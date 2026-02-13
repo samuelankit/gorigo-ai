@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/runner/workspace/app/guide/layout.tsx"],"sourcesContent":["import type { Metadata } from \"next\";\n\nexport const metadata: Metadata = {\n  title: \"GoRigo - Getting Started Guide\",\n  description: \"Step-by-step tutorials to help you get the most out of GoRigo AI Call Center Platform.\",\n};\n\nexport default function GuideLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <div className=\"min-h-screen bg-background\">\n      {children}\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;;;;;AAEO,MAAM,WAAqB;IAChC,OAAO;IACP,aAAa;AACf;AAEe,SAAS,YAAY,EAAE,QAAQ,EAAiC;IAC7E,qBACE,8OAAC;QAAI,WAAU;kBACZ;;;;;;AAGP"}}]
-}

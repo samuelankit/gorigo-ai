@@ -1,0 +1,12 @@
+node_modules
+.next
+.cache
+.git
+.github
+*.md
+.env*
+.replit
+replit.nix
+attached_assets
+client
+tsconfig.tsbuildinfo

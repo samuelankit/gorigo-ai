@@ -57,6 +57,21 @@ Enterprise-grade infrastructure components include:
 - **Billing & Usage**: Talk-time only pricing, real-time wallet deductions, billing ledger, spending caps, and Stripe for top-ups.
 - **Analytics Deep-Dive**: A 6-tab dashboard with global date range picker for detailed insights into calls, trends, activity, sentiment, quality, and agents.
 
+### Deployment Architecture
+- **Development**: Replit (Next.js dev server on port 5000, Replit PostgreSQL)
+- **Production**: Azure UK South region with Docker containerization
+  - **Container Registry**: Azure Container Registry (`gorigoacr`) for Docker images
+  - **Compute**: Azure App Service (Linux, B2 tier) with auto-scaling (1-5 instances, CPU-based)
+  - **Database**: Azure PostgreSQL Flexible Server (Burstable B2s, SSL required)
+  - **Secrets**: Azure Key Vault for DATABASE_URL, SESSION_SECRET, AI keys
+  - **Monitoring**: Application Insights + Log Analytics workspace
+  - **CI/CD**: GitHub Actions (`.github/workflows/deploy-azure.yml`) — lint, build Docker image, push to ACR, run migrations, deploy to App Service, health check
+  - **Infrastructure as Code**: Azure CLI script at `infra/azure-setup.sh`
+  - **Environment Variables Reference**: `infra/AZURE-ENV-VARS.md`
+  - **Next.js Output**: Conditional standalone mode (`NEXT_OUTPUT=standalone` env var) for Docker; default mode for Replit dev
+  - **Security**: TLS 1.2 minimum, FTPS disabled, always-on, HTTP/2 enabled
+  - **DDoS/WAF**: Available via Azure Front Door (configure separately for production traffic)
+
 ## External Dependencies
 - **AI Services**: OpenAI (`gpt-5.2`, `gpt-image-1`), Anthropic (`claude-sonnet-4-5`), OpenRouter (multi-model access) via Replit AI Integrations. Client modules in `replit_integrations/chat/` with `client-openai.ts`, `client-anthropic.ts`, `client-openrouter.ts`. Chat routes at `app/api/conversations/` with SSE streaming. Image generation at `app/api/images/generate/`. Batch processing utilities in `replit_integrations/batch/`.
 - **Database**: PostgreSQL.

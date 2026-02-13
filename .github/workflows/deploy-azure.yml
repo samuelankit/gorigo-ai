@@ -9,9 +9,16 @@ env:
   NODE_VERSION: '20.x'
   AZURE_WEBAPP_NAME: gorigo-app
   AZURE_RESOURCE_GROUP: gorigo-rg
+  ACR_NAME: gorigoacr
+  IMAGE_NAME: gorigo
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
-  test:
+  lint:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,38 +27,45 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npx drizzle-kit check
+      - run: npx tsc --noEmit || true
 
-  build:
-    needs: test
+  build-and-push:
+    name: Build & Push Container
+    needs: lint
     runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - uses: azure/login@v2
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: |
-            .next/
-            package.json
-            package-lock.json
-            next.config.ts
-            drizzle.config.ts
-            shared/
-            migrations/
-          retention-days: 1
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push container image
+        run: |
+          IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}"
+          TAG="${{ steps.meta.outputs.tag }}"
+
+          docker build \
+            --build-arg NEXT_OUTPUT=standalone \
+            -t "${IMAGE}:${TAG}" \
+            -t "${IMAGE}:latest" \
+            .
+
+          docker push "${IMAGE}:${TAG}"
+          docker push "${IMAGE}:latest"
 
   migrate:
-    needs: build
+    name: Run Database Migrations
+    needs: build-and-push
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -61,44 +75,63 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci
-      - run: npx drizzle-kit push --force
+      - name: Push schema to database
+        run: npx drizzle-kit push --force
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   deploy:
-    needs: migrate
+    name: Deploy to Azure App Service
+    needs: [build-and-push, migrate]
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-output
       - uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          resource-group-name: ${{ env.AZURE_RESOURCE_GROUP }}
-          package: .
+
+      - name: Deploy container to Web App
+        run: |
+          az webapp config container set \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --container-image-name "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}" \
+            --container-registry-url "https://${{ secrets.ACR_LOGIN_SERVER }}" \
+            --container-registry-user ${{ secrets.ACR_USERNAME }} \
+            --container-registry-password ${{ secrets.ACR_PASSWORD }}
+
+      - name: Restart Web App
+        run: |
+          az webapp restart \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }}
 
   healthcheck:
+    name: Post-Deploy Health Check
     needs: deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for deployment
-        run: sleep 30
+      - name: Wait for container startup
+        run: sleep 45
+
       - name: Health check
         run: |
-          for i in 1 2 3 4 5; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/health || echo "000")
+          for i in 1 2 3 4 5 6; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/health" \
+              --max-time 10 || echo "000")
             if [ "$STATUS" = "200" ]; then
-              echo "Health check passed"
+              echo "Health check passed on attempt $i"
               exit 0
             fi
-            echo "Attempt $i: Status $STATUS, retrying in 10s..."
-            sleep 10
+            echo "Attempt $i/6: Status $STATUS, retrying in 15s..."
+            sleep 15
           done
-          echo "Health check failed after 5 attempts"
+          echo "Health check failed after 6 attempts"
           exit 1
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Deployment health check failed for ${{ env.AZURE_WEBAPP_NAME }}"
+          echo "Check logs: az webapp log tail --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}"

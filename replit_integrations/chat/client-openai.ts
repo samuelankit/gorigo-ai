@@ -1,22 +1,10 @@
 import OpenAI from "openai";
 
-let _openai: OpenAI | null = null;
+const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || "placeholder-key";
+const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
 
-export function getOpenAI(): OpenAI {
-  if (!_openai) {
-    if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY || !process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
-      console.warn("OpenAI AI Integrations env vars not set. OpenAI provider will not be available.");
-    }
-    _openai = new OpenAI({
-      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-    });
-  }
-  return _openai;
+if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY && typeof window === "undefined" && process.env.NODE_ENV !== "production") {
+  console.warn("OpenAI AI Integrations env vars not set. OpenAI provider will not be available.");
 }
 
-export const openai = new Proxy({} as OpenAI, {
-  get(_target, prop) {
-    return (getOpenAI() as any)[prop];
-  },
-});
+export const openai = new OpenAI({ apiKey, baseURL });

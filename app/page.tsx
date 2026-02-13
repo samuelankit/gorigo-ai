@@ -188,9 +188,9 @@ export default function HomePage() {
             className="text-5xl sm:text-6xl lg:text-7xl font-light tracking-tight leading-[1.1] max-w-4xl mx-auto"
             data-testid="text-hero-title"
           >
-            The Unified Platform
+            Your AI Call Center,
             <br />
-            <span className="font-normal">for AI Voice Agents</span>
+            <span className="font-normal">Ready in Minutes</span>
           </h1>
           <p
             className="mt-8 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"

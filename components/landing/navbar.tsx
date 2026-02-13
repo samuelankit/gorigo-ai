@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { label: "Platform", href: "/#features" },
+  { label: "Engine", href: "/#features" },
   { label: "Pricing", href: "/pricing" },
   { label: "Docs", href: "/docs" },
   { label: "About", href: "/about" },

@@ -136,10 +136,10 @@ const packages = [
   },
   {
     name: "Bring Your Own Key",
-    description: "Use your own AI provider keys with our platform.",
+    description: "Use your own AI provider keys with our engine.",
     highlights: [
       "Your own API keys",
-      "Full platform access",
+      "Full engine access",
       "Lower per-minute costs",
       "Self-service setup",
     ],
@@ -182,7 +182,7 @@ export default function HomePage() {
             className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6"
             data-testid="text-hero-label"
           >
-            AI Call Centre Platform
+            AI Call Centre Engine
           </p>
           <h1
             className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] max-w-4xl mx-auto"

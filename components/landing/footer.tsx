@@ -42,7 +42,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-              AI-powered call centre platform
+              AI-powered call centre engine
             </p>
             <div className="mt-2">
               <p className="text-xs text-muted-foreground">
@@ -56,7 +56,7 @@ export function Footer() {
 
           <div>
             <h3 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
-              Platform
+              Engine
             </h3>
             <ul className="flex flex-col gap-2.5">
               {platformLinks.map((link) => (

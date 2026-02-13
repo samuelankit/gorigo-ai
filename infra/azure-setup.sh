@@ -85,7 +85,7 @@ fi
 echo "  ACR credentials retrieved: $ACR_LOGIN_SERVER"
 
 echo ""
-echo "[3/8] Creating App Service Plan (B2, Linux, auto-scale ready)..."
+echo "[3/8] Creating App Service Plan (S1, Linux, auto-scale ready)..."
 if az appservice plan show --name "$APP_SERVICE_PLAN" --resource-group "$RESOURCE_GROUP" &>/dev/null; then
   echo "  App Service Plan already exists, continuing..."
 else
@@ -94,7 +94,7 @@ else
     --resource-group "$RESOURCE_GROUP" \
     --location "$LOCATION" \
     --is-linux \
-    --sku B2
+    --sku S1
   echo "  App Service Plan created."
 fi
 

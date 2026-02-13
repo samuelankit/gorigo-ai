@@ -218,14 +218,14 @@ if az containerapp show --name "$CONTAINER_APP" --resource-group "$RESOURCE_GROU
     -o none
   echo "  Container App updated."
 else
+  INIT_IMAGE="mcr.microsoft.com/k8se/quickstart:latest"
+  echo "  Using placeholder image for initial creation: $INIT_IMAGE"
+  echo "  (CI/CD will deploy the real app image on first push)"
   az containerapp create \
     --name "$CONTAINER_APP" \
     --resource-group "$RESOURCE_GROUP" \
     --environment "$CONTAINER_ENV" \
-    --image "${ACR_LOGIN_SERVER}/${APP_NAME}:latest" \
-    --registry-server "$ACR_LOGIN_SERVER" \
-    --registry-username "$ACR_USERNAME" \
-    --registry-password "$ACR_PASSWORD" \
+    --image "$INIT_IMAGE" \
     --target-port 8080 \
     --ingress external \
     --min-replicas 1 \
@@ -242,7 +242,16 @@ else
     --scale-rule-type http \
     --scale-rule-http-concurrency 50 \
     -o none
-  echo "  Container App created with auto-scaling."
+
+  echo "  Configuring ACR registry credentials..."
+  az containerapp registry set \
+    --name "$CONTAINER_APP" \
+    --resource-group "$RESOURCE_GROUP" \
+    --server "$ACR_LOGIN_SERVER" \
+    --username "$ACR_USERNAME" \
+    --password "$ACR_PASSWORD" \
+    -o none
+  echo "  Container App created with auto-scaling and ACR registry."
 fi
 
 echo ""

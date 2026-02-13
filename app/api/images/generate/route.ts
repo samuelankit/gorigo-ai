@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const openaiClient = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+let _openaiClient: OpenAI | null = null;
+function getClient(): OpenAI {
+  if (!_openaiClient) {
+    _openaiClient = new OpenAI({
+      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+    });
+  }
+  return _openaiClient;
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -15,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const response = await openaiClient.images.generate({
+    const response = await getClient().images.generate({
       model: "gpt-image-1",
       prompt,
       n: 1,

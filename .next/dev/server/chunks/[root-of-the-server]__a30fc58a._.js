@@ -1872,14 +1872,36 @@ var __turbopack_async_dependencies__ = __turbopack_handle_async_dependencies__([
 ;
 ;
 const { Pool } = __TURBOPACK__imported__module__$5b$externals$5d2f$pg__$5b$external$5d$__$28$pg$2c$__esm_import$2c$__$5b$project$5d2f$node_modules$2f$pg$29$__["default"];
-if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+let _pool = null;
+let _db = null;
+function getPool() {
+    if (!_pool) {
+        if (!process.env.DATABASE_URL) {
+            throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+        }
+        _pool = new Pool({
+            connectionString: process.env.DATABASE_URL
+        });
+    }
+    return _pool;
 }
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
+function getDb() {
+    if (!_db) {
+        _db = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$drizzle$2d$orm$2f$node$2d$postgres$2f$driver$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["drizzle"])(getPool(), {
+            schema: __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$schema$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__
+        });
+    }
+    return _db;
+}
+const pool = new Proxy({}, {
+    get (_target, prop) {
+        return getPool()[prop];
+    }
 });
-const db = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$drizzle$2d$orm$2f$node$2d$postgres$2f$driver$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["drizzle"])(pool, {
-    schema: __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$schema$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__
+const db = new Proxy({}, {
+    get (_target, prop) {
+        return getDb()[prop];
+    }
 });
 __turbopack_async_result__();
 } catch(e) { __turbopack_async_result__(e); } }, false);}),

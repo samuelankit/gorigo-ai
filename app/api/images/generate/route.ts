@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
       size: size as "1024x1024" | "512x512" | "256x256",
     });
 
+    if (!response.data || response.data.length === 0) {
+      return NextResponse.json({ message: "No image data returned" }, { status: 500 });
+    }
     const imageData = response.data[0];
     return NextResponse.json({
       b64_json: imageData?.b64_json,

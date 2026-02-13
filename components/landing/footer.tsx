@@ -31,14 +31,13 @@ export function Footer() {
           <div className="col-span-2 sm:col-span-1 flex flex-col gap-3">
             <Link
               href="/"
-              className="flex items-center gap-2 flex-wrap"
+              className="flex items-center flex-wrap"
               data-testid="link-footer-logo"
             >
-              <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
-                <span className="text-[10px] font-bold text-primary-foreground">G</span>
-              </div>
-              <span className="text-sm font-semibold tracking-tight text-foreground">
-                GoRigo
+              <span className="text-lg font-bold tracking-tight">
+                <span className="text-[#2DD4A8]">Go</span>
+                <span className="text-foreground">Rigo</span>
+                <span className="text-[#2DD4A8]">.ai</span>
               </span>
             </Link>
             <p className="text-xs text-muted-foreground leading-relaxed mt-1">

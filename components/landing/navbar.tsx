@@ -33,13 +33,14 @@ export function Navbar() {
         <div className="flex items-center gap-8">
           <Link
             href="/"
-            className="flex items-center gap-2 flex-wrap"
+            className="flex items-center flex-wrap"
             data-testid="link-logo"
           >
-            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
-              <span className="text-xs font-bold text-primary-foreground">G</span>
-            </div>
-            <span className="text-base font-semibold tracking-tight text-foreground">GoRigo</span>
+            <span className="text-xl font-bold tracking-tight">
+              <span className="text-[#2DD4A8]">Go</span>
+              <span className="text-foreground">Rigo</span>
+              <span className="text-[#2DD4A8]">.ai</span>
+            </span>
           </Link>
 
           <div className="hidden items-center gap-0.5 md:flex flex-wrap">

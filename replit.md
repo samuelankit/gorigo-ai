@@ -61,15 +61,16 @@ Enterprise-grade infrastructure components include:
 - **Development**: Replit (Next.js dev server on port 5000, Replit PostgreSQL)
 - **Production**: Azure UK South region with Docker containerization
   - **Container Registry**: Azure Container Registry (`gorigoacr`) for Docker images
-  - **Compute**: Azure App Service (Linux, B2 tier) with auto-scaling (1-5 instances, CPU-based)
+  - **Compute**: Azure Container Apps with auto-scaling (1-5 replicas, HTTP concurrency-based)
+  - **Container Environment**: Azure Container Apps Environment with Log Analytics integration
   - **Database**: Azure PostgreSQL Flexible Server (Burstable B2s, SSL required)
-  - **Secrets**: Azure Key Vault for DATABASE_URL, SESSION_SECRET, AI keys
-  - **Monitoring**: Application Insights + Log Analytics workspace
-  - **CI/CD**: GitHub Actions (`.github/workflows/deploy-azure.yml`) — lint, build Docker image, push to ACR, run migrations, deploy to App Service, health check
+  - **Secrets**: Injected as Container App env vars; Azure Key Vault available for optional centralized secret management
+  - **Monitoring**: Log Analytics workspace (Container Apps built-in logging)
+  - **CI/CD**: GitHub Actions (`.github/workflows/deploy-azure.yml`) — lint, build Docker image, push to ACR, run migrations, deploy to Container Apps, health check
   - **Infrastructure as Code**: Azure CLI script at `infra/azure-setup.sh`
   - **Environment Variables Reference**: `infra/AZURE-ENV-VARS.md`
   - **Next.js Output**: Conditional standalone mode (`NEXT_OUTPUT=standalone` env var) for Docker; default mode for Replit dev
-  - **Security**: TLS 1.2 minimum, FTPS disabled, always-on, HTTP/2 enabled
+  - **Security**: TLS via Container Apps ingress, managed certificates
   - **DDoS/WAF**: Available via Azure Front Door (configure separately for production traffic)
 
 ## External Dependencies

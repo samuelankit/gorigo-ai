@@ -7,7 +7,7 @@ on:
 
 env:
   NODE_VERSION: '20.x'
-  AZURE_WEBAPP_NAME: gorigo-app
+  AZURE_CONTAINER_APP: gorigo-app
   AZURE_RESOURCE_GROUP: gorigo-rg
   ACR_NAME: gorigoacr
   IMAGE_NAME: gorigo
@@ -81,7 +81,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   deploy:
-    name: Deploy to Azure App Service
+    name: Deploy to Azure Container Apps
     needs: [build-and-push, migrate]
     runs-on: ubuntu-latest
     environment: production
@@ -90,38 +90,46 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy container to Web App
+      - name: Deploy container to Container App
         run: |
-          az webapp config container set \
+          az containerapp update \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --container-image-name "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}" \
-            --container-registry-url "https://${{ secrets.ACR_LOGIN_SERVER }}" \
-            --container-registry-user ${{ secrets.ACR_USERNAME }} \
-            --container-registry-password ${{ secrets.ACR_PASSWORD }}
-
-      - name: Restart Web App
-        run: |
-          az webapp restart \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --name ${{ env.AZURE_WEBAPP_NAME }}
+            --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}" \
+            --registry-server "${{ secrets.ACR_LOGIN_SERVER }}" \
+            --registry-username "${{ secrets.ACR_USERNAME }}" \
+            --registry-password "${{ secrets.ACR_PASSWORD }}"
 
   healthcheck:
     name: Post-Deploy Health Check
     needs: deploy
     runs-on: ubuntu-latest
     steps:
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get Container App URL
+        id: get-url
+        run: |
+          FQDN=$(az containerapp show \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          echo "app_url=https://${FQDN}" >> "$GITHUB_OUTPUT"
+
       - name: Wait for container startup
-        run: sleep 45
+        run: sleep 30
 
       - name: Health check
         run: |
           for i in 1 2 3 4 5 6; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              "https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/api/health" \
+              "${{ steps.get-url.outputs.app_url }}/api/health" \
               --max-time 10 || echo "000")
             if [ "$STATUS" = "200" ]; then
               echo "Health check passed on attempt $i"
+              echo "App is live at: ${{ steps.get-url.outputs.app_url }}"
               exit 0
             fi
             echo "Attempt $i/6: Status $STATUS, retrying in 15s..."
@@ -133,5 +141,5 @@ jobs:
       - name: Notify on failure
         if: failure()
         run: |
-          echo "::error::Deployment health check failed for ${{ env.AZURE_WEBAPP_NAME }}"
-          echo "Check logs: az webapp log tail --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }}"
+          echo "::error::Deployment health check failed for ${{ env.AZURE_CONTAINER_APP }}"
+          echo "Check logs: az containerapp logs show --name ${{ env.AZURE_CONTAINER_APP }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }}"

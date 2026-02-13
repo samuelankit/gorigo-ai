@@ -67,7 +67,6 @@ jobs:
     name: Run Database Migrations
     needs: build-and-push
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -84,7 +83,6 @@ jobs:
     name: Deploy to Azure Container Apps
     needs: [build-and-push, migrate]
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: azure/login@v2
         with:

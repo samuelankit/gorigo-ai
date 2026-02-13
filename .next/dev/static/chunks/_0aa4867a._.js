@@ -20,7 +20,7 @@ function ThemeProvider({ children }) {
     const [theme, setTheme] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         "ThemeProvider.useState": ()=>{
             if ("TURBOPACK compile-time truthy", 1) {
-                const stored = localStorage.getItem("cryptoops-theme");
+                const stored = localStorage.getItem("gorigo-theme");
                 return stored || "light";
             }
             //TURBOPACK unreachable
@@ -32,7 +32,7 @@ function ThemeProvider({ children }) {
             const root = document.documentElement;
             root.classList.remove("light", "dark");
             root.classList.add(theme);
-            localStorage.setItem("cryptoops-theme", theme);
+            localStorage.setItem("gorigo-theme", theme);
         }
     }["ThemeProvider.useEffect"], [
         theme
@@ -53,7 +53,7 @@ function ThemeProvider({ children }) {
         columnNumber: 5
     }, this);
 }
-_s(ThemeProvider, "zT+fV6wKwbtYZvoTDxT+B+88m7Y=");
+_s(ThemeProvider, "BRs3neM554ou+0fQ0xoCHyjqa+0=");
 _c = ThemeProvider;
 function useTheme() {
     _s1();

@@ -1,0 +1,31 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /about
+Allow: /contact
+Allow: /docs
+Allow: /guide
+Allow: /guide/overview
+Allow: /guide/agents
+Allow: /guide/knowledge-base
+Allow: /guide/clients
+Allow: /guide/billing
+Allow: /guide/campaigns
+Allow: /guide/monitoring
+Allow: /guide/compliance
+Allow: /policies/privacy
+Allow: /policies/terms
+Allow: /policies/cookies
+Allow: /policies/acceptable-use
+Allow: /sitemap
+
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api
+Disallow: /login
+Disallow: /register
+Disallow: /onboarding
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://gorigo.ai/sitemap.xml

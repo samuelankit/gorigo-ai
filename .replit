@@ -4,6 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["unzip", "zip"]
 
 [[ports]]
 localPort = 5000
@@ -37,3 +38,11 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[agent]
+integrations = ["javascript_openrouter_ai_integrations:2.0.0", "javascript_openai_ai_integrations:2.0.0", "javascript_anthropic_ai_integrations:2.0.0"]
+
+[userenv]
+
+[userenv.shared]
+BYOK_ENCRYPTION_KEY = "29b0961a49a3559da8cf425e0b8699884bf7e30d213a985ae09c2aa4f8981cb0"

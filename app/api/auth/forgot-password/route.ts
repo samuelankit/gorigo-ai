@@ -1,0 +1,57 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { users, passwordResetTokens } from "@/shared/schema";
+import { eq, and, isNull } from "drizzle-orm";
+import { authLimiter } from "@/lib/rate-limit";
+import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import crypto from "crypto";
+import { hashToken } from "@/lib/auth";
+
+export async function POST(request: NextRequest) {
+  try {
+    const rl = await authLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
+    const sizeError = checkBodySize(request, BODY_LIMITS.auth);
+    if (sizeError) return sizeError;
+
+    const body = await request.json();
+    const { email } = body;
+
+    if (!email || typeof email !== "string") {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
+    if (!user) {
+      return NextResponse.json({
+        message: "If an account with that email exists, a reset link has been generated.",
+      }, { status: 200 });
+    }
+
+    await db
+      .update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(and(eq(passwordResetTokens.userId, user.id), isNull(passwordResetTokens.usedAt)));
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hashToken(token);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await db.insert(passwordResetTokens).values({
+      userId: user.id,
+      token: tokenHash,
+      expiresAt,
+    });
+
+    return NextResponse.json({
+      message: "If an account with that email exists, a reset link has been generated.",
+    }, { status: 200 });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

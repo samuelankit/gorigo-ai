@@ -1,0 +1,45 @@
+import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/get-user";
+import { getOrCreateWallet, isLowBalance } from "@/lib/wallet";
+import { db } from "@/lib/db";
+import { walletTransactions } from "@/shared/schema";
+import { eq, desc, sql } from "drizzle-orm";
+
+export async function GET() {
+  try {
+    const auth = await getAuthenticatedUser();
+    if (!auth || !auth.orgId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const wallet = await getOrCreateWallet(auth.orgId);
+    const lowBalance = await isLowBalance(auth.orgId);
+
+    const [stats] = await db
+      .select({
+        totalTopUps: sql<number>`COALESCE(SUM(CASE WHEN ${walletTransactions.type} = 'top_up' THEN ${walletTransactions.amount} ELSE 0 END), 0)`,
+        totalDeductions: sql<number>`COALESCE(SUM(CASE WHEN ${walletTransactions.type} = 'deduction' THEN ABS(${walletTransactions.amount}) ELSE 0 END), 0)`,
+        transactionCount: sql<number>`COUNT(*)`,
+      })
+      .from(walletTransactions)
+      .where(eq(walletTransactions.orgId, auth.orgId));
+
+    return NextResponse.json({
+      wallet: {
+        balance: wallet.balance,
+        currency: wallet.currency,
+        lowBalanceThreshold: wallet.lowBalanceThreshold,
+        isActive: wallet.isActive,
+        lowBalance,
+      },
+      stats: {
+        totalTopUps: Number(stats.totalTopUps),
+        totalDeductions: Number(stats.totalDeductions),
+        transactionCount: Number(stats.transactionCount),
+      },
+    });
+  } catch (error) {
+    console.error("Get wallet error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

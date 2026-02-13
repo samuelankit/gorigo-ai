@@ -1,0 +1,77 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/get-user";
+import { billingLimiter } from "@/lib/rate-limit";
+import crypto from "crypto";
+
+export async function POST(request: NextRequest) {
+  try {
+    const rl = await billingLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
+    const auth = await getAuthenticatedUser();
+    if (!auth || !auth.orgId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (auth.isDemo) {
+      return NextResponse.json({ error: "Demo accounts cannot top up wallet" }, { status: 403 });
+    }
+
+    const { amount } = await request.json();
+    if (!amount || typeof amount !== "number" || amount < 5 || amount > 10000) {
+      return NextResponse.json({ error: "Amount must be between $5 and $10,000" }, { status: 400 });
+    }
+
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({
+        error: "Payment processing is not configured. Please contact support.",
+        configured: false,
+      }, { status: 503 });
+    }
+
+    try {
+      const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+      const idempotencyKey = crypto
+        .createHash("sha256")
+        .update(`topup_${auth.orgId}_${auth.user.id}_${amount}_${Math.floor(Date.now() / 30000)}`)
+        .digest("hex");
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "GoRigo Wallet Top-Up",
+              description: `Add $${amount.toFixed(2)} to your GoRigo wallet`,
+            },
+            unit_amount: Math.round(amount * 100),
+          },
+          quantity: 1,
+        }],
+        mode: "payment",
+        success_url: `${process.env.NEXT_PUBLIC_BASE_URL || "https://gorigo.replit.app"}/dashboard/billing?topup=success&amount=${amount}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || "https://gorigo.replit.app"}/dashboard/billing?topup=cancelled`,
+        metadata: {
+          orgId: auth.orgId.toString(),
+          userId: auth.user.id.toString(),
+          type: "wallet_topup",
+          amount: amount.toString(),
+        },
+      }, {
+        idempotencyKey,
+      });
+
+      return NextResponse.json({ url: session.url, sessionId: session.id });
+    } catch (stripeErr: any) {
+      console.error("Stripe session creation failed:", stripeErr);
+      return NextResponse.json({ error: "Payment service error. Please try again later." }, { status: 502 });
+    }
+  } catch (error) {
+    console.error("Top-up error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

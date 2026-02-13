@@ -1,0 +1,124 @@
+import { NextRequest, NextResponse } from "next/server";
+import { chatStorage } from "../../../../../replit_integrations/chat/storage";
+import { openai } from "../../../../../replit_integrations/chat/client-openai";
+import { anthropic } from "../../../../../replit_integrations/chat/client-anthropic";
+import { openrouter } from "../../../../../replit_integrations/chat/client-openrouter";
+
+type Provider = "openai" | "anthropic" | "openrouter";
+
+const DEFAULT_OPENAI_MODEL = "gpt-5.2";
+const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5";
+
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const msgs = await chatStorage.getMessages(Number(id));
+  return NextResponse.json(msgs);
+}
+
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const conversationId = Number(id);
+  const body = await req.json();
+  const { content, provider = "openai", model } = body as {
+    content: string;
+    provider?: Provider;
+    model?: string;
+  };
+
+  if (!content || typeof content !== "string") {
+    return NextResponse.json({ message: "content is required" }, { status: 400 });
+  }
+
+  const conv = await chatStorage.getConversation(conversationId);
+  if (!conv) return NextResponse.json({ message: "Conversation not found" }, { status: 404 });
+
+  await chatStorage.createMessage({
+    conversationId,
+    role: "user",
+    content,
+  });
+
+  const history = await chatStorage.getMessages(conversationId);
+  const chatMessages = history.map((m) => ({
+    role: m.role as "user" | "assistant" | "system",
+    content: m.content,
+  }));
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      let fullContent = "";
+      try {
+        if (provider === "anthropic") {
+          const anthropicStream = anthropic.messages.stream({
+            model: model || DEFAULT_ANTHROPIC_MODEL,
+            max_tokens: 8192,
+            messages: chatMessages.map((m) => ({
+              role: m.role === "system" ? "user" : m.role,
+              content: m.content,
+            })),
+          });
+
+          for await (const event of anthropicStream) {
+            if (
+              event.type === "content_block_delta" &&
+              event.delta.type === "text_delta"
+            ) {
+              const chunk = event.delta.text;
+              fullContent += chunk;
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ content: chunk, done: false })}\n\n`),
+              );
+            }
+          }
+        } else {
+          const client = provider === "openrouter" ? openrouter : openai;
+          const selectedModel = model || DEFAULT_OPENAI_MODEL;
+
+          const openaiStream = await client.chat.completions.create({
+            model: selectedModel,
+            messages: chatMessages,
+            stream: true,
+            max_completion_tokens: 8192,
+          });
+
+          for await (const chunk of openaiStream) {
+            const delta = chunk.choices[0]?.delta?.content;
+            if (delta) {
+              fullContent += delta;
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ content: delta, done: false })}\n\n`),
+              );
+            }
+          }
+        }
+
+        const assistantMsg = await chatStorage.createMessage({
+          conversationId,
+          role: "assistant",
+          content: fullContent,
+        });
+
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ content: "", done: true, messageId: assistantMsg.id })}\n\n`,
+          ),
+        );
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ error: errMsg, done: true })}\n\n`),
+        );
+      }
+      controller.close();
+    },
+  });
+
+  return new NextResponse(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}

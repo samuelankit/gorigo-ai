@@ -21,7 +21,7 @@ function ThemeProvider({ children }) {
         "ThemeProvider.useState": ()=>{
             if ("TURBOPACK compile-time truthy", 1) {
                 const stored = localStorage.getItem("cryptoops-theme");
-                return stored || "dark";
+                return stored || "light";
             }
             //TURBOPACK unreachable
             ;
@@ -53,7 +53,7 @@ function ThemeProvider({ children }) {
         columnNumber: 5
     }, this);
 }
-_s(ThemeProvider, "qB+qlPtuztROWlZKYHtoMwnzQ3s=");
+_s(ThemeProvider, "zT+fV6wKwbtYZvoTDxT+B+88m7Y=");
 _c = ThemeProvider;
 function useTheme() {
     _s1();

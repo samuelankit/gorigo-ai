@@ -16,9 +16,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("cryptoops-theme");
-      return (stored as Theme) || "dark";
+      return (stored as Theme) || "light";
     }
-    return "dark";
+    return "light";
   });
 
   useEffect(() => {

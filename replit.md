@@ -4,7 +4,7 @@
 GoRigo is an AI-powered call center platform designed to automate call center operations, provide comprehensive analytics, and manage a three-tier business hierarchy (Business Partners, Direct-to-Consumer, Affiliate Partners). The platform streamlines partner management via a SuperAdmin Console, automates commission processing, and offers capabilities like multi-agent management, visual automation flow building, knowledge management, and robust call management with real-time monitoring. Its ambition is to be a fully automated, scalable solution for AI-driven call centers.
 
 ## User Preferences
-- Default to dark mode.
+- Default to light mode (day vision), with dark mode (night vision) toggle available.
 - Talk-time only billing model.
 - AI disclosure on calls (compliance).
 - Solo founder - automate everything, SuperAdmin Console for all analytics and operations.

@@ -251,7 +251,6 @@ export default function HomePage() {
                 className="bg-background p-8"
                 data-testid={`card-feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <feature.icon className="h-5 w-5 text-muted-foreground mb-5" />
                 <h3 className="font-medium text-base mb-2">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {feature.description}

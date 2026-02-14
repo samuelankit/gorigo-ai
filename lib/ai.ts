@@ -1,4 +1,5 @@
 import { callLLM, callLLMStream, type ConversationMessage, type LLMCallResult } from "@/lib/llm-router";
+import { AGENT_ANTI_INJECTION_PREAMBLE } from "@/lib/prompt-guard";
 export type { ConversationMessage };
 
 export interface AIResponse {
@@ -22,7 +23,8 @@ function buildSystemPrompt(agentConfig: {
     approvalThreshold?: number;
   } | null;
 }): string {
-  let prompt = `You are ${agentConfig.name}, an AI voice agent for a business.`;
+  let prompt = AGENT_ANTI_INJECTION_PREAMBLE;
+  prompt += `\nYou are ${agentConfig.name}, an AI voice agent for a business.`;
 
   if (agentConfig.businessDescription) {
     prompt += `\n\nBusiness Description: ${agentConfig.businessDescription}`;

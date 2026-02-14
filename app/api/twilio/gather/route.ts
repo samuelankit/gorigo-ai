@@ -8,6 +8,7 @@ import { searchKnowledge, buildRAGContext, checkResponseCache } from "@/lib/rag"
 import { DEFAULT_VOICE, DEFAULT_LANGUAGE, validateTwilioSignature } from "@/lib/twilio";
 import { analyzeSentimentLocal } from "@/lib/sentiment";
 import { redactPII } from "@/lib/pii-redaction";
+import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_VOICE } from "@/lib/prompt-guard";
 import twilio from "twilio";
 
 const MAX_TURNS_BEFORE_CLOSE = 15;
@@ -24,20 +25,6 @@ function getWebhookUrl(request: NextRequest): string {
   const host = request.headers.get("host") || "";
   const url = new URL(request.url);
   return `${proto}://${host}${url.pathname}${url.search}`;
-}
-
-function detectHumanRequest(message: string): boolean {
-  const patterns = [
-    /speak\s+to\s+(a\s+)?(human|person|agent|representative|manager|someone)/i,
-    /transfer\s+me/i,
-    /real\s+person/i,
-    /human\s+agent/i,
-    /talk\s+to\s+someone/i,
-    /let\s+me\s+speak/i,
-    /get\s+me\s+(a\s+)?(human|person|agent|representative|manager)/i,
-    /want\s+(a\s+)?(human|person|agent|representative|manager)/i,
-  ];
-  return patterns.some((p) => p.test(message));
 }
 
 export async function POST(request: NextRequest) {
@@ -107,6 +94,20 @@ export async function POST(request: NextRequest) {
         finalOutcome: "max_turns_exceeded",
         endedAt: new Date(),
       }).where(eq(callLogs.id, callLogId));
+      return twimlResponse(vr.toString());
+    }
+
+    if (detectPromptInjection(speechResult)) {
+      const vr = new twilio.twiml.VoiceResponse();
+      vr.say({ voice: agentVoice, language: agentLanguage }, SAFE_REFUSAL_VOICE);
+      const gather = vr.gather({
+        input: ["speech"] as any,
+        action: `/api/twilio/gather?callLogId=${callLogId}&agentId=${agentId}&orgId=${orgId}`,
+        method: "POST",
+        speechTimeout: "auto",
+        language: agentLanguage,
+      });
+      gather.say({ voice: agentVoice, language: agentLanguage }, "How can I help you?");
       return twimlResponse(vr.toString());
     }
 

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { agents } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { generateAgentResponse } from "@/lib/ai";
+import { detectPromptInjection, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +21,14 @@ export async function POST(req: NextRequest) {
 
     if (!agentId || !message) {
       return NextResponse.json({ error: "agentId and message are required" }, { status: 400 });
+    }
+
+    if (detectPromptInjection(message)) {
+      return NextResponse.json({
+        reply: SAFE_REFUSAL_TEXT,
+        model: "blocked",
+        blocked: true,
+      });
     }
 
     const [agent] = await db

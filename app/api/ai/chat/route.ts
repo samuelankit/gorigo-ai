@@ -10,48 +10,7 @@ import { aiLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance, deductFromWallet } from "@/lib/wallet";
 import { redactPII } from "@/lib/pii-redaction";
-
-const PROMPT_INJECTION_PATTERNS = [
-  /ignore\s+(previous|all|above)\s+(instructions|prompts)/i,
-  /you\s+are\s+now\s+/i,
-  /pretend\s+you\s+are/i,
-  /system\s*:\s*/i,
-  /\[\s*INST\s*\]/i,
-  /jailbreak/i,
-  /forget\s+(everything|all|your)\s*(instructions|rules|guidelines)?/i,
-  /act\s+as\s+(if|a)\s/i,
-  /bypass\s+(your|the|all)\s*(filters?|rules?|restrictions?|safety)/i,
-  /override\s+(your|the|all)\s*(instructions?|rules?|programming)/i,
-  /new\s+instructions?\s*:/i,
-  /do\s+not\s+follow\s+(your|the|previous)\s*(instructions?|rules?)/i,
-  /disregard\s+(all|your|the|previous)\s*(instructions?|rules?|guidelines?)/i,
-  /reveal\s+(your|the)\s*(system\s*prompt|instructions|rules)/i,
-  /what\s+(are|is)\s+your\s*(system\s*prompt|instructions|rules)/i,
-  /roleplay\s+as/i,
-  /\bDAN\b/,
-  /developer\s+mode/i,
-  /sudo\s+mode/i,
-  /admin\s+mode/i,
-  /<<\s*SYS\s*>>/i,
-  /\[\/?\s*SYSTEM\s*\]/i,
-  /prompt\s*injection/i,
-];
-
-function detectPromptInjection(message: string): boolean {
-  return PROMPT_INJECTION_PATTERNS.some((pattern) => pattern.test(message));
-}
-
-function detectHumanRequest(message: string): boolean {
-  const patterns = [
-    /speak\s+to\s+(a\s+)?(human|person|agent|representative|manager|someone)/i,
-    /transfer\s+me/i,
-    /real\s+person/i,
-    /human\s+agent/i,
-    /talk\s+to\s+someone/i,
-    /let\s+me\s+speak/i,
-  ];
-  return patterns.some((p) => p.test(message));
-}
+import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     if (detectPromptInjection(message)) {
       return NextResponse.json({
-        response: "I'm sorry, I can only help with business-related inquiries. How can I assist you today?",
+        response: SAFE_REFUSAL_TEXT,
         currentState: requestedState || "GREETING",
         confidenceScore: 1.0,
         blocked: true,

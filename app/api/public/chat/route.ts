@@ -4,6 +4,7 @@ import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { db } from "@/server/db";
 import { chatLeads, chatMessages } from "@/shared/schema";
 import { eq, sql } from "drizzle-orm";
+import { detectPromptInjection, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 
 const publicChatStore = new Map<string, { count: number; resetAt: number }>();
 const PUBLIC_CHAT_WINDOW_MS = 60_000;
@@ -112,6 +113,28 @@ export async function POST(req: NextRequest) {
 
     if (message.length > MAX_MESSAGE_LENGTH) {
       return NextResponse.json({ error: "Message too long" }, { status: 400 });
+    }
+
+    if (detectPromptInjection(message)) {
+      const encoder = new TextEncoder();
+      const refusalStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ content: SAFE_REFUSAL_TEXT, done: false })}\n\n`)
+          );
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ content: "", done: true })}\n\n`)
+          );
+          controller.close();
+        },
+      });
+      return new Response(refusalStream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
     }
 
     const safeHistory = sanitizeHistory(history);

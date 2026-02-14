@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import Link from "next/link";
+import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | GoRigo",
@@ -13,12 +15,34 @@ export const metadata: Metadata = {
       "Learn how GoRigo collects, uses, and protects your personal data. GDPR-compliant privacy practices.",
     siteName: "GoRigo",
   },
+  twitter: {
+    card: "summary",
+    title: "Privacy Policy | GoRigo",
+    description:
+      "Learn how GoRigo collects, uses, and protects your personal data. GDPR-compliant privacy practices.",
+  },
+  alternates: {
+    canonical: "/policies/privacy",
+  },
 };
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-privacy-policy">
+      <WebPageJsonLd
+        title="Privacy Policy | GoRigo"
+        description="Learn how GoRigo collects, uses, and protects your personal data. GDPR-compliant privacy practices."
+        url="/policies/privacy"
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Privacy Policy", url: "/policies/privacy" },
+        ]}
+      />
       <Navbar />
+
+      <Breadcrumbs items={[{ label: "Privacy Policy" }]} />
 
       <div className="max-w-4xl mx-auto px-6 py-16">
         <h1

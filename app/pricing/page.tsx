@@ -1,6 +1,9 @@
 import { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
+import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
@@ -15,6 +18,15 @@ export const metadata: Metadata = {
     title: "Pricing - Flexible AI Call Centre Packages | GoRigo",
     description:
       "Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pricing - Flexible AI Call Centre Packages | GoRigo",
+    description:
+      "Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions. Managed, Bring Your Own Key, or Self-Hosted packages available.",
+  },
+  alternates: {
+    canonical: "/pricing",
   },
 };
 
@@ -94,7 +106,19 @@ function FeatureIcon({ included }: { included: boolean }) {
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-pricing">
+      <WebPageJsonLd
+        title="Pricing - Flexible AI Call Centre Packages | GoRigo"
+        description="Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions. Managed, Bring Your Own Key, or Self-Hosted packages available."
+        url="/pricing"
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Pricing", url: "/pricing" },
+        ]}
+      />
       <Navbar />
+      <Breadcrumbs items={[{ label: "Pricing" }]} />
 
       <section className="relative" data-testid="section-pricing-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
@@ -256,6 +280,7 @@ export default function PricingPage() {
         </div>
       </section>
 
+      <ConversionCta />
       <Footer />
     </div>
   );

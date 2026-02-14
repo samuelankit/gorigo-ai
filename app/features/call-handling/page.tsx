@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
+import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -32,6 +35,15 @@ export const metadata: Metadata = {
     title: "24/7 Call Handling | GoRigo.ai",
     description:
       "Never miss a call, day or night. GoRigo AI agents answer every call instantly, handle bookings, enquiries, and support requests around the clock without breaks or downtime.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "24/7 Call Handling | GoRigo.ai",
+    description:
+      "Never miss a call, day or night. GoRigo AI agents answer every call instantly, handle bookings, enquiries, and support requests around the clock without breaks or downtime.",
+  },
+  alternates: {
+    canonical: "/features/call-handling",
   },
 };
 
@@ -134,7 +146,11 @@ const faqs = [
 export default function CallHandlingPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-call-handling">
+      <WebPageJsonLd title="24/7 Call Handling" description="Never miss a call, day or night. GoRigo AI agents answer every call instantly, handle bookings, enquiries, and support requests around the clock without breaks or downtime." url="/features/call-handling" />
+      <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "24/7 Call Handling", url: "/features/call-handling" }]} />
+      <FAQJsonLd items={faqs.map(f => ({ question: f.question, answer: f.answer }))} />
       <Navbar />
+      <Breadcrumbs items={[{ label: "Capabilities", href: "/capabilities" }, { label: "24/7 Call Handling" }]} />
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
@@ -361,6 +377,7 @@ export default function CallHandlingPage() {
         </div>
       </section>
 
+      <ConversionCta />
       <Footer />
     </div>
   );

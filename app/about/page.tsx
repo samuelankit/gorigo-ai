@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
+import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -22,6 +25,15 @@ export const metadata: Metadata = {
     title: "About GoRigo | International Business Exchange Limited",
     description:
       "GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine the call centre with AI-powered voice agents.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About GoRigo | International Business Exchange Limited",
+    description:
+      "GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine the call centre with AI-powered voice agents.",
+  },
+  alternates: {
+    canonical: "/about",
   },
 };
 
@@ -76,7 +88,19 @@ const partners = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-about">
+      <WebPageJsonLd
+        title="About GoRigo | International Business Exchange Limited"
+        description="GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine the call centre with AI-powered voice agents."
+        url="/about"
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "About", url: "/about" },
+        ]}
+      />
       <Navbar />
+      <Breadcrumbs items={[{ label: "About" }]} />
 
       <section
         className="relative"
@@ -241,6 +265,7 @@ export default function AboutPage() {
         </div>
       </section>
 
+      <ConversionCta />
       <Footer />
     </div>
   );

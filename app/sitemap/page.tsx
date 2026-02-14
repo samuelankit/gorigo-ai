@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { Card, CardContent } from "@/components/ui/card";
+import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Sitemap | GoRigo",
@@ -11,6 +13,14 @@ export const metadata: Metadata = {
     title: "Sitemap | GoRigo",
     description: "Find your way around GoRigo. Browse all pages including platform features, getting started guides, legal policies, and account pages.",
     siteName: "GoRigo",
+  },
+  twitter: {
+    card: "summary",
+    title: "Sitemap | GoRigo",
+    description: "Find your way around GoRigo. Browse all pages including platform features, getting started guides, legal policies, and account pages.",
+  },
+  alternates: {
+    canonical: "/sitemap",
   },
 };
 
@@ -59,7 +69,20 @@ const sections = [
 export default function SitemapPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-sitemap">
+      <WebPageJsonLd
+        title="Sitemap | GoRigo"
+        description="Find your way around GoRigo. Browse all pages including platform features, getting started guides, legal policies, and account pages."
+        url="/sitemap"
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Sitemap", url: "/sitemap" },
+        ]}
+      />
       <Navbar />
+
+      <Breadcrumbs items={[{ label: "Sitemap" }]} />
 
       <section className="relative overflow-hidden" data-testid="section-sitemap-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />

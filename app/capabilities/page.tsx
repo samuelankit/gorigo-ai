@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { Button } from "@/components/ui/button";
+import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
+import { ConversionCta } from "@/components/seo/conversion-cta";
 import Link from "next/link";
 import {
   Bot,
@@ -19,11 +22,20 @@ import {
 export const metadata: Metadata = {
   title: "Capabilities | GoRigo.ai",
   description:
-    "Explore the full suite of GoRigo AI call centre capabilities. From intelligent agents and 24/7 call handling to compliance, analytics, multi-language support, and transparent billing.",
+    "Explore GoRigo's AI call centre capabilities in the UK. Intelligent agents, 24/7 call handling, GDPR compliance, real-time analytics, multi-language support, and pay-per-talk-time billing. No subscriptions, no seat licences.",
+  alternates: {
+    canonical: "/capabilities",
+  },
   openGraph: {
     title: "Capabilities | GoRigo.ai",
     description:
-      "Explore the full suite of GoRigo AI call centre capabilities. From intelligent agents and 24/7 call handling to compliance, analytics, multi-language support, and transparent billing.",
+      "Explore GoRigo's AI call centre capabilities in the UK. Intelligent agents, 24/7 call handling, GDPR compliance, real-time analytics, multi-language support, and pay-per-talk-time billing. No subscriptions, no seat licences.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Capabilities | GoRigo.ai",
+    description:
+      "Explore GoRigo's AI call centre capabilities in the UK. Intelligent agents, 24/7 call handling, GDPR compliance, real-time analytics, multi-language support, and pay-per-talk-time billing. No subscriptions, no seat licences.",
   },
 };
 
@@ -136,7 +148,20 @@ const platformStats = [
 export default function CapabilitiesPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-capabilities">
+      <WebPageJsonLd
+        title="GoRigo AI Call Centre Capabilities"
+        description="Explore GoRigo's AI call centre capabilities in the UK. Intelligent agents, 24/7 call handling, GDPR compliance, real-time analytics, multi-language support, and pay-per-talk-time billing."
+        url="/capabilities"
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Capabilities", url: "/capabilities" },
+        ]}
+      />
       <Navbar />
+
+      <Breadcrumbs items={[{ label: "Capabilities" }]} />
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
@@ -273,30 +298,10 @@ export default function CapabilitiesPage() {
         </div>
       </section>
 
-      <section className="py-20 border-t border-border/50" data-testid="section-cta">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-light tracking-tight">
-            Ready to Transform Your Call Centre?
-          </h2>
-          <p className="mt-4 text-base text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            Start with a free demo call to hear GoRigo in action. No commitment,
-            no credit card, just a conversation with our AI to see what it can do
-            for your business.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button asChild>
-              <Link href="/contact" data-testid="link-cta-contact">
-                Book a Demo
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/pricing" data-testid="link-cta-pricing">
-                View Pricing
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <ConversionCta
+        headline="See What GoRigo Can Do for Your Business"
+        subheadline="From AI agents to real-time analytics, GoRigo handles your calls so you can focus on growth. No subscriptions, no seat licences."
+      />
 
       <Footer />
     </div>

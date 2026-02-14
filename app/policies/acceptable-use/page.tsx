@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Acceptable Use Policy | GoRigo",
@@ -12,12 +14,34 @@ export const metadata: Metadata = {
       "Acceptable Use Policy for the GoRigo AI call centre platform. Understand what is and is not permitted.",
     siteName: "GoRigo",
   },
+  twitter: {
+    card: "summary",
+    title: "Acceptable Use Policy | GoRigo",
+    description:
+      "Acceptable Use Policy for the GoRigo AI call centre platform. Understand what is and is not permitted.",
+  },
+  alternates: {
+    canonical: "/policies/acceptable-use",
+  },
 };
 
 export default function AcceptableUsePolicyPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-acceptable-use">
+      <WebPageJsonLd
+        title="Acceptable Use Policy | GoRigo"
+        description="Acceptable Use Policy for the GoRigo AI call centre platform. Understand what is and is not permitted."
+        url="/policies/acceptable-use"
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Acceptable Use Policy", url: "/policies/acceptable-use" },
+        ]}
+      />
       <Navbar />
+
+      <Breadcrumbs items={[{ label: "Acceptable Use Policy" }]} />
 
       <div className="max-w-4xl mx-auto px-6 py-16">
         <h1

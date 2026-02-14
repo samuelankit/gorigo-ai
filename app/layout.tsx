@@ -10,7 +10,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "GoRigo - AI Call Centre Platform | International Business Exchange Limited",
   description:
-    "AI-powered call centre platform by International Business Exchange Limited. Inbound receptionist, outbound sales, and seamless human handoff. Pay only for talk time. UK compliant.",
+    "AI-powered call centre platform by International Business Exchange Limited. Deploy intelligent voice agents that handle inbound and outbound calls 24/7. Pay only for talk time. UK compliant with GDPR, DNC registry, and consent management.",
+  keywords: "AI call centre, AI voice agents, UK call centre, automated calls, call centre platform, pay per talk time",
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "/favicon.png",
     apple: "/logo.png",

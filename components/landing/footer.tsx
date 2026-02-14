@@ -4,11 +4,21 @@ import Link from "next/link";
 import { CallCtaBar } from "./call-cta-bar";
 
 const platformLinks = [
-  { label: "Features", href: "/#features" },
+  { label: "Capabilities", href: "/capabilities" },
+  { label: "AI Agents", href: "/features/ai-agents" },
+  { label: "Call Handling", href: "/features/call-handling" },
+  { label: "Compliance", href: "/features/compliance" },
+  { label: "Analytics", href: "/features/analytics" },
+  { label: "Multi-Language", href: "/features/multi-language" },
+  { label: "Pay Per Talk Time", href: "/features/pay-per-talk-time" },
+];
+
+const resourceLinks = [
   { label: "Pricing", href: "/pricing" },
   { label: "Partners", href: "/partners" },
   { label: "Documentation", href: "/docs" },
-  { label: "Getting Started Guide", href: "/guide" },
+  { label: "Getting Started", href: "/guide" },
+  { label: "Sitemap", href: "/sitemap" },
 ];
 
 const companyLinks = [
@@ -30,7 +40,7 @@ export function Footer() {
     <footer className="border-t border-border/50 pb-16">
       <CallCtaBar />
       <div className="mx-auto max-w-7xl px-6 py-14">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-5">
           <div className="col-span-2 sm:col-span-1 flex flex-col gap-3">
             <Link
               href="/"
@@ -58,10 +68,29 @@ export function Footer() {
 
           <div>
             <h3 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
-              Engine
+              Capabilities
             </h3>
             <ul className="flex flex-col gap-2.5">
               {platformLinks.map((link) => (
+                <li key={link.href + link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-4">
+              Resources
+            </h3>
+            <ul className="flex flex-col gap-2.5">
+              {resourceLinks.map((link) => (
                 <li key={link.href + link.label}>
                   <Link
                     href={link.href}

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
+import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -34,6 +37,15 @@ export const metadata: Metadata = {
     title: "Pay Per Talk Time | GoRigo.ai",
     description:
       "No seat licences, no subscriptions, no per-agent fees. Only pay for the actual minutes your AI agents spend on calls. Transparent, predictable, and fair billing.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pay Per Talk Time | GoRigo.ai",
+    description:
+      "No seat licences, no subscriptions, no per-agent fees. Only pay for the actual minutes your AI agents spend on calls. Transparent, predictable, and fair billing.",
+  },
+  alternates: {
+    canonical: "/features/pay-per-talk-time",
   },
 };
 
@@ -128,7 +140,11 @@ const faqs = [
 export default function PayPerTalkTimePage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-pay-per-talk-time">
+      <WebPageJsonLd title="Pay Per Talk Time" description="No seat licences, no subscriptions, no per-agent fees. Only pay for the actual minutes your AI agents spend on calls. Transparent, predictable, and fair billing." url="/features/pay-per-talk-time" />
+      <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "Pay Per Talk Time", url: "/features/pay-per-talk-time" }]} />
+      <FAQJsonLd items={faqs.map(f => ({ question: f.question, answer: f.answer }))} />
       <Navbar />
+      <Breadcrumbs items={[{ label: "Capabilities", href: "/capabilities" }, { label: "Pay Per Talk Time" }]} />
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
@@ -416,6 +432,7 @@ export default function PayPerTalkTimePage() {
         </div>
       </section>
 
+      <ConversionCta />
       <Footer />
     </div>
   );

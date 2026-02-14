@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
+import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -32,6 +35,15 @@ export const metadata: Metadata = {
     title: "Real-Time Analytics | GoRigo.ai",
     description:
       "See what is happening across your AI call centre as it happens. Live dashboards, sentiment analysis, call quality scoring, and actionable insights to improve every interaction.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Real-Time Analytics | GoRigo.ai",
+    description:
+      "See what is happening across your AI call centre as it happens. Live dashboards, sentiment analysis, call quality scoring, and actionable insights to improve every interaction.",
+  },
+  alternates: {
+    canonical: "/features/analytics",
   },
 };
 
@@ -135,7 +147,11 @@ const faqs = [
 export default function AnalyticsPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-analytics">
+      <WebPageJsonLd title="Real-Time Analytics" description="See what is happening across your AI call centre as it happens. Live dashboards, sentiment analysis, call quality scoring, and actionable insights to improve every interaction." url="/features/analytics" />
+      <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "Real-Time Analytics", url: "/features/analytics" }]} />
+      <FAQJsonLd items={faqs.map(f => ({ question: f.question, answer: f.answer }))} />
       <Navbar />
+      <Breadcrumbs items={[{ label: "Capabilities", href: "/capabilities" }, { label: "Real-Time Analytics" }]} />
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
@@ -362,6 +378,7 @@ export default function AnalyticsPage() {
         </div>
       </section>
 
+      <ConversionCta />
       <Footer />
     </div>
   );

@@ -5,11 +5,24 @@ const BASE_URL = "https://gorigo.ai";
 const pages: { path: string; priority: number; changefreq: string }[] = [
   { path: "/", priority: 1.0, changefreq: "daily" },
 
+  { path: "/capabilities", priority: 0.9, changefreq: "weekly" },
+  { path: "/features/ai-agents", priority: 0.9, changefreq: "weekly" },
+  { path: "/features/call-handling", priority: 0.9, changefreq: "weekly" },
+  { path: "/features/compliance", priority: 0.9, changefreq: "weekly" },
+  { path: "/features/analytics", priority: 0.9, changefreq: "weekly" },
+  { path: "/features/multi-language", priority: 0.9, changefreq: "weekly" },
+  { path: "/features/pay-per-talk-time", priority: 0.9, changefreq: "weekly" },
+
   { path: "/pricing", priority: 0.8, changefreq: "weekly" },
   { path: "/about", priority: 0.8, changefreq: "monthly" },
   { path: "/contact", priority: 0.8, changefreq: "monthly" },
   { path: "/docs", priority: 0.8, changefreq: "weekly" },
 
+  { path: "/partners", priority: 0.8, changefreq: "monthly" },
+  { path: "/partners/whitelabel", priority: 0.7, changefreq: "monthly" },
+  { path: "/partners/affiliate", priority: 0.7, changefreq: "monthly" },
+
+  { path: "/guide", priority: 0.6, changefreq: "monthly" },
   { path: "/guide/overview", priority: 0.6, changefreq: "monthly" },
   { path: "/guide/agents", priority: 0.6, changefreq: "monthly" },
   { path: "/guide/knowledge-base", priority: 0.6, changefreq: "monthly" },

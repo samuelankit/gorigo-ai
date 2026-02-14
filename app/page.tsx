@@ -5,6 +5,7 @@ import { Footer } from "@/components/landing/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/json-ld";
 import {
   Phone,
   Bot,
@@ -188,6 +189,13 @@ const capabilities = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-home">
+      <OrganizationJsonLd />
+      <WebPageJsonLd 
+        title="GoRigo - AI Call Centre Platform | 24/7 Voice Agents" 
+        description="AI-powered call centre platform by International Business Exchange Limited. Deploy intelligent voice agents that handle calls 24/7. Pay only for talk time. UK compliant." 
+        url="/" 
+      />
+      <SoftwareApplicationJsonLd />
       <Navbar />
 
       <section className="relative" data-testid="section-hero">

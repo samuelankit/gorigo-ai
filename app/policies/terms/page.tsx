@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Terms of Service | GoRigo",
@@ -12,12 +14,34 @@ export const metadata: Metadata = {
       "Terms of Service governing the use of the GoRigo AI call centre platform.",
     siteName: "GoRigo",
   },
+  twitter: {
+    card: "summary",
+    title: "Terms of Service | GoRigo",
+    description:
+      "Terms of Service governing the use of the GoRigo AI call centre platform.",
+  },
+  alternates: {
+    canonical: "/policies/terms",
+  },
 };
 
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-terms">
+      <WebPageJsonLd
+        title="Terms of Service | GoRigo"
+        description="Terms of Service governing the use of the GoRigo AI call centre platform."
+        url="/policies/terms"
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Terms of Service", url: "/policies/terms" },
+        ]}
+      />
       <Navbar />
+
+      <Breadcrumbs items={[{ label: "Terms of Service" }]} />
 
       <div className="max-w-4xl mx-auto px-6 py-16">
         <h1

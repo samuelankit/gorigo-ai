@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Cookie Policy | GoRigo",
@@ -12,12 +14,34 @@ export const metadata: Metadata = {
       "Learn about the cookies GoRigo uses, why we use them, and how to manage your cookie preferences.",
     siteName: "GoRigo",
   },
+  twitter: {
+    card: "summary",
+    title: "Cookie Policy | GoRigo",
+    description:
+      "Learn about the cookies GoRigo uses, why we use them, and how to manage your cookie preferences.",
+  },
+  alternates: {
+    canonical: "/policies/cookies",
+  },
 };
 
 export default function CookiePolicyPage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-cookie-policy">
+      <WebPageJsonLd
+        title="Cookie Policy | GoRigo"
+        description="Learn about the cookies GoRigo uses, why we use them, and how to manage your cookie preferences."
+        url="/policies/cookies"
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Cookie Policy", url: "/policies/cookies" },
+        ]}
+      />
       <Navbar />
+
+      <Breadcrumbs items={[{ label: "Cookie Policy" }]} />
 
       <div className="max-w-4xl mx-auto px-6 py-16">
         <h1

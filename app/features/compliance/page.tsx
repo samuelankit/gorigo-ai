@@ -140,31 +140,49 @@ export default function CompliancePage() {
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
-        <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-20 text-center">
-          <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6" data-testid="badge-feature">
-            Feature
-          </p>
-          <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1]"
-            data-testid="text-hero-title"
-          >
-            UK Compliant
-          </h1>
-          <p
-            className="mt-4 text-xl text-muted-foreground font-light"
-            data-testid="text-hero-subtitle"
-          >
-            Built for British Business Regulations
-          </p>
-          <p
-            className="mt-6 text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed"
-            data-testid="text-hero-intro"
-          >
-            Compliance is not an add-on with GoRigo. It is built into every call from the
-            very first second. GDPR, DNC registry checks, consent management, and PII
-            redaction all happen automatically, so your business stays on the right side
-            of UK regulations without any extra effort from your team.
-          </p>
+        <div className="relative max-w-6xl mx-auto px-6 pt-28 pb-20">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            <div className="w-full lg:w-1/2 flex-shrink-0">
+              <div className="rounded-md overflow-hidden border border-border/50 shadow-lg">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-auto object-cover"
+                  data-testid="video-feature-intro"
+                >
+                  <source src="/features/compliance-intro.mp4" type="video/mp4" />
+                </video>
+              </div>
+            </div>
+            <div className="w-full lg:w-1/2 text-center lg:text-left">
+              <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6" data-testid="badge-feature">
+                Feature
+              </p>
+              <h1
+                className="text-4xl sm:text-5xl lg:text-5xl font-light tracking-tight leading-[1.1]"
+                data-testid="text-hero-title"
+              >
+                UK Compliant
+              </h1>
+              <p
+                className="mt-4 text-xl text-muted-foreground font-light"
+                data-testid="text-hero-subtitle"
+              >
+                Built for British Business Regulations
+              </p>
+              <p
+                className="mt-6 text-base text-muted-foreground leading-relaxed"
+                data-testid="text-hero-intro"
+              >
+                Compliance is not an add-on with GoRigo. It is built into every call from the
+                very first second. GDPR, DNC registry checks, consent management, and PII
+                redaction all happen automatically, so your business stays on the right side
+                of UK regulations without any extra effort from your team.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

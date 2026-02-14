@@ -137,31 +137,49 @@ export default function AIAgentsPage() {
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
-        <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-20 text-center">
-          <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6" data-testid="badge-feature">
-            Feature
-          </p>
-          <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1]"
-            data-testid="text-hero-title"
-          >
-            AI-Powered Agents
-          </h1>
-          <p
-            className="mt-4 text-xl text-muted-foreground font-light"
-            data-testid="text-hero-subtitle"
-          >
-            Your Tireless Team of Virtual Call Handlers
-          </p>
-          <p
-            className="mt-6 text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed"
-            data-testid="text-hero-intro"
-          >
-            GoRigo AI voice agents work just like your best human agents, but they never
-            take breaks, never call in sick, and can handle thousands of calls at the same
-            time. They listen to what callers say, understand what they need, and respond
-            in a natural, conversational way.
-          </p>
+        <div className="relative max-w-6xl mx-auto px-6 pt-28 pb-20">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            <div className="w-full lg:w-1/2 flex-shrink-0">
+              <div className="rounded-md overflow-hidden border border-border/50 shadow-lg">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-auto object-cover"
+                  data-testid="video-feature-intro"
+                >
+                  <source src="/features/ai-agents-intro.mp4" type="video/mp4" />
+                </video>
+              </div>
+            </div>
+            <div className="w-full lg:w-1/2 text-center lg:text-left">
+              <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6" data-testid="badge-feature">
+                Feature
+              </p>
+              <h1
+                className="text-4xl sm:text-5xl lg:text-5xl font-light tracking-tight leading-[1.1]"
+                data-testid="text-hero-title"
+              >
+                AI-Powered Agents
+              </h1>
+              <p
+                className="mt-4 text-xl text-muted-foreground font-light"
+                data-testid="text-hero-subtitle"
+              >
+                Your Tireless Team of Virtual Call Handlers
+              </p>
+              <p
+                className="mt-6 text-base text-muted-foreground leading-relaxed"
+                data-testid="text-hero-intro"
+              >
+                GoRigo AI voice agents work just like your best human agents, but they never
+                take breaks, never call in sick, and can handle thousands of calls at the same
+                time. They listen to what callers say, understand what they need, and respond
+                in a natural, conversational way.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -192,40 +192,58 @@ export default function HomePage() {
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
-        <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-24 text-center">
-          <p
-            className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6"
-            data-testid="text-hero-label"
-          >
-            AI Call Centre Engine
-          </p>
-          <h1
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] max-w-4xl mx-auto"
-            data-testid="text-hero-title"
-          >
-            Your AI Call Center,
-            <br />
-            <span className="font-light">Ready in Minutes</span>
-          </h1>
-          <p
-            className="mt-8 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"
-            data-testid="text-hero-subtitle"
-          >
-            Deploy AI-powered voice agents that handle calls with human-like
-            conversations. No subscriptions — pay only for talk time.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
-            <Link href="/register">
-              <Button size="lg" data-testid="button-hero-get-started">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button variant="outline" size="lg" data-testid="button-hero-demo">
-                Book a Demo
-              </Button>
-            </Link>
+        <div className="relative max-w-6xl mx-auto px-6 pt-28 pb-24">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            <div className="w-full lg:w-1/2 flex-shrink-0">
+              <div className="rounded-md overflow-hidden border border-border/50 shadow-lg">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-auto object-cover"
+                  data-testid="video-hero-intro"
+                >
+                  <source src="/intro-video.mp4" type="video/mp4" />
+                </video>
+              </div>
+            </div>
+            <div className="w-full lg:w-1/2 text-center lg:text-left">
+              <p
+                className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6"
+                data-testid="text-hero-label"
+              >
+                AI Call Centre Engine
+              </p>
+              <h1
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
+                data-testid="text-hero-title"
+              >
+                Your AI Call Center,
+                <br />
+                <span className="font-light">Ready in Minutes</span>
+              </h1>
+              <p
+                className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed"
+                data-testid="text-hero-subtitle"
+              >
+                Deploy AI-powered voice agents that handle calls with human-like
+                conversations. No subscriptions — pay only for talk time.
+              </p>
+              <div className="mt-8 flex items-center justify-center lg:justify-start gap-3 flex-wrap">
+                <Link href="/register">
+                  <Button size="lg" data-testid="button-hero-get-started">
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button variant="outline" size="lg" data-testid="button-hero-demo">
+                    Book a Demo
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

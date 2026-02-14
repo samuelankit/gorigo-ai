@@ -12,7 +12,7 @@ interface GuideHeaderProps {
 
 export function GuideHeader({ showBack = false, backHref = "/guide", backLabel = "All Guides" }: GuideHeaderProps) {
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-14 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
           {showBack && (

@@ -201,18 +201,10 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-background to-violet-500/5 px-4">
-      <Suspense
-        fallback={
-          <Card className="w-full max-w-md shadow-lg">
-            <CardContent className="flex items-center justify-center py-12">
-              <div className="text-muted-foreground">Loading...</div>
-            </CardContent>
-          </Card>
-        }
-      >
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-background"><div className="animate-pulse text-muted-foreground">Loading...</div></div>}>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-background to-violet-500/5 px-4">
         <ResetPasswordForm />
-      </Suspense>
-    </div>
+      </div>
+    </Suspense>
   );
 }

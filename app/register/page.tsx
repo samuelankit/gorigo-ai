@@ -15,6 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Headphones, Link2 } from "lucide-react";
+import { Navbar } from "@/components/landing/navbar";
+import { Footer } from "@/components/landing/footer";
 
 export default function RegisterPage() {
   return (
@@ -94,7 +96,9 @@ function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-background to-violet-500/5 px-4">
+    <>
+    <Navbar />
+    <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-background to-violet-500/5 px-4 py-8">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center pb-2">
           <div className="flex flex-col items-center gap-3 mb-3">
@@ -211,5 +215,7 @@ function RegisterForm() {
         </form>
       </Card>
     </div>
+    <Footer />
+    </>
   );
 }

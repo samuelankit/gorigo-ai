@@ -15,6 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Headphones } from "lucide-react";
+import { Navbar } from "@/components/landing/navbar";
+import { Footer } from "@/components/landing/footer";
 
 function LoginForm() {
   const router = useRouter();
@@ -75,7 +77,9 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-background to-violet-500/5 px-4">
+    <>
+    <Navbar />
+    <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-background to-violet-500/5 px-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center pb-2">
           <div className="flex flex-col items-center gap-3 mb-3">
@@ -165,6 +169,8 @@ function LoginForm() {
         </form>
       </Card>
     </div>
+    <Footer />
+    </>
   );
 }
 

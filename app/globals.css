@@ -9,49 +9,49 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 210 14% 97%;
-  --foreground: 210 11% 15%;
-  --border: 210 14% 89%;
+  --background: 120 18% 97%;
+  --foreground: 150 20% 13%;
+  --border: 140 12% 88%;
 
   --card: 0 0% 100%;
-  --card-foreground: 210 11% 15%;
-  --card-border: 210 14% 91%;
+  --card-foreground: 150 20% 13%;
+  --card-border: 140 12% 90%;
 
-  --sidebar: 210 14% 95%;
-  --sidebar-foreground: 210 11% 20%;
-  --sidebar-border: 210 14% 87%;
-  --sidebar-primary: 207 100% 41%;
+  --sidebar: 140 14% 95%;
+  --sidebar-foreground: 150 18% 18%;
+  --sidebar-border: 140 12% 86%;
+  --sidebar-primary: 148 72% 34%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 207 100% 41%;
+  --sidebar-accent: 148 72% 34%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 207 100% 41%;
+  --sidebar-ring: 148 72% 34%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 210 11% 15%;
-  --popover-border: 210 14% 89%;
+  --popover-foreground: 150 20% 13%;
+  --popover-border: 140 12% 88%;
 
-  --primary: 207 100% 41%;
+  --primary: 148 72% 34%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 14% 93%;
-  --secondary-foreground: 210 11% 25%;
+  --secondary: 140 14% 93%;
+  --secondary-foreground: 150 18% 22%;
 
-  --muted: 210 14% 95%;
-  --muted-foreground: 210 9% 46%;
+  --muted: 140 12% 94%;
+  --muted-foreground: 150 8% 44%;
 
-  --accent: 207 100% 41%;
+  --accent: 168 60% 36%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 210 14% 83%;
-  --ring: 207 100% 41%;
-  --chart-1: 207 100% 41%;
-  --chart-2: 160 84% 39%;
+  --input: 140 12% 82%;
+  --ring: 148 72% 34%;
+  --chart-1: 148 72% 34%;
+  --chart-2: 168 60% 36%;
   --chart-3: 38 92% 50%;
-  --chart-4: 0 84% 60%;
-  --chart-5: 142 71% 45%;
+  --chart-4: 262 78% 60%;
+  --chart-5: 195 85% 45%;
 
   --font-sans: 'Segoe UI', 'Segoe UI Variable', 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: Georgia, serif;
@@ -92,49 +92,49 @@
   --elevate-1: rgba(255,255,255, .03);
   --elevate-2: rgba(255,255,255, .07);
 
-  --background: 240 6% 6%;
-  --foreground: 210 20% 92%;
-  --border: 240 4% 14%;
+  --background: 150 20% 6%;
+  --foreground: 120 14% 92%;
+  --border: 150 8% 14%;
 
-  --card: 240 5% 9%;
-  --card-foreground: 210 20% 92%;
-  --card-border: 240 4% 15%;
+  --card: 150 16% 9%;
+  --card-foreground: 120 14% 92%;
+  --card-border: 150 8% 15%;
 
-  --sidebar: 240 6% 5%;
-  --sidebar-foreground: 210 14% 85%;
-  --sidebar-border: 240 4% 13%;
-  --sidebar-primary: 207 90% 54%;
+  --sidebar: 150 18% 5%;
+  --sidebar-foreground: 140 12% 84%;
+  --sidebar-border: 150 8% 13%;
+  --sidebar-primary: 148 65% 42%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 207 90% 54%;
+  --sidebar-accent: 148 65% 42%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 207 90% 54%;
+  --sidebar-ring: 148 65% 42%;
 
-  --popover: 240 5% 10%;
-  --popover-foreground: 210 20% 92%;
-  --popover-border: 240 4% 16%;
+  --popover: 150 16% 10%;
+  --popover-foreground: 120 14% 92%;
+  --popover-border: 150 8% 16%;
 
-  --primary: 207 90% 54%;
+  --primary: 148 65% 42%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 240 4% 14%;
-  --secondary-foreground: 210 14% 78%;
+  --secondary: 150 8% 14%;
+  --secondary-foreground: 140 12% 78%;
 
-  --muted: 240 4% 12%;
-  --muted-foreground: 215 8% 46%;
+  --muted: 150 8% 12%;
+  --muted-foreground: 148 8% 46%;
 
-  --accent: 207 90% 54%;
+  --accent: 168 55% 40%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 240 4% 18%;
-  --ring: 207 90% 54%;
-  --chart-1: 207 100% 50%;
-  --chart-2: 160 84% 42%;
+  --input: 150 8% 18%;
+  --ring: 148 65% 42%;
+  --chart-1: 148 72% 42%;
+  --chart-2: 168 60% 40%;
   --chart-3: 38 92% 55%;
-  --chart-4: 0 72% 55%;
-  --chart-5: 142 71% 50%;
+  --chart-4: 262 78% 58%;
+  --chart-5: 195 85% 50%;
 
   --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);

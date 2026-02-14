@@ -29,36 +29,42 @@ const features = [
   {
     icon: Bot,
     title: "AI-Powered Agents",
+    href: "/features/ai-agents",
     description:
       "Deploy intelligent voice agents that handle inbound and outbound calls with natural, human-like conversation.",
   },
   {
     icon: Phone,
     title: "24/7 Call Handling",
+    href: "/features/call-handling",
     description:
       "Never miss a call. Your AI agents work around the clock, handling enquiries, bookings, and support requests.",
   },
   {
     icon: Shield,
     title: "UK Compliant",
+    href: "/features/compliance",
     description:
       "Built-in GDPR, DNC registry, consent management, and PII redaction. Fully compliant with UK regulations from day one.",
   },
   {
     icon: BarChart3,
     title: "Real-Time Analytics",
+    href: "/features/analytics",
     description:
       "Live dashboards with call quality scoring, sentiment analysis, and actionable insights to improve every interaction.",
   },
   {
     icon: Globe,
     title: "Multi-Language Support",
+    href: "/features/multi-language",
     description:
       "Serve customers in their preferred language. AI agents adapt to regional accents and multilingual conversations.",
   },
   {
     icon: Zap,
     title: "Pay Per Talk Time",
+    href: "/features/pay-per-talk-time",
     description:
       "No seat licences. No subscriptions. Only pay for the minutes your AI agents spend on actual calls.",
   },
@@ -246,16 +252,20 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border/50 rounded-md overflow-hidden border border-border/50">
             {features.map((feature) => (
-              <div
+              <Link
                 key={feature.title}
-                className="bg-background p-8"
+                href={feature.href}
+                className="bg-background p-8 group"
                 data-testid={`card-feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <h3 className="font-medium text-base mb-2">{feature.title}</h3>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-medium text-base mb-2">{feature.title}</h3>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1 shrink-0" />
+                </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

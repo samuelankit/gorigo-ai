@@ -1,5 +1,3 @@
-"use client";
-
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { Button } from "@/components/ui/button";
@@ -209,6 +207,7 @@ export default function HomePage() {
                   loop
                   muted
                   playsInline
+                  preload="metadata"
                   className="w-full h-auto object-cover"
                   data-testid="video-hero-intro"
                 >

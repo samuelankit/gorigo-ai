@@ -168,12 +168,12 @@ const packages = [
 ];
 
 const capabilities = [
-  { icon: Headphones, label: "Voice AI" },
-  { icon: Shield, label: "Compliance" },
-  { icon: BarChart3, label: "Analytics" },
-  { icon: Globe, label: "Multi-Language" },
-  { icon: Lock, label: "Data Security" },
-  { icon: Zap, label: "Pay-Per-Use" },
+  { icon: Headphones, label: "Voice AI", color: "text-teal-500" },
+  { icon: Shield, label: "Compliance", color: "text-blue-500" },
+  { icon: BarChart3, label: "Analytics", color: "text-violet-500" },
+  { icon: Globe, label: "Multi-Language", color: "text-amber-500" },
+  { icon: Lock, label: "Data Security", color: "text-rose-500" },
+  { icon: Zap, label: "Pay-Per-Use", color: "text-emerald-500" },
 ];
 
 export default function HomePage() {
@@ -230,7 +230,7 @@ export default function HomePage() {
                 className="flex items-center gap-2 text-muted-foreground"
                 data-testid={`stat-${cap.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
               >
-                <cap.icon className="h-4 w-4" />
+                <cap.icon className={`h-4 w-4 ${cap.color}`} />
                 <span className="text-sm">{cap.label}</span>
               </div>
             ))}

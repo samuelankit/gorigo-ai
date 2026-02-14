@@ -31,18 +31,21 @@ const values = [
     title: "Automation First",
     description:
       "We believe the best call centre is one that runs itself. Every feature is designed to reduce manual work.",
+    color: "text-emerald-500",
   },
   {
     icon: Eye,
     title: "Transparency",
     description:
       "No hidden fees, no lock-in contracts, no surprises. Talk-time billing means you only pay for what you use.",
+    color: "text-sky-500",
   },
   {
     icon: Shield,
     title: "Compliance by Design",
     description:
       "From DNC registries to PII redaction, compliance isn\u2019t an afterthought \u2014 it\u2019s built into the platform from the ground up.",
+    color: "text-blue-500",
   },
 ];
 
@@ -52,18 +55,21 @@ const partners = [
     title: "Business Partners",
     description:
       "White-label GoRigo under your own brand. Resell AI call centre capabilities to your clients with full platform access and dedicated support.",
+    color: "text-violet-500",
   },
   {
     icon: Users,
     title: "Direct-to-Consumer",
     description:
       "Sign up directly and deploy your own AI agents. Ideal for businesses that want to manage their call centre operations in-house.",
+    color: "text-pink-500",
   },
   {
     icon: Handshake,
     title: "Affiliate Partners",
     description:
       "Refer businesses to GoRigo and earn commissions on every customer you bring to the platform. Simple tracking, transparent payouts.",
+    color: "text-amber-500",
   },
 ];
 
@@ -153,7 +159,7 @@ export default function AboutPage() {
                 data-testid={`card-value-${value.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <value.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <value.icon className={`h-5 w-5 ${value.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{value.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {value.description}
@@ -192,7 +198,7 @@ export default function AboutPage() {
                 data-testid={`card-partner-${partner.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <partner.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <partner.icon className={`h-5 w-5 ${partner.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">
                     {partner.title}
                   </h3>

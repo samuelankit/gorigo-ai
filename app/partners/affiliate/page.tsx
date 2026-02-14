@@ -90,16 +90,16 @@ const howItWorksSteps = [
 ];
 
 const includedItems = [
-  { icon: Link2, label: "Unique referral link with tracking" },
-  { icon: BarChart3, label: "Real-time affiliate dashboard" },
-  { icon: MousePointerClick, label: "Click and conversion tracking" },
-  { icon: FileText, label: "Monthly commission reports" },
-  { icon: Image, label: "Marketing materials (banners, copy, templates)" },
-  { icon: HeadphonesIcon, label: "Dedicated affiliate support" },
-  { icon: Infinity, label: "No cap on earnings" },
-  { icon: Cookie, label: "Cookie tracking (90-day attribution window)" },
-  { icon: Network, label: "Multi-tier commission potential (earn from sub-affiliates)" },
-  { icon: BookOpen, label: "Promotional guidelines and brand assets" },
+  { icon: Link2, label: "Unique referral link with tracking", color: "text-fuchsia-500" },
+  { icon: BarChart3, label: "Real-time affiliate dashboard", color: "text-violet-500" },
+  { icon: MousePointerClick, label: "Click and conversion tracking", color: "text-sky-500" },
+  { icon: FileText, label: "Monthly commission reports", color: "text-indigo-500" },
+  { icon: Image, label: "Marketing materials (banners, copy, templates)", color: "text-pink-500" },
+  { icon: HeadphonesIcon, label: "Dedicated affiliate support", color: "text-cyan-500" },
+  { icon: Infinity, label: "No cap on earnings", color: "text-emerald-500" },
+  { icon: Cookie, label: "Cookie tracking (90-day attribution window)", color: "text-amber-500" },
+  { icon: Network, label: "Multi-tier commission potential (earn from sub-affiliates)", color: "text-teal-500" },
+  { icon: BookOpen, label: "Promotional guidelines and brand assets", color: "text-orange-500" },
 ];
 
 const benefits = [
@@ -108,36 +108,42 @@ const benefits = [
     title: "Passive Income",
     description:
       "Earn recurring commissions month after month. Every time your referred client uses GoRigo for their calls, you earn a percentage of their usage. This is not a one-off payment — it continues for as long as they remain an active customer.",
+    color: "text-orange-500",
   },
   {
     icon: Gift,
     title: "Zero Cost to Join",
     description:
       "There are no signup fees, no monthly fees, and no hidden charges. Creating your affiliate account is completely free, and you will never be asked to pay anything to participate in the programme.",
+    color: "text-emerald-500",
   },
   {
     icon: Laptop,
     title: "No Technical Skills Needed",
     description:
       "You do not need to understand AI, call centres, or any technical systems. All you need to do is share your referral link. We handle everything else, from onboarding the client to managing their account.",
+    color: "text-sky-500",
   },
   {
     icon: Eye,
     title: "Real-Time Tracking",
     description:
       "See every click, signup, and commission in your affiliate dashboard. You will always know exactly how your referrals are performing and how much you have earned, updated in real time.",
+    color: "text-violet-500",
   },
   {
     icon: Timer,
     title: "Long Cookie Window",
     description:
       "Our 90-day attribution window means that if someone clicks your link today but does not sign up until three months later, you still earn the commission. No rushed decisions needed.",
+    color: "text-rose-500",
   },
   {
     icon: Users,
     title: "Grow Your Network",
     description:
       "Earn from sub-affiliates you bring into the programme. When you refer other affiliates who then refer clients, you can earn additional commissions from their activity as well.",
+    color: "text-pink-500",
   },
 ];
 
@@ -147,36 +153,42 @@ const affiliateProfiles = [
     title: "Business Consultants and Advisors",
     description:
       "You already advise businesses on how to operate more efficiently. Recommending GoRigo as part of your service offering is a natural fit. Help your clients reduce call handling costs while earning a commission for every referral.",
+    color: "text-purple-500",
   },
   {
     icon: PenTool,
     title: "Industry Bloggers and Content Creators",
     description:
       "If you write about business technology, customer service, or operational efficiency, your audience is already looking for solutions like GoRigo. Share your referral link in your content and earn from every reader who signs up.",
+    color: "text-pink-500",
   },
   {
     icon: Share2,
     title: "Social Media Influencers",
     description:
       "Share GoRigo with your business-focused followers. Whether you create short-form content, host webinars, or run a professional community, your recommendation carries weight and can generate ongoing commissions.",
+    color: "text-fuchsia-500",
   },
   {
     icon: UserCheck,
     title: "Existing GoRigo Clients",
     description:
       "Love the product? You are in the best position to recommend it. Refer other businesses and earn commissions while helping them discover a tool you already use and trust. Your firsthand experience makes you the most credible advocate.",
+    color: "text-green-500",
   },
   {
     icon: Calculator,
     title: "Accountants and Financial Advisors",
     description:
       "Help your clients save money on call handling by recommending GoRigo. You understand their costs and can demonstrate the savings. Earn a recurring commission every time a client you refer uses the platform.",
+    color: "text-orange-500",
   },
   {
     icon: UsersRound,
     title: "Networking Groups and Business Communities",
     description:
       "If you run or participate in business networking groups, chambers of commerce, or professional associations, sharing GoRigo with your network is an easy way to add value for members while earning for every signup.",
+    color: "text-amber-500",
   },
 ];
 
@@ -209,72 +221,84 @@ const termsItems = [
     title: "Eligibility",
     description:
       "The affiliate programme is open to individuals and businesses worldwide, subject to applicable sanctions and legal restrictions in your jurisdiction.",
+    color: "text-amber-500",
   },
   {
     icon: TrendingUp,
     title: "Commission Structure",
     description:
       "You earn a percentage of your referred client's monthly platform usage. Exact commission rates are provided upon approval of your affiliate application.",
+    color: "text-violet-500",
   },
   {
     icon: Cookie,
     title: "Attribution",
     description:
       "A 90-day cookie window applies from the first click on your referral link. If the visitor signs up within 90 days, the referral is attributed to you.",
+    color: "text-rose-500",
   },
   {
     icon: CreditCard,
     title: "Payment",
     description:
       "Commissions are paid monthly via bank transfer. A minimum payout threshold applies. Details are provided upon approval.",
+    color: "text-orange-500",
   },
   {
     icon: Ban,
     title: "Prohibited Activities",
     description:
       "Affiliates must not engage in spam, make misleading claims about GoRigo, or bid on GoRigo-branded keywords in paid advertising without prior written approval.",
+    color: "text-red-500",
   },
   {
     icon: Image,
     title: "Brand Usage",
     description:
       "Affiliates may only use approved GoRigo marketing materials. Custom creative must be submitted for approval before use. Unauthorised use of the GoRigo brand is not permitted.",
+    color: "text-pink-500",
   },
   {
     icon: Shield,
     title: "Data Protection",
     description:
       "Affiliates must comply with GDPR and all applicable data protection regulations when handling any personal data in connection with referral activities.",
+    color: "text-blue-500",
   },
   {
     icon: AlertTriangle,
     title: "Fraud",
     description:
       "Any fraudulent activity, including fake signups, click fraud, or artificial inflation of metrics, will result in immediate termination of your affiliate account and forfeiture of all unpaid commissions.",
+    color: "text-yellow-500",
   },
   {
     icon: Handshake,
     title: "Termination",
     description:
       "Either party may end the affiliate arrangement with 14 days written notice. Any commissions already earned up to the termination date will still be paid out in the normal payment cycle.",
+    color: "text-purple-500",
   },
   {
     icon: Calendar,
     title: "Modifications",
     description:
       "GoRigo reserves the right to modify commission rates, programme terms, or the structure of the affiliate programme with 30 days notice to all active affiliates.",
+    color: "text-sky-500",
   },
   {
     icon: Gavel,
     title: "Governing Law",
     description:
       "This affiliate programme is governed by the laws of England and Wales. Any disputes will be subject to the exclusive jurisdiction of the courts of England and Wales.",
+    color: "text-indigo-500",
   },
   {
     icon: Building2,
     title: "Company",
     description:
       "The affiliate programme is operated by International Business Exchange Limited, registered in England and Wales, Company No. 15985956.",
+    color: "text-teal-500",
   },
 ];
 
@@ -395,7 +419,7 @@ export default function AffiliatePartnerPage() {
                 className="flex items-start gap-3"
                 data-testid={`what-is-point-${index}`}
               >
-                <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                 <p className="text-muted-foreground leading-relaxed">{point}</p>
               </div>
             ))}
@@ -467,7 +491,7 @@ export default function AffiliatePartnerPage() {
                 className="flex items-start gap-3 p-5 rounded-md border border-border/50"
                 data-testid={`included-item-${index}`}
               >
-                <item.icon className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                <item.icon className={`h-5 w-5 ${item.color} shrink-0 mt-0.5`} />
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {item.label}
                 </p>
@@ -497,7 +521,7 @@ export default function AffiliatePartnerPage() {
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}
@@ -529,7 +553,7 @@ export default function AffiliatePartnerPage() {
                 data-testid={`card-profile-${profile.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <profile.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <profile.icon className={`h-5 w-5 ${profile.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{profile.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {profile.description}
@@ -581,13 +605,13 @@ export default function AffiliatePartnerPage() {
           </div>
           <div className="mt-8 space-y-3">
             <div className="flex items-start gap-3" data-testid="commission-note-threshold">
-              <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+              <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Minimum payout threshold: details available upon signup
               </p>
             </div>
             <div className="flex items-start gap-3" data-testid="commission-note-ongoing">
-              <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+              <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Commissions continue for as long as the referred client remains active
               </p>
@@ -616,7 +640,7 @@ export default function AffiliatePartnerPage() {
                 className="flex items-start gap-4 p-5 rounded-md border border-border/50"
                 data-testid={`terms-item-${index}`}
               >
-                <item.icon className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                <item.icon className={`h-5 w-5 ${item.color} shrink-0 mt-0.5`} />
                 <div>
                   <p className="font-medium text-sm mb-1">{item.title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">

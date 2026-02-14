@@ -41,6 +41,7 @@ const docCategories = [
       "Webhooks",
     ],
     href: "/docs",
+    color: "text-violet-500",
   },
   {
     icon: BookOpen,
@@ -49,6 +50,7 @@ const docCategories = [
       "Step-by-step tutorials for setting up your AI call centre.",
     links: [],
     href: "/guide",
+    color: "text-indigo-500",
   },
   {
     icon: Plug,
@@ -57,6 +59,7 @@ const docCategories = [
       "Connect GoRigo with your existing tools and workflows.",
     links: ["CRM Integration", "Telephony Setup", "Webhook Configuration"],
     href: "/docs",
+    color: "text-orange-500",
   },
   {
     icon: Package,
@@ -65,6 +68,7 @@ const docCategories = [
       "Official client libraries for popular programming languages.",
     links: ["Node.js", "Python", "REST"],
     href: "/docs",
+    color: "text-emerald-500",
   },
   {
     icon: Brain,
@@ -73,6 +77,7 @@ const docCategories = [
       "Learn how to upload, manage, and optimise your AI agent's knowledge.",
     links: [],
     href: "/guide/knowledge-base",
+    color: "text-teal-500",
   },
   {
     icon: Shield,
@@ -80,6 +85,7 @@ const docCategories = [
     description: "GDPR, DNC, and data protection documentation.",
     links: [],
     href: "/guide/compliance",
+    color: "text-blue-500",
   },
 ];
 
@@ -128,7 +134,7 @@ export default function DocsPage() {
               >
                 <Card className="h-full hover-elevate">
                   <CardContent className="p-8">
-                    <cat.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                    <cat.icon className={`h-5 w-5 ${cat.color} mb-5`} />
                     <h3 className="font-medium text-lg mb-2 text-foreground">
                       {cat.title}
                     </h3>

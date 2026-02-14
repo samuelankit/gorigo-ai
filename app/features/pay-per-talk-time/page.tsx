@@ -41,24 +41,28 @@ const benefits = [
   {
     icon: Calculator,
     title: "Predictable Costs",
+    color: "text-orange-500",
     description:
       "Your bill is directly tied to how many minutes your AI agents spend on calls. No surprises, no hidden charges, and no complex pricing tiers. You can forecast your costs accurately based on your expected call volume.",
   },
   {
     icon: ScaleIcon,
     title: "Scales Up and Down Automatically",
+    color: "text-violet-500",
     description:
       "Busy month? You pay for more minutes. Quiet month? You pay for fewer. There is no need to add or remove seats, adjust licences, or renegotiate contracts. Your costs adjust naturally with your business activity.",
   },
   {
     icon: TrendingDown,
     title: "No Waste on Idle Time",
+    color: "text-emerald-500",
     description:
       "Traditional call centres charge you for agents sitting idle between calls. With GoRigo, you are never paying for downtime. If your agents are not on a call, you are not being charged. Every penny goes towards actual customer interactions.",
   },
   {
     icon: Eye,
     title: "Transparent Billing",
+    color: "text-sky-500",
     description:
       "Your dashboard shows exactly how many minutes have been used, broken down by agent, client, and time period. You can see your running total at any time and set spending limits to stay within your budget.",
   },
@@ -68,18 +72,21 @@ const useCases = [
   {
     icon: Rocket,
     title: "Startup with Low Volume",
+    color: "text-emerald-500",
     scenario:
       "A small startup receives about 50 calls per month. With a traditional call centre, they would need to pay for at least one full-time agent seat, costing hundreds of pounds per month even when the phone is not ringing. With GoRigo, they pay only for the 50 calls they actually handle, keeping costs minimal while still delivering professional service.",
   },
   {
     icon: TreePine,
     title: "Seasonal Business",
+    color: "text-green-500",
     scenario:
       "A retail business handles around 100 calls per month most of the year, but during the Christmas period, call volume surges to over 10,000. Instead of hiring temporary staff and paying for extra licences, GoRigo scales automatically. The business pays for 100 minutes in quiet months and 10,000 minutes in busy ones, with no setup changes required.",
   },
   {
     icon: Briefcase,
     title: "Agency Managing Multiple Clients",
+    color: "text-purple-500",
     scenario:
       "A marketing agency manages call handling for 15 different clients. Each client has different call volumes and needs separate billing. GoRigo tracks talk time per client, generates individual usage reports, and allows the agency to bill each client accurately for their actual usage without any manual tracking or spreadsheets.",
   },
@@ -171,7 +178,7 @@ export default function PayPerTalkTimePage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <Users className="h-4 w-4 text-pink-500" />
                   </div>
                   <span className="text-sm">Agent Seats</span>
                 </div>
@@ -180,7 +187,7 @@ export default function PayPerTalkTimePage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <DollarSign className="h-4 w-4 text-orange-500" />
                   </div>
                   <span className="text-sm">Software Licences</span>
                 </div>
@@ -189,7 +196,7 @@ export default function PayPerTalkTimePage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <Clock className="h-4 w-4 text-rose-500" />
                   </div>
                   <span className="text-sm">Overtime Costs</span>
                 </div>
@@ -198,7 +205,7 @@ export default function PayPerTalkTimePage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                    <CalendarOff className="h-4 w-4 text-muted-foreground" />
+                    <CalendarOff className="h-4 w-4 text-amber-500" />
                   </div>
                   <span className="text-sm">Holiday and Sick Pay</span>
                 </div>
@@ -219,7 +226,7 @@ export default function PayPerTalkTimePage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <Clock className="h-4 w-4 text-rose-500" />
                   </div>
                   <span className="text-sm">Actual Talk Minutes</span>
                 </div>
@@ -228,7 +235,7 @@ export default function PayPerTalkTimePage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <DollarSign className="h-4 w-4 text-orange-500" />
                   </div>
                   <span className="text-sm">Your Per-Minute Rate</span>
                 </div>
@@ -277,7 +284,7 @@ export default function PayPerTalkTimePage() {
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}
@@ -306,7 +313,7 @@ export default function PayPerTalkTimePage() {
                 data-testid={`card-usecase-${useCase.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <useCase.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <useCase.icon className={`h-5 w-5 ${useCase.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{useCase.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {useCase.scenario}

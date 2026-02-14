@@ -53,7 +53,7 @@ export default function ContactPage() {
             <div className="lg:col-span-2 space-y-4">
               <Card data-testid="card-contact-email">
                 <CardContent className="p-6">
-                  <Mail className="h-5 w-5 text-muted-foreground mb-4" />
+                  <Mail className="h-5 w-5 text-cyan-500 mb-4" />
                   <h3 className="font-medium text-base mb-3">Email Us</h3>
                   <div className="space-y-2">
                     <div>
@@ -94,7 +94,7 @@ export default function ContactPage() {
 
               <Card data-testid="card-contact-phone">
                 <CardContent className="p-6">
-                  <Phone className="h-5 w-5 text-muted-foreground mb-4" />
+                  <Phone className="h-5 w-5 text-teal-500 mb-4" />
                   <h3 className="font-medium text-base mb-3">
                     Call Our AI Demo Line
                   </h3>
@@ -112,7 +112,7 @@ export default function ContactPage() {
 
               <Card data-testid="card-contact-address">
                 <CardContent className="p-6">
-                  <MapPin className="h-5 w-5 text-muted-foreground mb-4" />
+                  <MapPin className="h-5 w-5 text-rose-500 mb-4" />
                   <h3 className="font-medium text-base mb-3">Visit Us</h3>
                   <p
                     className="text-sm text-foreground"

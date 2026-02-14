@@ -36,37 +36,41 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, label: "Call Starts", description: "An inbound or outbound call begins" },
-  { icon: Bot, label: "AI Discloses", description: "The agent tells the caller they are speaking with an AI" },
-  { icon: UserX, label: "Checks DNC Registry", description: "Outbound calls are screened against the Do Not Call list" },
-  { icon: FileCheck, label: "Records Consent", description: "Caller consent is captured and stored securely" },
-  { icon: Eye, label: "Auto-Redacts PII", description: "Personal data is scrubbed from transcripts and logs" },
-  { icon: Lock, label: "Encrypted Storage", description: "All data is encrypted at rest and in transit" },
-  { icon: ClipboardList, label: "Audit Trail Created", description: "A complete compliance record is generated" },
+  { icon: Phone, label: "Call Starts", description: "An inbound or outbound call begins", color: "text-cyan-500" },
+  { icon: Bot, label: "AI Discloses", description: "The agent tells the caller they are speaking with an AI", color: "text-teal-500" },
+  { icon: UserX, label: "Checks DNC Registry", description: "Outbound calls are screened against the Do Not Call list", color: "text-pink-500" },
+  { icon: FileCheck, label: "Records Consent", description: "Caller consent is captured and stored securely", color: "text-green-500" },
+  { icon: Eye, label: "Auto-Redacts PII", description: "Personal data is scrubbed from transcripts and logs", color: "text-sky-500" },
+  { icon: Lock, label: "Encrypted Storage", description: "All data is encrypted at rest and in transit", color: "text-blue-500" },
+  { icon: ClipboardList, label: "Audit Trail Created", description: "A complete compliance record is generated", color: "text-indigo-500" },
 ];
 
 const benefits = [
   {
     icon: ShieldCheck,
     title: "No Manual Compliance Work",
+    color: "text-blue-500",
     description:
       "Compliance happens automatically on every single call. Your team does not need to remember checklists, fill in forms, or manually scrub data. The system handles it all in real time.",
   },
   {
     icon: Bot,
     title: "Automatic AI Disclosure",
+    color: "text-teal-500",
     description:
       "UK regulations require that callers are informed when they are speaking with an AI. GoRigo handles this disclosure automatically at the start of every call, keeping you compliant from the first second.",
   },
   {
     icon: UserX,
     title: "DNC Registry Checking",
+    color: "text-pink-500",
     description:
       "Before any outbound call is placed, GoRigo automatically checks the number against the Telephone Preference Service (TPS) and Corporate TPS registers. Numbers on the list are blocked from being called.",
   },
   {
     icon: Eye,
     title: "PII Auto-Scrubbed from Transcripts",
+    color: "text-sky-500",
     description:
       "Personal information such as names, addresses, dates of birth, and payment details are automatically detected and redacted from call transcripts and logs, reducing your data exposure risk.",
   },
@@ -76,18 +80,21 @@ const useCases = [
   {
     icon: Landmark,
     title: "Financial Services and FCA Compliance",
+    color: "text-purple-500",
     scenario:
       "A financial advisory firm needs to ensure every client call meets FCA record-keeping requirements. GoRigo automatically logs all interactions, records consent for advice given, redacts sensitive financial details from transcripts, and produces audit-ready reports that regulators can review.",
   },
   {
     icon: Stethoscope,
     title: "Healthcare Provider Handling Patient Data",
+    color: "text-rose-500",
     scenario:
       "A private clinic manages hundreds of patient calls daily. GoRigo ensures that patient health information is handled according to NHS data protection standards, PII is redacted from accessible logs, and all call records are encrypted and stored in UK-based data centres.",
   },
   {
     icon: Heart,
     title: "Charity Managing Donor Calls",
+    color: "text-pink-500",
     scenario:
       "A charity running a fundraising campaign must comply with Fundraising Regulator standards. GoRigo checks donor numbers against the Fundraising Preference Service, records opt-in consent before discussing donations, and creates a transparent audit trail of every interaction.",
   },
@@ -183,7 +190,7 @@ export default function CompliancePage() {
                     <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
                   </div>
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center mb-3">
-                    <step.icon className="h-4 w-4 text-muted-foreground" />
+                    <step.icon className={`h-4 w-4 ${step.color}`} />
                   </div>
                   <p className="font-medium text-sm mb-1">{step.label}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
@@ -211,7 +218,7 @@ export default function CompliancePage() {
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}
@@ -240,7 +247,7 @@ export default function CompliancePage() {
                 data-testid={`card-usecase-${useCase.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <useCase.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <useCase.icon className={`h-5 w-5 ${useCase.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{useCase.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {useCase.scenario}

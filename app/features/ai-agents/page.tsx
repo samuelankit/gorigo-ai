@@ -35,35 +35,39 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, label: "Call Arrives", description: "A customer dials your business number" },
-  { icon: Bot, label: "AI Listens", description: "The agent picks up and actively listens" },
-  { icon: Brain, label: "Understands Intent", description: "Natural language processing identifies what the caller needs" },
-  { icon: MessageSquare, label: "Responds Naturally", description: "The agent speaks back in a natural, conversational tone" },
-  { icon: ClipboardList, label: "Logs Everything", description: "Every detail is recorded for your review" },
+  { icon: Phone, label: "Call Arrives", description: "A customer dials your business number", color: "text-cyan-500" },
+  { icon: Bot, label: "AI Listens", description: "The agent picks up and actively listens", color: "text-teal-500" },
+  { icon: Brain, label: "Understands Intent", description: "Natural language processing identifies what the caller needs", color: "text-violet-500" },
+  { icon: MessageSquare, label: "Responds Naturally", description: "The agent speaks back in a natural, conversational tone", color: "text-amber-500" },
+  { icon: ClipboardList, label: "Logs Everything", description: "Every detail is recorded for your review", color: "text-indigo-500" },
 ];
 
 const benefits = [
   {
     icon: Zap,
     title: "Never Tired",
+    color: "text-emerald-500",
     description:
       "Your AI agents do not fatigue, lose focus, or have bad days. Every single call gets the same level of attention and care, whether it is the first call of the day or the ten-thousandth.",
   },
   {
     icon: CheckCircle2,
     title: "Consistent Quality",
+    color: "text-green-500",
     description:
       "Human agents have good days and bad days. AI agents deliver the same professional, friendly experience on every call, following your exact scripts and guidelines without deviation.",
   },
   {
     icon: RefreshCw,
     title: "Instant Training Updates",
+    color: "text-blue-500",
     description:
       "Need to change a response or add a new product to your knowledge base? Updates go live instantly across all your agents. No retraining sessions or team meetings required.",
   },
   {
     icon: Layers,
     title: "Handles Thousands Simultaneously",
+    color: "text-violet-500",
     description:
       "While a human agent handles one call at a time, your AI agents can manage thousands of concurrent conversations without any drop in quality or increase in wait times.",
   },
@@ -73,18 +77,21 @@ const useCases = [
   {
     icon: Stethoscope,
     title: "Dental Clinic Booking",
+    color: "text-rose-500",
     scenario:
       "A busy dental practice receives dozens of booking calls daily. Their AI agent handles appointment scheduling, confirms availability, sends reminders, and answers common questions about treatments and pricing, freeing up reception staff to focus on patients in the clinic.",
   },
   {
     icon: Home,
     title: "Estate Agent Enquiries",
+    color: "text-purple-500",
     scenario:
       "An estate agency gets calls about property viewings at all hours. The AI agent provides property details, schedules viewings, qualifies potential buyers by asking key questions, and routes serious enquiries to the right agent with a full summary.",
   },
   {
     icon: ShoppingCart,
     title: "E-Commerce Order Status",
+    color: "text-orange-500",
     scenario:
       "An online retailer receives hundreds of calls about order tracking, returns, and delivery updates. The AI agent instantly looks up order information, provides real-time status updates, and processes simple return requests without any human involvement.",
   },
@@ -177,7 +184,7 @@ export default function AIAgentsPage() {
                   data-testid={`flow-step-${index}`}
                 >
                   <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center mb-3">
-                    <step.icon className="h-5 w-5 text-muted-foreground" />
+                    <step.icon className={`h-5 w-5 ${step.color}`} />
                   </div>
                   <p className="font-medium text-sm mb-1">{step.label}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
@@ -215,7 +222,7 @@ export default function AIAgentsPage() {
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}
@@ -244,7 +251,7 @@ export default function AIAgentsPage() {
                 data-testid={`card-usecase-${useCase.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <useCase.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <useCase.icon className={`h-5 w-5 ${useCase.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{useCase.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {useCase.scenario}

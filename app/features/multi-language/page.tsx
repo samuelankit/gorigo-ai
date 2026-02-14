@@ -35,35 +35,39 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, label: "Customer Calls", description: "A caller dials your business number in any language" },
-  { icon: Ear, label: "Language Detected", description: "The AI automatically identifies the caller's language" },
-  { icon: Languages, label: "AI Switches Language", description: "The agent seamlessly transitions to that language" },
-  { icon: MessageCircle, label: "Conversation Flows", description: "The call continues naturally in the caller's language" },
-  { icon: FileText, label: "Transcript Available", description: "Full transcript provided in original language and English" },
+  { icon: Phone, label: "Customer Calls", description: "A caller dials your business number in any language", color: "text-cyan-500" },
+  { icon: Ear, label: "Language Detected", description: "The AI automatically identifies the caller's language", color: "text-rose-500" },
+  { icon: Languages, label: "AI Switches Language", description: "The agent seamlessly transitions to that language", color: "text-amber-500" },
+  { icon: MessageCircle, label: "Conversation Flows", description: "The call continues naturally in the caller's language", color: "text-emerald-500" },
+  { icon: FileText, label: "Transcript Available", description: "Full transcript provided in original language and English", color: "text-indigo-500" },
 ];
 
 const benefits = [
   {
     icon: Globe,
     title: "Serve Global Customers",
+    color: "text-amber-500",
     description:
       "Whether your customers speak French, Spanish, Mandarin, or Arabic, your AI agents can handle the conversation. Expand your reach to international markets without any additional setup or infrastructure.",
   },
   {
     icon: UserCheck,
     title: "No Multilingual Staff Needed",
+    color: "text-pink-500",
     description:
       "Hiring and retaining staff who speak multiple languages is expensive and difficult. With GoRigo, a single AI agent can communicate fluently in dozens of languages, eliminating the need for specialist recruitment.",
   },
   {
     icon: Mic,
     title: "Automatic Accent Adaptation",
+    color: "text-cyan-500",
     description:
       "Our AI does not just understand standard dialects. It adapts to regional accents, colloquial expressions, and speech patterns, ensuring that callers from different regions are understood clearly and responded to appropriately.",
   },
   {
     icon: BookOpen,
     title: "Transcripts in Any Language",
+    color: "text-indigo-500",
     description:
       "Every call is transcribed in the original language it was conducted in, with an automatic English translation available alongside. This means your team can review any call regardless of the language it was handled in.",
   },
@@ -73,18 +77,21 @@ const useCases = [
   {
     icon: Plane,
     title: "UK Tourism Business",
+    color: "text-sky-500",
     scenario:
       "A tourism company in London serves visitors from across Europe. French and German tourists call to book tours, ask about schedules, and request directions. The AI agent detects their language within seconds and handles the entire conversation fluently, providing a welcoming experience that builds trust and drives bookings.",
   },
   {
     icon: ShoppingCart,
     title: "International E-Commerce",
+    color: "text-orange-500",
     scenario:
       "An online retailer ships to multiple countries and receives order enquiries in a variety of languages. Instead of routing calls to different language teams, a single GoRigo agent handles calls in Spanish, Italian, Portuguese, and more. Order details, delivery updates, and return requests are all managed seamlessly.",
   },
   {
     icon: HeartPulse,
     title: "Diverse Community Services",
+    color: "text-rose-500",
     scenario:
       "A healthcare-adjacent service supports a diverse community where callers speak Urdu, Bengali, Polish, and other languages. The AI agent ensures every caller can access important information in their own language, removing language barriers that might otherwise prevent people from getting the help they need.",
   },
@@ -177,7 +184,7 @@ export default function MultiLanguagePage() {
                   data-testid={`flow-step-${index}`}
                 >
                   <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center mb-3">
-                    <step.icon className="h-5 w-5 text-muted-foreground" />
+                    <step.icon className={`h-5 w-5 ${step.color}`} />
                   </div>
                   <p className="font-medium text-sm mb-1">{step.label}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
@@ -215,7 +222,7 @@ export default function MultiLanguagePage() {
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}
@@ -244,7 +251,7 @@ export default function MultiLanguagePage() {
                 data-testid={`card-usecase-${useCase.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <useCase.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <useCase.icon className={`h-5 w-5 ${useCase.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{useCase.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {useCase.scenario}

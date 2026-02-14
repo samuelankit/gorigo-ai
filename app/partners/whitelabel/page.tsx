@@ -57,28 +57,28 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: UserPlus, label: "You Sign Up", description: "Apply as a whitelabel partner" },
-  { icon: Palette, label: "We Brand It", description: "Your logo, colours, and domain" },
-  { icon: Users, label: "You Add Clients", description: "Onboard your clients to your platform" },
-  { icon: Phone, label: "Clients Use AI", description: "AI call centre under your brand" },
-  { icon: Receipt, label: "You Bill Clients", description: "At your own rates" },
-  { icon: CreditCard, label: "We Bill You", description: "At partner rates" },
-  { icon: TrendingUp, label: "You Keep the Margin", description: "The difference is your profit" },
+  { icon: UserPlus, label: "You Sign Up", description: "Apply as a whitelabel partner", color: "text-pink-500" },
+  { icon: Palette, label: "We Brand It", description: "Your logo, colours, and domain", color: "text-fuchsia-500" },
+  { icon: Users, label: "You Add Clients", description: "Onboard your clients to your platform", color: "text-violet-500" },
+  { icon: Phone, label: "Clients Use AI", description: "AI call centre under your brand", color: "text-cyan-500" },
+  { icon: Receipt, label: "You Bill Clients", description: "At your own rates", color: "text-indigo-500" },
+  { icon: CreditCard, label: "We Bill You", description: "At partner rates", color: "text-orange-500" },
+  { icon: TrendingUp, label: "You Keep the Margin", description: "The difference is your profit", color: "text-emerald-500" },
 ];
 
 const included = [
-  { icon: LayoutDashboard, title: "Fully branded dashboard", description: "Your logo, colours, and custom domain on every screen" },
-  { icon: Users, title: "Client management portal", description: "Add, remove, and manage all your clients from one place" },
-  { icon: Bot, title: "AI agent configuration", description: "Set up and customise AI agents for each of your clients" },
-  { icon: BookOpen, title: "Knowledge base management", description: "Upload documents and training materials per client" },
-  { icon: BarChart3, title: "Call analytics and reporting", description: "Per-client and aggregate reporting dashboards" },
-  { icon: DollarSign, title: "Billing management", description: "Set your own rates and track usage across all clients" },
-  { icon: Code, title: "API access", description: "Full API access for custom integrations and automation" },
-  { icon: Headphones, title: "Dedicated partner support", description: "Priority support channel for partners only" },
-  { icon: GraduationCap, title: "Training materials", description: "Comprehensive documentation and video walkthroughs" },
-  { icon: RefreshCw, title: "Regular platform updates", description: "Automatic updates with no downtime for your clients" },
-  { icon: Rocket, title: "White-glove onboarding", description: "Hands-on setup assistance for your first 3 clients" },
-  { icon: FileText, title: "Marketing templates", description: "Ready-to-use sales collateral and pitch materials" },
+  { icon: LayoutDashboard, title: "Fully branded dashboard", description: "Your logo, colours, and custom domain on every screen", color: "text-sky-500" },
+  { icon: Users, title: "Client management portal", description: "Add, remove, and manage all your clients from one place", color: "text-pink-500" },
+  { icon: Bot, title: "AI agent configuration", description: "Set up and customise AI agents for each of your clients", color: "text-teal-500" },
+  { icon: BookOpen, title: "Knowledge base management", description: "Upload documents and training materials per client", color: "text-indigo-500" },
+  { icon: BarChart3, title: "Call analytics and reporting", description: "Per-client and aggregate reporting dashboards", color: "text-violet-500" },
+  { icon: DollarSign, title: "Billing management", description: "Set your own rates and track usage across all clients", color: "text-orange-500" },
+  { icon: Code, title: "API access", description: "Full API access for custom integrations and automation", color: "text-slate-500" },
+  { icon: Headphones, title: "Dedicated partner support", description: "Priority support channel for partners only", color: "text-cyan-500" },
+  { icon: GraduationCap, title: "Training materials", description: "Comprehensive documentation and video walkthroughs", color: "text-yellow-500" },
+  { icon: RefreshCw, title: "Regular platform updates", description: "Automatic updates with no downtime for your clients", color: "text-emerald-500" },
+  { icon: Rocket, title: "White-glove onboarding", description: "Hands-on setup assistance for your first 3 clients", color: "text-rose-500" },
+  { icon: FileText, title: "Marketing templates", description: "Ready-to-use sales collateral and pitch materials", color: "text-amber-500" },
 ];
 
 const benefits = [
@@ -87,36 +87,42 @@ const benefits = [
     title: "Zero Development Cost",
     description:
       "There is no need to spend months and hundreds of thousands building your own AI platform. GoRigo gives you a fully built, tested, and maintained product that you can start selling immediately.",
+    color: "text-emerald-500",
   },
   {
     icon: Crown,
     title: "Your Brand, Your Rules",
     description:
       "You have complete control over your branding, pricing, and client relationships. Your clients interact with your brand, your support team, and your sales process. GoRigo stays invisible.",
+    color: "text-yellow-500",
   },
   {
     icon: TrendingUp,
     title: "Recurring Revenue",
     description:
       "Every client you add generates ongoing monthly revenue. You set the price, we charge you the partner rate, and you keep the margin. The more clients you add, the more you earn.",
+    color: "text-violet-500",
   },
   {
     icon: Rocket,
     title: "Scale Without Limits",
     description:
       "Add as many clients as you want. The platform scales automatically to handle increased call volumes, new clients, and growing businesses without any additional infrastructure work on your part.",
+    color: "text-rose-500",
   },
   {
     icon: RefreshCw,
     title: "Stay Ahead",
     description:
       "Access the latest AI features, voice models, and platform improvements without building them yourself. When we release new capabilities, your whitelabel platform gets them automatically.",
+    color: "text-teal-500",
   },
   {
     icon: Target,
     title: "Focus on Sales",
     description:
       "We handle all the technology, hosting, updates, security, and compliance. You focus on what you do best: finding clients, building relationships, and growing your business.",
+    color: "text-orange-500",
   },
 ];
 
@@ -126,30 +132,35 @@ const idealPartners = [
     title: "BPO and Call Centre Operators",
     description:
       "You already manage call centre operations for businesses. Adding AI call handling to your service offering lets you serve more clients with lower overheads while offering a cutting-edge solution that differentiates you from competitors.",
+    color: "text-cyan-500",
   },
   {
     icon: Wifi,
     title: "Telecoms Companies",
     description:
       "You provide phone lines and connectivity to businesses. Bundling an AI call centre platform with your existing services creates a compelling package that increases customer retention and average revenue per account.",
+    color: "text-fuchsia-500",
   },
   {
     icon: Megaphone,
     title: "Digital and Marketing Agencies",
     description:
       "Your clients already trust you with their marketing. Offering AI call handling as a value-add service means you can capture more of their budget while solving a real business problem they face every day.",
+    color: "text-red-500",
   },
   {
     icon: Briefcase,
     title: "Business Consultants",
     description:
       "You advise businesses on how to improve their operations. Recommending and reselling an AI call centre platform under your own brand positions you as a solutions provider, not just an advisor.",
+    color: "text-purple-500",
   },
   {
     icon: Monitor,
     title: "IT Managed Service Providers",
     description:
       "You already manage IT infrastructure for business clients. Adding AI-powered communications to your portfolio is a natural extension that creates new recurring revenue streams and deepens client relationships.",
+    color: "text-sky-500",
   },
 ];
 
@@ -168,56 +179,67 @@ const termsData = [
     icon: Calendar,
     title: "Agreement Duration",
     description: "Initial 12-month term, auto-renewing annually. Either party may choose not to renew by providing notice before the renewal date.",
+    color: "text-rose-500",
   },
   {
     icon: Palette,
     title: "Branding",
     description: "Partners may use their own branding on the platform but must not claim ownership of the underlying technology. All marketing materials must be accurate and not misleading.",
+    color: "text-pink-500",
   },
   {
     icon: Shield,
     title: "Data Ownership",
     description: "Client data belongs to the client. Partners act as data processors under GDPR. GoRigo acts as a sub-processor. All parties must comply with applicable data protection legislation.",
+    color: "text-blue-500",
   },
   {
     icon: Clock,
     title: "Service Level",
     description: "GoRigo commits to 99.5% platform uptime. Partners must communicate SLAs accurately to their clients and must not promise uptime guarantees beyond what GoRigo provides.",
+    color: "text-amber-500",
   },
   {
     icon: Receipt,
     title: "Billing",
     description: "Partners are invoiced monthly based on aggregate client usage at partner rates. Detailed usage breakdowns are available through the partner dashboard.",
+    color: "text-indigo-500",
   },
   {
     icon: CreditCard,
     title: "Payment Terms",
     description: "Net 30 days from invoice date. Late payments may incur interest at the statutory rate. Persistent non-payment may result in service suspension.",
+    color: "text-orange-500",
   },
   {
     icon: Lock,
     title: "IP Rights",
     description: "All GoRigo technology, code, and AI models remain the property of International Business Exchange Limited. Partners receive a licence to use the platform, not ownership of it.",
+    color: "text-slate-500",
   },
   {
     icon: Handshake,
     title: "Non-Compete",
     description: "Partners are not restricted from offering competing products. The partnership is non-exclusive. GoRigo may also appoint other partners in the same market.",
+    color: "text-purple-500",
   },
   {
     icon: Eye,
     title: "Termination",
     description: "Either party may terminate with 60 days written notice. Upon termination, client data will be made available for export for a period of 30 days.",
+    color: "text-sky-500",
   },
   {
     icon: Scale,
     title: "Liability",
     description: "GoRigo's liability is limited to the total fees paid by the partner in the preceding 12 months. Neither party is liable for indirect, consequential, or incidental damages.",
+    color: "text-violet-500",
   },
   {
     icon: Building2,
     title: "Governing Law",
     description: "This agreement is governed by the laws of England and Wales. GoRigo is operated by International Business Exchange Limited, Company No. 15985956.",
+    color: "text-teal-500",
   },
 ];
 
@@ -373,7 +395,7 @@ export default function WhitelabelPage() {
                   data-testid={`flow-step-${index}`}
                 >
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center mb-3">
-                    <step.icon className="h-4 w-4 text-muted-foreground" />
+                    <step.icon className={`h-4 w-4 ${step.color}`} />
                   </div>
                   <p className="font-medium text-sm mb-1">{step.label}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
@@ -421,7 +443,7 @@ export default function WhitelabelPage() {
                 className="p-6 rounded-md border border-border/50"
                 data-testid={`included-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <item.icon className="h-5 w-5 text-muted-foreground mb-4" />
+                <item.icon className={`h-5 w-5 ${item.color} mb-4`} />
                 <h3 className="font-medium mb-1.5">{item.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {item.description}
@@ -452,7 +474,7 @@ export default function WhitelabelPage() {
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}
@@ -489,7 +511,7 @@ export default function WhitelabelPage() {
                 data-testid={`card-partner-${partner.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <partner.icon className="h-5 w-5 text-muted-foreground mb-5" />
+                  <partner.icon className={`h-5 w-5 ${partner.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">{partner.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {partner.description}
@@ -526,7 +548,7 @@ export default function WhitelabelPage() {
                 className="flex items-start gap-3 text-sm"
                 data-testid={`requirement-${index}`}
               >
-                <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
                 <span className="text-muted-foreground leading-relaxed">{req}</span>
               </li>
             ))}
@@ -559,7 +581,7 @@ export default function WhitelabelPage() {
                 className="flex items-start gap-4 p-5 rounded-md border border-border/50"
                 data-testid={`term-${term.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <term.icon className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                <term.icon className={`h-5 w-5 ${term.color} shrink-0 mt-0.5`} />
                 <div>
                   <h3 className="font-medium text-sm mb-1">{term.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">

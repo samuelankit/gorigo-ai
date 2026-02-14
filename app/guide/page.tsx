@@ -24,6 +24,7 @@ const modules = [
     icon: LayoutDashboard,
     href: "/guide/overview",
     time: "5 min",
+    color: "text-violet-500",
   },
   {
     title: "AI Agents",
@@ -31,6 +32,7 @@ const modules = [
     icon: Bot,
     href: "/guide/agents",
     time: "8 min",
+    color: "text-teal-500",
   },
   {
     title: "Knowledge Base",
@@ -38,6 +40,7 @@ const modules = [
     icon: BookOpen,
     href: "/guide/knowledge-base",
     time: "6 min",
+    color: "text-indigo-500",
   },
   {
     title: "Clients & Partners",
@@ -45,6 +48,7 @@ const modules = [
     icon: Users,
     href: "/guide/clients",
     time: "7 min",
+    color: "text-pink-500",
   },
   {
     title: "Billing & Wallets",
@@ -52,6 +56,7 @@ const modules = [
     icon: Wallet,
     href: "/guide/billing",
     time: "5 min",
+    color: "text-orange-500",
   },
   {
     title: "Outbound Campaigns",
@@ -59,6 +64,7 @@ const modules = [
     icon: Megaphone,
     href: "/guide/campaigns",
     time: "7 min",
+    color: "text-rose-500",
   },
   {
     title: "Call Monitoring",
@@ -66,6 +72,7 @@ const modules = [
     icon: PhoneCall,
     href: "/guide/monitoring",
     time: "6 min",
+    color: "text-cyan-500",
   },
   {
     title: "Compliance & DNC",
@@ -73,6 +80,7 @@ const modules = [
     icon: ShieldCheck,
     href: "/guide/compliance",
     time: "5 min",
+    color: "text-blue-500",
   },
 ];
 
@@ -96,7 +104,7 @@ export default function GuidePage() {
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
                     <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                      <mod.icon className="h-5 w-5 text-muted-foreground" />
+                      <mod.icon className={`h-5 w-5 ${mod.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 flex-wrap">

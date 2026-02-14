@@ -30,6 +30,8 @@ const sections = [
     links: [
       { label: "Home", href: "/" },
       { label: "Pricing", href: "/pricing" },
+      { label: "ROI Calculator", href: "/roi-calculator" },
+      { label: "Trust Centre", href: "/trust" },
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
       { label: "Documentation", href: "/docs" },

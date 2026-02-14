@@ -11,8 +11,9 @@ import { cn } from "@/lib/utils";
 const navLinks = [
   { label: "Capabilities", href: "/capabilities" },
   { label: "Pricing", href: "/pricing" },
+  { label: "ROI Calculator", href: "/roi-calculator" },
+  { label: "Trust", href: "/trust" },
   { label: "Partners", href: "/partners" },
-  { label: "Docs", href: "/docs" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
   { label: "Guide", href: "/guide" },

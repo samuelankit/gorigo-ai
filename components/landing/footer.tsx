@@ -15,6 +15,7 @@ const platformLinks = [
 
 const resourceLinks = [
   { label: "Pricing", href: "/pricing" },
+  { label: "ROI Calculator", href: "/roi-calculator" },
   { label: "Partners", href: "/partners" },
   { label: "Documentation", href: "/docs" },
   { label: "Getting Started", href: "/guide" },
@@ -23,6 +24,7 @@ const resourceLinks = [
 
 const companyLinks = [
   { label: "About", href: "/about" },
+  { label: "Trust Centre", href: "/trust" },
   { label: "Contact", href: "/contact" },
   { label: "Careers", href: "/contact" },
   { label: "Blog", href: "/contact" },

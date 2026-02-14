@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/replit_integrations/chat/client-openai";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { db } from "@/server/db";
+import { chatLeads, chatMessages } from "@/shared/schema";
+import { eq, sql } from "drizzle-orm";
 
 const publicChatStore = new Map<string, { count: number; resetAt: number }>();
 const PUBLIC_CHAT_WINDOW_MS = 60_000;
@@ -34,6 +37,12 @@ function checkPublicRateLimit(req: NextRequest): boolean {
     return true;
   }
   return false;
+}
+
+function getIp(req: NextRequest): string {
+  const cfIp = req.headers.get("cf-connecting-ip");
+  const forwarded = req.headers.get("x-forwarded-for");
+  return cfIp || forwarded?.split(",")[0]?.trim() || "unknown";
 }
 
 const SYSTEM_PROMPT = `You are GoRigo, a friendly AI assistant for GoRigo.ai — an AI-powered call centre platform based in the UK.
@@ -91,9 +100,10 @@ export async function POST(req: NextRequest) {
     if (sizeError) return sizeError;
 
     const body = await req.json();
-    const { message, history } = body as {
+    const { message, history, leadId } = body as {
       message: string;
       history?: unknown;
+      leadId?: number;
     };
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {
@@ -105,6 +115,23 @@ export async function POST(req: NextRequest) {
     }
 
     const safeHistory = sanitizeHistory(history);
+
+    if (leadId && typeof leadId === "number") {
+      try {
+        await db.insert(chatMessages).values({
+          leadId,
+          role: "user",
+          content: message.trim(),
+        });
+        await db
+          .update(chatLeads)
+          .set({
+            totalMessages: sql`${chatLeads.totalMessages} + 1`,
+            lastMessageAt: sql`CURRENT_TIMESTAMP`,
+          })
+          .where(eq(chatLeads.id, leadId));
+      } catch {}
+    }
 
     const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
       { role: "system", content: SYSTEM_PROMPT },
@@ -121,12 +148,15 @@ export async function POST(req: NextRequest) {
     });
 
     const encoder = new TextEncoder();
+    let fullResponse = "";
+
     const readable = new ReadableStream({
       async start(controller) {
         try {
           for await (const chunk of stream) {
             const delta = chunk.choices[0]?.delta?.content;
             if (delta) {
+              fullResponse += delta;
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify({ content: delta, done: false })}\n\n`)
               );
@@ -136,6 +166,23 @@ export async function POST(req: NextRequest) {
             encoder.encode(`data: ${JSON.stringify({ content: "", done: true })}\n\n`)
           );
           controller.close();
+
+          if (leadId && typeof leadId === "number" && fullResponse) {
+            try {
+              await db.insert(chatMessages).values({
+                leadId,
+                role: "assistant",
+                content: fullResponse,
+              });
+              await db
+                .update(chatLeads)
+                .set({
+                  totalMessages: sql`${chatLeads.totalMessages} + 1`,
+                  lastMessageAt: sql`CURRENT_TIMESTAMP`,
+                })
+                .where(eq(chatLeads.id, leadId));
+            } catch {}
+          }
         } catch {
           controller.enqueue(
             encoder.encode(

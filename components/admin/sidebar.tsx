@@ -43,6 +43,7 @@ import {
   PhoneCall,
   Megaphone,
   GraduationCap,
+  MessageCircle,
 } from "lucide-react";
 
 const overviewItems = [
@@ -50,6 +51,7 @@ const overviewItems = [
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Revenue", url: "/admin/revenue", icon: PoundSterling },
   { title: "Calls", url: "/admin/calls", icon: PhoneCall },
+  { title: "Chat Leads", url: "/admin/chats", icon: MessageCircle },
 ];
 
 const managementItems = [

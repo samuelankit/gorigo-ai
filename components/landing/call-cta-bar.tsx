@@ -39,12 +39,12 @@ export function CallCtaBar() {
 
             <Button
               variant="outline"
-              size="icon"
               onClick={() => setChatOpen(!chatOpen)}
               className="bg-white/15 border-white/20 text-primary-foreground"
               data-testid="button-cta-chat"
             >
               <MessageCircle className="h-4 w-4" />
+              Chat with Us
             </Button>
           </div>
 

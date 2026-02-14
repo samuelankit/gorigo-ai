@@ -1101,4 +1101,34 @@ export const insertDeploymentModelChangeSchema = createInsertSchema(deploymentMo
 export type InsertDeploymentModelChange = z.infer<typeof insertDeploymentModelChangeSchema>;
 export type DeploymentModelChange = typeof deploymentModelChanges.$inferSelect;
 
+export const chatLeads = pgTable("chat_leads", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  ipAddress: text("ip_address"),
+  status: text("status").default("new"),
+  totalMessages: integer("total_messages").default(0),
+  lastMessageAt: timestamp("last_message_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").notNull().references(() => chatLeads.id, { onDelete: "cascade" }),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  rating: integer("rating"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_chat_messages_lead_id").on(table.leadId),
+]);
+
+export const insertChatLeadSchema = createInsertSchema(chatLeads).omit({ id: true, createdAt: true, totalMessages: true, lastMessageAt: true });
+export type InsertChatLead = z.infer<typeof insertChatLeadSchema>;
+export type ChatLead = typeof chatLeads.$inferSelect;
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+
 export * from "./models/chat";

@@ -118,6 +118,8 @@ function addSecurityHeaders(response: NextResponse): void {
     "img-src 'self' data: blob: https:;",
     "font-src 'self' data:;",
     "connect-src 'self' https:;",
+    "media-src 'self' blob:;",
+    "worker-src 'self' blob:;",
     "frame-ancestors 'none';",
     "base-uri 'self';",
     "form-action 'self';",

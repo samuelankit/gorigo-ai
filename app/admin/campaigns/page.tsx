@@ -43,6 +43,10 @@ import {
   Pause,
   CircleDot,
   Activity,
+  Globe,
+  DollarSign,
+  Timer,
+  RotateCcw,
 } from "lucide-react";
 
 interface CampaignRecord {
@@ -63,6 +67,26 @@ interface CampaignRecord {
   createdAt: string;
   orgName: string | null;
   agentName: string | null;
+  campaignType: string | null;
+  countryCode: string | null;
+  language: string | null;
+  callingHoursStart: string | null;
+  callingHoursEnd: string | null;
+  callingTimezone: string | null;
+  pacingCallsPerMinute: number | null;
+  pacingMaxConcurrent: number | null;
+  pacingRampUpMinutes: number | null;
+  retryMaxAttempts: number | null;
+  retryIntervalMinutes: number | null;
+  retryWindowStart: string | null;
+  retryWindowEnd: string | null;
+  budgetCap: string | null;
+  budgetSpent: string | null;
+  budgetAlertThreshold: string | null;
+  dailySpendLimit: string | null;
+  answeredCount: number | null;
+  convertedCount: number | null;
+  optOutCount: number | null;
 }
 
 interface Stats {
@@ -289,10 +313,11 @@ export default function AdminCampaignsPage() {
                   <TableRow>
                     <TableHead>Campaign</TableHead>
                     <TableHead>Organisation</TableHead>
-                    <TableHead>Agent</TableHead>
+                    <TableHead>Country</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Progress</TableHead>
-                    <TableHead>Contacts</TableHead>
+                    <TableHead>Budget</TableHead>
                     <TableHead>Created</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -317,11 +342,17 @@ export default function AdminCampaignsPage() {
                             <span className="text-sm truncate max-w-[120px]">{c.orgName || `Org #${c.orgId}`}</span>
                           </div>
                         </TableCell>
-                        <TableCell data-testid={`text-campaign-agent-${c.id}`}>
+                        <TableCell data-testid={`text-campaign-country-${c.id}`}>
                           <div className="flex items-center gap-1.5">
-                            <Bot className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <span className="text-sm truncate max-w-[120px]">{c.agentName || (c.agentId ? `Agent #${c.agentId}` : "-")}</span>
+                            <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <span className="text-sm">{c.countryCode || "-"}</span>
+                            {c.language && <span className="text-xs text-muted-foreground">({c.language})</span>}
                           </div>
+                        </TableCell>
+                        <TableCell data-testid={`text-campaign-type-${c.id}`}>
+                          <Badge variant="secondary" className="no-default-hover-elevate no-default-active-elevate">
+                            {c.campaignType || "outbound"}
+                          </Badge>
                         </TableCell>
                         <TableCell data-testid={`text-campaign-status-${c.id}`}>
                           <Badge variant={statusBadgeVariant(c.status)}>
@@ -339,8 +370,15 @@ export default function AdminCampaignsPage() {
                             <span className="text-xs text-muted-foreground">{progressPct}%</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm" data-testid={`text-campaign-contacts-${c.id}`}>
-                          {(c.completedCount ?? 0)} / {(c.totalContacts ?? 0)}
+                        <TableCell className="text-sm" data-testid={`text-campaign-budget-${c.id}`}>
+                          {c.budgetCap ? (
+                            <div>
+                              <span className="font-medium">${Number(c.budgetSpent || 0).toFixed(2)}</span>
+                              <span className="text-muted-foreground"> / ${Number(c.budgetCap).toFixed(2)}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">No cap</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground" data-testid={`text-campaign-created-${c.id}`}>
                           {formatRelative(c.createdAt)}
@@ -371,7 +409,7 @@ export default function AdminCampaignsPage() {
       </Card>
 
       <Dialog open={!!detailCampaign} onOpenChange={(open) => { if (!open) setDetailCampaign(null); }}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" data-testid="dialog-campaign-detail">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="dialog-campaign-detail">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Megaphone className="h-5 w-5 text-muted-foreground" />
@@ -384,7 +422,7 @@ export default function AdminCampaignsPage() {
               ? Math.round(((detailCampaign.completedCount ?? 0) / (detailCampaign.totalContacts ?? 1)) * 100)
               : 0;
             return (
-              <div className="space-y-4 mt-2">
+              <div className="space-y-5 mt-2">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Organisation</p>
@@ -403,30 +441,110 @@ export default function AdminCampaignsPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Call Interval</p>
-                    <p className="font-medium" data-testid="text-detail-interval">{detailCampaign.callInterval ?? 30}s</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Total Contacts</p>
-                    <p className="font-medium" data-testid="text-detail-total">{(detailCampaign.totalContacts ?? 0).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Completed</p>
-                    <p className="font-medium" data-testid="text-detail-completed">{(detailCampaign.completedCount ?? 0).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Failed</p>
-                    <p className="font-medium" data-testid="text-detail-failed">{(detailCampaign.failedCount ?? 0).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Max Retries</p>
-                    <p className="font-medium" data-testid="text-detail-retries">{detailCampaign.maxRetries ?? 1}</p>
+                    <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Type</p>
+                    <Badge variant="secondary" className="no-default-hover-elevate no-default-active-elevate" data-testid="text-detail-type">
+                      {detailCampaign.campaignType || "outbound"}
+                    </Badge>
                   </div>
                 </div>
 
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">Progress</p>
-                  <div className="flex items-center gap-3">
+                <div className="border-t pt-4">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                    <Globe className="h-3.5 w-3.5" /> International Settings
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Country</p>
+                      <p className="font-medium" data-testid="text-detail-country">{detailCampaign.countryCode || "Not set"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Language</p>
+                      <p className="font-medium" data-testid="text-detail-language">{detailCampaign.language || "en-GB"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Calling Hours</p>
+                      <p className="font-medium" data-testid="text-detail-calling-hours">
+                        {detailCampaign.callingHoursStart && detailCampaign.callingHoursEnd
+                          ? `${detailCampaign.callingHoursStart} - ${detailCampaign.callingHoursEnd}`
+                          : "Default"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Timezone</p>
+                      <p className="font-medium" data-testid="text-detail-timezone">{detailCampaign.callingTimezone || "Default"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                    <Timer className="h-3.5 w-3.5" /> Pacing & Retry
+                  </p>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Calls/min</p>
+                      <p className="font-medium" data-testid="text-detail-pacing">{detailCampaign.pacingCallsPerMinute ?? 5}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Max Concurrent</p>
+                      <p className="font-medium" data-testid="text-detail-concurrent">{detailCampaign.pacingMaxConcurrent ?? 3}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Ramp Up</p>
+                      <p className="font-medium" data-testid="text-detail-rampup">{detailCampaign.pacingRampUpMinutes ?? 5} min</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Max Retries</p>
+                      <p className="font-medium" data-testid="text-detail-retries">{detailCampaign.retryMaxAttempts ?? 3}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Retry Interval</p>
+                      <p className="font-medium" data-testid="text-detail-retry-interval">{detailCampaign.retryIntervalMinutes ?? 60} min</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Retry Window</p>
+                      <p className="font-medium" data-testid="text-detail-retry-window">
+                        {detailCampaign.retryWindowStart && detailCampaign.retryWindowEnd
+                          ? `${detailCampaign.retryWindowStart} - ${detailCampaign.retryWindowEnd}`
+                          : "Any time"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                    <DollarSign className="h-3.5 w-3.5" /> Budget & Spend
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Budget Cap</p>
+                      <p className="font-medium" data-testid="text-detail-budget-cap">
+                        {detailCampaign.budgetCap ? `$${Number(detailCampaign.budgetCap).toFixed(2)}` : "No cap"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Spent</p>
+                      <p className="font-medium" data-testid="text-detail-budget-spent">${Number(detailCampaign.budgetSpent || 0).toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Alert Threshold</p>
+                      <p className="font-medium" data-testid="text-detail-budget-alert">{detailCampaign.budgetAlertThreshold ?? 80}%</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Daily Limit</p>
+                      <p className="font-medium" data-testid="text-detail-daily-limit">
+                        {detailCampaign.dailySpendLimit ? `$${Number(detailCampaign.dailySpendLimit).toFixed(2)}` : "No limit"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                    <RotateCcw className="h-3.5 w-3.5" /> Progress & Outcomes
+                  </p>
+                  <div className="flex items-center gap-3 mb-3">
                     <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                       <div
                         className="h-full rounded-full bg-foreground/40"
@@ -435,16 +553,42 @@ export default function AdminCampaignsPage() {
                     </div>
                     <span className="text-sm font-medium" data-testid="text-detail-progress">{progressPct}%</span>
                   </div>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Total</p>
+                      <p className="font-medium" data-testid="text-detail-total">{(detailCampaign.totalContacts ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Completed</p>
+                      <p className="font-medium" data-testid="text-detail-completed">{(detailCampaign.completedCount ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Failed</p>
+                      <p className="font-medium" data-testid="text-detail-failed">{(detailCampaign.failedCount ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Answered</p>
+                      <p className="font-medium" data-testid="text-detail-answered">{(detailCampaign.answeredCount ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Converted</p>
+                      <p className="font-medium" data-testid="text-detail-converted">{(detailCampaign.convertedCount ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Opt-outs</p>
+                      <p className="font-medium" data-testid="text-detail-optouts">{(detailCampaign.optOutCount ?? 0).toLocaleString()}</p>
+                    </div>
+                  </div>
                 </div>
 
                 {detailCampaign.description && (
-                  <div>
+                  <div className="border-t pt-4">
                     <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Description</p>
                     <p className="text-sm" data-testid="text-detail-description">{detailCampaign.description}</p>
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm border-t pt-4">
                   <div>
                     <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Scheduled</p>
                     <p className="font-medium" data-testid="text-detail-scheduled">{formatDate(detailCampaign.scheduledAt)}</p>

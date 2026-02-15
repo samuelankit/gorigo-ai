@@ -44,6 +44,7 @@ import {
   Megaphone,
   GraduationCap,
   MessageCircle,
+  Globe,
 } from "lucide-react";
 
 const overviewItems = [
@@ -63,6 +64,7 @@ const managementItems = [
   { title: "Wallets", url: "/admin/wallets", icon: Wallet },
   { title: "Pricing", url: "/admin/pricing", icon: Calculator },
   { title: "Phone Numbers", url: "/admin/phone-numbers", icon: Phone },
+  { title: "Countries", url: "/admin/countries", icon: Globe },
   { title: "Deployments", url: "/admin/deployments", icon: ArrowLeftRight },
   { title: "Campaigns", url: "/admin/campaigns", icon: Megaphone },
   { title: "Knowledge", url: "/admin/knowledge", icon: BookOpen },

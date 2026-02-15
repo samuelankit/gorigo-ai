@@ -29,13 +29,15 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_sessions_user_id").on(table.userId),
+  index("idx_sessions_token").on(table.token),
+  index("idx_sessions_expires").on(table.expiresAt),
 ]);
 
 export const orgs = pgTable("orgs", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  timezone: text("timezone").default("UTC"),
-  currency: text("currency").default("GBP"),
+  timezone: text("timezone").notNull().default("UTC"),
+  currency: text("currency").notNull().default("GBP"),
   channelType: text("channel_type").default("d2c"),
   referredByAffiliateId: integer("referred_by_affiliate_id"),
   maxConcurrentCalls: integer("max_concurrent_calls").default(5),
@@ -100,12 +102,14 @@ export const agents = pgTable("agents", {
   systemPrompt: text("system_prompt"),
   escalationRules: jsonb("escalation_rules"),
   status: text("status").default("active"),
-  language: text("language").default("en-GB"),
-  voiceName: text("voice_name").default("Polly.Amy"),
-  speechModel: text("speech_model").default("default"),
+  language: text("language").notNull().default("en-GB"),
+  voiceName: text("voice_name").notNull().default("Polly.Amy"),
+  speechModel: text("speech_model").notNull().default("default"),
+  deletedAt: timestamp("deleted_at"),
 }, (table) => [
   index("idx_agents_org_id").on(table.orgId),
   index("idx_agents_user_id").on(table.userId),
+  index("idx_agents_org_status").on(table.orgId, table.status),
 ]);
 
 export const callLogs = pgTable("call_logs", {
@@ -135,7 +139,7 @@ export const callLogs = pgTable("call_logs", {
   handoffReason: text("handoff_reason"),
   handoffAt: timestamp("handoff_at"),
   finalOutcome: text("final_outcome"),
-  startedAt: timestamp("started_at").defaultNow(),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
   endedAt: timestamp("ended_at"),
   recordingUrl: text("recording_url"),
   recordingSid: text("recording_sid"),
@@ -179,6 +183,10 @@ export const callLogs = pgTable("call_logs", {
   index("idx_call_logs_created_at").on(table.createdAt),
   index("idx_call_logs_campaign").on(table.campaignId),
   index("idx_call_logs_country").on(table.destinationCountry),
+  index("idx_call_logs_org_status").on(table.orgId, table.status),
+  index("idx_call_logs_org_agent").on(table.orgId, table.agentId),
+  index("idx_call_logs_org_created").on(table.orgId, table.createdAt),
+  index("idx_call_logs_started_at").on(table.startedAt),
 ]);
 
 export const usageRecords = pgTable("usage_records", {
@@ -234,6 +242,8 @@ export const billingLedger = pgTable("billing_ledger", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_billing_ledger_org_id").on(table.orgId),
+  index("idx_billing_ledger_org_status").on(table.orgId, table.status),
+  index("idx_billing_ledger_created").on(table.createdAt),
 ]);
 
 export const jobs = pgTable("jobs", {
@@ -408,6 +418,9 @@ export const auditLog = pgTable("audit_log", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_audit_log_created_at").on(table.createdAt),
+  index("idx_audit_log_actor").on(table.actorId),
+  index("idx_audit_log_action").on(table.action),
+  index("idx_audit_log_entity").on(table.entityType, table.entityId),
 ]);
 
 export const knowledgeDocuments = pgTable("knowledge_documents", {
@@ -581,6 +594,8 @@ export const walletTransactions = pgTable("wallet_transactions", {
 }, (table) => [
   index("idx_wallet_txn_org_id").on(table.orgId),
   index("idx_wallet_txn_created_at").on(table.createdAt),
+  index("idx_wallet_txn_org_type").on(table.orgId, table.type),
+  index("idx_wallet_txn_ref").on(table.referenceType, table.referenceId),
 ]);
 
 export const costConfig = pgTable("cost_config", {
@@ -788,6 +803,7 @@ export const campaigns = pgTable("campaigns", {
   pausedReason: text("paused_reason"),
   archivedAt: timestamp("archived_at"),
   updatedAt: timestamp("updated_at").defaultNow(),
+  deletedAt: timestamp("deleted_at"),
 }, (table) => [
   index("idx_campaigns_org_status").on(table.orgId, table.status),
   index("idx_campaigns_country").on(table.countryCode),
@@ -826,6 +842,7 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_notifications_user_id").on(table.userId),
+  index("idx_notifications_user_read").on(table.userId, table.isRead),
 ]);
 
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });

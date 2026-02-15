@@ -1,12 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { agents, callLogs, callHops, agentFlows } from "@/shared/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { calculateFlowComplexity, type FlowNode, type FlowEdge } from "@/lib/flow-engine";
+import { generalLimiter } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const rl = await generalLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

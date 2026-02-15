@@ -6,6 +6,26 @@ import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
+import { z } from "zod";
+
+const agentUpdateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  greeting: z.string().max(2000).optional(),
+  businessDescription: z.string().max(5000).optional(),
+  inboundEnabled: z.boolean().optional(),
+  outboundEnabled: z.boolean().optional(),
+  roles: z.string().max(500).optional(),
+  faqEntries: z.array(z.object({
+    question: z.string().max(500),
+    answer: z.string().max(2000),
+  })).max(100).optional(),
+  handoffNumber: z.string().max(20).regex(/^\+?[0-9\s\-()]*$/).optional().nullable(),
+  handoffTrigger: z.string().max(100).optional(),
+  voicePreference: z.string().max(50).optional(),
+  negotiationEnabled: z.boolean().optional(),
+  negotiationGuardrails: z.record(z.unknown()).optional().nullable(),
+  complianceDisclosure: z.boolean().optional(),
+}).strict();
 
 export async function GET() {
   try {
@@ -75,6 +95,11 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
+    const parsed = agentUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input", details: parsed.error.errors }, { status: 400 });
+    }
+
     const [existingAgent] = await db
       .select()
       .from(agents)
@@ -85,21 +110,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
-    const allowedFields = [
-      "name", "greeting", "businessDescription", "inboundEnabled", "outboundEnabled",
-      "roles", "faqEntries", "handoffNumber", "handoffTrigger", "voicePreference",
-      "negotiationEnabled", "negotiationGuardrails", "complianceDisclosure",
-    ];
-    const sanitized: Record<string, unknown> = {};
-    for (const key of allowedFields) {
-      if (key in body) {
-        sanitized[key] = body[key];
-      }
-    }
-
     const [updatedAgent] = await db
       .update(agents)
-      .set({ ...sanitized, updatedAt: new Date() })
+      .set({ ...parsed.data, updatedAt: new Date() })
       .where(eq(agents.id, existingAgent.id))
       .returning();
 

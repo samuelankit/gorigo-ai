@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { users, sessions, passwordResetTokens } from "@/shared/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { hashPassword, hashToken } from "@/lib/auth";
+import { logAuthEvent } from "@/lib/audit";
 import { authLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 
@@ -66,6 +67,8 @@ export async function POST(request: NextRequest) {
     await db
       .delete(sessions)
       .where(eq(sessions.userId, resetRecord.userId));
+
+    logAuthEvent("password_reset.completed", resetRecord.userId, "").catch(() => {});
 
     return NextResponse.json({ message: "Password has been reset successfully. Please log in." }, { status: 200 });
   } catch (error) {

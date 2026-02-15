@@ -5,9 +5,14 @@ import { agents } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { generateAgentResponse } from "@/lib/ai";
 import { detectPromptInjection, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
+import { generalLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const rl = await generalLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

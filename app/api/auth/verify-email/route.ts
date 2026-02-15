@@ -3,9 +3,14 @@ import { db } from "@/lib/db";
 import { users } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
+import { authLimiter } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = await authLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const token = request.nextUrl.searchParams.get("token");
     if (!token || typeof token !== "string" || token.length < 32) {
       return NextResponse.json({ error: "Invalid or missing verification token" }, { status: 400 });

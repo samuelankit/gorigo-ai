@@ -68,7 +68,7 @@ export async function PUT(request: NextRequest) {
 
     const newToken = createSession(auth.user.id);
     const newTokenHash = hashToken(newToken);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await db.insert(sessions).values({ userId: auth.user.id, token: newTokenHash, expiresAt });
     await setSessionCookie(newToken);
 

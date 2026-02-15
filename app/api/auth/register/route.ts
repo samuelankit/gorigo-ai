@@ -6,6 +6,7 @@ import { hashPassword, createSession, setSessionCookie, hashToken } from "@/lib/
 import { authLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import crypto from "crypto";
+import { logAuthEvent } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
 
       const token = createSession(newUser.id);
       const tokenHash = hashToken(token);
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       const forwarded = request.headers.get("x-forwarded-for");
       const ip = forwarded?.split(",")[0]?.trim() || "unknown";
       const userAgent = request.headers.get("user-agent") || "unknown";
@@ -148,6 +149,8 @@ export async function POST(request: NextRequest) {
     });
 
     await setSessionCookie(result.token);
+
+    logAuthEvent("register.success", result.newUser.id, result.newUser.email, { businessName }).catch(() => {});
 
     const { password: _, emailVerificationToken: __, ...userWithoutSensitive } = result.newUser;
     return NextResponse.json({

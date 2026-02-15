@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { topUpWallet } from "@/lib/wallet";
 import { logAudit } from "@/lib/audit";
+import { billingLimiter } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await billingLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
       return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
     }

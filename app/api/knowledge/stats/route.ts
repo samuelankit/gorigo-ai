@@ -1,9 +1,14 @@
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { getRAGStats } from "@/lib/rag";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { generalLimiter } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const rl = await generalLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -4,6 +4,11 @@ import { topUpWallet } from "@/lib/wallet";
 import { knowledgeLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
+import { z } from "zod";
+
+const topupSchema = z.object({
+  amount: z.number().positive("Amount must be positive").finite().max(10000, "Maximum top-up amount is 10,000"),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,15 +30,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { amount } = body;
-
-    if (!amount || typeof amount !== "number" || amount <= 0) {
-      return NextResponse.json({ error: "Valid positive amount is required" }, { status: 400 });
+    const parsed = topupSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0]?.message || "Invalid input" }, { status: 400 });
     }
 
-    if (amount > 10000) {
-      return NextResponse.json({ error: "Maximum top-up amount is 10,000" }, { status: 400 });
-    }
+    const { amount } = parsed.data;
 
     const result = await topUpWallet(auth.orgId, amount);
 

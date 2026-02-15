@@ -7,7 +7,7 @@ import crypto from "crypto";
 import { hasScope } from "@/lib/api-key-auth";
 
 const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000;
-const ABSOLUTE_TIMEOUT_MS = 7 * 24 * 60 * 60 * 1000;
+const ABSOLUTE_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface AuthResult {
   user: typeof users.$inferSelect;

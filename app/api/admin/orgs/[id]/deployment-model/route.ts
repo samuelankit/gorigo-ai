@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { getAllRatesForModel } from "@/lib/rate-resolver";
 import { logAudit } from "@/lib/audit";
 import { getOrgByokStatus, validateOpenAIKey, validateTwilioCredentials } from "@/lib/byok";
+import { adminLimiter } from "@/lib/rate-limit";
 
 type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
 
@@ -72,6 +73,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || auth.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -144,6 +149,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || auth.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

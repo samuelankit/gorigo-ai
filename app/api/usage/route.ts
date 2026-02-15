@@ -1,11 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { usageRecords, orgs, rateCards } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { generalLimiter } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const rl = await generalLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

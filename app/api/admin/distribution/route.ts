@@ -6,9 +6,14 @@ import {
 } from "@/shared/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { adminLimiter } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || auth.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

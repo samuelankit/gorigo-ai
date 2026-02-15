@@ -2,10 +2,15 @@ import { db } from "@/lib/db";
 import { partners, orgs, callLogs, billingLedger } from "@/shared/schema";
 import { sql, count, sum } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { adminLimiter } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     const access = requireSuperAdmin(auth);
     if (!access.allowed) {

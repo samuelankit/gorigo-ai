@@ -1,11 +1,16 @@
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { generalLimiter } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const start = Date.now();
   try {
+    const rl = await generalLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     await db.execute(sql`SELECT 1`);
     const dbLatency = Date.now() - start;
 

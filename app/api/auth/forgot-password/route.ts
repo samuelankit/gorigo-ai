@@ -6,6 +6,7 @@ import { authLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import crypto from "crypto";
 import { hashToken } from "@/lib/auth";
+import { logAuthEvent } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,6 +47,8 @@ export async function POST(request: NextRequest) {
       token: tokenHash,
       expiresAt,
     });
+
+    logAuthEvent("password_reset.requested", user.id, user.email).catch(() => {});
 
     return NextResponse.json({
       message: "If an account with that email exists, a reset link has been generated.",

@@ -3,9 +3,14 @@ import { db } from "@/server/db";
 import { chatLeads, chatMessages } from "@/shared/schema";
 import { eq, desc, sql, like, or, and, count } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { adminLimiter } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   try {
+    const rl = await adminLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || auth.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -89,6 +94,10 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const rl = await adminLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || auth.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

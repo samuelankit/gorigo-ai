@@ -1,13 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { getLastHealthReport, getHealthHistory, getMetricsHistory, startAutopilotMonitor, runHealthCheck } from "@/lib/autopilot";
 import { getLLMRouterStats, resetCircuitBreaker } from "@/lib/llm-router";
 import { getRecentErrors, clearErrorLog, handleApiError } from "@/lib/error-handler";
+import { adminLimiter } from "@/lib/rate-limit";
 
 startAutopilotMonitor();
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || auth.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -55,8 +60,12 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || auth.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

@@ -19,6 +19,17 @@ GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentic
 
 Enterprise-grade infrastructure components include: LLM Fallback Router, Database Hardening, Global Error Handler, Autopilot Health Monitor, Rate Limiting, Security Middleware, CI/CD Pipeline, Real-Time Call Monitoring, Infrastructure Dashboard, Notification System, Admin Client Management, Automation Controls, Platform Settings Console, Admin Revenue Dashboard, Admin Notification Center, Admin Audit Log, Admin Wallets, Admin Compliance Centre, Admin Affiliate Management, Admin Knowledge Management, Admin Campaign Management, Admin Call Monitoring, Admin Agent Overview, Admin API Key Management, External API Layer, Finance Module, Getting Started Guide, Feature Detail Pages, Partner Pages, Public Website, and Public AI Chat Widget.
 
+### Security Hardening (Feb 2026)
+- **Audit Logging**: All auth events (login success/fail, register, logout, password reset request/complete) are logged to the `audit_log` table via `lib/audit.ts`. Wallet and profile changes also logged.
+- **Session Management**: 30-day absolute session timeout, 2-hour idle timeout, max 5 concurrent sessions per user with oldest eviction. Sessions endpoint at `/api/auth/sessions` for listing, individual revocation, and "invalidate all" functionality. Background cleanup every 5 minutes.
+- **Rate Limiting**: All ~140 API endpoints protected with appropriate rate limiters (auth: 10/min, general: 100/min, admin: 30/min, AI: 20/min, settings: 5/min, billing: 10/min, exports: 5/min).
+- **Input Validation**: Zod schemas enforce strict validation on agent updates, knowledge creation, wallet topups, and profile changes. Sanitization utility at `lib/sanitize.ts`.
+- **Password Reset**: Full flow with hashed tokens (SHA-256), 1-hour expiry, rate limiting, and all sessions invalidated on reset. Pages at `/forgot-password` and `/reset-password`.
+- **Email Verification**: Required for outbound calls, AI chat, and campaign creation. Hashed tokens, 24-hour expiry.
+- **Cookie Consent**: GDPR-compliant banner with Essential/Analytics/Marketing toggles. Script gating via `lib/cookie-scripts.ts` — analytics and marketing scripts only load after user consent.
+- **CSRF Protection**: Origin/Referer checking in middleware.
+- **API Endpoint Security**: All endpoints require authentication. 4 previously unprotected routes secured.
+
 ### Feature Specifications
 - **Deployment Packages**: Four commercial packages (Managed, BYOK, Self-Hosted, Custom) selected during onboarding, affecting billing rates.
 - **Agent Configuration**: Customizable AI agents with roles, FAQs, knowledge bases, and language/voice selection.

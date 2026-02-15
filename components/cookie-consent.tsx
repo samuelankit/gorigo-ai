@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Cookie, X, Settings2, Shield } from "lucide-react";
+import { X, Settings2, Shield } from "lucide-react";
+import { loadConsentedScripts, removeNonEssentialScripts } from "@/lib/cookie-scripts";
 
 type ConsentLevel = "essential" | "analytics" | "all";
 
@@ -45,22 +46,35 @@ export function CookieConsent() {
     if (!consent || consent.version !== CONSENT_VERSION) {
       const timer = setTimeout(() => setVisible(true), 1000);
       return () => clearTimeout(timer);
+    } else {
+      loadConsentedScripts();
     }
   }, []);
 
   function handleAcceptAll() {
     storeConsent("all");
+    loadConsentedScripts();
     setVisible(false);
   }
 
   function handleAcceptEssential() {
     storeConsent("essential");
+    removeNonEssentialScripts();
     setVisible(false);
   }
 
   function handleSavePreferences() {
-    const level: ConsentLevel = preferences.analytics ? "analytics" : "essential";
+    const level: ConsentLevel = preferences.analytics && preferences.marketing
+      ? "all"
+      : preferences.analytics
+        ? "analytics"
+        : "essential";
     storeConsent(level);
+    if (level === "essential") {
+      removeNonEssentialScripts();
+    } else {
+      loadConsentedScripts();
+    }
     setVisible(false);
   }
 

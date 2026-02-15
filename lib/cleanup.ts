@@ -6,7 +6,7 @@ import { retryFailedDistributions } from "@/lib/distribution";
 export async function cleanupExpiredSessions(): Promise<number> {
   const now = new Date();
   const idleCutoff = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-  const absoluteCutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const absoluteCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   const result = await db.delete(sessions).where(
     sql`${sessions.expiresAt} < ${now}

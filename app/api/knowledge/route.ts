@@ -5,6 +5,13 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { knowledgeLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { z } from "zod";
+
+const knowledgeCreateSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200, "Title too long (max 200 characters)").transform(v => v.trim()),
+  content: z.string().min(1, "Content is required").max(100000, "Content exceeds maximum length (100,000 characters)"),
+  sourceType: z.enum(["manual", "upload", "url", "audio"]).default("manual"),
+});
 
 const MAX_DOCUMENTS_PER_ORG = 100;
 
@@ -60,15 +67,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, content, sourceType } = body;
-
-    if (!title || !content) {
-      return NextResponse.json({ error: "Title and content are required" }, { status: 400 });
+    const parsed = knowledgeCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input", details: parsed.error.errors }, { status: 400 });
     }
 
-    if (content.length > 100000) {
-      return NextResponse.json({ error: "Content exceeds maximum length (100,000 characters)" }, { status: 400 });
-    }
+    const { title, content, sourceType } = parsed.data;
 
     const [document] = await db
       .insert(knowledgeDocuments)
@@ -76,7 +80,7 @@ export async function POST(request: NextRequest) {
         orgId: auth.orgId,
         title,
         content,
-        sourceType: sourceType || "manual",
+        sourceType,
         status: "pending",
       })
       .returning();

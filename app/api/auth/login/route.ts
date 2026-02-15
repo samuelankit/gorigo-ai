@@ -5,6 +5,7 @@ import { eq, and, lt, asc } from "drizzle-orm";
 import { verifyPassword, createSession, setSessionCookie, hashToken } from "@/lib/auth";
 import { authLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { logAuthEvent } from "@/lib/audit";
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -63,6 +64,8 @@ export async function POST(request: NextRequest) {
 
       await db.update(users).set(updates).where(eq(users.id, user.id));
 
+      logAuthEvent("login.failed", user.id, user.email, { attempts, locked: attempts >= MAX_FAILED_ATTEMPTS }).catch(() => {});
+
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
     const { ip, userAgent } = getClientInfo(request);
     const token = createSession(user.id);
     const tokenHash = hashToken(token);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await db.insert(sessions).values({
       userId: user.id,
       token: tokenHash,
@@ -101,6 +104,8 @@ export async function POST(request: NextRequest) {
     });
 
     await setSessionCookie(token);
+
+    logAuthEvent("login.success", user.id, user.email).catch(() => {});
 
     const { password: _, ...userWithoutPassword } = user;
     return NextResponse.json({ user: userWithoutPassword }, { status: 200 });

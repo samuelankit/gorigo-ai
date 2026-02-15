@@ -6,6 +6,11 @@ import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
+import { z } from "zod";
+
+const profileUpdateSchema = z.object({
+  businessName: z.string().min(1, "Business name is required").max(200, "Business name too long").transform(v => v.trim()),
+});
 
 export async function PUT(request: NextRequest) {
   try {
@@ -28,13 +33,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { businessName } = body;
-
-    if (!businessName || typeof businessName !== "string" || !businessName.trim()) {
-      return NextResponse.json({ error: "Business name is required" }, { status: 400 });
+    const parsed = profileUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0]?.message || "Invalid input" }, { status: 400 });
     }
 
-    const updateData = { businessName: businessName.trim() };
+    const updateData = { businessName: parsed.data.businessName };
     await db
       .update(users)
       .set(updateData)

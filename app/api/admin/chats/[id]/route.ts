@@ -3,12 +3,17 @@ import { db } from "@/server/db";
 import { chatLeads, chatMessages } from "@/shared/schema";
 import { eq, asc } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { adminLimiter } from "@/lib/rate-limit";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rl = await adminLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || auth.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

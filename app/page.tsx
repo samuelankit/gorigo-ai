@@ -41,10 +41,10 @@ const features = [
   },
   {
     icon: Shield,
-    title: "UK Compliant",
+    title: "Globally Compliant",
     href: "/features/compliance",
     description:
-      "Built-in GDPR, DNC registry, consent management, and PII redaction. Fully compliant with UK regulations from day one.",
+      "Per-country DNC registries, calling hours enforcement, AI disclosure in 12 languages, and PII redaction. Compliant across 20 countries from day one.",
   },
   {
     icon: BarChart3,
@@ -55,10 +55,10 @@ const features = [
   },
   {
     icon: Globe,
-    title: "Multi-Language Support",
+    title: "20 Countries, 12+ Languages",
     href: "/features/multi-language",
     description:
-      "Serve customers in their preferred language. AI agents adapt to regional accents and multilingual conversations.",
+      "Call internationally across 20 countries. AI agents detect languages, adapt to accents, and handle multilingual conversations naturally.",
   },
   {
     icon: Zap,
@@ -189,9 +189,9 @@ const packages = [
 
 const capabilities = [
   { icon: Headphones, label: "Voice AI", color: "text-teal-500" },
+  { icon: Globe, label: "20 Countries", color: "text-amber-500" },
   { icon: Shield, label: "Compliance", color: "text-blue-500" },
   { icon: BarChart3, label: "Analytics", color: "text-violet-500" },
-  { icon: Globe, label: "Multi-Language", color: "text-amber-500" },
   { icon: Lock, label: "Data Security", color: "text-rose-500" },
   { icon: Zap, label: "Pay-Per-Use", color: "text-emerald-500" },
 ];
@@ -443,7 +443,7 @@ export default function HomePage() {
             Ready to get started?
           </h2>
           <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-            Join businesses across the UK using GoRigo to deliver better
+            Join businesses across 20 countries using GoRigo to deliver better
             customer experiences at a fraction of the cost.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">

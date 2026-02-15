@@ -33,6 +33,8 @@ export const metadata: Metadata = {
 const packages = [
   {
     name: "Managed",
+    rate: "From 12p",
+    rateUnit: "/min",
     description: "We run everything. You focus on your business while our team handles the entire AI call centre stack.",
     features: [
       "Fully managed AI agents",
@@ -49,6 +51,8 @@ const packages = [
   },
   {
     name: "Bring Your Own Key",
+    rate: "From 5p",
+    rateUnit: "/min",
     description: "Use your own OpenAI or Anthropic API keys with our platform for maximum cost control.",
     features: [
       "Full platform access",
@@ -65,6 +69,8 @@ const packages = [
   },
   {
     name: "Self-Hosted",
+    rate: "From 8p",
+    rateUnit: "/min",
     description: "Deploy on your own infrastructure with complete control over data and operations.",
     features: [
       "On-premise or private cloud",
@@ -163,9 +169,13 @@ export default function PricingPage() {
                     </p>
                   )}
                   <h3 className="font-medium text-xl mb-2">{pkg.name}</h3>
+                  <div className="mb-3" data-testid={`text-rate-${pkg.name.toLowerCase().replace(/\s+/g, "-")}`}>
+                    <span className="text-2xl font-semibold">{pkg.rate}</span>
+                    <span className="text-sm text-muted-foreground">{pkg.rateUnit}</span>
+                  </div>
                   <p className="text-sm text-muted-foreground mb-2">{pkg.description}</p>
                   <p className="text-xs text-muted-foreground mb-6">
-                    Pay per minute of AI agent call time
+                    Talk-time only. No subscriptions or seat fees.
                   </p>
                   <ul className="space-y-2.5 mb-6">
                     {pkg.features.map((feature) => (
@@ -201,11 +211,15 @@ export default function PricingPage() {
                   Enterprise
                 </p>
                 <h3 className="font-medium text-xl mb-2">Custom Plan</h3>
+                <div className="mb-3" data-testid="text-rate-custom">
+                  <span className="text-2xl font-semibold">Custom</span>
+                  <span className="text-sm text-muted-foreground"> rates</span>
+                </div>
                 <p className="text-sm text-muted-foreground mb-2">
                   Need something different? We will build a bespoke package tailored to your exact requirements.
                 </p>
                 <p className="text-xs text-muted-foreground mb-6">
-                  Custom rates negotiated for your business
+                  Negotiated rates with volume discounts
                 </p>
                 <ul className="space-y-2.5 mb-6">
                   <li className="flex items-start gap-2 text-sm">

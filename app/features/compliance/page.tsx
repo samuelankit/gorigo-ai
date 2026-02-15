@@ -28,19 +28,19 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "UK Compliant | GoRigo.ai",
+  title: "Global Compliance | GoRigo.ai",
   description:
-    "Built for British business regulations. GoRigo handles GDPR, DNC registry checks, consent management, and PII redaction automatically so you stay compliant without extra work.",
+    "Per-country compliance across 20 countries. GoRigo handles DNC registries, calling hours by timezone, AI disclosure in 12 languages, consent management, and PII redaction automatically on every call.",
   openGraph: {
-    title: "UK Compliant | GoRigo.ai",
+    title: "Global Compliance | GoRigo.ai",
     description:
-      "Built for British business regulations. GoRigo handles GDPR, DNC registry checks, consent management, and PII redaction automatically so you stay compliant without extra work.",
+      "Per-country compliance across 20 countries. GoRigo handles DNC registries, calling hours by timezone, AI disclosure in 12 languages, consent management, and PII redaction automatically on every call.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "UK Compliant | GoRigo.ai",
+    title: "Global Compliance | GoRigo.ai",
     description:
-      "Built for British business regulations. GoRigo handles GDPR, DNC registry checks, consent management, and PII redaction automatically so you stay compliant without extra work.",
+      "Per-country compliance across 20 countries. GoRigo handles DNC registries, calling hours by timezone, AI disclosure in 12 languages, consent management, and PII redaction automatically on every call.",
   },
   alternates: {
     canonical: "/features/compliance",
@@ -70,14 +70,14 @@ const benefits = [
     title: "Automatic AI Disclosure",
     color: "text-teal-500",
     description:
-      "UK regulations require that callers are informed when they are speaking with an AI. GoRigo handles this disclosure automatically at the start of every call, keeping you compliant from the first second.",
+      "Regulations across multiple jurisdictions require that callers are informed when they are speaking with an AI. GoRigo delivers this disclosure automatically in 12 languages at the start of every call, keeping you compliant from the first second.",
   },
   {
     icon: UserX,
     title: "DNC Registry Checking",
     color: "text-pink-500",
     description:
-      "Before any outbound call is placed, GoRigo automatically checks the number against the Telephone Preference Service (TPS) and Corporate TPS registers. Numbers on the list are blocked from being called.",
+      "Before any outbound call is placed, GoRigo automatically checks the number against the relevant national Do-Not-Call registry for that country (e.g. TPS in the UK, National DNC in the US, Robinson List in Germany). Numbers on the list are blocked from being called.",
   },
   {
     icon: Eye,
@@ -101,7 +101,7 @@ const useCases = [
     title: "Healthcare Provider Handling Patient Data",
     color: "text-rose-500",
     scenario:
-      "A private clinic manages hundreds of patient calls daily. GoRigo ensures that patient health information is handled according to NHS data protection standards, PII is redacted from accessible logs, and all call records are encrypted and stored in UK-based data centres.",
+      "A private clinic manages hundreds of patient calls daily. GoRigo ensures that patient health information is handled according to local data protection standards (e.g. NHS in the UK, HIPAA in the US), PII is redacted from accessible logs, and all call records are encrypted and stored securely.",
   },
   {
     icon: Heart,
@@ -148,11 +148,11 @@ const faqs = [
 export default function CompliancePage() {
   return (
     <div className="min-h-screen bg-background" data-testid="page-compliance">
-      <WebPageJsonLd title="UK Compliant" description="Built for British business regulations. GoRigo handles GDPR, DNC registry checks, consent management, and PII redaction automatically so you stay compliant without extra work." url="/features/compliance" />
-      <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "UK Compliant", url: "/features/compliance" }]} />
+      <WebPageJsonLd title="Global Compliance" description="Per-country compliance across 20 countries. GoRigo handles DNC registries, calling hours by timezone, AI disclosure in 12 languages, consent management, and PII redaction automatically on every call." url="/features/compliance" />
+      <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "Global Compliance", url: "/features/compliance" }]} />
       <FAQJsonLd items={faqs.map(f => ({ question: f.question, answer: f.answer }))} />
       <Navbar />
-      <Breadcrumbs items={[{ label: "Capabilities", href: "/capabilities" }, { label: "UK Compliant" }]} />
+      <Breadcrumbs items={[{ label: "Capabilities", href: "/capabilities" }, { label: "Global Compliance" }]} />
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
@@ -180,22 +180,22 @@ export default function CompliancePage() {
                 className="text-4xl sm:text-5xl lg:text-5xl font-light tracking-tight leading-[1.1]"
                 data-testid="text-hero-title"
               >
-                UK Compliant
+                Globally Compliant
               </h1>
               <p
                 className="mt-4 text-xl text-muted-foreground font-light"
                 data-testid="text-hero-subtitle"
               >
-                Built for British Business Regulations
+                Per-Country Compliance Across 20 Countries
               </p>
               <p
                 className="mt-6 text-base text-muted-foreground leading-relaxed"
                 data-testid="text-hero-intro"
               >
                 Compliance is not an add-on with GoRigo. It is built into every call from the
-                very first second. GDPR, DNC registry checks, consent management, and PII
-                redaction all happen automatically, so your business stays on the right side
-                of UK regulations without any extra effort from your team.
+                very first second. Per-country DNC registries, calling hours enforcement by
+                timezone, AI disclosure in 12 languages, consent management, and PII redaction
+                all happen automatically across 20 countries without any extra effort from your team.
               </p>
             </div>
           </div>

@@ -22,20 +22,20 @@ import {
 export const metadata: Metadata = {
   title: "Capabilities | GoRigo.ai",
   description:
-    "Explore GoRigo's AI call centre capabilities in the UK. Intelligent agents, 24/7 call handling, GDPR compliance, real-time analytics, multi-language support, and pay-per-talk-time billing. No subscriptions, no seat licences.",
+    "Explore GoRigo's AI call centre capabilities across 20 countries. Intelligent agents, 24/7 call handling, per-country compliance, real-time analytics, 12+ languages, and pay-per-talk-time billing. No subscriptions, no seat licences.",
   alternates: {
     canonical: "/capabilities",
   },
   openGraph: {
     title: "Capabilities | GoRigo.ai",
     description:
-      "Explore GoRigo's AI call centre capabilities in the UK. Intelligent agents, 24/7 call handling, GDPR compliance, real-time analytics, multi-language support, and pay-per-talk-time billing. No subscriptions, no seat licences.",
+      "Explore GoRigo's AI call centre capabilities across 20 countries. Intelligent agents, 24/7 call handling, per-country compliance, real-time analytics, 12+ languages, and pay-per-talk-time billing. No subscriptions, no seat licences.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Capabilities | GoRigo.ai",
     description:
-      "Explore GoRigo's AI call centre capabilities in the UK. Intelligent agents, 24/7 call handling, GDPR compliance, real-time analytics, multi-language support, and pay-per-talk-time billing. No subscriptions, no seat licences.",
+      "Explore GoRigo's AI call centre capabilities across 20 countries. Intelligent agents, 24/7 call handling, per-country compliance, real-time analytics, 12+ languages, and pay-per-talk-time billing. No subscriptions, no seat licences.",
   },
 };
 
@@ -74,18 +74,18 @@ const capabilities = [
   },
   {
     slug: "compliance",
-    title: "UK Compliant",
-    tagline: "Built for British business regulations",
+    title: "Globally Compliant",
+    tagline: "Per-country compliance across 20 countries",
     description:
-      "GDPR, DNC registry checks, consent management, and PII redaction all happen automatically on every call. Your business stays on the right side of UK regulations without any extra effort from your team.",
+      "DNC registry checks, calling hours enforcement by timezone, AI disclosure in 12 languages, consent management, and PII redaction all happen automatically on every call. Your business stays compliant across 20 countries without extra effort.",
     video: "/features/compliance-intro.mp4",
     icon: Shield,
     color: "text-blue-500",
     bgAccent: "bg-blue-500/10",
     highlights: [
-      "Automatic AI disclosure",
-      "PII auto-redaction",
-      "Full audit trail",
+      "Country-specific DNC and calling hours",
+      "AI disclosure in 12 languages",
+      "PII auto-redaction and audit trail",
     ],
   },
   {
@@ -106,18 +106,18 @@ const capabilities = [
   },
   {
     slug: "multi-language",
-    title: "Multi-Language Support",
-    tagline: "Speak your customer's language",
+    title: "International Calling",
+    tagline: "20 countries, 12+ languages, one platform",
     description:
-      "AI agents automatically detect the caller's language, switch in real time, and handle the entire conversation naturally. Accents, dialects, and regional expressions are all understood and responded to with ease.",
+      "Call internationally across the UK, US, France, Germany, India, Canada, Australia, Spain, Italy, Netherlands, Japan, Brazil, Mexico, UAE, Singapore, South Africa, Ireland, Sweden, Switzerland, and Poland. AI agents detect languages, adapt to accents, and handle every conversation naturally.",
     video: "/features/multi-language-intro.mp4",
     icon: Globe,
     color: "text-amber-500",
     bgAccent: "bg-amber-500/10",
     highlights: [
-      "30+ languages supported",
-      "Automatic accent adaptation",
-      "Bilingual transcripts",
+      "20 countries with per-country compliance",
+      "12+ languages with accent adaptation",
+      "Country-specific rate cards and currency",
     ],
   },
   {
@@ -139,8 +139,8 @@ const capabilities = [
 ];
 
 const platformStats = [
-  { label: "Languages Supported", value: "30+", icon: Globe },
-  { label: "Answer Time", value: "<1s", icon: Phone },
+  { label: "Countries", value: "20", icon: Globe },
+  { label: "Languages", value: "12+", icon: Phone },
   { label: "Uptime", value: "99.9%", icon: TrendingUp },
   { label: "Concurrent Calls", value: "Unlimited", icon: Bot },
 ];

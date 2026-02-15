@@ -27,8 +27,6 @@ const companyLinks = [
   { label: "About", href: "/about" },
   { label: "Trust Centre", href: "/trust" },
   { label: "Contact", href: "/contact" },
-  { label: "Careers", href: "/contact" },
-  { label: "Blog", href: "/contact" },
 ];
 
 const legalLinks = [

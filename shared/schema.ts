@@ -150,9 +150,32 @@ export const callLogs = pgTable("call_logs", {
   notes: text("notes"),
   billedDeploymentModel: text("billed_deployment_model"),
   billedRatePerMinute: numeric("billed_rate_per_minute", { precision: 12, scale: 6 }),
+  campaignId: integer("campaign_id"),
+  campaignContactId: integer("campaign_contact_id"),
+  destinationCountry: text("destination_country"),
+  languageUsed: text("language_used"),
+  translatedTranscript: text("translated_transcript"),
+  translationConfidence: numeric("translation_confidence", { precision: 5, scale: 2 }),
+  complianceDncChecked: boolean("compliance_dnc_checked").default(false),
+  complianceDncResult: text("compliance_dnc_result"),
+  complianceDisclosurePlayed: boolean("compliance_disclosure_played").default(false),
+  complianceDisclosureAt: timestamp("compliance_disclosure_at"),
+  complianceRecordingConsent: text("compliance_recording_consent"),
+  complianceRecordingConsentAt: timestamp("compliance_recording_consent_at"),
+  complianceOptOutDetected: boolean("compliance_opt_out_detected").default(false),
+  complianceOptOutAt: timestamp("compliance_opt_out_at"),
+  countrySurcharge: numeric("country_surcharge", { precision: 10, scale: 4 }),
+  totalBilledRate: numeric("total_billed_rate", { precision: 12, scale: 6 }),
+  twilioCallCost: numeric("twilio_call_cost", { precision: 10, scale: 4 }),
+  llmTokensUsed: integer("llm_tokens_used"),
+  sttCost: numeric("stt_cost", { precision: 10, scale: 4 }),
+  ttsCost: numeric("tts_cost", { precision: 10, scale: 4 }),
+  responseLatencyAvg: integer("response_latency_avg"),
 }, (table) => [
   index("idx_call_logs_org_id").on(table.orgId),
   index("idx_call_logs_created_at").on(table.createdAt),
+  index("idx_call_logs_campaign").on(table.campaignId),
+  index("idx_call_logs_country").on(table.destinationCountry),
 ]);
 
 export const usageRecords = pgTable("usage_records", {
@@ -634,7 +657,23 @@ export const twilioPhoneNumbers = pgTable("twilio_phone_numbers", {
   isActive: boolean("is_active").default(true),
   assignedAt: timestamp("assigned_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+  countryCode: text("country_code"),
+  numberType: text("number_type").default("local"),
+  subAccountId: integer("sub_account_id"),
+  healthScore: integer("health_score").default(100),
+  answerRate: numeric("answer_rate", { precision: 5, scale: 2 }),
+  totalCallsMade: integer("total_calls_made").default(0),
+  spamFlagged: boolean("spam_flagged").default(false),
+  spamFlaggedAt: timestamp("spam_flagged_at"),
+  lastUsedAt: timestamp("last_used_at"),
+  monthlyRentalCost: numeric("monthly_rental_cost", { precision: 10, scale: 4 }),
+  provisioningStatus: text("provisioning_status").default("active"),
+  regulatoryBundleSid: text("regulatory_bundle_sid"),
+  campaignId: integer("campaign_id"),
+}, (table) => [
+  index("idx_phone_numbers_country").on(table.countryCode),
+  index("idx_phone_numbers_org").on(table.orgId),
+]);
 
 export const distributionLedger = pgTable("distribution_ledger", {
   id: serial("id").primaryKey(),
@@ -717,7 +756,39 @@ export const campaigns = pgTable("campaigns", {
   callInterval: integer("call_interval").default(30),
   maxRetries: integer("max_retries").default(1),
   createdAt: timestamp("created_at").defaultNow(),
-});
+  campaignType: text("campaign_type").default("outbound"),
+  countryCode: text("country_code"),
+  language: text("language").default("en-GB"),
+  phoneNumberId: integer("phone_number_id"),
+  script: text("script"),
+  scriptLanguage: text("script_language"),
+  scriptVersion: integer("script_version").default(1),
+  callingHoursStart: text("calling_hours_start"),
+  callingHoursEnd: text("calling_hours_end"),
+  callingTimezone: text("calling_timezone"),
+  pacingCallsPerMinute: integer("pacing_calls_per_minute").default(5),
+  pacingMaxConcurrent: integer("pacing_max_concurrent").default(3),
+  pacingRampUpMinutes: integer("pacing_ramp_up_minutes").default(5),
+  retryMaxAttempts: integer("retry_max_attempts").default(3),
+  retryIntervalMinutes: integer("retry_interval_minutes").default(60),
+  retryWindowStart: text("retry_window_start"),
+  retryWindowEnd: text("retry_window_end"),
+  budgetCap: numeric("budget_cap", { precision: 12, scale: 2 }),
+  budgetSpent: numeric("budget_spent", { precision: 12, scale: 2 }).default("0"),
+  budgetAlertThreshold: numeric("budget_alert_threshold", { precision: 5, scale: 2 }).default("80"),
+  dailySpendLimit: numeric("daily_spend_limit", { precision: 12, scale: 2 }),
+  answeredCount: integer("answered_count").default(0),
+  convertedCount: integer("converted_count").default(0),
+  optOutCount: integer("opt_out_count").default(0),
+  conversionDefinition: text("conversion_definition"),
+  pausedAt: timestamp("paused_at"),
+  pausedReason: text("paused_reason"),
+  archivedAt: timestamp("archived_at"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_campaigns_org_status").on(table.orgId, table.status),
+  index("idx_campaigns_country").on(table.countryCode),
+]);
 
 export const insertCampaignSchema = createInsertSchema(campaigns).omit({ id: true, createdAt: true });
 export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
@@ -1130,5 +1201,182 @@ export type ChatLead = typeof chatLeads.$inferSelect;
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+
+// ═══════════════════════════════════════════════════
+// INTERNATIONAL CALLING — COUNTRIES & COMPLIANCE
+// ═══════════════════════════════════════════════════
+
+export const countries = pgTable("countries", {
+  id: serial("id").primaryKey(),
+  isoCode: text("iso_code").unique().notNull(),
+  name: text("name").notNull(),
+  callingCode: text("calling_code").notNull(),
+  timezone: text("timezone").notNull(),
+  currency: text("currency").notNull(),
+  tier: integer("tier").notNull().default(2),
+  status: text("status").notNull().default("coming_soon"),
+  flagEmoji: text("flag_emoji"),
+  region: text("region"),
+  numberFormats: jsonb("number_formats"),
+  requiresKyc: boolean("requires_kyc").default(false),
+  requiresLocalPresence: boolean("requires_local_presence").default(false),
+  sanctioned: boolean("sanctioned").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_countries_iso_code").on(table.isoCode),
+  index("idx_countries_tier").on(table.tier),
+  index("idx_countries_status").on(table.status),
+]);
+
+export const countryComplianceProfiles = pgTable("country_compliance_profiles", {
+  id: serial("id").primaryKey(),
+  countryId: integer("country_id").notNull().references(() => countries.id),
+  callingHoursStart: text("calling_hours_start").notNull().default("09:00"),
+  callingHoursEnd: text("calling_hours_end").notNull().default("20:00"),
+  callingHoursTimezone: text("calling_hours_timezone").notNull(),
+  restrictedDays: jsonb("restricted_days").default([]),
+  dncRegistryName: text("dnc_registry_name"),
+  dncRegistryUrl: text("dnc_registry_url"),
+  dncCheckMethod: text("dnc_check_method").default("manual"),
+  dncApiEndpoint: text("dnc_api_endpoint"),
+  aiDisclosureRequired: boolean("ai_disclosure_required").default(true),
+  aiDisclosureScript: text("ai_disclosure_script"),
+  aiDisclosureLanguage: text("ai_disclosure_language"),
+  recordingConsentType: text("recording_consent_type").notNull().default("one_party"),
+  recordingConsentScript: text("recording_consent_script"),
+  maxCallAttemptsPerDay: integer("max_call_attempts_per_day").default(3),
+  maxCallAttemptsPerWeek: integer("max_call_attempts_per_week").default(10),
+  coolingOffHours: integer("cooling_off_hours").default(24),
+  dataRetentionDays: integer("data_retention_days").default(90),
+  dataResidencyRequired: boolean("data_residency_required").default(false),
+  dataResidencyRegion: text("data_residency_region"),
+  regulatoryBody: text("regulatory_body"),
+  regulatoryUrl: text("regulatory_url"),
+  notes: text("notes"),
+  lastReviewedAt: timestamp("last_reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uq_compliance_country").on(table.countryId),
+]);
+
+export const countryRateCards = pgTable("country_rate_cards", {
+  id: serial("id").primaryKey(),
+  countryId: integer("country_id").notNull().references(() => countries.id),
+  deploymentModel: text("deployment_model").notNull(),
+  direction: text("direction").notNull().default("outbound"),
+  numberType: text("number_type").notNull().default("mobile"),
+  surchargePerMinute: numeric("surcharge_per_minute", { precision: 10, scale: 4 }).notNull(),
+  twilioEstimatedCost: numeric("twilio_estimated_cost", { precision: 10, scale: 4 }),
+  marginPercent: numeric("margin_percent", { precision: 5, scale: 2 }).default("20"),
+  isActive: boolean("is_active").default(true),
+  effectiveFrom: timestamp("effective_from").defaultNow(),
+  effectiveUntil: timestamp("effective_until"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_country_rates_country").on(table.countryId),
+  index("idx_country_rates_model").on(table.deploymentModel),
+  uniqueIndex("uq_country_rate").on(table.countryId, table.deploymentModel, table.direction, table.numberType),
+]);
+
+export const countryHolidays = pgTable("country_holidays", {
+  id: serial("id").primaryKey(),
+  countryId: integer("country_id").notNull().references(() => countries.id),
+  name: text("name").notNull(),
+  date: text("date").notNull(),
+  isRecurring: boolean("is_recurring").default(false),
+  noCallingAllowed: boolean("no_calling_allowed").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_holidays_country").on(table.countryId),
+]);
+
+// ═══════════════════════════════════════════════════
+// INTERNATIONAL CALLING — TWILIO SUB-ACCOUNTS
+// ═══════════════════════════════════════════════════
+
+export const twilioSubAccounts = pgTable("twilio_sub_accounts", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").unique().notNull().references(() => orgs.id),
+  twilioAccountSid: text("twilio_account_sid").unique(),
+  twilioAuthToken: text("twilio_auth_token"),
+  friendlyName: text("friendly_name"),
+  status: text("status").notNull().default("pending"),
+  concurrentCallLimit: integer("concurrent_call_limit").default(10),
+  dailySpendLimit: numeric("daily_spend_limit", { precision: 12, scale: 2 }),
+  currentDailySpend: numeric("current_daily_spend", { precision: 12, scale: 2 }).default("0"),
+  lastSpendResetAt: timestamp("last_spend_reset_at"),
+  suspendedReason: text("suspended_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_twilio_sub_org").on(table.orgId),
+]);
+
+// ═══════════════════════════════════════════════════
+// INTERNATIONAL CALLING — CAMPAIGN CONTACTS
+// ═══════════════════════════════════════════════════
+
+export const campaignContacts = pgTable("campaign_contacts", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").notNull().references(() => campaigns.id),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  phoneNumber: text("phone_number").notNull(),
+  phoneNumberE164: text("phone_number_e164").notNull(),
+  countryCode: text("country_code"),
+  contactName: text("contact_name"),
+  contactEmail: text("contact_email"),
+  contactMetadata: jsonb("contact_metadata"),
+  status: text("status").notNull().default("pending"),
+  dncChecked: boolean("dnc_checked").default(false),
+  dncResult: text("dnc_result"),
+  dncCheckedAt: timestamp("dnc_checked_at"),
+  attemptCount: integer("attempt_count").default(0),
+  maxAttempts: integer("max_attempts").default(3),
+  lastAttemptAt: timestamp("last_attempt_at"),
+  nextRetryAfter: timestamp("next_retry_after"),
+  lastCallDisposition: text("last_call_disposition"),
+  callLogId: integer("call_log_id"),
+  optedOut: boolean("opted_out").default(false),
+  optedOutAt: timestamp("opted_out_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_campaign_contacts_campaign").on(table.campaignId),
+  index("idx_campaign_contacts_org").on(table.orgId),
+  index("idx_campaign_contacts_status").on(table.status),
+  index("idx_campaign_contacts_phone").on(table.phoneNumberE164),
+  uniqueIndex("uq_campaign_contact_phone").on(table.campaignId, table.phoneNumberE164),
+]);
+
+// ═══════════════════════════════════════════════════
+// INTERNATIONAL CALLING — INSERT SCHEMAS & TYPES
+// ═══════════════════════════════════════════════════
+
+export const insertCountrySchema = createInsertSchema(countries).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCountry = z.infer<typeof insertCountrySchema>;
+export type Country = typeof countries.$inferSelect;
+
+export const insertCountryComplianceProfileSchema = createInsertSchema(countryComplianceProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCountryComplianceProfile = z.infer<typeof insertCountryComplianceProfileSchema>;
+export type CountryComplianceProfile = typeof countryComplianceProfiles.$inferSelect;
+
+export const insertCountryRateCardSchema = createInsertSchema(countryRateCards).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCountryRateCard = z.infer<typeof insertCountryRateCardSchema>;
+export type CountryRateCard = typeof countryRateCards.$inferSelect;
+
+export const insertCountryHolidaySchema = createInsertSchema(countryHolidays).omit({ id: true, createdAt: true });
+export type InsertCountryHoliday = z.infer<typeof insertCountryHolidaySchema>;
+export type CountryHoliday = typeof countryHolidays.$inferSelect;
+
+export const insertTwilioSubAccountSchema = createInsertSchema(twilioSubAccounts).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertTwilioSubAccount = z.infer<typeof insertTwilioSubAccountSchema>;
+export type TwilioSubAccount = typeof twilioSubAccounts.$inferSelect;
+
+export const insertCampaignContactSchema = createInsertSchema(campaignContacts).omit({ id: true, createdAt: true });
+export type InsertCampaignContact = z.infer<typeof insertCampaignContactSchema>;
+export type CampaignContact = typeof campaignContacts.$inferSelect;
 
 export * from "./models/chat";

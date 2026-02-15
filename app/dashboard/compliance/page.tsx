@@ -15,7 +15,9 @@ import { useToast } from "@/lib/use-toast";
 import {
   Shield, Phone, FileText, Search, Trash2, Plus,
   Check, X, AlertTriangle, Eye, Lock, Download, Loader2,
+  Globe, Clock, Languages, MapPin, Calendar,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DNCEntry {
   id: number;
@@ -50,8 +52,85 @@ interface PIIScanResult {
   piiTypes: string[];
 }
 
+interface CountryOverview {
+  id: number;
+  isoCode: string;
+  name: string;
+  callingCode: string;
+  timezone: string;
+  region: string | null;
+  currentLocalTime: string;
+  withinCallingHours: boolean;
+  callCount: number;
+  complianceScore: number;
+  issues: string[];
+  callingHours: {
+    start: string;
+    end: string;
+    timezone: string;
+    restrictedDays: string[];
+  } | null;
+  dnc: {
+    registryName: string | null;
+    registryUrl: string | null;
+    checkMethod: string | null;
+  } | null;
+  disclosure: {
+    required: boolean | null;
+    language: string | null;
+    customScript: string | null;
+  } | null;
+  consent: {
+    type: string;
+    script: string | null;
+  } | null;
+  holidays: {
+    name: string;
+    date: string;
+    noCallingAllowed: boolean | null;
+    isRecurring: boolean | null;
+  }[];
+}
+
+interface ComplianceOverviewData {
+  countries: CountryOverview[];
+  totalDncEntries: number;
+  disclosureTexts: Record<string, string>;
+  summary: {
+    totalCountries: number;
+    countriesCallable: number;
+    avgComplianceScore: number;
+    countriesWithCalls: number;
+  };
+}
+
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  fr: "French",
+  de: "German",
+  es: "Spanish",
+  it: "Italian",
+  pt: "Portuguese",
+  nl: "Dutch",
+  ja: "Japanese",
+  ar: "Arabic",
+  hi: "Hindi",
+  sv: "Swedish",
+  pl: "Polish",
+};
+
+const CONSENT_TYPE_LABELS: Record<string, string> = {
+  one_party: "One-Party",
+  two_party: "Two-Party (All-Party)",
+  all_party: "All-Party",
+};
+
 export default function CompliancePage() {
   const { toast } = useToast();
+
+  const [overviewData, setOverviewData] = useState<ComplianceOverviewData | null>(null);
+  const [loadingOverview, setLoadingOverview] = useState(true);
+  const [selectedDisclosureLang, setSelectedDisclosureLang] = useState("en");
 
   const [dncEntries, setDncEntries] = useState<DNCEntry[]>([]);
   const [loadingDnc, setLoadingDnc] = useState(true);
@@ -70,6 +149,19 @@ export default function CompliancePage() {
   const [piiResult, setPiiResult] = useState<PIIScanResult | null>(null);
   const [scanningPii, setScanningPii] = useState(false);
   const [exportingDnc, setExportingDnc] = useState(false);
+
+  const fetchOverview = () => {
+    setLoadingOverview(true);
+    fetch("/api/compliance/overview")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.countries) setOverviewData(d);
+      })
+      .catch(() => {
+        toast({ title: "Failed to load compliance overview", variant: "destructive" });
+      })
+      .finally(() => setLoadingOverview(false));
+  };
 
   const fetchDnc = () => {
     setLoadingDnc(true);
@@ -98,6 +190,7 @@ export default function CompliancePage() {
   };
 
   useEffect(() => {
+    fetchOverview();
     fetchDnc();
     fetchConsent();
   }, []);
@@ -221,22 +314,46 @@ export default function CompliancePage() {
     ? consentRecords
     : consentRecords.filter((r) => r.consentType === consentFilter);
 
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "text-emerald-600 dark:text-emerald-400";
+    if (score >= 70) return "text-amber-600 dark:text-amber-400";
+    return "text-red-600 dark:text-red-400";
+  };
+
+  const getScoreBg = (score: number) => {
+    if (score >= 90) return "bg-emerald-500/10 border-emerald-500/20";
+    if (score >= 70) return "bg-amber-500/10 border-amber-500/20";
+    return "bg-red-500/10 border-red-500/20";
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 flex-wrap">
         <Shield className="h-6 w-6 text-muted-foreground" />
         <div>
           <h1 className="text-2xl font-bold text-foreground" data-testid="text-compliance-title">
-            Compliance
+            Compliance Center
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Manage DNC lists, consent records, and scan for PII.
+            Per-country compliance, DNC management, calling hours, AI disclosure, and consent.
           </p>
         </div>
       </div>
 
-      <Tabs defaultValue="dnc" data-testid="tabs-compliance">
-        <TabsList>
+      <Tabs defaultValue="overview" data-testid="tabs-compliance">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="overview" data-testid="tab-overview">
+            <Globe className="h-4 w-4 mr-1.5" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="hours" data-testid="tab-hours">
+            <Clock className="h-4 w-4 mr-1.5" />
+            Calling Hours
+          </TabsTrigger>
+          <TabsTrigger value="disclosure" data-testid="tab-disclosure">
+            <Languages className="h-4 w-4 mr-1.5" />
+            AI Disclosure
+          </TabsTrigger>
           <TabsTrigger value="dnc" data-testid="tab-dnc">
             <Phone className="h-4 w-4 mr-1.5" />
             DNC List
@@ -251,6 +368,451 @@ export default function CompliancePage() {
           </TabsTrigger>
         </TabsList>
 
+        {/* ── OVERVIEW TAB ── */}
+        <TabsContent value="overview" className="space-y-4 mt-4">
+          {loadingOverview ? (
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-4">
+                {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
+              </div>
+              <Skeleton className="h-64 w-full" />
+            </div>
+          ) : overviewData ? (
+            <>
+              <div className="grid gap-4 sm:grid-cols-4">
+                <Card>
+                  <CardContent className="p-5">
+                    <p className="text-sm font-medium text-muted-foreground">Countries</p>
+                    <p className="text-2xl font-bold text-foreground mt-1" data-testid="text-overview-total-countries">
+                      {overviewData.summary.totalCountries}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">active markets</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5">
+                    <p className="text-sm font-medium text-muted-foreground">Callable Now</p>
+                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1" data-testid="text-overview-callable">
+                      {overviewData.summary.countriesCallable}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">within calling hours</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5">
+                    <p className="text-sm font-medium text-muted-foreground">Compliance Score</p>
+                    <p className={cn("text-2xl font-bold mt-1", getScoreColor(overviewData.summary.avgComplianceScore))} data-testid="text-overview-avg-score">
+                      {overviewData.summary.avgComplianceScore}%
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">average across all</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5">
+                    <p className="text-sm font-medium text-muted-foreground">DNC Entries</p>
+                    <p className="text-2xl font-bold text-foreground mt-1" data-testid="text-overview-dnc">
+                      {overviewData.totalDncEntries}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">blocked numbers</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Per-Country Compliance Status</CardTitle>
+                  <CardDescription className="text-xs">Real-time compliance health for all active markets</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Country</TableHead>
+                          <TableHead>Score</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Local Time</TableHead>
+                          <TableHead>DNC Registry</TableHead>
+                          <TableHead>Consent</TableHead>
+                          <TableHead className="text-right">30d Calls</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {overviewData.countries.map((country) => (
+                          <TableRow key={country.id} data-testid={`row-overview-${country.isoCode}`}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <div>
+                                  <p className="text-sm font-medium">{country.name}</p>
+                                  <p className="text-xs text-muted-foreground">{country.isoCode} {country.callingCode}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className={cn("inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium", getScoreBg(country.complianceScore))}>
+                                <span className={getScoreColor(country.complianceScore)}>{country.complianceScore}%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {country.withinCallingHours ? (
+                                <Badge className="no-default-hover-elevate bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" data-testid={`badge-status-${country.isoCode}`}>
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Callable
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="no-default-hover-elevate" data-testid={`badge-status-${country.isoCode}`}>
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Outside Hours
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm font-mono">{country.currentLocalTime || "--:--"}</span>
+                              <span className="text-xs text-muted-foreground ml-1.5">{country.timezone.split("/").pop()?.replace(/_/g, " ")}</span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm">{country.dnc?.registryName || "-"}</span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="no-default-hover-elevate text-xs">
+                                {CONSENT_TYPE_LABELS[country.consent?.type || ""] || country.consent?.type || "-"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-sm font-mono">{country.callCount}</span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Globe className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No compliance data available.</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* ── CALLING HOURS TAB ── */}
+        <TabsContent value="hours" className="space-y-4 mt-4">
+          {loadingOverview ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+            </div>
+          ) : overviewData ? (
+            <>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Calling Windows by Country</CardTitle>
+                  <CardDescription className="text-xs">
+                    Each country has specific hours when calling is permitted, based on local regulations
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Country</TableHead>
+                          <TableHead>Calling Window</TableHead>
+                          <TableHead>Timezone</TableHead>
+                          <TableHead>Local Time Now</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Restricted Days</TableHead>
+                          <TableHead>Holidays</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {overviewData.countries.map((country) => (
+                          <TableRow key={country.id} data-testid={`row-hours-${country.isoCode}`}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <div>
+                                  <p className="text-sm font-medium">{country.name}</p>
+                                  <p className="text-xs text-muted-foreground">{country.isoCode}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {country.callingHours ? (
+                                <span className="text-sm font-mono">
+                                  {country.callingHours.start} - {country.callingHours.end}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Not set</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm">{country.timezone}</span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm font-mono">{country.currentLocalTime || "--:--"}</span>
+                            </TableCell>
+                            <TableCell>
+                              {country.withinCallingHours ? (
+                                <Badge className="no-default-hover-elevate bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Open
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="no-default-hover-elevate">
+                                  <X className="h-3 w-3 mr-1" />
+                                  Closed
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {country.callingHours?.restrictedDays && country.callingHours.restrictedDays.length > 0 ? (
+                                <div className="flex gap-1 flex-wrap">
+                                  {country.callingHours.restrictedDays.map((day) => (
+                                    <Badge key={day} variant="outline" className="no-default-hover-elevate text-[11px] capitalize">
+                                      {day.replace(/_/g, " ")}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">None</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {country.holidays.length > 0 ? (
+                                <Badge variant="outline" className="no-default-hover-elevate text-[11px]">
+                                  <Calendar className="h-3 w-3 mr-1" />
+                                  {country.holidays.length}
+                                </Badge>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Check className="h-4 w-4 text-emerald-500" />
+                      Currently Callable
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-1.5">
+                      {overviewData.countries.filter((c) => c.withinCallingHours).map((country) => (
+                        <div
+                          key={country.id}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-emerald-500/20 bg-emerald-500/5 text-xs"
+                          data-testid={`badge-callable-${country.isoCode}`}
+                        >
+                          <MapPin className="h-3 w-3 text-emerald-500 shrink-0" />
+                          <span className="font-medium">{country.isoCode}</span>
+                          <span className="text-muted-foreground font-mono">{country.currentLocalTime}</span>
+                        </div>
+                      ))}
+                      {overviewData.countries.filter((c) => c.withinCallingHours).length === 0 && (
+                        <p className="text-sm text-muted-foreground">No countries are within calling hours right now.</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      Outside Calling Hours
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-1.5">
+                      {overviewData.countries.filter((c) => !c.withinCallingHours).map((country) => (
+                        <div
+                          key={country.id}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs"
+                          data-testid={`badge-closed-${country.isoCode}`}
+                        >
+                          <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                          <span className="font-medium">{country.isoCode}</span>
+                          <span className="text-muted-foreground font-mono">{country.currentLocalTime}</span>
+                        </div>
+                      ))}
+                      {overviewData.countries.filter((c) => !c.withinCallingHours).length === 0 && (
+                        <p className="text-sm text-muted-foreground">All countries are currently within calling hours.</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          ) : null}
+        </TabsContent>
+
+        {/* ── AI DISCLOSURE TAB ── */}
+        <TabsContent value="disclosure" className="space-y-4 mt-4">
+          {loadingOverview ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+            </div>
+          ) : overviewData ? (
+            <>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Languages className="h-4 w-4 text-muted-foreground" />
+                      AI Disclosure Text Preview
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      This text is read aloud at the start of every AI call, in the local language
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Select value={selectedDisclosureLang} onValueChange={setSelectedDisclosureLang}>
+                      <SelectTrigger data-testid="select-disclosure-language">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
+                          <SelectItem key={code} value={code}>{name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {overviewData.disclosureTexts[selectedDisclosureLang] ? (
+                      <div className="rounded-md border bg-muted/30 p-4">
+                        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+                          {LANGUAGE_NAMES[selectedDisclosureLang] || selectedDisclosureLang}
+                        </p>
+                        <p className="text-sm leading-relaxed" data-testid="text-disclosure-preview" dir={selectedDisclosureLang === "ar" ? "rtl" : "ltr"}>
+                          {overviewData.disclosureTexts[selectedDisclosureLang]}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No disclosure text available for this language.</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-muted-foreground" />
+                      Recording Consent by Country
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Each country requires a specific consent model for call recording
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="rounded-md border bg-muted/30 p-3">
+                          <p className="text-xs text-muted-foreground mb-1">One-Party Consent</p>
+                          <p className="text-lg font-semibold text-foreground" data-testid="text-one-party-count">
+                            {overviewData.countries.filter((c) => c.consent?.type === "one_party").length}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">Only one party needs to know</p>
+                        </div>
+                        <div className="rounded-md border bg-muted/30 p-3">
+                          <p className="text-xs text-muted-foreground mb-1">Two-Party Consent</p>
+                          <p className="text-lg font-semibold text-foreground" data-testid="text-two-party-count">
+                            {overviewData.countries.filter((c) => c.consent?.type === "two_party").length}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">All parties must consent</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Disclosure & Consent Requirements per Country</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Country</TableHead>
+                          <TableHead>AI Disclosure</TableHead>
+                          <TableHead>Disclosure Language</TableHead>
+                          <TableHead>Recording Consent</TableHead>
+                          <TableHead>DNC Registry</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {overviewData.countries.map((country) => (
+                          <TableRow key={country.id} data-testid={`row-disclosure-${country.isoCode}`}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <div>
+                                  <p className="text-sm font-medium">{country.name}</p>
+                                  <p className="text-xs text-muted-foreground">{country.isoCode}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {country.disclosure?.required ? (
+                                <Badge className="no-default-hover-elevate bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Required
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="no-default-hover-elevate">
+                                  Optional
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm">
+                                {country.disclosure?.language
+                                  ? LANGUAGE_NAMES[country.disclosure.language.split("-")[0]] || country.disclosure.language
+                                  : "-"}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "no-default-hover-elevate text-xs",
+                                  country.consent?.type === "two_party"
+                                    ? "border-amber-500/30 text-amber-600 dark:text-amber-400"
+                                    : ""
+                                )}
+                              >
+                                {CONSENT_TYPE_LABELS[country.consent?.type || ""] || country.consent?.type || "-"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm">{country.dnc?.registryName || "-"}</span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : null}
+        </TabsContent>
+
+        {/* ── DNC TAB ── */}
         <TabsContent value="dnc" className="space-y-4 mt-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <Card>
@@ -426,6 +988,7 @@ export default function CompliancePage() {
           </Card>
         </TabsContent>
 
+        {/* ── CONSENT TAB ── */}
         <TabsContent value="consent" className="space-y-4 mt-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 pb-3">
@@ -511,6 +1074,7 @@ export default function CompliancePage() {
           </Card>
         </TabsContent>
 
+        {/* ── PII SCANNER TAB ── */}
         <TabsContent value="pii" className="space-y-4 mt-4">
           <Card>
             <CardHeader className="pb-3">

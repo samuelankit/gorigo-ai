@@ -14,7 +14,7 @@ import {
   PhoneIncoming, PhoneOutgoing, ArrowRight, Activity,
   ChevronRight, GitBranch, Zap, CheckCircle2, Circle, Sparkles,
   Radio, PhoneOff, Target, Headphones, Cloud, Key, Server, Shield,
-  Check, MessageSquare,
+  Check, MessageSquare, Globe, MapPin,
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
@@ -75,6 +75,16 @@ interface TodayStatsData {
   failedToday: number;
   totalMinutesToday: number;
   leadsToday: number;
+}
+
+interface InternationalSummary {
+  activeCountries: { id: number; name: string; isoCode: string; callingCode: string; region: string; tier: string; status: string }[];
+  allAvailableCountries: { id: number; name: string; isoCode: string; callingCode: string; region: string; tier: string; status: string }[];
+  countryCallStats: { countryCode: string | null; totalCalls: number; avgDuration: string | null }[];
+  compliance: { totalCalls: number; dncBlocked: number; disclosurePlayed: number; consentObtained: number; rate: number };
+  totalCountries: number;
+  countriesWithCalls: number;
+  hasCallHistory: boolean;
 }
 
 interface LiveActiveCall {
@@ -166,6 +176,8 @@ export default function DashboardPage() {
   const [liveData, setLiveData] = useState<LiveDashboardData | null>(null);
   const [deploymentModel, setDeploymentModel] = useState<string | null>(null);
   const [serviceHealth, setServiceHealth] = useState<"healthy" | "unhealthy" | null>(null);
+  const [internationalData, setInternationalData] = useState<InternationalSummary | null>(null);
+  const [loadingInternational, setLoadingInternational] = useState(true);
 
   const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -230,6 +242,14 @@ export default function DashboardPage() {
         if (d && !d.error) setOnboarding(d);
       })
       .catch(() => {});
+
+    fetch("/api/international/summary")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && !d.error) setInternationalData(d);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingInternational(false));
 
     const fetchTodayStats = () => {
       fetch("/api/calls/today")
@@ -544,6 +564,179 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      <Card data-testid="card-international-calling">
+        <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 p-4 pb-2">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <CardTitle className="text-sm font-medium">International Calling</CardTitle>
+            {internationalData && (
+              <Badge variant="secondary" className="no-default-hover-elevate text-[11px]">
+                {internationalData.hasCallHistory
+                  ? `${internationalData.countriesWithCalls} active`
+                  : `${internationalData.totalCountries} available`}
+              </Badge>
+            )}
+          </div>
+          <Button asChild variant="ghost" size="sm" data-testid="button-view-international">
+            <Link href="/dashboard/compliance">
+              Details
+              <ArrowRight className="h-3 w-3 ml-1" />
+            </Link>
+          </Button>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          {loadingInternational ? (
+            <div className="space-y-2">
+              {[1, 2].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+            </div>
+          ) : !internationalData || internationalData.totalCountries === 0 ? (
+            <div className="text-center py-6">
+              <Globe className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground" data-testid="text-no-countries">
+                No countries available.
+              </p>
+            </div>
+          ) : !internationalData.hasCallHistory ? (
+            <div className="space-y-3">
+              <div className="rounded-md border border-blue-500/20 bg-blue-500/5 p-3">
+                <div className="flex items-start gap-3">
+                  <Globe className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">Ready to call {internationalData.totalCountries} countries</p>
+                    <p className="text-muted-foreground mt-0.5">
+                      Your platform supports international calling across {internationalData.totalCountries} countries with automatic compliance. Start a campaign to see per-country analytics here.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {internationalData.activeCountries.slice(0, 10).map((country) => (
+                  <div
+                    key={country.id}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs"
+                    data-testid={`badge-country-${country.isoCode}`}
+                  >
+                    <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="font-medium">{country.isoCode}</span>
+                  </div>
+                ))}
+                {internationalData.activeCountries.length > 10 && (
+                  <div className="flex items-center px-2 py-1 text-xs text-muted-foreground">
+                    +{internationalData.activeCountries.length - 10} more
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <Button asChild variant="outline" size="sm" data-testid="button-intl-campaigns">
+                  <Link href="/dashboard/campaigns">
+                    <Target className="h-3.5 w-3.5 mr-1.5" />
+                    Start Campaign
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" data-testid="button-intl-compliance">
+                  <Link href="/dashboard/compliance">
+                    <Shield className="h-3.5 w-3.5 mr-1.5" />
+                    Compliance
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded bg-muted/50">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Active</p>
+                  <p className="text-lg font-semibold" data-testid="text-intl-countries">{internationalData.countriesWithCalls}</p>
+                </div>
+                <div className="p-3 rounded bg-muted/50">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Available</p>
+                  <p className="text-lg font-semibold" data-testid="text-intl-available">{internationalData.totalCountries}</p>
+                </div>
+                <div className="p-3 rounded bg-muted/50">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Compliance</p>
+                  <p className={cn("text-lg font-semibold", internationalData.compliance.rate >= 90 ? "text-emerald-600 dark:text-emerald-400" : internationalData.compliance.rate >= 70 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400")} data-testid="text-intl-compliance">{internationalData.compliance.rate}%</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {internationalData.activeCountries.slice(0, 12).map((country) => (
+                  <div
+                    key={country.id}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-primary/20 bg-primary/5 text-xs"
+                    data-testid={`badge-country-${country.isoCode}`}
+                  >
+                    <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="font-medium">{country.isoCode}</span>
+                    <span className="text-muted-foreground hidden sm:inline">{country.callingCode}</span>
+                  </div>
+                ))}
+                {internationalData.activeCountries.length > 12 && (
+                  <div className="flex items-center px-2 py-1 text-xs text-muted-foreground">
+                    +{internationalData.activeCountries.length - 12} more
+                  </div>
+                )}
+              </div>
+
+              {internationalData.countryCallStats.length > 0 && (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-[11px]">Country</TableHead>
+                        <TableHead className="text-right text-[11px]">Calls</TableHead>
+                        <TableHead className="text-right text-[11px]">Avg Duration</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {internationalData.countryCallStats.slice(0, 5).map((stat) => {
+                        const country = internationalData.activeCountries.find((c) => c.isoCode === stat.countryCode)
+                          || internationalData.allAvailableCountries?.find((c) => c.isoCode === stat.countryCode);
+                        return (
+                          <TableRow key={stat.countryCode || "unknown"} data-testid={`row-intl-${stat.countryCode}`}>
+                            <TableCell className="text-[13px]">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                                <span className="font-medium">{country?.name || stat.countryCode || "Unknown"}</span>
+                                {country && <span className="text-muted-foreground text-xs">{country.callingCode}</span>}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right text-[13px] font-mono">{stat.totalCalls}</TableCell>
+                            <TableCell className="text-right text-[13px] font-mono">
+                              {stat.avgDuration ? `${Math.round(Number(stat.avgDuration))}s` : "--"}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <Button asChild variant="outline" size="sm" data-testid="button-intl-compliance">
+                  <Link href="/dashboard/compliance">
+                    <Shield className="h-3.5 w-3.5 mr-1.5" />
+                    Compliance
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" data-testid="button-intl-campaigns">
+                  <Link href="/dashboard/campaigns">
+                    <Target className="h-3.5 w-3.5 mr-1.5" />
+                    Campaigns
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" data-testid="button-intl-settings">
+                  <Link href="/dashboard/settings">
+                    <Globe className="h-3.5 w-3.5 mr-1.5" />
+                    Settings
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {liveData && (liveData.activeCalls.length > 0 || liveData.recentCompleted.length > 0) && (
         <Card data-testid="card-live-activity">

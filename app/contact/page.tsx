@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { socialLinks } from "@/lib/social-links";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -18,6 +19,7 @@ import {
   Handshake,
   LifeBuoy,
   Building2,
+  ExternalLink,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -70,6 +72,7 @@ const emailChannels = [
     testId: "link-email-enterprise",
   },
 ];
+
 
 export default function ContactPage() {
   return (
@@ -233,6 +236,48 @@ export default function ContactPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-20" data-testid="section-connect-social">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-semibold mb-2" data-testid="text-social-heading">
+              Connect With Us
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-lg mx-auto">
+              Follow GoRigo across our channels for demos, tutorials, industry insights,
+              and community discussions.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {socialLinks.map((social) => {
+              const Icon = social.icon;
+              const purpose = social.purpose;
+              return (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`card-social-${social.label.toLowerCase()}`}
+                >
+                  <Card className="h-full hover-elevate cursor-pointer">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2.5 mb-2">
+                        <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="font-medium text-sm">{social.label}</span>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground/50 ml-auto shrink-0" />
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {purpose}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </a>
+              );
+            })}
           </div>
         </div>
       </section>

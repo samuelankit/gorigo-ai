@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CallCtaBar } from "./call-cta-bar";
+import { socialLinks } from "@/lib/social-links";
 
 const platformLinks = [
   { label: "Capabilities", href: "/capabilities" },
@@ -65,6 +66,25 @@ export function Footer() {
               <p className="text-xs text-muted-foreground">
                 UK Company No. 15985956
               </p>
+            </div>
+
+            <div className="flex items-center gap-2 mt-3 flex-wrap" data-testid="footer-social-icons">
+              {socialLinks.map((social) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={social.label}
+                    data-testid={social.testId}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 

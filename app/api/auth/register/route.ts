@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
 
     logAuthEvent("register.success", result.newUser.id, result.newUser.email, { businessName }).catch(() => {});
 
-    const { password: _, emailVerificationToken: __, ...userWithoutSensitive } = result.newUser;
+    const { password: _, emailVerificationToken: __, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, ...userWithoutSensitive } = result.newUser;
     return NextResponse.json({
       user: userWithoutSensitive,
       message: "Account created. Please check your email to verify your address.",

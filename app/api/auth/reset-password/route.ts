@@ -6,6 +6,13 @@ import { hashPassword, hashToken } from "@/lib/auth";
 import { logAuthEvent } from "@/lib/audit";
 import { authLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(8).max(128),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,18 +25,8 @@ export async function POST(request: NextRequest) {
     if (sizeError) return sizeError;
 
     const body = await request.json();
-    const { token, newPassword } = body;
+    const { token, newPassword } = resetPasswordSchema.parse(body);
 
-    if (!token || typeof token !== "string") {
-      return NextResponse.json({ error: "Reset token is required" }, { status: 400 });
-    }
-
-    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
-    }
-    if (newPassword.length > 128) {
-      return NextResponse.json({ error: "Password too long (max 128 characters)" }, { status: 400 });
-    }
     if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
       return NextResponse.json({ error: "Password must contain at least one uppercase letter, one lowercase letter, and one number" }, { status: 400 });
     }
@@ -72,7 +69,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: "Password has been reset successfully. Please log in." }, { status: 200 });
   } catch (error) {
-    console.error("Reset password error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ResetPassword");
   }
 }

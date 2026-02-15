@@ -6,8 +6,12 @@ import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
-const VALID_DEPLOYMENT_MODELS = ["managed", "byok", "self_hosted", "custom"] as const;
+const deploymentModelSchema = z.object({
+  deploymentModel: z.enum(["managed", "byok", "self_hosted", "custom"]),
+}).strict();
 
 export async function PUT(request: NextRequest) {
   try {
@@ -34,11 +38,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { deploymentModel } = body;
-
-    if (!deploymentModel || !VALID_DEPLOYMENT_MODELS.includes(deploymentModel)) {
-      return NextResponse.json({ error: "Invalid deployment model. Must be one of: managed, byok, self_hosted, custom" }, { status: 400 });
-    }
+    const { deploymentModel } = deploymentModelSchema.parse(body);
 
     const byokMode = deploymentModel === "byok" ? "byok" : "platform";
 
@@ -62,7 +62,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true, deploymentModel }, { status: 200 });
   } catch (error) {
-    console.error("Update deployment model error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "DeploymentModel");
   }
 }

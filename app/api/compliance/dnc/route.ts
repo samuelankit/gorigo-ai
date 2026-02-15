@@ -7,6 +7,15 @@ import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
 import { addToDNCList, removeFromDNCList, normalizePhoneNumber } from "@/lib/dnc";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const dncAddSchema = z.object({
+  phoneNumber: z.string().min(1).max(20).regex(/^\+?[0-9\s\-()]*$/),
+  reason: z.string().max(500).optional(),
+  source: z.string().max(100).optional(),
+  notes: z.string().max(1000).optional(),
+}).strict();
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,8 +47,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ entries });
   } catch (error) {
-    console.error("Get DNC list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "DNCGet");
   }
 }
 
@@ -63,11 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { phoneNumber, reason, source, notes } = body;
-
-    if (!phoneNumber || typeof phoneNumber !== "string") {
-      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
-    }
+    const { phoneNumber, reason, source, notes } = dncAddSchema.parse(body);
 
     await addToDNCList(
       auth.orgId,
@@ -88,8 +92,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
-    console.error("Add to DNC list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "DNCAdd");
   }
 }
 
@@ -128,7 +131,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Remove from DNC list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "DNCDelete");
   }
 }

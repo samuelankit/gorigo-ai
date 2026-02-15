@@ -5,6 +5,13 @@ import { eq } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { getActiveCalls } from "@/lib/call-limits";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const callLimitsSchema = z.object({
+  maxConcurrentCalls: z.number().int().min(1).max(100).optional(),
+  minCallBalance: z.number().min(0).optional(),
+}).strict();
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,8 +38,7 @@ export async function GET(request: NextRequest) {
       activeCalls,
     });
   } catch (error) {
-    console.error("Call limits GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CallLimitsGet");
   }
 }
 
@@ -49,22 +55,15 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
+    const validated = callLimitsSchema.parse(body);
     const updates: Record<string, any> = {};
 
-    if (body.maxConcurrentCalls !== undefined) {
-      const max = parseInt(body.maxConcurrentCalls);
-      if (isNaN(max) || max < 1 || max > 100) {
-        return NextResponse.json({ error: "maxConcurrentCalls must be between 1 and 100" }, { status: 400 });
-      }
-      updates.maxConcurrentCalls = max;
+    if (validated.maxConcurrentCalls !== undefined) {
+      updates.maxConcurrentCalls = validated.maxConcurrentCalls;
     }
 
-    if (body.minCallBalance !== undefined) {
-      const min = parseFloat(body.minCallBalance);
-      if (isNaN(min) || min < 0) {
-        return NextResponse.json({ error: "minCallBalance must be non-negative" }, { status: 400 });
-      }
-      updates.minCallBalance = min;
+    if (validated.minCallBalance !== undefined) {
+      updates.minCallBalance = validated.minCallBalance;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -82,7 +81,6 @@ export async function PUT(request: NextRequest) {
       minCallBalance: updated.minCallBalance || 1.00,
     });
   } catch (error) {
-    console.error("Call limits PUT error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CallLimitsPut");
   }
 }

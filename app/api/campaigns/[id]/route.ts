@@ -3,6 +3,25 @@ import { db } from "@/lib/db";
 import { campaigns, campaignContacts } from "@/shared/schema";
 import { eq, and, count, sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const campaignUpdateSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional(),
+  agentId: z.number().int().positive().optional(),
+  countryCode: z.string().min(2).max(3).optional(),
+  language: z.string().max(50).optional(),
+  callingHoursStart: z.string().max(10).optional(),
+  callingHoursEnd: z.string().max(10).optional(),
+  callingTimezone: z.string().max(100).optional(),
+  pacingCallsPerMinute: z.number().int().min(0).optional(),
+  pacingMaxConcurrent: z.number().int().min(0).optional(),
+  budgetCap: z.number().min(0).optional(),
+  dailySpendLimit: z.number().min(0).optional(),
+  script: z.string().max(10000).optional(),
+  scriptLanguage: z.string().max(50).optional(),
+}).strict();
 
 export async function GET(
   request: NextRequest,
@@ -50,8 +69,7 @@ export async function GET(
       dncBlockedCount: counts[0]?.dncBlockedCount ?? 0,
     });
   } catch (error) {
-    console.error("Campaign GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CampaignGet");
   }
 }
 
@@ -89,6 +107,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
+    const validated = campaignUpdateSchema.parse(body);
 
     const allowedFields = [
       "name", "description", "agentId", "countryCode", "language",
@@ -99,8 +118,8 @@ export async function PATCH(
 
     const updateData: Record<string, any> = { updatedAt: new Date() };
     for (const field of allowedFields) {
-      if (field in body) {
-        updateData[field] = body[field];
+      if (field in validated) {
+        updateData[field] = (validated as any)[field];
       }
     }
 
@@ -112,8 +131,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Campaign PATCH error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CampaignPatch");
   }
 }
 
@@ -155,7 +173,6 @@ export async function DELETE(
 
     return NextResponse.json(archived);
   } catch (error) {
-    console.error("Campaign DELETE error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CampaignDelete");
   }
 }

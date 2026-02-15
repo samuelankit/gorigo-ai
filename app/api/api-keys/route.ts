@@ -6,6 +6,14 @@ import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import crypto from "crypto";
 import { logAudit } from "@/lib/audit";
 import { apiKeyLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const createApiKeySchema = z.object({
+  name: z.string().min(1).max(100),
+  scopes: z.array(z.string()).optional(),
+  expiresInDays: z.number().int().positive().optional(),
+}).strict();
 
 function hashKey(key: string): string {
   return crypto.createHash("sha256").update(key).digest("hex");
@@ -48,8 +56,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ keys });
   } catch (error) {
-    console.error("List API keys error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ApiKeysGet");
   }
 }
 
@@ -70,11 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, scopes, expiresInDays } = body;
-
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json({ error: "Key name is required" }, { status: 400 });
-    }
+    const { name, scopes, expiresInDays } = createApiKeySchema.parse(body);
 
     const existingKeys = await db
       .select({ id: apiKeys.id })
@@ -89,7 +92,7 @@ export async function POST(request: NextRequest) {
     const keyHash = hashKey(fullKey);
 
     let expiresAt: Date | null = null;
-    if (expiresInDays && typeof expiresInDays === "number" && expiresInDays > 0) {
+    if (expiresInDays && expiresInDays > 0) {
       expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
     }
 
@@ -131,7 +134,6 @@ export async function POST(request: NextRequest) {
       secretKey: fullKey,
     });
   } catch (error) {
-    console.error("Create API key error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ApiKeysCreate");
   }
 }

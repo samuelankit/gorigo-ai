@@ -7,6 +7,12 @@ import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import crypto from "crypto";
 import { hashToken } from "@/lib/auth";
 import { logAuthEvent } from "@/lib/audit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email().max(255),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,11 +25,7 @@ export async function POST(request: NextRequest) {
     if (sizeError) return sizeError;
 
     const body = await request.json();
-    const { email } = body;
-
-    if (!email || typeof email !== "string") {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
-    }
+    const { email } = forgotPasswordSchema.parse(body);
 
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
@@ -54,7 +56,6 @@ export async function POST(request: NextRequest) {
       message: "If an account with that email exists, a reset link has been generated.",
     }, { status: 200 });
   } catch (error) {
-    console.error("Forgot password error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ForgotPassword");
   }
 }

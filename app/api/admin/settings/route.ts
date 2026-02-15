@@ -6,6 +6,12 @@ import { logAudit } from "@/lib/audit";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const adminSettingsSchema = z.object({
+  settings: z.record(z.string(), z.any()),
+}).passthrough();
 
 export async function GET() {
   try {
@@ -23,8 +29,7 @@ export async function GET() {
 
     return NextResponse.json({ settings: settingsObj });
   } catch (error) {
-    console.error("Admin get settings error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminSettingsGet");
   }
 }
 
@@ -45,11 +50,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { settings } = body;
-
-    if (!settings || typeof settings !== "object") {
-      return NextResponse.json({ error: "settings object is required" }, { status: 400 });
-    }
+    const { settings } = adminSettingsSchema.parse(body);
 
     for (const [key, value] of Object.entries(settings)) {
       const [existing] = await db
@@ -81,7 +82,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Admin update settings error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminSettingsPut");
   }
 }

@@ -37,15 +37,24 @@ const aiLimiter = createRateLimiter(60_000, 20);
 const knowledgeLimiter = createRateLimiter(60_000, 10);
 const adminLimiter = createRateLimiter(60_000, 30);
 const exportLimiter = createRateLimiter(60_000, 5);
+const publicLimiter = createRateLimiter(60_000, 15);
+const billingLimiter = createRateLimiter(60_000, 10);
+const settingsLimiter = createRateLimiter(60_000, 20);
+const rigoMwLimiter = createRateLimiter(60_000, 12);
 const generalLimiter = createRateLimiter(60_000, 100);
 
 function getLimiterForPath(pathname: string) {
   if (pathname === "/api/auth/me") return authReadLimiter;
   if (pathname.startsWith("/api/auth/")) return authMutateLimiter;
   if (pathname.startsWith("/api/ai/")) return aiLimiter;
+  if (pathname.startsWith("/api/rigo")) return rigoMwLimiter;
+  if (pathname.startsWith("/api/public/")) return publicLimiter;
   if (pathname.startsWith("/api/knowledge")) return knowledgeLimiter;
   if (pathname.startsWith("/api/admin/")) return adminLimiter;
   if (pathname.startsWith("/api/export/")) return exportLimiter;
+  if (pathname === "/api/billing/stripe-webhook") return null;
+  if (pathname.startsWith("/api/billing/") || pathname.startsWith("/api/wallet/")) return billingLimiter;
+  if (pathname.startsWith("/api/settings/")) return settingsLimiter;
   if (pathname.startsWith("/api/twilio/")) return null;
   return generalLimiter;
 }
@@ -60,6 +69,10 @@ const BODY_SIZE_LIMITS: Record<string, number> = {
   "/api/compliance/": 50 * 1024,
   "/api/twilio/": 50 * 1024,
   "/api/billing/stripe-webhook": 1 * 1024 * 1024,
+  "/api/public/": 50 * 1024,
+  "/api/rigo": 50 * 1024,
+  "/api/wallet/": 10 * 1024,
+  "/api/billing/": 10 * 1024,
 };
 const DEFAULT_BODY_LIMIT = 1 * 1024 * 1024;
 

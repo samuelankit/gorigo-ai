@@ -4,6 +4,13 @@ import { eq } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const clientStatusSchema = z.object({
+  action: z.enum(["suspend", "activate", "flag"]),
+  reason: z.string().max(500).optional(),
+}).strict();
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +36,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { action, reason } = body;
-
-    if (!action || !["suspend", "activate", "flag"].includes(action)) {
-      return NextResponse.json({ error: "Invalid action. Must be suspend, activate, or flag" }, { status: 400 });
-    }
+    const { action, reason } = clientStatusSchema.parse(body);
 
     const [org] = await db.select().from(orgs).where(eq(orgs.id, orgId)).limit(1);
     if (!org) {
@@ -64,7 +67,6 @@ export async function POST(
 
     return NextResponse.json({ success: true, message });
   } catch (error) {
-    console.error("Admin client status error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminClientStatus");
   }
 }

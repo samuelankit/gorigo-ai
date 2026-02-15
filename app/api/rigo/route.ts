@@ -8,6 +8,16 @@ import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { agents, callLogs, campaigns } from "@/shared/schema";
 import { eq, and, sql, count, desc } from "drizzle-orm";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const rigoSchema = z.object({
+  message: z.string().min(1).max(2000),
+  conversationHistory: z.array(z.object({
+    role: z.string().min(1).max(50),
+    content: z.string().min(1).max(5000),
+  })).optional(),
+}).strict();
 
 const RIGO_COST_PER_INTERACTION = 0.01;
 
@@ -234,11 +244,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { message, conversationHistory = [] } = body;
-
-    if (!message || typeof message !== "string" || message.trim().length === 0) {
-      return NextResponse.json({ error: "Message is required" }, { status: 400 });
-    }
+    const { message, conversationHistory = [] } = rigoSchema.parse(body);
 
     intentCategory = detectIntent(message);
     isFreeGreeting = intentCategory === "greeting" && isFirstGreetingForOrg(auth.orgId);
@@ -385,12 +391,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      {
-        error: "Rigo encountered an error. Please try again.",
-        spokenResponse: "I am sorry, something went wrong. Please try again in a moment.",
-      },
-      { status: 500 }
-    );
+    return handleRouteError(error, "Rigo");
   }
 }

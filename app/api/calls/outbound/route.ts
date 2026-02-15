@@ -12,6 +12,14 @@ import { logAudit } from "@/lib/audit";
 import { callLimiter } from "@/lib/rate-limit";
 import { runFullComplianceCheck } from "@/lib/compliance-engine";
 import { runFraudCheck } from "@/lib/fraud-engine";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const outboundCallSchema = z.object({
+  phoneNumber: z.string().min(1).max(20).regex(/^\+?[0-9\s\-()]*$/),
+  agentId: z.number().int().positive().optional(),
+  countryCode: z.string().min(2).max(3).optional(),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,11 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { phoneNumber, agentId } = body;
-
-    if (!phoneNumber || typeof phoneNumber !== "string") {
-      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
-    }
+    const { phoneNumber, agentId, countryCode: bodyCountryCode } = outboundCallSchema.parse(body);
 
     const e164Regex = /^\+[1-9]\d{6,14}$/;
     const sanitizedPhone = phoneNumber.replace(/[\s\-().]/g, "");
@@ -66,7 +70,7 @@ export async function POST(request: NextRequest) {
       ["+971", "AE"], ["+65", "SG"], ["+27", "ZA"], ["+353", "IE"],
       ["+46", "SE"], ["+41", "CH"], ["+48", "PL"],
     ];
-    let countryCode = body.countryCode as string | undefined;
+    let countryCode = bodyCountryCode;
     if (!countryCode) {
       for (const [prefix, code] of E164_PREFIX_MAP) {
         if (sanitizedPhone.startsWith(prefix)) {
@@ -223,7 +227,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to initiate call. Please try again." }, { status: 500 });
     }
   } catch (error) {
-    console.error("Outbound call API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OutboundCall");
   }
 }

@@ -6,6 +6,13 @@ import { verifyPassword, createSession, setSessionCookie, hashToken } from "@/li
 import { authLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAuthEvent } from "@/lib/audit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const loginSchema = z.object({
+  email: z.string().email().max(255),
+  password: z.string().min(1).max(128),
+}).strict();
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -29,16 +36,7 @@ export async function POST(request: NextRequest) {
     if (sizeError) return sizeError;
 
     const body = await request.json();
-    const { email, password } = body;
-
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (typeof email !== "string" || !emailRegex.test(email)) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
-    }
+    const { email, password } = loginSchema.parse(body);
 
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!user) {
@@ -107,10 +105,9 @@ export async function POST(request: NextRequest) {
 
     logAuthEvent("login.success", user.id, user.email).catch(() => {});
 
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _, emailVerificationToken: _evt, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, ...userWithoutPassword } = user;
     return NextResponse.json({ user: userWithoutPassword }, { status: 200 });
   } catch (error) {
-    console.error("Login error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Login");
   }
 }

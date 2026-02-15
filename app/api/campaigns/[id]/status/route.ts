@@ -3,6 +3,13 @@ import { db } from "@/lib/db";
 import { campaigns, campaignContacts } from "@/shared/schema";
 import { eq, and, count } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const campaignStatusSchema = z.object({
+  status: z.enum(["draft", "active", "paused", "completed", "cancelled"]),
+  reason: z.string().max(500).optional(),
+}).strict();
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   draft: ["active", "cancelled"],
@@ -27,11 +34,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status: newStatus, reason } = body;
-
-    if (!newStatus) {
-      return NextResponse.json({ error: "Status is required" }, { status: 400 });
-    }
+    const { status: newStatus, reason } = campaignStatusSchema.parse(body);
 
     const [campaign] = await db
       .select()
@@ -99,7 +102,6 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Campaign status PATCH error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CampaignStatus");
   }
 }

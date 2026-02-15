@@ -5,6 +5,15 @@ import { eq } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { DEFAULT_SCHEDULE } from "@/lib/business-hours";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const businessHoursSchema = z.object({
+  businessHours: z.any().optional(),
+  voicemailEnabled: z.boolean().optional(),
+  voicemailGreeting: z.string().max(1000).optional(),
+  timezone: z.string().min(1).max(100).optional(),
+}).passthrough();
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,8 +39,7 @@ export async function GET(request: NextRequest) {
       timezone: org.timezone || "America/New_York",
     });
   } catch (error) {
-    console.error("Business hours GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "BusinessHoursGet");
   }
 }
 
@@ -48,12 +56,13 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
+    const validated = businessHoursSchema.parse(body);
     const updates: Record<string, any> = {};
 
-    if (body.businessHours !== undefined) updates.businessHours = body.businessHours;
-    if (body.voicemailEnabled !== undefined) updates.voicemailEnabled = body.voicemailEnabled;
-    if (body.voicemailGreeting !== undefined) updates.voicemailGreeting = body.voicemailGreeting;
-    if (body.timezone !== undefined) updates.timezone = body.timezone;
+    if (validated.businessHours !== undefined) updates.businessHours = validated.businessHours;
+    if (validated.voicemailEnabled !== undefined) updates.voicemailEnabled = validated.voicemailEnabled;
+    if (validated.voicemailGreeting !== undefined) updates.voicemailGreeting = validated.voicemailGreeting;
+    if (validated.timezone !== undefined) updates.timezone = validated.timezone;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "No fields to update" }, { status: 400 });
@@ -72,7 +81,6 @@ export async function PUT(request: NextRequest) {
       timezone: updated.timezone || "America/New_York",
     });
   } catch (error) {
-    console.error("Business hours PUT error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "BusinessHoursPut");
   }
 }

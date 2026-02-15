@@ -6,6 +6,16 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { recordConsent, revokeConsent, normalizePhoneNumber } from "@/lib/dnc";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const consentSchema = z.object({
+  phoneNumber: z.string().min(1).max(20).regex(/^\+?[0-9\s\-()]*$/),
+  consentType: z.string().min(1).max(100),
+  consentGiven: z.boolean(),
+  method: z.string().max(100).optional(),
+  consentText: z.string().max(2000).optional(),
+}).strict();
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,8 +47,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ records });
   } catch (error) {
-    console.error("Get consent records error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ConsentGet");
   }
 }
 
@@ -62,19 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { phoneNumber, consentType, consentGiven, method, consentText } = body;
-
-    if (!phoneNumber || typeof phoneNumber !== "string") {
-      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
-    }
-
-    if (!consentType || typeof consentType !== "string") {
-      return NextResponse.json({ error: "Consent type is required" }, { status: 400 });
-    }
-
-    if (typeof consentGiven !== "boolean") {
-      return NextResponse.json({ error: "consentGiven must be a boolean" }, { status: 400 });
-    }
+    const { phoneNumber, consentType, consentGiven, method, consentText } = consentSchema.parse(body);
 
     await recordConsent(
       auth.orgId,
@@ -87,8 +84,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
-    console.error("Record consent error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ConsentAdd");
   }
 }
 
@@ -126,7 +122,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Revoke consent error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ConsentDelete");
   }
 }

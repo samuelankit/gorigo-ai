@@ -5,6 +5,12 @@ import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const spendingCapSchema = z.object({
+  spendingCap: z.number().nonnegative().nullable(),
+}).strict();
 
 export async function PUT(request: NextRequest) {
   try {
@@ -31,7 +37,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { spendingCap } = body;
+    const { spendingCap } = spendingCapSchema.parse(body);
 
     const now = new Date();
     const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -53,7 +59,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("Update spending cap error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "SpendingCap");
   }
 }

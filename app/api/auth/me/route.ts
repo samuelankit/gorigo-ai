@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     if (!auth) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    const { password: _, ...userWithoutPassword } = auth.user;
+    const { password: _, emailVerificationToken: _evt, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, ...userWithoutPassword } = auth.user;
 
     let org = null;
     if (auth.orgId) {

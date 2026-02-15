@@ -7,6 +7,16 @@ import { topUpWallet, refundToWallet } from "@/lib/wallet";
 import { logAudit } from "@/lib/audit";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const adminWalletSchema = z.object({
+  orgId: z.number().int().positive(),
+  amount: z.number().positive(),
+  description: z.string().max(500).optional(),
+  action: z.enum(["topup", "refund"]).optional(),
+  originalTransactionId: z.number().int().positive().optional(),
+}).strict();
 
 async function requireSuperAdmin() {
   const auth = await getAuthenticatedUser();
@@ -53,8 +63,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Admin get wallets error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminWalletGet");
   }
 }
 
@@ -74,15 +83,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { orgId, amount, description, action: walletAction } = body;
-
-    if (!orgId || !amount || typeof amount !== "number" || amount <= 0) {
-      return NextResponse.json({ error: "orgId and positive amount required" }, { status: 400 });
-    }
+    const { orgId, amount, description, action: walletAction, originalTransactionId } = adminWalletSchema.parse(body);
 
     if (walletAction === "refund") {
-      const originalTransactionId = body.originalTransactionId ? Number(body.originalTransactionId) : undefined;
-
       const result = await refundToWallet(
         orgId,
         amount,
@@ -125,7 +128,6 @@ export async function POST(request: NextRequest) {
       transaction: result.transaction,
     });
   } catch (error) {
-    console.error("Admin wallet top-up error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminWalletPost");
   }
 }

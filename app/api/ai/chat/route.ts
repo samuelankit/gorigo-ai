@@ -12,6 +12,19 @@ import { hasInsufficientBalance, deductFromWallet } from "@/lib/wallet";
 import { requireEmailVerified } from "@/lib/get-user";
 import { redactPII } from "@/lib/pii-redaction";
 import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const aiChatSchema = z.object({
+  message: z.string().min(1).max(5000),
+  conversationHistory: z.array(z.object({
+    role: z.enum(["user", "system", "assistant"]),
+    content: z.string().min(1),
+  })).optional(),
+  stream: z.boolean().optional(),
+  callLogId: z.number().int().positive().optional(),
+  currentState: z.string().optional(),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,11 +67,7 @@ export async function POST(request: NextRequest) {
       stream = false,
       callLogId,
       currentState: requestedState,
-    } = body;
-
-    if (!message) {
-      return NextResponse.json({ error: "Message is required" }, { status: 400 });
-    }
+    } = aiChatSchema.parse(body);
 
     if (detectPromptInjection(message)) {
       return NextResponse.json({
@@ -74,7 +83,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No agent configured" }, { status: 404 });
     }
 
-    const currentState: FSMState = isValidState(requestedState) ? requestedState : "GREETING";
+    const currentState: FSMState = isValidState(requestedState ?? "") ? (requestedState as FSMState) : "GREETING";
     const allowedActions = STATE_ALLOWED_ACTIONS[currentState] || [];
     const userRequestedHuman = detectHumanRequest(message);
 
@@ -341,10 +350,6 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
       ragSource,
     });
   } catch (error) {
-    console.error("AI chat error:", error);
-    return NextResponse.json(
-      { error: "Failed to generate response" },
-      { status: 500 }
-    );
+    return handleRouteError(error, "AIChat");
   }
 }

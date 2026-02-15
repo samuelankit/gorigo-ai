@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { billingLimiter } from "@/lib/rate-limit";
 import crypto from "crypto";
+import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
+
+const topupSchema = z.object({
+  amount: z.number().positive().min(5).max(10000),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,10 +25,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Demo accounts cannot top up wallet" }, { status: 403 });
     }
 
-    const { amount } = await request.json();
-    if (!amount || typeof amount !== "number" || amount < 5 || amount > 10000) {
-      return NextResponse.json({ error: "Amount must be between $5 and $10,000" }, { status: 400 });
-    }
+    const body = await request.json();
+    const { amount } = topupSchema.parse(body);
 
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json({
@@ -71,7 +75,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Payment service error. Please try again later." }, { status: 502 });
     }
   } catch (error) {
-    console.error("Top-up error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "BillingTopup");
   }
 }

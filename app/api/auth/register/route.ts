@@ -5,6 +5,7 @@ import { eq, sql, and, desc } from "drizzle-orm";
 import { hashPassword, createSession, setSessionCookie, hashToken } from "@/lib/auth";
 import { authLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,10 +44,17 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(password);
 
     const result = await db.transaction(async (tx) => {
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const verificationTokenHash = crypto.createHash("sha256").update(verificationToken).digest("hex");
+      const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
       const [newUser] = await tx.insert(users).values({
         email,
         password: hashedPassword,
         businessName,
+        emailVerified: false,
+        emailVerificationToken: verificationTokenHash,
+        emailVerificationExpiresAt: verificationExpiresAt,
       }).returning();
 
       let referredByAffiliateId: number | null = null;
@@ -136,13 +144,16 @@ export async function POST(request: NextRequest) {
         userAgent,
       });
 
-      return { newUser, token };
+      return { newUser, token, verificationToken };
     });
 
     await setSessionCookie(result.token);
 
-    const { password: _, ...userWithoutPassword } = result.newUser;
-    return NextResponse.json({ user: userWithoutPassword }, { status: 201 });
+    const { password: _, emailVerificationToken: __, ...userWithoutSensitive } = result.newUser;
+    return NextResponse.json({
+      user: userWithoutSensitive,
+      message: "Account created. Please check your email to verify your address.",
+    }, { status: 201 });
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

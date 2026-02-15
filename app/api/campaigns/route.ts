@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { campaigns, insertCampaignSchema } from "@/shared/schema";
 import { eq } from "drizzle-orm";
-import { getAuthenticatedUser } from "@/lib/get-user";
+import { getAuthenticatedUser, requireEmailVerified } from "@/lib/get-user";
 
 export async function GET() {
   try {
@@ -29,6 +29,11 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const verifiedCheck = requireEmailVerified(auth);
+    if (!verifiedCheck.allowed) {
+      return NextResponse.json({ error: verifiedCheck.error }, { status: verifiedCheck.status || 403 });
     }
 
     const body = await request.json();

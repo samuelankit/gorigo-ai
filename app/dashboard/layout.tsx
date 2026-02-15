@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Bot, Send, Workflow, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Search, Plus, Bot, Send, Workflow, Settings, LogOut, ChevronDown, Mail, AlertTriangle } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -26,6 +26,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [email, setEmail] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -41,6 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           setAuthenticated(true);
           setEmail(data.user.email || "");
           setBusinessName(data.user.businessName || "");
+          setEmailVerified(data.user.emailVerified !== false);
         }
         setLoading(false);
       })
@@ -48,6 +51,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push("/login");
       });
   }, [router]);
+
+  const handleResendVerification = useCallback(async () => {
+    setResendingVerification(true);
+    try {
+      await fetch("/api/auth/resend-verification", { method: "POST" });
+    } catch {}
+    setResendingVerification(false);
+  }, []);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -181,6 +192,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </DropdownMenu>
             </div>
           </header>
+          {!emailVerified && (
+            <div
+              className="flex items-center gap-3 border-b bg-amber-50 px-4 py-2 dark:bg-amber-950/30"
+              data-testid="banner-email-verification"
+            >
+              <Mail className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                Please verify your email address to unlock all features.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResendVerification}
+                disabled={resendingVerification}
+                className="ml-auto shrink-0"
+                data-testid="button-resend-verification"
+              >
+                {resendingVerification ? "Sending..." : "Resend Verification"}
+              </Button>
+            </div>
+          )}
           <main className="flex-1 overflow-auto p-5">
             {children}
           </main>

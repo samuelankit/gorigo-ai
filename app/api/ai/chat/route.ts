@@ -9,6 +9,7 @@ import { checkResponseCache, searchKnowledge, buildRAGContext, cacheResponse } f
 import { aiLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance, deductFromWallet } from "@/lib/wallet";
+import { requireEmailVerified } from "@/lib/get-user";
 import { redactPII } from "@/lib/pii-redaction";
 import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 
@@ -32,6 +33,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (!auth.isDemo) {
+      const verifiedCheck = requireEmailVerified(auth);
+      if (!verifiedCheck.allowed) {
+        return NextResponse.json({ error: verifiedCheck.error, code: "EMAIL_NOT_VERIFIED" }, { status: verifiedCheck.status || 403 });
+      }
+
       const insufficientBalance = await hasInsufficientBalance(auth.orgId);
       if (insufficientBalance) {
         return NextResponse.json({

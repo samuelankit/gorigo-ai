@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { agents, callLogs, twilioPhoneNumbers } from "@/shared/schema";
 import { resolveRate } from "@/lib/rate-resolver";
 import { eq, and } from "drizzle-orm";
-import { getAuthenticatedUser, requireApiKeyScope } from "@/lib/get-user";
+import { getAuthenticatedUser, requireApiKeyScope, requireEmailVerified } from "@/lib/get-user";
 import { isTwilioConfigured, makeOutboundCall } from "@/lib/twilio";
 import { hasInsufficientBalance } from "@/lib/wallet";
 import { isOnDNCList, hasValidConsent } from "@/lib/dnc";
@@ -28,6 +28,11 @@ export async function POST(request: NextRequest) {
     const scopeCheck = requireApiKeyScope(auth, "calls:write");
     if (!scopeCheck.allowed) {
       return NextResponse.json({ error: scopeCheck.error }, { status: scopeCheck.status || 403 });
+    }
+
+    const verifiedCheck = requireEmailVerified(auth);
+    if (!verifiedCheck.allowed) {
+      return NextResponse.json({ error: verifiedCheck.error }, { status: verifiedCheck.status || 403 });
     }
 
     const { isTwilioConfiguredForOrg } = await import("@/lib/twilio");

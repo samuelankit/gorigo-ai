@@ -22,9 +22,11 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
+  const verified = searchParams.get("verified") === "true";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState(verified ? "Email verified successfully. You can now sign in." : "");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -100,6 +102,14 @@ function LoginForm() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {successMessage && (
+              <div
+                className="text-sm text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/30 rounded-md p-3"
+                data-testid="text-login-success"
+              >
+                {successMessage}
+              </div>
+            )}
             {error && (
               <div
                 className="text-sm text-destructive bg-destructive/10 rounded-md p-3"

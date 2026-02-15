@@ -128,6 +128,14 @@ export function requireWriteAccess(auth: { isDemo: boolean } | null) {
   return { allowed: true, error: null };
 }
 
+export function requireEmailVerified(auth: AuthResult | null): { allowed: boolean; error: string | null; status?: number } {
+  if (!auth) return { allowed: false, error: "Not authenticated", status: 401 };
+  if (auth.user.emailVerified === false) {
+    return { allowed: false, error: "Email verification required. Please verify your email address before using this feature.", status: 403 };
+  }
+  return { allowed: true, error: null };
+}
+
 export function requireSuperAdmin(auth: { globalRole: string } | null) {
   if (!auth) return { allowed: false, error: "Not authenticated" };
   if (auth.globalRole !== "SUPERADMIN") return { allowed: false, error: "Access denied" };

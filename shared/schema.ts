@@ -13,6 +13,9 @@ export const users = pgTable("users", {
   failedLoginAttempts: integer("failed_login_attempts").default(0),
   lockedUntil: timestamp("locked_until"),
   globalRole: text("global_role").default("CLIENT"),
+  emailVerified: boolean("email_verified").default(false),
+  emailVerificationToken: text("email_verification_token"),
+  emailVerificationExpiresAt: timestamp("email_verification_expires_at"),
 });
 
 export const sessions = pgTable("sessions", {

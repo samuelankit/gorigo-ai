@@ -14,7 +14,7 @@ import {
   PhoneIncoming, PhoneOutgoing, ArrowRight, Activity,
   ChevronRight, GitBranch, Zap, CheckCircle2, Circle, Sparkles,
   Radio, PhoneOff, Target, Headphones, Cloud, Key, Server, Shield,
-  Check,
+  Check, MessageSquare,
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
@@ -339,12 +339,14 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
-                deploymentModel === "managed" ? "bg-blue-500/10" : deploymentModel === "byok" ? "bg-amber-500/10" : "bg-emerald-500/10"
+                deploymentModel === "managed" ? "bg-blue-500/10" : deploymentModel === "byok" ? "bg-amber-500/10" : deploymentModel === "custom" ? "bg-violet-500/10" : "bg-emerald-500/10"
               )}>
                 {deploymentModel === "managed" ? (
                   <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 ) : deploymentModel === "byok" ? (
                   <Key className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                ) : deploymentModel === "custom" ? (
+                  <MessageSquare className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                 ) : (
                   <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 )}
@@ -352,10 +354,10 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium" data-testid="text-deployment-label">
-                    {deploymentModel === "managed" ? "Managed Package" : deploymentModel === "byok" ? "BYOK Package" : "Self-Hosted Package"}
+                    {deploymentModel === "managed" ? "Managed Package" : deploymentModel === "byok" ? "BYOK Package" : deploymentModel === "custom" ? "Custom Package" : "Self-Hosted Package"}
                   </span>
                   <Badge variant="secondary" className="no-default-hover-elevate text-[11px]" data-testid="badge-rate">
-                    {deploymentModel === "managed" ? "\u00A30.15/min" : deploymentModel === "byok" ? "\u00A30.05/min" : "\u00A30.03/min"}
+                    {deploymentModel === "managed" ? "\u00A30.15/min" : deploymentModel === "byok" ? "\u00A30.05/min" : deploymentModel === "custom" ? "Custom" : "\u00A30.03/min"}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -363,7 +365,9 @@ export default function DashboardPage() {
                     ? "AI + Telephony included \u2022 Fully managed"
                     : deploymentModel === "byok"
                       ? "Platform fee only \u2022 Your API keys"
-                      : "Licence fee only \u2022 Your infrastructure"}
+                      : deploymentModel === "custom"
+                        ? "Tailored solution \u2022 Custom rates"
+                        : "Licence fee only \u2022 Your infrastructure"}
                 </p>
               </div>
             </div>
@@ -390,6 +394,12 @@ export default function DashboardPage() {
                 <Badge variant="outline" className="no-default-hover-elevate text-[11px]" data-testid="badge-self-hosted-infra">
                   <Server className="h-3 w-3 mr-1" />
                   Your Infrastructure
+                </Badge>
+              )}
+              {deploymentModel === "custom" && (
+                <Badge variant="outline" className="no-default-hover-elevate text-[11px]" data-testid="badge-custom-bespoke">
+                  <MessageSquare className="h-3 w-3 mr-1" />
+                  Bespoke Solution
                 </Badge>
               )}
             </div>
@@ -430,9 +440,14 @@ export default function DashboardPage() {
                   ) : (
                     <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
                   )}
-                  <span className={step.completed ? "text-muted-foreground line-through" : "text-foreground"}>
-                    {step.title}
-                  </span>
+                  <div className="min-w-0">
+                    <span className={step.completed ? "text-muted-foreground line-through" : "text-foreground"}>
+                      {step.title}
+                    </span>
+                    {step.description && !step.completed && (
+                      <p className="text-[11px] text-muted-foreground truncate">{step.description}</p>
+                    )}
+                  </div>
                 </Link>
               ))}
             </div>

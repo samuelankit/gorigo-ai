@@ -139,6 +139,9 @@ export default function OnboardingPage() {
   const [newQuestion, setNewQuestion] = useState("");
   const [newAnswer, setNewAnswer] = useState("");
 
+  const [selectedCountries, setSelectedCountries] = useState<string[]>(["GB"]);
+  const [availableCountries, setAvailableCountries] = useState<{ code: string; name: string }[]>([]);
+
   useEffect(() => {
     fetch("/api/auth/me")
       .then((res) => {
@@ -160,6 +163,18 @@ export default function OnboardingPage() {
       .catch(() => {
         router.push("/login");
       });
+
+    fetch("/api/countries")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAvailableCountries(data.map((c: { isoCode?: string; code?: string; name: string }) => ({
+            code: c.isoCode || c.code || "",
+            name: c.name,
+          })));
+        }
+      })
+      .catch(() => {});
   }, [router]);
 
   const addFaqEntry = () => {
@@ -216,6 +231,14 @@ export default function OnboardingPage() {
         throw new Error("Failed to save agent configuration");
       }
 
+      if (selectedCountries.length > 0) {
+        await fetch("/api/onboarding/international", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ countries: selectedCountries }),
+        }).catch(() => {});
+      }
+
       toast({ title: "Agent launched successfully", description: "Your AI agent is ready to go." });
       router.push("/dashboard");
     } catch {
@@ -233,8 +256,8 @@ export default function OnboardingPage() {
     );
   }
 
-  const totalSteps = 4;
-  const stepLabels = ["Package", "Business", "Agent", "FAQ"];
+  const totalSteps = 5;
+  const stepLabels = ["Package", "Business", "Agent", "FAQ", "Countries"];
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-500/5 via-background to-violet-500/5 p-4">
@@ -250,7 +273,7 @@ export default function OnboardingPage() {
             </span>
           </div>
           <h1 className="text-3xl font-bold text-foreground" data-testid="text-onboarding-title">
-            {step === 1 ? "Choose Your Package" : "Set Up Your AI Agent"}
+            {step === 1 ? "Choose Your Package" : step === 5 ? "International Calling" : "Set Up Your AI Agent"}
           </h1>
           <p className="text-muted-foreground">Step {step} of {totalSteps}</p>
         </div>
@@ -282,7 +305,7 @@ export default function OnboardingPage() {
               {i < totalSteps - 1 && (
                 <div
                   className={cn(
-                    "h-0.5 w-10 mx-1.5 mb-5 rounded-full transition-colors",
+                    "h-0.5 w-8 mx-1 mb-5 rounded-full transition-colors",
                     s < step ? "bg-primary" : "bg-muted"
                   )}
                 />
@@ -597,6 +620,80 @@ export default function OnboardingPage() {
                   </div>
                 </>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 5 && (
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>International Calling Countries</CardTitle>
+              <CardDescription>Select which countries your AI agents will handle calls for. You can change this later in settings.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {availableCountries.length === 0 ? (
+                <div className="text-center py-8">
+                  <Globe className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Loading available countries...</p>
+                </div>
+              ) : (
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {availableCountries.map((country) => {
+                    const isSelected = selectedCountries.includes(country.code);
+                    return (
+                      <div
+                        key={country.code}
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-all",
+                          isSelected ? "ring-2 ring-primary border-primary/30 bg-primary/5" : "hover-elevate"
+                        )}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedCountries(selectedCountries.filter((c) => c !== country.code));
+                          } else {
+                            setSelectedCountries([...selectedCountries, country.code]);
+                          }
+                        }}
+                        data-testid={`country-toggle-${country.code}`}
+                      >
+                        <div className="flex items-center justify-center w-8 h-8 rounded-md bg-muted shrink-0">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{country.name}</p>
+                          <p className="text-xs text-muted-foreground">{country.code}</p>
+                        </div>
+                        {isSelected && (
+                          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary shrink-0">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {selectedCountries.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-muted-foreground">{selectedCountries.length} {selectedCountries.length === 1 ? "country" : "countries"} selected</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {selectedCountries.map((code) => (
+                      <Badge key={code} variant="secondary" className="text-xs no-default-hover-elevate">{code}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="rounded-md border border-blue-500/20 bg-blue-500/5 p-3">
+                <div className="flex items-start gap-3">
+                  <Shield className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">Per-country compliance included</p>
+                    <p className="text-muted-foreground mt-0.5">
+                      Each country includes automatic calling hours enforcement, DNC list checking, AI disclosure in the local language, and recording consent management.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}

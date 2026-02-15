@@ -173,6 +173,18 @@ const packages = [
     cta: "Contact Sales",
     href: "/contact",
   },
+  {
+    name: "Custom",
+    description: "Tailored solution built around your exact requirements.",
+    highlights: [
+      "Bespoke configuration",
+      "Custom billing rates",
+      "Dedicated onboarding",
+      "Negotiated SLAs",
+    ],
+    cta: "Contact Sales",
+    href: "/contact",
+  },
 ];
 
 const capabilities = [
@@ -373,7 +385,7 @@ export default function HomePage() {
               Choose how you deploy
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {packages.map((pkg) => (
               <Card
                 key={pkg.name}

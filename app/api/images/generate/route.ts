@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { getAuthenticatedUser } from "@/lib/get-user";
 
 const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || "placeholder-key";
 const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
@@ -7,6 +8,11 @@ const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
 const openaiClient = new OpenAI({ apiKey, baseURL });
 
 export async function POST(req: NextRequest) {
+  const auth = await getAuthenticatedUser();
+  if (!auth) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   const body = await req.json();
   const { prompt, size = "1024x1024" } = body;
 

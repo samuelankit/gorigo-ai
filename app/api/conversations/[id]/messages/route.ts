@@ -3,6 +3,7 @@ import { chatStorage } from "../../../../../replit_integrations/chat/storage";
 import { openai } from "../../../../../replit_integrations/chat/client-openai";
 import { anthropic } from "../../../../../replit_integrations/chat/client-anthropic";
 import { openrouter } from "../../../../../replit_integrations/chat/client-openrouter";
+import { getAuthenticatedUser } from "@/lib/get-user";
 
 type Provider = "openai" | "anthropic" | "openrouter";
 
@@ -10,12 +11,22 @@ const DEFAULT_OPENAI_MODEL = "gpt-5.2";
 const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await getAuthenticatedUser();
+  if (!auth) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   const { id } = await params;
   const msgs = await chatStorage.getMessages(Number(id));
   return NextResponse.json(msgs);
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await getAuthenticatedUser();
+  if (!auth) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   const { id } = await params;
   const conversationId = Number(id);
   const body = await req.json();

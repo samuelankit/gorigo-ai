@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { countries, countryRateCards } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
+import { getAuthenticatedUser } from "@/lib/get-user";
 
 export async function GET(request: NextRequest) {
+  const auth = await getAuthenticatedUser();
+  if (!auth) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const countryCode = searchParams.get("countryCode");

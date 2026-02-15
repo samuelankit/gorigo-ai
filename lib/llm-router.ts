@@ -132,6 +132,8 @@ export interface LLMCallResult {
   latencyMs: number;
   keySource: "org" | "platform";
   tier: number;
+  inputTokens?: number;
+  outputTokens?: number;
 }
 
 export interface ConversationMessage {
@@ -152,7 +154,7 @@ async function callOpenAI(
   messages: ConversationMessage[],
   maxTokens: number,
   temperature: number,
-): Promise<{ content: string; latencyMs: number }> {
+): Promise<{ content: string; latencyMs: number; inputTokens?: number; outputTokens?: number }> {
   const start = Date.now();
   const response = await client.chat.completions.create({
     model,
@@ -163,6 +165,8 @@ async function callOpenAI(
   return {
     content: response.choices[0]?.message?.content || "",
     latencyMs: Date.now() - start,
+    inputTokens: response.usage?.prompt_tokens,
+    outputTokens: response.usage?.completion_tokens,
   };
 }
 
@@ -172,7 +176,7 @@ async function callAnthropic(
   messages: ConversationMessage[],
   maxTokens: number,
   temperature: number,
-): Promise<{ content: string; latencyMs: number }> {
+): Promise<{ content: string; latencyMs: number; inputTokens?: number; outputTokens?: number }> {
   const { system, userMessages } = extractSystemPrompt(messages);
   const anthropicMessages = userMessages.map(m => ({
     role: m.role as "user" | "assistant",
@@ -190,6 +194,8 @@ async function callAnthropic(
   return {
     content: textBlock?.text || "",
     latencyMs: Date.now() - start,
+    inputTokens: response.usage?.input_tokens,
+    outputTokens: response.usage?.output_tokens,
   };
 }
 
@@ -225,6 +231,8 @@ export async function callLLM(
           latencyMs: result.latencyMs,
           keySource: "org",
           tier: 0,
+          inputTokens: result.inputTokens,
+          outputTokens: result.outputTokens,
         };
       }
     } catch (err) {
@@ -242,7 +250,7 @@ export async function callLLM(
       try {
         const result = await callOpenAI(client, model, messages, maxTokens, temperature);
         recordSuccess("openai", result.latencyMs);
-        return { content: result.content, model, provider: "openai", usedFallback: false, latencyMs: result.latencyMs, keySource: "platform", tier: 1 };
+        return { content: result.content, model, provider: "openai", usedFallback: false, latencyMs: result.latencyMs, keySource: "platform", tier: 1, inputTokens: result.inputTokens, outputTokens: result.outputTokens };
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         console.error(`[LLM Router] Tier 1 OpenAI (${model}) failed:`, errMsg);
@@ -254,7 +262,7 @@ export async function callLLM(
             const simplifiedMessages = messages.length > 4 ? [messages[0], ...messages.slice(-3)] : messages;
             const result = await callOpenAI(client, OPENAI_MODELS.fallback, simplifiedMessages, Math.min(maxTokens, 512), temperature);
             recordSuccess("openai", result.latencyMs);
-            return { content: result.content, model: OPENAI_MODELS.fallback, provider: "openai", usedFallback: true, latencyMs: result.latencyMs, keySource: "platform", tier: 1 };
+            return { content: result.content, model: OPENAI_MODELS.fallback, provider: "openai", usedFallback: true, latencyMs: result.latencyMs, keySource: "platform", tier: 1, inputTokens: result.inputTokens, outputTokens: result.outputTokens };
           } catch (fallbackErr) {
             const fbMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
             console.error(`[LLM Router] Tier 1 OpenAI fallback (${OPENAI_MODELS.fallback}) also failed:`, fbMsg);
@@ -277,7 +285,7 @@ export async function callLLM(
       try {
         const result = await callAnthropic(client, ANTHROPIC_MODEL, messages, maxTokens, temperature);
         recordSuccess("anthropic", result.latencyMs);
-        return { content: result.content, model: ANTHROPIC_MODEL, provider: "anthropic", usedFallback: true, latencyMs: result.latencyMs, keySource: "platform", tier: 2 };
+        return { content: result.content, model: ANTHROPIC_MODEL, provider: "anthropic", usedFallback: true, latencyMs: result.latencyMs, keySource: "platform", tier: 2, inputTokens: result.inputTokens, outputTokens: result.outputTokens };
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         console.error(`[LLM Router] Tier 2 Anthropic (${ANTHROPIC_MODEL}) failed:`, errMsg);

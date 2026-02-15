@@ -52,6 +52,7 @@ const overviewItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Revenue", url: "/admin/revenue", icon: PoundSterling },
+  { title: "Unit Economics", url: "/admin/unit-economics", icon: Calculator },
   { title: "Calls", url: "/admin/calls", icon: PhoneCall },
   { title: "Operations", url: "/admin/operations", icon: Activity },
   { title: "Chat Leads", url: "/admin/chats", icon: MessageCircle },

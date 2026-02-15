@@ -598,6 +598,36 @@ export const walletTransactions = pgTable("wallet_transactions", {
   index("idx_wallet_txn_ref").on(table.referenceType, table.referenceId),
 ]);
 
+export const costEvents = pgTable("cost_events", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  callLogId: integer("call_log_id").references(() => callLogs.id),
+  category: text("category").notNull(),
+  provider: text("provider").notNull(),
+  model: text("model"),
+  inputTokens: integer("input_tokens").default(0),
+  outputTokens: integer("output_tokens").default(0),
+  unitQuantity: numeric("unit_quantity", { precision: 12, scale: 4 }).default("0"),
+  unitType: text("unit_type").notNull(),
+  unitCost: numeric("unit_cost", { precision: 12, scale: 6 }).notNull(),
+  totalCost: numeric("total_cost", { precision: 12, scale: 6 }).notNull(),
+  revenueCharged: numeric("revenue_charged", { precision: 12, scale: 2 }).default("0"),
+  margin: numeric("margin", { precision: 12, scale: 6 }).default("0"),
+  currency: text("currency").default("GBP"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_cost_events_org_id").on(table.orgId),
+  index("idx_cost_events_call_log_id").on(table.callLogId),
+  index("idx_cost_events_category").on(table.category),
+  index("idx_cost_events_created_at").on(table.createdAt),
+  index("idx_cost_events_org_category").on(table.orgId, table.category),
+]);
+
+export const insertCostEventSchema = createInsertSchema(costEvents).omit({ id: true, createdAt: true });
+export type InsertCostEvent = z.infer<typeof insertCostEventSchema>;
+export type CostEvent = typeof costEvents.$inferSelect;
+
 export const costConfig = pgTable("cost_config", {
   id: serial("id").primaryKey(),
   category: text("category").notNull(),

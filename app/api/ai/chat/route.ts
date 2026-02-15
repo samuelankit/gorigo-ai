@@ -14,6 +14,7 @@ import { redactPII } from "@/lib/pii-redaction";
 import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
 
 const aiChatSchema = z.object({
   message: z.string().min(1).max(5000),
@@ -258,6 +259,28 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
       message,
       auth.orgId
     );
+
+    if (response.inputTokens || response.outputTokens) {
+      const llmCost = calculateLLMCost(
+        response.model,
+        response.inputTokens || 0,
+        response.outputTokens || 0
+      );
+      logCostEvent({
+        orgId: auth.orgId,
+        category: "llm",
+        provider: response.provider || "openai",
+        model: response.model,
+        inputTokens: response.inputTokens,
+        outputTokens: response.outputTokens,
+        unitQuantity: (response.inputTokens || 0) + (response.outputTokens || 0),
+        unitType: "tokens",
+        unitCost: llmCost.costGBP,
+        totalCost: llmCost.costGBP,
+        revenueCharged: 0.003,
+        metadata: { source: "ai_chat", agentId: body.agentId },
+      }).catch(() => {});
+    }
 
     let assistantText = response.content;
     let proposedNextState: FSMState = currentState;

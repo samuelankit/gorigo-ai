@@ -11,6 +11,7 @@ import { redactPII } from "@/lib/pii-redaction";
 import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_VOICE } from "@/lib/prompt-guard";
 import twilio from "twilio";
 import { detectOptOut, handleOptOut } from "@/lib/compliance-engine";
+import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
 
 const MAX_TURNS_BEFORE_CLOSE = 15;
 
@@ -195,6 +196,29 @@ Be conversational, warm, and concise. This is a voice call, so keep it natural.
     }
 
     const aiResponse = await generateAgentResponse(agentConfig, conversationHistory, speechResult, orgId);
+
+    if (aiResponse.inputTokens || aiResponse.outputTokens) {
+      const llmCost = calculateLLMCost(
+        aiResponse.model,
+        aiResponse.inputTokens || 0,
+        aiResponse.outputTokens || 0
+      );
+      logCostEvent({
+        orgId,
+        callLogId: callLogId || undefined,
+        category: "llm",
+        provider: aiResponse.provider || "openai",
+        model: aiResponse.model,
+        inputTokens: aiResponse.inputTokens,
+        outputTokens: aiResponse.outputTokens,
+        unitQuantity: (aiResponse.inputTokens || 0) + (aiResponse.outputTokens || 0),
+        unitType: "tokens",
+        unitCost: llmCost.costGBP,
+        totalCost: llmCost.costGBP,
+        metadata: { source: "twilio_call", agentId, turnCount },
+      }).catch(() => {});
+    }
+
     let responseText = aiResponse.content;
 
     try {

@@ -5,6 +5,7 @@ import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance, deductFromWallet, getWalletBalance, refundToWallet } from "@/lib/wallet";
 import { callLLM, type ConversationMessage } from "@/lib/llm-router";
 import { logAudit } from "@/lib/audit";
+import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
 import { db } from "@/lib/db";
 import { agents, callLogs, campaigns } from "@/shared/schema";
 import { eq, and, sql, count, desc } from "drizzle-orm";
@@ -364,6 +365,28 @@ export async function POST(request: NextRequest) {
         cost: isFreeGreeting ? 0 : RIGO_COST_PER_INTERACTION,
       },
     }).catch(() => {});
+
+    if (llmResult.inputTokens || llmResult.outputTokens) {
+      const llmCost = calculateLLMCost(
+        llmResult.model,
+        llmResult.inputTokens || 0,
+        llmResult.outputTokens || 0
+      );
+      logCostEvent({
+        orgId: auth.orgId,
+        category: "llm",
+        provider: llmResult.provider,
+        model: llmResult.model,
+        inputTokens: llmResult.inputTokens,
+        outputTokens: llmResult.outputTokens,
+        unitQuantity: (llmResult.inputTokens || 0) + (llmResult.outputTokens || 0),
+        unitType: "tokens",
+        unitCost: llmCost.costGBP,
+        totalCost: llmCost.costGBP,
+        revenueCharged: isFreeGreeting ? 0 : RIGO_COST_PER_INTERACTION,
+        metadata: { source: "rigo", intent: intentCategory },
+      }).catch(() => {});
+    }
 
     return NextResponse.json({
       response: llmResult.content,

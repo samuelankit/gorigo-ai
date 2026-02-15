@@ -7,6 +7,9 @@ export interface AIResponse {
   model: string;
   usedFallback: boolean;
   keySource?: "org" | "platform";
+  inputTokens?: number;
+  outputTokens?: number;
+  provider?: string;
 }
 
 function buildSystemPrompt(agentConfig: {
@@ -101,6 +104,9 @@ export async function generateAgentResponse(
     model: result.model,
     usedFallback: result.usedFallback,
     keySource: result.keySource,
+    inputTokens: result.inputTokens,
+    outputTokens: result.outputTokens,
+    provider: result.provider,
   };
 }
 

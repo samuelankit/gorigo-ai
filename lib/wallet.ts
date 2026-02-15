@@ -5,7 +5,7 @@ import { roundMoney, safeSubtract, safeAdd, validateAmount, safeParseNumeric } f
 import { createNotification } from "@/lib/notifications";
 
 export type TransactionType = "top_up" | "deduction" | "refund" | "adjustment" | "bonus" | "commission" | "revenue_share" | "payout";
-export type ReferenceType = "call" | "ai_chat" | "transcription" | "knowledge" | "manual" | "system" | "signup_bonus" | "affiliate_commission" | "partner_revenue_share" | "reseller_revenue_share" | "affiliate_payout";
+export type ReferenceType = "call" | "ai_chat" | "rigo_assistant" | "transcription" | "knowledge" | "manual" | "system" | "signup_bonus" | "affiliate_commission" | "partner_revenue_share" | "reseller_revenue_share" | "affiliate_payout";
 
 export async function getOrCreateWallet(orgId: number) {
   try {
@@ -178,7 +178,7 @@ export async function deductFromWallet(
     return { transaction: txn, newBalance: actualBalanceAfter };
   });
 
-  const REVENUE_REFERENCE_TYPES: ReferenceType[] = ["call", "ai_chat", "transcription", "knowledge"];
+  const REVENUE_REFERENCE_TYPES: ReferenceType[] = ["call", "ai_chat", "rigo_assistant", "transcription", "knowledge"];
 
   if (result) {
     if (REVENUE_REFERENCE_TYPES.includes(referenceType)) {

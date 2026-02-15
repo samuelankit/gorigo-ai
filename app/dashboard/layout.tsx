@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Search, Plus, Bot, Send, Workflow, Settings, LogOut, ChevronDown, Mail, AlertTriangle } from "lucide-react";
+import { RigoAssistant } from "@/components/dashboard/rigo-assistant";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -218,6 +219,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </main>
         </div>
       </div>
+      <RigoAssistant />
     </SidebarProvider>
   );
 }

@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mic, MicOff, X, Volume2, Loader2, Wallet, AlertCircle } from "lucide-react";
+import { Mic, MicOff, X, Volume2, Loader2, Wallet, AlertCircle, Monitor } from "lucide-react";
 
 interface SpeechRecognitionAlternative {
   transcript: string;
@@ -56,6 +56,12 @@ interface ConversationEntry {
   content: string;
 }
 
+function isSpeechRecognitionSupported(): boolean {
+  if (typeof window === "undefined") return false;
+  const win = window as unknown as Record<string, unknown>;
+  return !!(win.SpeechRecognition || win.webkitSpeechRecognition);
+}
+
 export function RigoAssistant() {
   const [state, setState] = useState<RigoState>("idle");
   const [isOpen, setIsOpen] = useState(false);
@@ -63,13 +69,18 @@ export function RigoAssistant() {
   const [response, setResponse] = useState("");
   const [error, setError] = useState("");
   const [conversationHistory, setConversationHistory] = useState<ConversationEntry[]>([]);
-  const [isFirstInteraction, setIsFirstInteraction] = useState(true);
+  const [hasGreeted, setHasGreeted] = useState(false);
   const [lastCost, setLastCost] = useState<number | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [browserSupported, setBrowserSupported] = useState(true);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const pulseTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setBrowserSupported(isSpeechRecognitionSupported());
+  }, []);
 
   const stopSpeaking = useCallback(() => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -134,15 +145,20 @@ export function RigoAssistant() {
         body: JSON.stringify({
           message: userMessage,
           conversationHistory: conversationHistory.slice(-10),
-          isFirstInteraction,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.code === "INSUFFICIENT_BALANCE") {
-          setError("Wallet balance too low. Please top up to use Rigo.");
+        if (data.code === "INSUFFICIENT_BALANCE" || data.code === "SPENDING_CAP_EXCEEDED") {
+          setError(data.error || "Wallet balance too low.");
+          setState("error");
+          if (data.spokenResponse) speak(data.spokenResponse);
+          return;
+        }
+        if (data.refunded) {
+          setError("Request failed. Your wallet has been refunded.");
           setState("error");
           if (data.spokenResponse) speak(data.spokenResponse);
           return;
@@ -152,8 +168,8 @@ export function RigoAssistant() {
 
       const assistantResponse = data.response;
       setResponse(assistantResponse);
-      setLastCost(data.cost || null);
-      setIsFirstInteraction(false);
+      setLastCost(data.cost ?? null);
+      setHasGreeted(true);
 
       setConversationHistory(prev => [
         ...prev,
@@ -167,7 +183,7 @@ export function RigoAssistant() {
       setError(msg);
       setState("error");
     }
-  }, [conversationHistory, isFirstInteraction, speak]);
+  }, [conversationHistory, speak]);
 
   const startListening = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -258,10 +274,10 @@ export function RigoAssistant() {
   const handleOpen = useCallback(() => {
     setIsOpen(true);
     setDismissed(false);
-    if (isFirstInteraction) {
+    if (!hasGreeted) {
       sendToRigo("Hello");
     }
-  }, [isFirstInteraction, sendToRigo]);
+  }, [hasGreeted, sendToRigo]);
 
   const handleClose = useCallback(() => {
     cleanup();
@@ -273,6 +289,7 @@ export function RigoAssistant() {
   }, [cleanup]);
 
   if (dismissed) return null;
+  if (!browserSupported) return null;
 
   const stateLabel: Record<RigoState, string> = {
     idle: "Tap to speak",
@@ -292,7 +309,7 @@ export function RigoAssistant() {
 
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50" data-testid="rigo-fab">
+      <div className="fixed bottom-6 right-6 z-40" data-testid="rigo-fab">
         <Button
           size="icon"
           className="h-14 w-14 rounded-full shadow-lg bg-primary text-primary-foreground"
@@ -310,7 +327,7 @@ export function RigoAssistant() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-80" data-testid="rigo-panel">
+    <div className="fixed bottom-6 right-6 z-40 w-80" data-testid="rigo-panel">
       <Card className="shadow-xl">
         <div className="flex items-center justify-between gap-2 px-4 py-3 border-b">
           <div className="flex items-center gap-2 min-w-0">
@@ -326,7 +343,7 @@ export function RigoAssistant() {
             {lastCost !== null && (
               <Badge variant="outline" className="no-default-hover-elevate text-[10px] gap-0.5">
                 <Wallet className="h-2.5 w-2.5" />
-                {lastCost.toFixed(3)}p
+                {lastCost === 0 ? "Free" : `${(lastCost * 100).toFixed(0)}p`}
               </Badge>
             )}
             <Button size="icon" variant="ghost" onClick={handleClose} data-testid="button-rigo-close">
@@ -378,8 +395,8 @@ export function RigoAssistant() {
             </p>
           )}
 
-          <p className="text-[10px] text-muted-foreground text-center">
-            Each interaction costs 1p from your wallet
+          <p className="text-[10px] text-muted-foreground text-center" data-testid="text-rigo-cost">
+            Each interaction costs 1p from your wallet (first greeting free)
           </p>
         </CardContent>
       </Card>

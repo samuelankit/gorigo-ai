@@ -22,7 +22,11 @@ Enterprise-grade infrastructure components include: LLM Fallback Router, Databas
 ### Rigo Voice Assistant (Feb 2026)
 - **Concept**: Optional AI voice-controlled layer on top of the SaaS dashboard. Users can manage their call centre entirely by voice from their phone.
 - **Architecture**: Floating mic button in dashboard layout (`components/dashboard/rigo-assistant.tsx`), backed by `/api/rigo` endpoint. Uses Web Speech API (SpeechRecognition for input, SpeechSynthesis for output) in the browser, with LLM processing via the existing `callLLM` router.
-- **Billing**: Each voice interaction costs £0.01 (1p), deducted atomically from the user's wallet BEFORE LLM processing using `rigo_assistant` reference type. If deduction fails, request is rejected with 402. Logged to billing ledger and distribution engine.
+- **Billing**: Each voice interaction costs £0.01 (1p), deducted atomically from the user's wallet BEFORE LLM processing using `rigo_assistant` reference type. If deduction fails, request is rejected with 402. Logged to billing ledger and distribution engine. First greeting per session is FREE.
+- **Auto-Refund**: If the LLM call fails after wallet deduction, the system automatically refunds the user via `refundToWallet` and logs the failure. Users see "Your wallet has been refunded" in the error response.
+- **Observability**: Every Rigo interaction is logged to the audit log (`rigo.interaction` action) with intent category, latency, success/failure, model used, and cost. Enables analytics on voice usage patterns.
+- **Rate Limiting**: Dedicated `rigoLimiter` at 10 requests/minute (separate from the general AI limiter of 20/min) to protect against wallet drain and AI cost spikes.
+- **Browser Support**: Rigo FAB is hidden on browsers that lack Web Speech API support (Firefox, older Safari). Only shows on Chrome, Edge, and compatible browsers.
 - **Capabilities**: Rigo can query call statistics (today/all-time), wallet balance, agent configurations, campaign status, and provide general platform guidance. Context is gathered dynamically from the database based on user intent detection.
 - **Key Files**: `app/api/rigo/route.ts` (backend), `components/dashboard/rigo-assistant.tsx` (UI component).
 - **States**: idle, listening, processing, speaking, error. Visual feedback for each state with colour-coded mic button.
@@ -31,7 +35,9 @@ Enterprise-grade infrastructure components include: LLM Fallback Router, Databas
 ### Security Hardening (Feb 2026)
 - **Audit Logging**: All auth events (login success/fail, register, logout, password reset request/complete) are logged to the `audit_log` table via `lib/audit.ts`. Wallet and profile changes also logged.
 - **Session Management**: 30-day absolute session timeout, 2-hour idle timeout, max 5 concurrent sessions per user with oldest eviction. Sessions endpoint at `/api/auth/sessions` for listing, individual revocation, and "invalidate all" functionality. Background cleanup every 5 minutes.
-- **Rate Limiting**: All ~140 API endpoints protected with appropriate rate limiters (auth: 10/min, general: 100/min, admin: 30/min, AI: 20/min, settings: 5/min, billing: 10/min, exports: 5/min).
+- **Rate Limiting**: All ~140 API endpoints protected with appropriate rate limiters (auth: 10/min, general: 100/min, admin: 30/min, AI: 20/min, Rigo: 10/min, settings: 5/min, billing: 10/min, exports: 5/min).
+- **Microphone Policy**: `Permissions-Policy` header allows `microphone=(self)` for Rigo voice input. Camera and geolocation remain blocked.
+- **Admin Refund Interface**: SuperAdmin can issue refunds from `/admin/wallets` page via the Refund button on each wallet row. Refunds are logged to audit trail with actor identity.
 - **Input Validation**: Zod schemas enforce strict validation on agent updates, knowledge creation, wallet topups, and profile changes. Sanitization utility at `lib/sanitize.ts`.
 - **Password Reset**: Full flow with hashed tokens (SHA-256), 1-hour expiry, rate limiting, and all sessions invalidated on reset. Pages at `/forgot-password` and `/reset-password`.
 - **Email Verification**: Required for outbound calls, AI chat, and campaign creation. Hashed tokens, 24-hour expiry.

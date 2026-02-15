@@ -67,3 +67,4 @@ export const webhookLimiter = rateLimit({ windowMs: 60_000, maxRequests: 20 });
 export const billingLimiter = rateLimit({ windowMs: 60_000, maxRequests: 10 });
 export const exportLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
 export const notificationLimiter = rateLimit({ windowMs: 60_000, maxRequests: 30 });
+export const rigoLimiter = rateLimit({ windowMs: 60_000, maxRequests: 10 });

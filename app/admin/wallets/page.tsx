@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import {
   Wallet, Plus, AlertTriangle, DollarSign, CreditCard, Search,
-  ArrowUpDown, TrendingDown,
+  ArrowUpDown, TrendingDown, RotateCcw,
 } from "lucide-react";
 
 interface WalletData {
@@ -71,6 +71,11 @@ export default function AdminWalletsPage() {
   const [formOrgId, setFormOrgId] = useState("");
   const [formAmount, setFormAmount] = useState("");
   const [formDescription, setFormDescription] = useState("");
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [refundOrgId, setRefundOrgId] = useState("");
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundDescription, setRefundDescription] = useState("");
+  const [refundSaving, setRefundSaving] = useState(false);
 
   const fetchWallets = () => {
     setLoading(true);
@@ -128,6 +133,44 @@ export default function AdminWalletsPage() {
     setFormAmount("");
     setFormDescription("");
     setDialogOpen(true);
+  };
+
+  const openRefundForOrg = (orgId: number) => {
+    setRefundOrgId(String(orgId));
+    setRefundAmount("");
+    setRefundDescription("");
+    setRefundDialogOpen(true);
+  };
+
+  const handleRefund = async () => {
+    if (!refundOrgId || !refundAmount) return;
+    const amount = parseFloat(refundAmount);
+    if (isNaN(amount) || amount <= 0) return;
+    setRefundSaving(true);
+    try {
+      const body: Record<string, unknown> = {
+        orgId: parseInt(refundOrgId),
+        amount,
+        action: "refund",
+      };
+      if (refundDescription) body.description = refundDescription;
+
+      const res = await fetch("/api/admin/wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setRefundDialogOpen(false);
+        setRefundOrgId("");
+        setRefundAmount("");
+        setRefundDescription("");
+        fetchWallets();
+      }
+    } catch {
+    } finally {
+      setRefundSaving(false);
+    }
   };
 
   const formatCurrency = (amount: number) =>
@@ -332,6 +375,66 @@ export default function AdminWalletsPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={refundDialogOpen} onOpenChange={setRefundDialogOpen}>
+        <DialogContent className="max-w-md" data-testid="dialog-refund-wallet">
+          <DialogHeader>
+            <DialogTitle>Issue Refund</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label>Organisation</Label>
+              <Select value={refundOrgId} onValueChange={setRefundOrgId}>
+                <SelectTrigger data-testid="select-refund-org">
+                  <SelectValue placeholder="Select organisation" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wallets.map((w) => (
+                    <SelectItem key={w.orgId} value={String(w.orgId)}>
+                      {w.orgName || `Org #${w.orgId}`} — {formatCurrency(w.balance)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="refund-amount">Refund Amount (GBP)</Label>
+              <Input
+                id="refund-amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+                placeholder="10.00"
+                data-testid="input-refund-amount"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="refund-description">Reason for refund</Label>
+              <Textarea
+                id="refund-description"
+                value={refundDescription}
+                onChange={(e) => setRefundDescription(e.target.value)}
+                placeholder="Service issue, billing error, etc."
+                data-testid="input-refund-description"
+              />
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline" data-testid="button-cancel-refund">Cancel</Button>
+              </DialogClose>
+              <Button
+                onClick={handleRefund}
+                disabled={refundSaving || !refundOrgId || !refundAmount || parseFloat(refundAmount) <= 0}
+                data-testid="button-submit-refund"
+              >
+                {refundSaving ? "Processing..." : "Issue Refund"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -406,15 +509,26 @@ export default function AdminWalletsPage() {
                       </TableCell>
                       <TableCell className="text-sm">{w.updatedAt ? formatDate(w.updatedAt) : "-"}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openTopUpForOrg(w.orgId)}
-                          data-testid={`button-topup-${w.id}`}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Top Up
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openTopUpForOrg(w.orgId)}
+                            data-testid={`button-topup-${w.id}`}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Top Up
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openRefundForOrg(w.orgId)}
+                            data-testid={`button-refund-${w.id}`}
+                          >
+                            <RotateCcw className="h-4 w-4 mr-1" />
+                            Refund
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

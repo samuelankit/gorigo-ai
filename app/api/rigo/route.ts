@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/get-user";
-import { aiLimiter } from "@/lib/rate-limit";
+import { rigoLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
-import { hasInsufficientBalance, deductFromWallet, getWalletBalance } from "@/lib/wallet";
+import { hasInsufficientBalance, deductFromWallet, getWalletBalance, refundToWallet } from "@/lib/wallet";
 import { callLLM, type ConversationMessage } from "@/lib/llm-router";
+import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { agents, callLogs, campaigns } from "@/shared/schema";
 import { eq, and, sql, count, desc } from "drizzle-orm";
@@ -32,6 +33,30 @@ You can help with:
 When presenting numbers, round appropriately and use natural language (e.g. "You have had 12 calls today" not "count: 12").
 
 Always address the user naturally. If this is their first interaction, introduce yourself briefly.`;
+
+function detectIntent(message: string): string {
+  const lower = message.toLowerCase();
+  if (/call|calls|today|stat|analytic|recent|activity|busy|volume/.test(lower)) return "calls";
+  if (/wallet|balance|money|credit|spend|cost|top.?up|fund/.test(lower)) return "wallet";
+  if (/agent|bot|assistant|configure|setup/.test(lower)) return "agents";
+  if (/campaign|outbound|contact|send/.test(lower)) return "campaigns";
+  if (/overview|summary|dashboard|how.*doing|status|report/.test(lower)) return "overview";
+  if (/hello|hi|hey|greet|start/.test(lower)) return "greeting";
+  return "general";
+}
+
+const freeGreetingTracker = new Map<number, number>();
+const GREETING_COOLDOWN_MS = 3600_000;
+
+function isFirstGreetingForOrg(orgId: number): boolean {
+  const last = freeGreetingTracker.get(orgId);
+  const now = Date.now();
+  if (!last || now - last > GREETING_COOLDOWN_MS) {
+    freeGreetingTracker.set(orgId, now);
+    return true;
+  }
+  return false;
+}
 
 async function gatherContext(orgId: number, intent: string): Promise<string> {
   const lowerIntent = intent.toLowerCase();
@@ -161,9 +186,37 @@ async function gatherContext(orgId: number, intent: string): Promise<string> {
   return contextParts.join("\n\n");
 }
 
-export async function POST(request: NextRequest) {
+async function attemptRefund(
+  orgId: number,
+  deductionResult: Awaited<ReturnType<typeof deductFromWallet>>
+): Promise<boolean> {
+  if (!deductionResult?.transaction) return false;
   try {
-    const rl = await aiLimiter(request);
+    await refundToWallet(
+      orgId,
+      RIGO_COST_PER_INTERACTION,
+      "Automatic refund — Rigo AI processing failed",
+      "rigo_assistant",
+      `rigo-refund-${deductionResult.transaction.id}`,
+      deductionResult.transaction.id
+    );
+    console.log("[Rigo] Refund issued, txn:", deductionResult.transaction.id);
+    return true;
+  } catch (refundErr) {
+    console.error("[Rigo] Refund failed:", refundErr);
+    return false;
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let intentCategory = "unknown";
+  let deductionResult: Awaited<ReturnType<typeof deductFromWallet>> = null;
+  let isFreeGreeting = false;
+  let auth: Awaited<ReturnType<typeof getAuthenticatedUser>> = null;
+
+  try {
+    const rl = await rigoLimiter(request);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
     }
@@ -171,7 +224,7 @@ export async function POST(request: NextRequest) {
     const sizeError = checkBodySize(request, BODY_LIMITS.chat);
     if (sizeError) return sizeError;
 
-    const auth = await getAuthenticatedUser();
+    auth = await getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -180,39 +233,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No organization found" }, { status: 404 });
     }
 
-    const insufficientBalance = await hasInsufficientBalance(auth.orgId, RIGO_COST_PER_INTERACTION);
-    if (insufficientBalance) {
-      return NextResponse.json({
-        error: "Insufficient wallet balance. Please top up your wallet to continue using Rigo.",
-        code: "INSUFFICIENT_BALANCE",
-        spokenResponse: "I am sorry, but your wallet balance is too low for me to help right now. Please top up your wallet first.",
-      }, { status: 402 });
-    }
-
     const body = await request.json();
-    const { message, conversationHistory = [], isFirstInteraction = false } = body;
+    const { message, conversationHistory = [] } = body;
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
-    try {
-      await deductFromWallet(
-        auth.orgId,
-        RIGO_COST_PER_INTERACTION,
-        "Rigo voice assistant interaction",
-        "rigo_assistant"
-      );
-    } catch (walletErr) {
-      const errMsg = walletErr instanceof Error ? walletErr.message : "Wallet deduction failed";
-      console.error("[Rigo] Wallet deduction failed:", errMsg);
-      return NextResponse.json({
-        error: errMsg.includes("Spending cap") ? errMsg : "Insufficient wallet balance to use Rigo. Please top up your wallet.",
-        code: errMsg.includes("Spending cap") ? "SPENDING_CAP_EXCEEDED" : "INSUFFICIENT_BALANCE",
-        spokenResponse: errMsg.includes("Spending cap")
-          ? "Your monthly spending cap has been reached. Please adjust it in your settings."
-          : "Your wallet balance is too low. Please top up to continue using Rigo.",
-      }, { status: 402 });
+    intentCategory = detectIntent(message);
+    isFreeGreeting = intentCategory === "greeting" && isFirstGreetingForOrg(auth.orgId);
+
+    if (!isFreeGreeting) {
+      const insufficientBalance = await hasInsufficientBalance(auth.orgId, RIGO_COST_PER_INTERACTION);
+      if (insufficientBalance) {
+        return NextResponse.json({
+          error: "Insufficient wallet balance. Please top up your wallet to continue using Rigo.",
+          code: "INSUFFICIENT_BALANCE",
+          spokenResponse: "I am sorry, but your wallet balance is too low for me to help right now. Please top up your wallet first.",
+        }, { status: 402 });
+      }
+
+      try {
+        deductionResult = await deductFromWallet(
+          auth.orgId,
+          RIGO_COST_PER_INTERACTION,
+          "Rigo voice assistant interaction",
+          "rigo_assistant"
+        );
+      } catch (walletErr) {
+        const errMsg = walletErr instanceof Error ? walletErr.message : "Wallet deduction failed";
+        console.error("[Rigo] Wallet deduction failed:", errMsg);
+        return NextResponse.json({
+          error: errMsg.includes("Spending cap") ? errMsg : "Insufficient wallet balance to use Rigo. Please top up your wallet.",
+          code: errMsg.includes("Spending cap") ? "SPENDING_CAP_EXCEEDED" : "INSUFFICIENT_BALANCE",
+          spokenResponse: errMsg.includes("Spending cap")
+            ? "Your monthly spending cap has been reached. Please adjust it in your settings."
+            : "Your wallet balance is too low. Please top up to continue using Rigo.",
+        }, { status: 402 });
+      }
     }
 
     const context = await gatherContext(auth.orgId, message);
@@ -222,7 +280,7 @@ export async function POST(request: NextRequest) {
       { role: "system", content: `\n\nCURRENT PLATFORM DATA FOR THIS USER:\n${context}` },
     ];
 
-    if (isFirstInteraction) {
+    if (isFreeGreeting) {
       messages.push({
         role: "system",
         content: "This is the user's first interaction in this session. Greet them briefly as Rigo and let them know you are ready to help manage their call centre.",
@@ -238,20 +296,95 @@ export async function POST(request: NextRequest) {
 
     messages.push({ role: "user", content: message });
 
-    const llmResult = await callLLM(messages, {
-      maxTokens: 256,
-      temperature: 0.4,
-      orgId: auth.orgId,
-    });
+    let llmResult;
+    try {
+      llmResult = await callLLM(messages, {
+        maxTokens: 256,
+        temperature: 0.4,
+        orgId: auth.orgId,
+      });
+    } catch (llmError) {
+      console.error("[Rigo] LLM call failed:", llmError);
+
+      const refunded = await attemptRefund(auth.orgId, deductionResult);
+
+      logAudit({
+        actorId: auth.user.id,
+        actorEmail: auth.user.email,
+        action: "rigo.interaction",
+        entityType: "rigo",
+        entityId: auth.orgId,
+        details: {
+          intent: intentCategory,
+          success: false,
+          error: llmError instanceof Error ? llmError.message : "LLM failure",
+          refunded,
+          latencyMs: Date.now() - startTime,
+          free: isFreeGreeting,
+        },
+      }).catch(() => {});
+
+      const refundMsg = refunded
+        ? "Your wallet has been refunded."
+        : isFreeGreeting
+          ? ""
+          : "We were unable to process the refund. Please contact support.";
+
+      return NextResponse.json(
+        {
+          error: `Rigo could not process your request.${refundMsg ? ` ${refundMsg}` : ""}`,
+          spokenResponse: `I am sorry, I could not process that request.${refundMsg ? ` ${refundMsg}` : ""} Please try again in a moment.`,
+          refunded,
+        },
+        { status: 500 }
+      );
+    }
+
+    const latencyMs = Date.now() - startTime;
+
+    logAudit({
+      actorId: auth.user.id,
+      actorEmail: auth.user.email,
+      action: "rigo.interaction",
+      entityType: "rigo",
+      entityId: auth.orgId,
+      details: {
+        intent: intentCategory,
+        success: true,
+        model: llmResult.model,
+        provider: llmResult.provider,
+        latencyMs,
+        free: isFreeGreeting,
+        cost: isFreeGreeting ? 0 : RIGO_COST_PER_INTERACTION,
+      },
+    }).catch(() => {});
 
     return NextResponse.json({
       response: llmResult.content,
       model: llmResult.model,
       provider: llmResult.provider,
-      cost: RIGO_COST_PER_INTERACTION,
+      cost: isFreeGreeting ? 0 : RIGO_COST_PER_INTERACTION,
+      free: isFreeGreeting,
     });
   } catch (error) {
     console.error("[Rigo] Error:", error);
+
+    if (deductionResult?.transaction && auth?.orgId) {
+      const refunded = await attemptRefund(auth.orgId, deductionResult);
+      return NextResponse.json(
+        {
+          error: refunded
+            ? "Rigo encountered an error. Your wallet has been refunded."
+            : "Rigo encountered an error. Please contact support for a refund.",
+          spokenResponse: refunded
+            ? "I am sorry, something went wrong. Your wallet has been refunded. Please try again."
+            : "I am sorry, something went wrong. Please contact support.",
+          refunded,
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       {
         error: "Rigo encountered an error. Please try again.",

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { wallets, walletTransactions, orgs } from "@/shared/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
-import { topUpWallet } from "@/lib/wallet";
+import { topUpWallet, refundToWallet } from "@/lib/wallet";
 import { logAudit } from "@/lib/audit";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
@@ -74,10 +74,38 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { orgId, amount, description } = body;
+    const { orgId, amount, description, action: walletAction } = body;
 
     if (!orgId || !amount || typeof amount !== "number" || amount <= 0) {
       return NextResponse.json({ error: "orgId and positive amount required" }, { status: 400 });
+    }
+
+    if (walletAction === "refund") {
+      const originalTransactionId = body.originalTransactionId ? Number(body.originalTransactionId) : undefined;
+
+      const result = await refundToWallet(
+        orgId,
+        amount,
+        description || "Admin refund",
+        "manual",
+        undefined,
+        originalTransactionId
+      );
+
+      await logAudit({
+        actorId: auth.user.id,
+        actorEmail: auth.user.email,
+        action: "wallet.admin_refund",
+        entityType: "wallet",
+        entityId: orgId,
+        details: { amount, newBalance: result.newBalance, description, originalTransactionId },
+      });
+
+      return NextResponse.json({
+        success: true,
+        newBalance: result.newBalance,
+        transaction: result.transaction,
+      });
     }
 
     const result = await topUpWallet(orgId, amount, description || "Admin top-up", "system");

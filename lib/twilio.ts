@@ -61,6 +61,35 @@ export async function getTwilioConfig(orgId?: number): Promise<TwilioConfig | nu
   return null;
 }
 
+export async function getTwilioConfigForSubAccount(orgId: number): Promise<TwilioConfig | null> {
+  const { db } = await import("@/lib/db");
+  const { twilioSubAccounts } = await import("@/shared/schema");
+  const { eq } = await import("drizzle-orm");
+
+  const [subAccount] = await db
+    .select()
+    .from(twilioSubAccounts)
+    .where(eq(twilioSubAccounts.orgId, orgId))
+    .limit(1);
+
+  if (subAccount && subAccount.status === "active" && subAccount.twilioAccountSid && subAccount.twilioAuthToken) {
+    try {
+      const subClient = twilio(subAccount.twilioAccountSid, subAccount.twilioAuthToken);
+      return {
+        client: subClient,
+        phoneNumber: "",
+        accountSid: subAccount.twilioAccountSid,
+        authToken: subAccount.twilioAuthToken,
+        source: "org" as const,
+      };
+    } catch (err) {
+      console.warn(`[SubAccount] Failed to create client for org ${orgId}:`, err);
+    }
+  }
+
+  return getTwilioConfig(orgId);
+}
+
 export function isTwilioConfigured(): boolean {
   return !!(platformClient && accountSid && authToken && twilioPhoneNumber);
 }

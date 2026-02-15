@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
         phoneNumber: body.phoneNumber,
         friendlyName: body.friendlyName ?? null,
         twilioSid: body.twilioSid ?? null,
+        countryCode: body.countryCode ?? null,
+        subAccountId: body.subAccountId ?? null,
       })
       .returning();
 

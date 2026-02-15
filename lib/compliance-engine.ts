@@ -1,0 +1,308 @@
+import { db } from "@/lib/db";
+import { countries, countryComplianceProfiles, countryHolidays, doNotCallList, consentRecords } from "@/shared/schema";
+import { eq, and, isNull, or, gt } from "drizzle-orm";
+import { normalizePhoneNumber, isOnDNCList, addToDNCList } from "@/lib/dnc";
+
+export interface ComplianceCheckResult {
+  allowed: boolean;
+  reason?: string;
+  checks: {
+    dncClear: boolean;
+    withinCallingHours: boolean;
+    holidayCheck: boolean;
+    consentValid: boolean;
+    countryActive: boolean;
+  };
+  countryCode?: string;
+  disclosureRequired?: string;
+  recordingConsentMode?: string;
+}
+
+export interface CountryCallingHours {
+  timezone: string;
+  callingHoursStart: string;
+  callingHoursEnd: string;
+  weekendCallingAllowed: boolean;
+}
+
+export async function getCountryByCode(isoCode: string) {
+  const [country] = await db
+    .select()
+    .from(countries)
+    .where(eq(countries.isoCode, isoCode.toUpperCase()))
+    .limit(1);
+
+  if (!country) return null;
+
+  const [compliance] = await db
+    .select()
+    .from(countryComplianceProfiles)
+    .where(eq(countryComplianceProfiles.countryId, country.id))
+    .limit(1);
+
+  return { country, compliance };
+}
+
+export async function isWithinCountryCallingHours(
+  isoCode: string
+): Promise<{ allowed: boolean; reason?: string }> {
+  const data = await getCountryByCode(isoCode);
+  if (!data || !data.compliance) return { allowed: true };
+
+  const { country, compliance } = data;
+  const timezone = country.timezone;
+  const start = compliance.callingHoursStart || "09:00";
+  const end = compliance.callingHoursEnd || "20:00";
+
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const dayFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    weekday: "long",
+  });
+
+  const parts = formatter.formatToParts(now);
+  const hour = parts.find((p) => p.type === "hour")?.value || "00";
+  const minute = parts.find((p) => p.type === "minute")?.value || "00";
+  const currentTime = `${hour}:${minute}`;
+
+  const weekday = dayFormatter.format(now).toLowerCase();
+  const isWeekend = weekday === "saturday" || weekday === "sunday";
+
+  const restrictedDays =
+    (compliance.restrictedDays as string[]) || [];
+  if (isWeekend && restrictedDays.includes("saturday") && restrictedDays.includes("sunday")) {
+    return {
+      allowed: false,
+      reason: `Calling not allowed on weekends in ${country.name}`,
+    };
+  }
+
+  if (currentTime < start || currentTime >= end) {
+    return {
+      allowed: false,
+      reason: `Outside calling hours (${start}-${end}) in ${country.name} (${timezone})`,
+    };
+  }
+
+  const dateFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const todayStr = dateFormatter.format(now);
+
+  const holidays = await db
+    .select()
+    .from(countryHolidays)
+    .where(
+      and(
+        eq(countryHolidays.countryId, country.id),
+        eq(countryHolidays.date, todayStr)
+      )
+    )
+    .limit(1);
+
+  if (holidays.length > 0 && holidays[0].noCallingAllowed) {
+    return {
+      allowed: false,
+      reason: `Holiday: ${holidays[0].name} - no calling allowed in ${country.name}`,
+    };
+  }
+
+  return { allowed: true };
+}
+
+export async function runFullComplianceCheck(
+  orgId: number,
+  phoneNumber: string,
+  countryCode: string
+): Promise<ComplianceCheckResult> {
+  const result: ComplianceCheckResult = {
+    allowed: true,
+    checks: {
+      dncClear: true,
+      withinCallingHours: true,
+      holidayCheck: true,
+      consentValid: true,
+      countryActive: true,
+    },
+    countryCode,
+  };
+
+  const data = await getCountryByCode(countryCode);
+  if (!data) {
+    result.allowed = false;
+    result.checks.countryActive = false;
+    result.reason = `Country ${countryCode} not configured`;
+    return result;
+  }
+
+  if (data.country.status !== "active") {
+    result.allowed = false;
+    result.checks.countryActive = false;
+    result.reason = `Calling to ${data.country.name} is currently disabled`;
+    return result;
+  }
+
+  if (data.compliance) {
+    result.disclosureRequired = data.compliance.aiDisclosureRequired
+      ? data.compliance.aiDisclosureScript ||
+        "This call may be recorded and uses AI assistance."
+      : undefined;
+    result.recordingConsentMode = data.compliance.recordingConsentType || "one_party";
+  }
+
+  const onDnc = await isOnDNCList(orgId, phoneNumber);
+  if (onDnc) {
+    result.allowed = false;
+    result.checks.dncClear = false;
+    result.reason = "Phone number is on Do Not Call list";
+    return result;
+  }
+
+  const hoursCheck = await isWithinCountryCallingHours(countryCode);
+  if (!hoursCheck.allowed) {
+    result.allowed = false;
+    result.checks.withinCallingHours = false;
+    result.checks.holidayCheck = hoursCheck.reason?.includes("Holiday")
+      ? false
+      : true;
+    result.reason = hoursCheck.reason;
+    return result;
+  }
+
+  return result;
+}
+
+export async function getDisclosureText(
+  countryCode: string,
+  language?: string
+): Promise<string | null> {
+  const data = await getCountryByCode(countryCode);
+  if (!data?.compliance?.aiDisclosureRequired) return null;
+
+  const disclosures: Record<string, string> = {
+    en: "Please be advised that this call uses artificial intelligence technology and may be recorded for quality assurance.",
+    fr: "Veuillez noter que cet appel utilise l'intelligence artificielle et peut être enregistré pour l'assurance qualité.",
+    de: "Bitte beachten Sie, dass dieses Gespräch künstliche Intelligenz nutzt und zur Qualitätssicherung aufgezeichnet werden kann.",
+    es: "Por favor, tenga en cuenta que esta llamada utiliza inteligencia artificial y puede ser grabada para garantía de calidad.",
+    it: "Si prega di notare che questa chiamata utilizza l'intelligenza artificiale e potrebbe essere registrata per la garanzia della qualità.",
+    pt: "Por favor, esteja ciente de que esta chamada usa inteligência artificial e pode ser gravada para garantia de qualidade.",
+    nl: "Houd er rekening mee dat dit gesprek gebruik maakt van kunstmatige intelligentie en kan worden opgenomen voor kwaliteitsborging.",
+    ja: "このコールは人工知能技術を使用しており、品質保証のために録音される場合があります。",
+    ar: "يرجى العلم أن هذه المكالمة تستخدم تقنية الذكاء الاصطناعي وقد يتم تسجيلها لضمان الجودة.",
+    hi: "कृपया ध्यान दें कि यह कॉल कृत्रिम बुद्धिमत्ता तकनीक का उपयोग करती है और गुणवत्ता आश्वासन के लिए रिकॉर्ड की जा सकती है।",
+    sv: "Observera att detta samtal använder artificiell intelligens och kan spelas in för kvalitetssäkring.",
+    pl: "Prosimy o uwagę, że ta rozmowa wykorzystuje sztuczną inteligencję i może być nagrywana w celach zapewnienia jakości.",
+  };
+
+  const customText = data.compliance.aiDisclosureScript;
+  if (customText) return customText;
+
+  const langCode = language?.split("-")[0] || "en";
+  return disclosures[langCode] || disclosures["en"];
+}
+
+export function detectOptOut(
+  transcript: string
+): { detected: boolean; keyword?: string } {
+  const optOutPhrases = [
+    "stop calling",
+    "do not call",
+    "remove me",
+    "take me off",
+    "unsubscribe",
+    "opt out",
+    "no more calls",
+    "don't call",
+    "never call",
+    "remove my number",
+    "arrêtez",
+    "ne m'appelez plus",
+    "hören sie auf",
+    "rufen sie mich nicht mehr an",
+    "deje de llamar",
+    "no me llame",
+    "smettila di chiamare",
+    "non mi chiami più",
+    "pare de ligar",
+    "não me ligue",
+    "stop met bellen",
+    "sluta ringa",
+    "przestań dzwonić",
+  ];
+
+  const lower = transcript.toLowerCase();
+  for (const phrase of optOutPhrases) {
+    if (lower.includes(phrase)) {
+      return { detected: true, keyword: phrase };
+    }
+  }
+  return { detected: false };
+}
+
+export async function handleOptOut(
+  orgId: number,
+  phoneNumber: string,
+  callLogId?: number,
+  reason?: string
+): Promise<void> {
+  await addToDNCList(
+    orgId,
+    phoneNumber,
+    reason || "Customer requested opt-out during call",
+    "call_opt_out",
+    undefined,
+    callLogId ? `Call ID: ${callLogId}` : undefined
+  );
+}
+
+export async function getCountryVoiceConfig(
+  countryCode: string
+): Promise<{
+  language: string;
+  voice: string;
+  speechModel: string;
+} | null> {
+  const data = await getCountryByCode(countryCode);
+  if (!data?.country) return null;
+
+  const voiceMap: Record<string, { language: string; voice: string }> = {
+    GB: { language: "en-GB", voice: "Polly.Amy" },
+    US: { language: "en-US", voice: "Polly.Joanna" },
+    CA: { language: "en-US", voice: "Polly.Joanna" },
+    AU: { language: "en-AU", voice: "Polly.Nicole" },
+    IE: { language: "en-GB", voice: "Polly.Amy" },
+    FR: { language: "fr-FR", voice: "Polly.Lea" },
+    DE: { language: "de-DE", voice: "Polly.Vicki" },
+    ES: { language: "es-ES", voice: "Polly.Lucia" },
+    IT: { language: "it-IT", voice: "Polly.Bianca" },
+    NL: { language: "nl-NL", voice: "Polly.Lotte" },
+    JP: { language: "ja-JP", voice: "Polly.Mizuki" },
+    BR: { language: "pt-BR", voice: "Polly.Vitoria" },
+    MX: { language: "es-MX", voice: "Polly.Mia" },
+    IN: { language: "hi-IN", voice: "Polly.Aditi" },
+    AE: { language: "ar-SA", voice: "Polly.Zeina" },
+    SG: { language: "en-US", voice: "Polly.Joanna" },
+    ZA: { language: "en-GB", voice: "Polly.Amy" },
+    SE: { language: "sv-SE", voice: "Polly.Astrid" },
+    CH: { language: "de-DE", voice: "Polly.Vicki" },
+    PL: { language: "pl-PL", voice: "Polly.Ewa" },
+  };
+
+  const config =
+    voiceMap[countryCode.toUpperCase()] ||
+    { language: "en-US", voice: "Polly.Joanna" };
+
+  return {
+    ...config,
+    speechModel: "phone_call",
+  };
+}

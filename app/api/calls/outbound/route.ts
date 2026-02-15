@@ -10,6 +10,8 @@ import { isOnDNCList, hasValidConsent } from "@/lib/dnc";
 import { canStartCall, getMinCallBalance } from "@/lib/call-limits";
 import { logAudit } from "@/lib/audit";
 import { callLimiter } from "@/lib/rate-limit";
+import { runFullComplianceCheck } from "@/lib/compliance-engine";
+import { runFraudCheck } from "@/lib/fraud-engine";
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,6 +52,42 @@ export async function POST(request: NextRequest) {
     const isDNC = await isOnDNCList(auth.orgId, sanitizedPhone);
     if (isDNC) {
       return NextResponse.json({ error: "This number is on the Do Not Call list and cannot be dialed." }, { status: 403 });
+    }
+
+    const E164_PREFIX_MAP: [string, string][] = [
+      ["+1", "US"], ["+44", "GB"], ["+33", "FR"], ["+49", "DE"],
+      ["+91", "IN"], ["+61", "AU"], ["+34", "ES"], ["+39", "IT"],
+      ["+31", "NL"], ["+81", "JP"], ["+55", "BR"], ["+52", "MX"],
+      ["+971", "AE"], ["+65", "SG"], ["+27", "ZA"], ["+353", "IE"],
+      ["+46", "SE"], ["+41", "CH"], ["+48", "PL"],
+    ];
+    let countryCode = body.countryCode as string | undefined;
+    if (!countryCode) {
+      for (const [prefix, code] of E164_PREFIX_MAP) {
+        if (sanitizedPhone.startsWith(prefix)) {
+          countryCode = code;
+          break;
+        }
+      }
+    }
+
+    if (countryCode) {
+      const complianceResult = await runFullComplianceCheck(auth.orgId, sanitizedPhone, countryCode);
+      if (!complianceResult.allowed) {
+        return NextResponse.json({
+          error: complianceResult.reason || "Call blocked by compliance check",
+          complianceChecks: complianceResult.checks,
+        }, { status: 403 });
+      }
+    }
+
+    const fraudResult = await runFraudCheck(auth.orgId, sanitizedPhone, countryCode);
+    if (!fraudResult.allowed) {
+      return NextResponse.json({
+        error: "Call blocked by fraud detection",
+        riskScore: fraudResult.riskScore,
+        flags: fraudResult.flags,
+      }, { status: 403 });
     }
 
     const callCheck = await canStartCall(auth.orgId);

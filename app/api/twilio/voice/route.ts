@@ -7,6 +7,7 @@ import { DEFAULT_VOICE, DEFAULT_LANGUAGE, validateTwilioSignature } from "@/lib/
 import { isWithinBusinessHours, getNextOpenTime, type BusinessHoursConfig } from "@/lib/business-hours";
 import twilio from "twilio";
 import { recordConsent } from "@/lib/dnc";
+import { getCountryVoiceConfig, getDisclosureText } from "@/lib/compliance-engine";
 
 function twimlResponse(xml: string) {
   return new NextResponse(xml, {
@@ -141,14 +142,30 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    const agentVoice = (activeAgent.voiceName || DEFAULT_VOICE) as any;
-    const agentLanguage = (activeAgent.language || DEFAULT_LANGUAGE) as any;
+    let agentVoice: any = activeAgent.voiceName || DEFAULT_VOICE;
+    let agentLanguage: any = activeAgent.language || DEFAULT_LANGUAGE;
+
+    const phoneCountryCode = phoneRecord.countryCode;
+    if (phoneCountryCode) {
+      const countryVoice = await getCountryVoiceConfig(phoneCountryCode);
+      if (countryVoice) {
+        agentVoice = activeAgent.voiceName || countryVoice.voice;
+        agentLanguage = activeAgent.language || countryVoice.language;
+      }
+    }
 
     const greeting = activeAgent.greeting || "Hello, thank you for calling. How can I help you today?";
 
-    const aiDisclosure = `I'm ${activeAgent.name}, an AI assistant.`;
-    const recordingDisclosure = "This call is being recorded for quality and training purposes. By continuing, you consent to being recorded.";
-    const fullDisclosure = `${recordingDisclosure} ${aiDisclosure} `;
+    let disclosureText: string;
+    if (phoneCountryCode) {
+      const countryDisclosure = await getDisclosureText(phoneCountryCode, agentLanguage);
+      disclosureText = countryDisclosure || `I'm ${activeAgent.name}, an AI assistant. This call may be recorded.`;
+    } else {
+      const aiDisclosure = `I'm ${activeAgent.name}, an AI assistant.`;
+      const recordingDisclosure = "This call is being recorded for quality and training purposes. By continuing, you consent to being recorded.";
+      disclosureText = `${recordingDisclosure} ${aiDisclosure}`;
+    }
+    const fullDisclosure = `${disclosureText} `;
 
     const vr = new twilio.twiml.VoiceResponse();
     const gather = vr.gather({
@@ -168,8 +185,8 @@ export async function POST(request: NextRequest) {
       .set({ aiDisclosurePlayed: true, aiDisclosureVersion: "v2-twilio-consent" })
       .where(eq(callLogs.id, callLog.id));
 
-    await recordConsent(orgId, callerNumber, "ai_call", true, "verbal_ivr", aiDisclosure, callLog.id);
-    await recordConsent(orgId, callerNumber, "recording", true, "verbal_continuation", recordingDisclosure, callLog.id);
+    await recordConsent(orgId, callerNumber, "ai_call", true, "verbal_ivr", disclosureText, callLog.id);
+    await recordConsent(orgId, callerNumber, "recording", true, "verbal_continuation", disclosureText, callLog.id);
 
     return twimlResponse(vr.toString());
   } catch (error) {

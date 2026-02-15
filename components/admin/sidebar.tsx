@@ -45,6 +45,7 @@ import {
   GraduationCap,
   MessageCircle,
   Globe,
+  Activity,
 } from "lucide-react";
 
 const overviewItems = [
@@ -52,6 +53,7 @@ const overviewItems = [
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Revenue", url: "/admin/revenue", icon: PoundSterling },
   { title: "Calls", url: "/admin/calls", icon: PhoneCall },
+  { title: "Operations", url: "/admin/operations", icon: Activity },
   { title: "Chat Leads", url: "/admin/chats", icon: MessageCircle },
 ];
 
@@ -65,6 +67,7 @@ const managementItems = [
   { title: "Pricing", url: "/admin/pricing", icon: Calculator },
   { title: "Phone Numbers", url: "/admin/phone-numbers", icon: Phone },
   { title: "Countries", url: "/admin/countries", icon: Globe },
+  { title: "International", url: "/admin/international", icon: Globe },
   { title: "Deployments", url: "/admin/deployments", icon: ArrowLeftRight },
   { title: "Campaigns", url: "/admin/campaigns", icon: Megaphone },
   { title: "Knowledge", url: "/admin/knowledge", icon: BookOpen },

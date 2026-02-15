@@ -20,7 +20,7 @@ GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentic
 Enterprise-grade infrastructure components include: LLM Fallback Router, Database Hardening, Global Error Handler, Autopilot Health Monitor, Rate Limiting, Security Middleware, CI/CD Pipeline, Real-Time Call Monitoring, Infrastructure Dashboard, Notification System, Admin Client Management, Automation Controls, Platform Settings Console, Admin Revenue Dashboard, Admin Notification Center, Admin Audit Log, Admin Wallets, Admin Compliance Centre, Admin Affiliate Management, Admin Knowledge Management, Admin Campaign Management, Admin Call Monitoring, Admin Agent Overview, Admin API Key Management, External API Layer, Finance Module, Getting Started Guide, Feature Detail Pages, Partner Pages, Public Website, and Public AI Chat Widget.
 
 ### Feature Specifications
-- **Deployment Packages**: Three commercial packages (Managed, BYOK, Self-Hosted) selected during onboarding, affecting billing rates.
+- **Deployment Packages**: Four commercial packages (Managed, BYOK, Self-Hosted, Custom) selected during onboarding, affecting billing rates.
 - **Agent Configuration**: Customizable AI agents with roles, FAQs, knowledge bases, and language/voice selection.
 - **Knowledge Management**: Supports document upload, chunking, embedding, and audio transcription.
 - **Multi-Tier Partner Management**: Business Partners can create resellers, D2C clients, and affiliate partners.
@@ -28,6 +28,23 @@ Enterprise-grade infrastructure components include: LLM Fallback Router, Databas
 - **Multi-Tier Distribution Engine**: Manages a commission waterfall from customer payment to platform remainder.
 - **Billing & Usage**: Talk-time only pricing, real-time wallet deductions, billing ledger, spending caps, and Stripe for top-ups.
 - **Analytics Deep-Dive**: A 6-tab dashboard with global date range picker for detailed insights into calls, trends, activity, sentiment, quality, and agents.
+
+### International Calling System (Sections B-J)
+- **Country Management**: 20 countries seeded (UK, US, FR, DE, IN, CA, AU, ES, IT, NL, JP, BR, MX, AE, SG, ZA, IE, SE, CH, PL) with compliance profiles, rate cards, and holiday calendars. Admin CRUD at `/admin/countries`.
+- **Twilio Sub-Account Isolation**: Per-org sub-accounts for client isolation. API at `/api/admin/twilio-sub-accounts`. Sub-account credentials resolved via `getTwilioConfigForSubAccount()` in `lib/twilio.ts`.
+- **Compliance Engine** (`lib/compliance-engine.ts`): Country-aware DNC checking, calling hours enforcement by timezone/holidays, AI disclosure in 12 languages, recording consent modes, opt-out detection in 8 languages. Wired into outbound call initiation and Twilio gather/voice flows.
+- **Fraud Detection** (`lib/fraud-engine.ts`): Velocity checks (calls/minute/hour/day), failed call pattern detection, destination risk scoring (high-risk countries, premium rate prefixes), daily spend limit monitoring. Integrated into outbound call flow.
+- **Currency Conversion** (`lib/currency.ts`): Exchange rates for 15 currencies, formatting, country-to-currency mapping for display.
+- **International Analytics**: Admin API at `/api/admin/international` with country-level call stats, compliance metrics, sub-account summaries. Dashboard at `/admin/international` with 5 tabs.
+- **Campaign Management**: Contact list import with E.164 validation, DNC pre-checking, country detection from phone prefixes. API at `/api/admin/campaigns/international`.
+- **Client Onboarding**: International setup flow with country selection, deployment model, and provisioning. API at `/api/onboarding/international`.
+- **Operations Dashboard**: Real-time call monitoring at `/admin/operations` with 3 tabs (Live Calls, System Health, Alerts). Auto-refresh, country filters, fraud alert display.
+
+### Key International Libraries
+- `lib/compliance-engine.ts` — Full pre-call compliance checks, disclosure text, opt-out handling, voice config per country
+- `lib/fraud-engine.ts` — Velocity limits, fraud scoring, spend tracking
+- `lib/currency.ts` — Multi-currency conversion and formatting
+- `lib/twilio.ts` — Extended with `getTwilioConfigForSubAccount()` for sub-account credential resolution
 
 ### Deployment Architecture
 - **Development**: Replit (Next.js dev server on port 5000, Replit PostgreSQL)

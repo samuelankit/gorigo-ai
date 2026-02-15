@@ -10,6 +10,7 @@ import { analyzeSentimentLocal } from "@/lib/sentiment";
 import { redactPII } from "@/lib/pii-redaction";
 import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_VOICE } from "@/lib/prompt-guard";
 import twilio from "twilio";
+import { detectOptOut, handleOptOut } from "@/lib/compliance-engine";
 
 const MAX_TURNS_BEFORE_CLOSE = 15;
 
@@ -94,6 +95,25 @@ export async function POST(request: NextRequest) {
         finalOutcome: "max_turns_exceeded",
         endedAt: new Date(),
       }).where(eq(callLogs.id, callLogId));
+      return twimlResponse(vr.toString());
+    }
+
+    const optOutCheck = detectOptOut(speechResult);
+    if (optOutCheck.detected) {
+      const callerNumber = callLog.callerNumber || "";
+      await handleOptOut(orgId, callerNumber, callLogId, `Opt-out keyword: "${optOutCheck.keyword}"`);
+      await db.update(callLogs).set({
+        currentState: "CLOSE",
+        turnCount,
+        status: "completed",
+        finalOutcome: "opt_out",
+        complianceOptOutDetected: true,
+        endedAt: new Date(),
+      }).where(eq(callLogs.id, callLogId));
+
+      const vr = new twilio.twiml.VoiceResponse();
+      vr.say({ voice: agentVoice, language: agentLanguage }, "I understand. Your number has been removed from our calling list. You will not receive any further calls from us. Goodbye.");
+      vr.hangup();
       return twimlResponse(vr.toString());
     }
 

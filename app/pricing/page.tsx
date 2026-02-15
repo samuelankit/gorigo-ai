@@ -7,23 +7,23 @@ import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-import { CheckCircle2, Minus, ArrowRight } from "lucide-react";
+import { CheckCircle2, Minus, ArrowRight, MessageSquare } from "lucide-react";
 import { PricingFaq } from "./faq";
 
 export const metadata: Metadata = {
   title: "Pricing - Flexible AI Call Centre Packages | GoRigo",
   description:
-    "Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions. Managed, Bring Your Own Key, or Self-Hosted packages available.",
+    "Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions. Managed, BYOK, Self-Hosted, or fully custom Enterprise packages available.",
   openGraph: {
     title: "Pricing - Flexible AI Call Centre Packages | GoRigo",
     description:
-      "Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions.",
+      "Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions. Enterprise custom packages available.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Pricing - Flexible AI Call Centre Packages | GoRigo",
     description:
-      "Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions. Managed, Bring Your Own Key, or Self-Hosted packages available.",
+      "Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions. Managed, BYOK, Self-Hosted, or Enterprise custom packages available.",
   },
   alternates: {
     canonical: "/pricing",
@@ -82,18 +82,21 @@ const packages = [
 ];
 
 const comparisonFeatures = [
-  { name: "AI Agent Management", managed: true, byok: true, selfHosted: true },
-  { name: "Knowledge Base", managed: true, byok: true, selfHosted: true },
-  { name: "Real-Time Analytics", managed: true, byok: true, selfHosted: true },
-  { name: "Call Recording", managed: true, byok: true, selfHosted: true },
-  { name: "Multi-Language", managed: true, byok: true, selfHosted: true },
-  { name: "DNC Management", managed: true, byok: true, selfHosted: true },
-  { name: "API Access", managed: true, byok: true, selfHosted: true },
-  { name: "Custom Integrations", managed: true, byok: false, selfHosted: true },
-  { name: "Dedicated Account Manager", managed: true, byok: false, selfHosted: true },
-  { name: "SLA Guarantee", managed: true, byok: false, selfHosted: true },
-  { name: "White Label", managed: false, byok: false, selfHosted: true },
-  { name: "On-Premise Deployment", managed: false, byok: false, selfHosted: true },
+  { name: "AI Agent Management", managed: true, byok: true, selfHosted: true, custom: true },
+  { name: "Knowledge Base", managed: true, byok: true, selfHosted: true, custom: true },
+  { name: "Real-Time Analytics", managed: true, byok: true, selfHosted: true, custom: true },
+  { name: "Call Recording", managed: true, byok: true, selfHosted: true, custom: true },
+  { name: "Multi-Language", managed: true, byok: true, selfHosted: true, custom: true },
+  { name: "DNC Management", managed: true, byok: true, selfHosted: true, custom: true },
+  { name: "API Access", managed: true, byok: true, selfHosted: true, custom: true },
+  { name: "Custom Integrations", managed: true, byok: false, selfHosted: true, custom: true },
+  { name: "Dedicated Account Manager", managed: true, byok: false, selfHosted: true, custom: true },
+  { name: "SLA Guarantee", managed: true, byok: false, selfHosted: true, custom: true },
+  { name: "White Label", managed: false, byok: false, selfHosted: true, custom: true },
+  { name: "On-Premise Deployment", managed: false, byok: false, selfHosted: true, custom: true },
+  { name: "Custom Billing Rates", managed: false, byok: false, selfHosted: false, custom: true },
+  { name: "Bespoke Feature Selection", managed: false, byok: false, selfHosted: false, custom: true },
+  { name: "Dedicated Onboarding", managed: false, byok: false, selfHosted: false, custom: true },
 ];
 
 function FeatureIcon({ included }: { included: boolean }) {
@@ -108,7 +111,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-background" data-testid="page-pricing">
       <WebPageJsonLd
         title="Pricing - Flexible AI Call Centre Packages | GoRigo"
-        description="Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions. Managed, Bring Your Own Key, or Self-Hosted packages available."
+        description="Choose the right GoRigo deployment for your business. Talk-time only billing with no subscriptions. Managed, BYOK, Self-Hosted, or fully custom Enterprise packages available."
         url="/pricing"
       />
       <BreadcrumbJsonLd
@@ -145,8 +148,8 @@ export default function PricingPage() {
       </section>
 
       <section className="py-20" data-testid="section-packages">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {packages.map((pkg) => (
               <Card
                 key={pkg.name}
@@ -188,6 +191,63 @@ export default function PricingPage() {
                 </CardContent>
               </Card>
             ))}
+
+            <Card
+              className="border-primary/20 bg-gradient-to-b from-primary/[0.03] to-transparent"
+              data-testid="card-package-custom"
+            >
+              <CardContent className="p-8">
+                <p className="text-xs font-medium tracking-widest uppercase text-primary mb-4" data-testid="badge-enterprise">
+                  Enterprise
+                </p>
+                <h3 className="font-medium text-xl mb-2">Custom Plan</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Need something different? We will build a bespoke package tailored to your exact requirements.
+                </p>
+                <p className="text-xs text-muted-foreground mb-6">
+                  Custom rates negotiated for your business
+                </p>
+                <ul className="space-y-2.5 mb-6">
+                  <li className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">Pick and choose features</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">Custom billing rates</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">Dedicated onboarding</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">Bespoke SLAs</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">Priority engineering support</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">Volume discounts</span>
+                  </li>
+                </ul>
+                <p className="text-xs text-muted-foreground mb-6">
+                  <span className="font-medium text-foreground">Best for:</span> Businesses needing a tailored solution.
+                </p>
+                <Link href="/contact">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    data-testid="button-package-custom"
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Contact Sales
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
@@ -212,6 +272,7 @@ export default function PricingPage() {
                       <th className="text-center p-4 font-medium text-muted-foreground">Managed</th>
                       <th className="text-center p-4 font-medium text-foreground">BYOK</th>
                       <th className="text-center p-4 font-medium text-muted-foreground">Self-Hosted</th>
+                      <th className="text-center p-4 font-medium text-primary">Custom</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -230,6 +291,9 @@ export default function PricingPage() {
                         </td>
                         <td className="p-4">
                           <FeatureIcon included={feature.selfHosted} />
+                        </td>
+                        <td className="p-4">
+                          <FeatureIcon included={feature.custom} />
                         </td>
                       </tr>
                     ))}

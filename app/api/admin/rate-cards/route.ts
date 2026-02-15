@@ -7,7 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 
-const VALID_DEPLOYMENT_MODELS = ["managed", "byok", "self_hosted"] as const;
+const VALID_DEPLOYMENT_MODELS = ["managed", "byok", "self_hosted", "custom"] as const;
 const VALID_CATEGORIES = ["voice_inbound", "voice_outbound", "ai_chat"] as const;
 
 async function requireSuperAdmin() {

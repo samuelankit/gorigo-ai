@@ -69,6 +69,7 @@ const DEPLOYMENT_MODELS = [
   { value: "managed", label: "Managed", icon: Cloud, description: "Full-service: AI + telephony + platform included" },
   { value: "byok", label: "BYOK", icon: Key, description: "Platform fee only, customer provides API keys" },
   { value: "self_hosted", label: "Self-Hosted", icon: Server, description: "License fee only, customer runs infrastructure" },
+  { value: "custom", label: "Custom", icon: Calculator, description: "Bespoke rates and features configured per client" },
 ];
 
 const RATE_CATEGORIES = [

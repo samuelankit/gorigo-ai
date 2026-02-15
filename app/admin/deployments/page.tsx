@@ -25,7 +25,7 @@ import {
   Clock, Phone, Search, ChevronRight, History, ShieldAlert,
 } from "lucide-react";
 
-type DeploymentModel = "managed" | "byok" | "self_hosted";
+type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
 
 interface OrgItem {
   id: number;
@@ -103,6 +103,14 @@ const MODEL_CONFIG: Record<DeploymentModel, { label: string; icon: typeof Cloud;
     bgColor: "bg-emerald-500/10",
     badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     description: "Client infrastructure. License fee per minute.",
+  },
+  custom: {
+    label: "Custom",
+    icon: Cloud,
+    color: "text-violet-600 dark:text-violet-400",
+    bgColor: "bg-violet-500/10",
+    badgeClass: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    description: "Bespoke rates and features configured per client.",
   },
 };
 
@@ -251,8 +259,8 @@ export default function DeploymentsPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        {(["managed", "byok", "self_hosted"] as DeploymentModel[]).map((model) => {
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {(["managed", "byok", "self_hosted", "custom"] as DeploymentModel[]).map((model) => {
           const config = MODEL_CONFIG[model];
           const Icon = config.icon;
           const count = modelCounts[model] || 0;
@@ -296,6 +304,7 @@ export default function DeploymentsPage() {
                   <SelectItem value="managed">Managed</SelectItem>
                   <SelectItem value="byok">BYOK</SelectItem>
                   <SelectItem value="self_hosted">Self-Hosted</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
                 </SelectContent>
               </Select>
             </div>

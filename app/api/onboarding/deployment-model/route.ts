@@ -7,7 +7,7 @@ import { settingsLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
 
-const VALID_DEPLOYMENT_MODELS = ["managed", "byok", "self_hosted"] as const;
+const VALID_DEPLOYMENT_MODELS = ["managed", "byok", "self_hosted", "custom"] as const;
 
 export async function PUT(request: NextRequest) {
   try {
@@ -37,7 +37,7 @@ export async function PUT(request: NextRequest) {
     const { deploymentModel } = body;
 
     if (!deploymentModel || !VALID_DEPLOYMENT_MODELS.includes(deploymentModel)) {
-      return NextResponse.json({ error: "Invalid deployment model. Must be one of: managed, byok, self_hosted" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid deployment model. Must be one of: managed, byok, self_hosted, custom" }, { status: 400 });
     }
 
     const byokMode = deploymentModel === "byok" ? "byok" : "platform";

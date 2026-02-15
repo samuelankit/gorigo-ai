@@ -54,12 +54,14 @@ const PACKAGE_LABELS: Record<string, { label: string; color: string }> = {
   managed: { label: "Managed", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
   byok: { label: "BYOK", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
   self_hosted: { label: "Self-Hosted", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+  custom: { label: "Custom", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
 };
 
 const PACKAGE_ICONS: Record<string, typeof Cloud> = {
   managed: Cloud,
   byok: Key,
   self_hosted: Server,
+  custom: Building2,
 };
 
 function getStatusBadge(channelType: string) {
@@ -258,6 +260,7 @@ export default function ClientsPage() {
             <SelectItem value="managed">Managed</SelectItem>
             <SelectItem value="byok">BYOK</SelectItem>
             <SelectItem value="self_hosted">Self-Hosted</SelectItem>
+            <SelectItem value="custom">Custom</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setPage(0); }}>

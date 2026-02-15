@@ -3,7 +3,7 @@ import { rateCards, orgs } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { safeParseNumeric } from "@/lib/money";
 
-export type DeploymentModel = "managed" | "byok" | "self_hosted";
+export type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
 export type UsageCategory = "voice_inbound" | "voice_outbound" | "ai_chat";
 
 export interface ResolvedRate {
@@ -32,6 +32,11 @@ const DEFAULT_RATES: Record<DeploymentModel, Record<UsageCategory, ResolvedRate>
     voice_outbound: { deploymentModel: "self_hosted", category: "voice_outbound", ratePerMinute: 0.04, platformFeePerMinute: 0.04, includesAiCost: false, includesTelephonyCost: false, label: "Self-Hosted - Outbound Voice" },
     ai_chat: { deploymentModel: "self_hosted", category: "ai_chat", ratePerMinute: 0.01, platformFeePerMinute: 0.01, includesAiCost: false, includesTelephonyCost: false, label: "Self-Hosted - AI Chat" },
   },
+  custom: {
+    voice_inbound: { deploymentModel: "custom", category: "voice_inbound", ratePerMinute: 0.15, platformFeePerMinute: 0.15, includesAiCost: true, includesTelephonyCost: true, label: "Custom - Inbound Voice" },
+    voice_outbound: { deploymentModel: "custom", category: "voice_outbound", ratePerMinute: 0.18, platformFeePerMinute: 0.18, includesAiCost: true, includesTelephonyCost: true, label: "Custom - Outbound Voice" },
+    ai_chat: { deploymentModel: "custom", category: "ai_chat", ratePerMinute: 0.05, platformFeePerMinute: 0.05, includesAiCost: true, includesTelephonyCost: false, label: "Custom - AI Chat" },
+  },
 };
 
 export async function getOrgDeploymentModel(orgId: number): Promise<DeploymentModel> {
@@ -43,7 +48,7 @@ export async function getOrgDeploymentModel(orgId: number): Promise<DeploymentMo
 
   if (!org || !org.deploymentModel) return "managed";
   const model = org.deploymentModel as DeploymentModel;
-  if (!["managed", "byok", "self_hosted"].includes(model)) return "managed";
+  if (!["managed", "byok", "self_hosted", "custom"].includes(model)) return "managed";
   return model;
 }
 
@@ -136,6 +141,7 @@ export async function getAllRateCards(): Promise<ResolvedRate[]> {
     ...Object.values(DEFAULT_RATES.managed),
     ...Object.values(DEFAULT_RATES.byok),
     ...Object.values(DEFAULT_RATES.self_hosted),
+    ...Object.values(DEFAULT_RATES.custom),
   ];
 }
 
@@ -144,6 +150,7 @@ export function getDeploymentModelLabel(model: DeploymentModel): string {
     case "managed": return "Managed";
     case "byok": return "BYOK (Bring Your Own Keys)";
     case "self_hosted": return "Self-Hosted";
+    case "custom": return "Custom Plan";
     default: return "Managed";
   }
 }
@@ -153,6 +160,7 @@ export function getDeploymentModelDescription(model: DeploymentModel): string {
     case "managed": return "We host and run everything. AI, telephony, and platform costs included in rate.";
     case "byok": return "Use our platform with your own API keys. You pay AI/telephony providers directly, we charge platform fee only.";
     case "self_hosted": return "Run the platform on your own infrastructure. License fee per minute of usage.";
+    case "custom": return "Bespoke package with custom rates, features, and SLAs configured by our sales team.";
     default: return "";
   }
 }

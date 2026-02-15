@@ -44,12 +44,14 @@ const PACKAGE_INFO: Record<string, { name: string; rate: string; description: st
   managed: { name: "Managed", rate: "£0.15/min", description: "AI + Telephony included", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
   byok: { name: "BYOK", rate: "£0.05/min", description: "Platform fee only", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-500/10" },
   self_hosted: { name: "Self-Hosted", rate: "£0.03/min", description: "Licence fee only", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10" },
+  custom: { name: "Custom", rate: "Custom", description: "Bespoke rates and features", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-500/10" },
 };
 
 const PACKAGE_ICONS: Record<string, typeof Cloud> = {
   managed: Cloud,
   byok: Key,
   self_hosted: Server,
+  custom: Cloud,
 };
 
 type DaySchedule = { open: string; close: string };

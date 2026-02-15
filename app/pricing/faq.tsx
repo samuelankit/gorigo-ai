@@ -33,6 +33,16 @@ const faqs = [
     answer:
       "Yes, we offer competitive volume discounts for high-volume usage. Contact our sales team to discuss custom pricing tailored to your call volumes.",
   },
+  {
+    question: "What if none of the standard packages fit my needs?",
+    answer:
+      "We offer a Custom Plan for businesses that need a tailored solution. You can pick and choose specific features, negotiate custom billing rates, and get a dedicated onboarding experience. Contact our sales team to discuss your requirements and we will build a bespoke package for you.",
+  },
+  {
+    question: "How does the Custom Plan billing work?",
+    answer:
+      "Custom Plan rates are negotiated individually based on your specific needs, expected call volume, and chosen features. Your dedicated account manager will work with you to agree on rates that work for your business. All billing is still based on talk-time only, with no hidden fees.",
+  },
 ];
 
 export function PricingFaq() {

@@ -58,6 +58,7 @@ const PACKAGE_CONFIG: Record<string, { label: string; color: string; rate: strin
   managed: { label: "Managed", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400", rate: "0.15/min", icon: Cloud },
   byok: { label: "BYOK", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400", rate: "0.05/min", icon: Key },
   self_hosted: { label: "Self-Hosted", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", rate: "0.03/min", icon: Server },
+  custom: { label: "Custom", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400", rate: "Custom", icon: Cloud },
 };
 
 function StatCard({ icon: Icon, label, value, subtext, color, testId }: {

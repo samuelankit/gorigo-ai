@@ -7,9 +7,9 @@ import { getAllRatesForModel } from "@/lib/rate-resolver";
 import { logAudit } from "@/lib/audit";
 import { getOrgByokStatus, validateOpenAIKey, validateTwilioCredentials } from "@/lib/byok";
 
-type DeploymentModel = "managed" | "byok" | "self_hosted";
+type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
 
-const VALID_MODELS: DeploymentModel[] = ["managed", "byok", "self_hosted"];
+const VALID_MODELS: DeploymentModel[] = ["managed", "byok", "self_hosted", "custom"];
 
 async function getActiveCalls(orgId: number): Promise<number> {
   const [result] = await db
@@ -168,7 +168,7 @@ export async function PUT(
 
     if (!VALID_MODELS.includes(deploymentModel)) {
       return NextResponse.json(
-        { error: 'deploymentModel must be "managed", "byok", or "self_hosted"' },
+        { error: 'deploymentModel must be "managed", "byok", "self_hosted", or "custom"' },
         { status: 400 }
       );
     }

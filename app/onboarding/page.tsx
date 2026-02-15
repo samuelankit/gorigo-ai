@@ -15,10 +15,10 @@ import { useToast } from "@/lib/use-toast";
 import { cn } from "@/lib/utils";
 import {
   ChevronRight, ChevronLeft, Plus, Trash2, Check, Headphones,
-  Cloud, Key, Server, Shield, Zap, Phone, Bot, Globe, Lock,
+  Cloud, Key, Server, Shield, Zap, Phone, Bot, Globe, Lock, MessageSquare,
 } from "lucide-react";
 
-type DeploymentModel = "managed" | "byok" | "self_hosted";
+type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
 
 interface FaqEntry {
   question: string;
@@ -96,6 +96,24 @@ const PACKAGES: {
     ],
     included: ["Licence"],
     notIncluded: ["AI Models", "Telephony", "Hosting"],
+  },
+  {
+    id: "custom",
+    name: "Custom Plan",
+    tagline: "Tailored to your needs",
+    price: "Custom",
+    priceUnit: "",
+    icon: MessageSquare,
+    color: "text-violet-600 dark:text-violet-400",
+    bgColor: "bg-violet-500/10",
+    borderColor: "border-violet-500/30",
+    features: [
+      "Pick and choose features",
+      "Custom billing rates",
+      "Dedicated onboarding",
+      "Bespoke SLAs",
+    ],
+    included: ["Negotiated"],
   },
 ];
 
@@ -275,7 +293,7 @@ export default function OnboardingPage() {
 
         {step === 1 && (
           <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {PACKAGES.map((pkg) => {
                 const Icon = pkg.icon;
                 const isSelected = selectedPackage === pkg.id;
@@ -374,6 +392,20 @@ export default function OnboardingPage() {
                     <p className="font-medium text-foreground">Infrastructure Required</p>
                     <p className="text-muted-foreground mt-0.5">
                       Self-hosted requires your own server infrastructure. You will receive deployment documentation and a licence key after setup.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {selectedPackage === "custom" && (
+              <Card className="border-violet-500/20 bg-violet-500/5">
+                <CardContent className="flex items-start gap-3 p-4">
+                  <MessageSquare className="h-5 w-5 text-violet-500 mt-0.5 shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground">Custom Plan</p>
+                    <p className="text-muted-foreground mt-0.5">
+                      Our sales team will work with you to configure a bespoke package. After completing this setup, a member of our team will contact you to finalise your custom rates and features.
                     </p>
                   </div>
                 </CardContent>

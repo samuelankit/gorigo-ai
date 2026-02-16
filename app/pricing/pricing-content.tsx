@@ -38,7 +38,7 @@ const allPackages = [
     bestFor: "Businesses that want zero technical overhead.",
     cta: "Book a Demo",
     href: "/contact",
-    featured: false,
+    featured: true,
     mobileApp: true,
   },
   {
@@ -59,7 +59,7 @@ const allPackages = [
     bestFor: "Tech-savvy teams wanting cost control.",
     cta: "Get Started",
     href: "/register",
-    featured: true,
+    featured: false,
   },
   {
     key: "selfHosted" as const,

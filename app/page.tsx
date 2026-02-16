@@ -366,7 +366,6 @@ export default function HomePage() {
                 className="group p-6 rounded-md border border-border/50 hover-elevate"
                 data-testid={`card-industry-${industry.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <industry.icon className={`h-5 w-5 ${industry.color} mb-4`} />
                 <h3 className="font-medium mb-1.5">{industry.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {industry.description}

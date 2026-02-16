@@ -106,7 +106,8 @@ export async function POST(request: NextRequest) {
     logAuthEvent("login.success", user.id, user.email).catch(() => {});
 
     const { password: _, emailVerificationToken: _evt, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, ...userWithoutPassword } = user;
-    return NextResponse.json({ user: userWithoutPassword }, { status: 200 });
+    const isMobile = request.headers.get("x-client-type") === "mobile";
+    return NextResponse.json({ user: userWithoutPassword, ...(isMobile ? { token } : {}) }, { status: 200 });
   } catch (error) {
     return handleRouteError(error, "Login");
   }

@@ -71,8 +71,22 @@ async function authenticateViaApiKey(): Promise<AuthResult | null> {
   };
 }
 
+async function getBearerToken(): Promise<string | null> {
+  try {
+    const headersList = await headers();
+    const authHeader = headersList.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      return authHeader.slice(7);
+    }
+  } catch {}
+  return null;
+}
+
 export async function getAuthenticatedUser(): Promise<AuthResult | null> {
-  const token = await getSessionCookie();
+  let token = await getSessionCookie();
+  if (!token) {
+    token = (await getBearerToken()) ?? undefined;
+  }
   if (!token) {
     return authenticateViaApiKey();
   }

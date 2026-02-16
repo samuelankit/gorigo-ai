@@ -3,6 +3,9 @@
 ## Overview
 GoRigo is an AI-powered call center platform designed to automate call center operations, provide comprehensive analytics, and manage a three-tier business hierarchy (Business Partners, Direct-to-Consumer, Affiliate Partners). The platform streamlines partner management via a SuperAdmin Console, automates commission processing, and offers capabilities like multi-agent management, visual automation flow building, knowledge management, and robust call management with real-time monitoring. Its ambition is to be a fully automated, scalable solution for AI-driven call centers.
 
+## Strategic Positioning: Mobile-First
+Primary model: "Run Your AI Call Center From Your Phone" — a React Native/Expo mobile app with AI voice control (Rigo assistant) as the main interface. Secondary model: Web SaaS platform for desktop users. Both connect to the same backend APIs.
+
 ## User Preferences
 - Default to light mode (day vision), with dark mode (night vision) toggle available.
 - Talk-time only billing model.
@@ -13,6 +16,16 @@ GoRigo is an AI-powered call center platform designed to automate call center op
 
 ### UI/UX Decisions
 The platform uses Next.js 14 (App Router) with Tailwind CSS and Shadcn/ui for components, and Recharts for data visualization. Dark mode is the default, inspired by Azure Portal/Fluent Design. The dashboard features a collapsible left sidebar, a sticky top command bar, and a content workspace, emphasizing flat design, compact spacing, and table-first data views.
+
+### Mobile App (React Native / Expo)
+Located in `/mobile/` directory. Uses Expo Router for navigation with 5 main tabs:
+- **Dashboard** (`mobile/app/(tabs)/index.tsx`): Stats cards, wallet balance, voice CTA, quick actions
+- **Voice** (`mobile/app/(tabs)/voice.tsx`): Primary interface - chat-like UI with mic button, sends commands to `/api/rigo`
+- **Calls** (`mobile/app/(tabs)/calls.tsx`): Call list with direction, status, duration
+- **Agents** (`mobile/app/(tabs)/agents.tsx`): Agent list with status badges
+- **Settings** (`mobile/app/(tabs)/settings.tsx`): Account, call center config, app settings
+
+Theme: Green #189553 primary, white background (matches web). API client in `mobile/lib/api.ts` uses AsyncStorage for auth tokens and hits same backend endpoints.
 
 ### Technical Implementations
 GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentication is session-based. AI functionalities leverage OpenAI via Replit AI Integrations, enhanced by a RAG system. A prepaid wallet system with atomic operations and row-level locks manages billing and commissions. Multi-tenancy is enforced via `orgId`, and Role-Based Access Control (`globalRole`) manages permissions. A 7-state Call State Machine handles call flows, integrated with Twilio Programmable Voice. Background jobs process document chunking, embedding, and audio transcription. Security features include prompt injection detection and input validation. A distribution engine manages commissions and revenue sharing. A multi-agent system supports various AI agent types and visual flow diagram building. Compliance features include TCPA/FCC DNC management, PII auto-redaction, sentiment analysis, and call quality scoring. The system supports AI model fallback, multilingual capabilities, concurrent call limits, business hours, and outgoing webhooks.
@@ -40,3 +53,8 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - **Charting Library**: Recharts.
 - **Telephony**: Twilio Programmable Voice.
 - **Payments**: Stripe.
+- **Mobile**: Expo SDK 54, expo-router, expo-speech, expo-av, expo-haptics.
+
+## Recent Changes
+- 2026-02-16: Created mobile app foundation with Expo Router, 5-tab navigation, voice command interface, and login screen
+- 2026-02-16: Updated web landing page hero to mobile-first messaging ("Run Your AI Call Center From Your Phone")

@@ -203,8 +203,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-background" data-testid="page-home">
       <OrganizationJsonLd />
       <WebPageJsonLd 
-        title="GoRigo - AI Call Centre Platform | 24/7 Voice Agents" 
-        description="AI-powered call centre platform by International Business Exchange Limited. Deploy intelligent voice agents that handle calls 24/7. Pay only for talk time. UK compliant." 
+        title="GoRigo - Run Your AI Call Center From Your Phone | 24/7 Voice Agents" 
+        description="Run and manage your entire AI call center from your phone. Deploy intelligent voice agents, monitor calls, and control everything by voice. Pay only for talk time." 
         url="/" 
       />
       <SoftwareApplicationJsonLd />
@@ -240,22 +240,28 @@ export default function HomePage() {
                 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
                 data-testid="text-hero-title"
               >
-                Your AI Call Center,
+                Run Your AI Call Center
                 <br />
-                <span className="font-light">Ready in Minutes</span>
+                <span className="font-light">From Your Phone</span>
               </h1>
               <p
                 className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed"
                 data-testid="text-hero-subtitle"
               >
                 Deploy AI-powered voice agents that handle calls with human-like
-                conversations. No subscriptions — pay only for talk time.
+                conversations. Manage everything by voice from your mobile.
+                No subscriptions — pay only for talk time.
               </p>
               <div className="mt-8 flex items-center justify-center lg:justify-start gap-3 flex-wrap">
                 <Link href="/register">
                   <Button size="lg" data-testid="button-hero-get-started">
-                    Get Started
+                    Get the App
                     <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button variant="outline" size="lg" data-testid="button-hero-web-app">
+                    Use Web App
                   </Button>
                 </Link>
                 <Link href="/contact">
@@ -264,6 +270,9 @@ export default function HomePage() {
                   </Button>
                 </Link>
               </div>
+              <p className="mt-4 text-xs text-muted-foreground" data-testid="text-hero-platforms">
+                Available on iOS, Android, and Web
+              </p>
             </div>
           </div>
         </div>

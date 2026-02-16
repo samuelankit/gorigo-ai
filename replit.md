@@ -82,3 +82,6 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - 2026-02-16: Created public API (GET /api/public/deployment-packages) returning enabled package flags without auth
 - 2026-02-16: Pricing page dynamically filters visible packages and comparison table columns based on admin settings
 - 2026-02-16: New business creation page filters deployment options based on enabled packages
+- 2026-02-16: Built browser-based Web Call system — WebCallModal component with phone-call UI (connecting/active/ended phases), Web Speech API for STT, speechSynthesis for TTS, live transcript, waveform animations, call timer, keyboard fallback for non-Chrome browsers, 5-min call limit, tab visibility handling, post-call lead capture
+- 2026-02-16: Created WebCallButton client component for hero section — "Call from Browser" CTA shown on desktop (sm+), phone CTA shown on mobile only
+- 2026-02-16: Web call reuses existing /api/public/chat endpoint (no new backend needed) with streaming responses, conversation history

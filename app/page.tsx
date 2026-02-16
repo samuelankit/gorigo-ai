@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/json-ld";
 import { CustomIcon } from "@/components/ui/custom-icon";
+import { WebCallButton } from "@/components/landing/web-call-button";
 import { SiApple, SiGoogleplay } from "react-icons/si";
 import {
   ArrowRight,
@@ -158,11 +159,11 @@ export default function HomePage() {
                 No subscriptions — pay only for talk time.
               </p>
 
-              <div className="mt-10 flex flex-col sm:flex-row items-center gap-4" data-testid="hero-talk-to-ai">
+              <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 flex-wrap" data-testid="hero-talk-to-ai">
                 <a
                   href="tel:+440000000000"
                   data-testid="link-hero-call-ai"
-                  className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-2.5 shadow-sm hover-elevate dark:bg-white"
+                  className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-2.5 shadow-sm hover-elevate dark:bg-white sm:hidden"
                 >
                   <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40" />
@@ -173,6 +174,7 @@ export default function HomePage() {
                     <span className="text-sm text-gray-500">+44 (0) 000 000 0000</span>
                   </span>
                 </a>
+                <WebCallButton />
                 <span className="inline-flex items-center gap-2 text-sm font-medium text-primary" data-testid="text-hero-availability">
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />

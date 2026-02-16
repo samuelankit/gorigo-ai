@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
@@ -198,6 +199,7 @@ const capabilities = [
 
 export default function HomePage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-home">
       <OrganizationJsonLd />
       <WebPageJsonLd 
@@ -467,5 +469,6 @@ export default function HomePage() {
 
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -144,6 +145,7 @@ const faqs = [
 
 export default function AIAgentsPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-ai-agents">
       <WebPageJsonLd title="AI-Powered Agents" description="Deploy intelligent AI voice agents that listen, understand, and respond naturally to every call. Never tired, always consistent, handling thousands of calls simultaneously." url="/features/ai-agents" />
       <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "AI-Powered Agents", url: "/features/ai-agents" }]} />
@@ -373,5 +375,6 @@ export default function AIAgentsPage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -146,6 +147,7 @@ const faqs = [
 
 export default function AnalyticsPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-analytics">
       <WebPageJsonLd title="Real-Time Analytics" description="See what is happening across your AI call centre as it happens. Live dashboards, sentiment analysis, call quality scoring, and actionable insights to improve every interaction." url="/features/analytics" />
       <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "Real-Time Analytics", url: "/features/analytics" }]} />
@@ -381,5 +383,6 @@ export default function AnalyticsPage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

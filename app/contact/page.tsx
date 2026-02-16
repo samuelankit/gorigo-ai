@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { socialLinks } from "@/lib/social-links";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -76,6 +77,7 @@ const emailChannels = [
 
 export default function ContactPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-contact">
       <WebPageJsonLd
         title="Contact GoRigo | Book a Demo"
@@ -290,5 +292,6 @@ export default function ContactPage() {
       />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

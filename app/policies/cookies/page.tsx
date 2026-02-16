@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 
@@ -27,6 +28,7 @@ export const metadata: Metadata = {
 
 export default function CookiePolicyPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-cookie-policy">
       <WebPageJsonLd
         title="Cookie Policy | GoRigo"
@@ -209,5 +211,6 @@ export default function CookiePolicyPage() {
 
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

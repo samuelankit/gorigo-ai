@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -145,6 +146,7 @@ const faqs = [
 
 export default function CallHandlingPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-call-handling">
       <WebPageJsonLd title="24/7 Call Handling" description="Never miss a call, day or night. GoRigo AI agents answer every call instantly, handle bookings, enquiries, and support requests around the clock without breaks or downtime." url="/features/call-handling" />
       <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "24/7 Call Handling", url: "/features/call-handling" }]} />
@@ -380,5 +382,6 @@ export default function CallHandlingPage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

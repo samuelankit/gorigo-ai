@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -144,6 +145,7 @@ const faqs = [
 
 export default function MultiLanguagePage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-multi-language">
       <WebPageJsonLd title="Multi-Language Support" description="AI agents that detect and respond in your caller's preferred language. Automatic accent adaptation, multilingual transcripts, and seamless conversations in dozens of languages." url="/features/multi-language" />
       <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "Multi-Language Support", url: "/features/multi-language" }]} />
@@ -379,5 +381,6 @@ export default function MultiLanguagePage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

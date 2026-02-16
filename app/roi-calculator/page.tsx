@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -297,6 +298,7 @@ export default function RoiCalculatorPage() {
   ];
 
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-roi-calculator">
       <Navbar />
       <Breadcrumbs items={[{ label: "ROI Calculator" }]} />
@@ -745,5 +747,6 @@ export default function RoiCalculatorPage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

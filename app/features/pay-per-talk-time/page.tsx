@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -139,6 +140,7 @@ const faqs = [
 
 export default function PayPerTalkTimePage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-pay-per-talk-time">
       <WebPageJsonLd title="Pay Per Talk Time" description="No seat licences, no subscriptions, no per-agent fees. Only pay for the actual minutes your AI agents spend on calls. Transparent, predictable, and fair billing." url="/features/pay-per-talk-time" />
       <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "Pay Per Talk Time", url: "/features/pay-per-talk-time" }]} />
@@ -435,5 +437,6 @@ export default function PayPerTalkTimePage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -87,6 +88,7 @@ const partners = [
 
 export default function AboutPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-about">
       <WebPageJsonLd
         title="About GoRigo | International Business Exchange Limited"
@@ -268,5 +270,6 @@ export default function AboutPage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

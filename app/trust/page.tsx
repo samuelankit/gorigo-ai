@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -220,6 +221,7 @@ function StatusBadge({ status }: { status: "active" | "planned" }) {
 
 export default function TrustCenterPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-trust">
       <WebPageJsonLd
         title="Trust Centre - Security & Compliance | GoRigo"
@@ -462,5 +464,6 @@ export default function TrustCenterPage() {
       />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -114,6 +115,7 @@ function FeatureIcon({ included }: { included: boolean }) {
 
 export default function PricingPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-pricing">
       <WebPageJsonLd
         title="Pricing - Flexible AI Call Centre Packages | GoRigo"
@@ -361,5 +363,6 @@ export default function PricingPage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

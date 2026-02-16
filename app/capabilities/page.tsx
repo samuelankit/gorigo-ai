@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { Button } from "@/components/ui/button";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -147,6 +148,7 @@ const platformStats = [
 
 export default function CapabilitiesPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-capabilities">
       <WebPageJsonLd
         title="GoRigo AI Call Centre Capabilities"
@@ -305,5 +307,6 @@ export default function CapabilitiesPage() {
 
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

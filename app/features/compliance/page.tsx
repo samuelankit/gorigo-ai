@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -147,6 +148,7 @@ const faqs = [
 
 export default function CompliancePage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-compliance">
       <WebPageJsonLd title="Global Compliance" description="Per-country compliance across 20 countries. GoRigo handles DNC registries, calling hours by timezone, AI disclosure in 12 languages, consent management, and PII redaction automatically on every call." url="/features/compliance" />
       <BreadcrumbJsonLd items={[{ name: "Home", url: "/" }, { name: "Capabilities", url: "/capabilities" }, { name: "Global Compliance", url: "/features/compliance" }]} />
@@ -376,5 +378,6 @@ export default function CompliancePage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

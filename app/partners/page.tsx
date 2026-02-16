@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -337,6 +338,7 @@ const faqs = [
 
 export default function PartnersPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-partners">
       <WebPageJsonLd
         title="Partner with GoRigo | Grow Your Business with AI"
@@ -694,5 +696,6 @@ export default function PartnersPage() {
       <ConversionCta />
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { PublicLayout } from "@/components/public-layout";
 import Link from "next/link";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
@@ -28,6 +29,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
+    <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-privacy-policy">
       <WebPageJsonLd
         title="Privacy Policy | GoRigo"
@@ -415,5 +417,6 @@ export default function PrivacyPolicyPage() {
 
       <Footer />
     </div>
+    </PublicLayout>
   );
 }

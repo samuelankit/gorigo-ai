@@ -103,37 +103,31 @@ const industries = [
     icon: Landmark,
     title: "Financial Services",
     description: "Account enquiries, loan applications, fraud alerts, and appointment scheduling.",
-    color: "text-blue-500",
   },
   {
     icon: ShoppingCart,
     title: "Retail & E-Commerce",
     description: "Order tracking, returns processing, product recommendations, and customer support.",
-    color: "text-orange-500",
   },
   {
     icon: Wifi,
     title: "Telecoms",
     description: "Service activations, billing enquiries, technical support, and plan upgrades.",
-    color: "text-violet-500",
   },
   {
     icon: Plane,
     title: "Travel & Hospitality",
     description: "Booking management, itinerary changes, loyalty programmes, and concierge services.",
-    color: "text-amber-500",
   },
   {
     icon: Stethoscope,
     title: "Healthcare",
     description: "Appointment booking, prescription refills, patient follow-ups, and triage assistance.",
-    color: "text-rose-500",
   },
   {
     icon: Building2,
     title: "Professional Services",
     description: "Client intake, scheduling, follow-ups, and after-hours reception for law firms, agencies, and consultancies.",
-    color: "text-purple-500",
   },
 ];
 
@@ -455,6 +449,9 @@ export default function HomePage() {
                 className="group p-6 rounded-md border border-border/50 hover-elevate"
                 data-testid={`card-industry-${industry.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
+                <div className="flex items-center justify-center w-10 h-10 rounded-md bg-[#2DD4A8]/10 mb-4">
+                  <industry.icon className="h-5 w-5 text-[#2DD4A8]" />
+                </div>
                 <h3 className="font-medium mb-1.5">{industry.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {industry.description}

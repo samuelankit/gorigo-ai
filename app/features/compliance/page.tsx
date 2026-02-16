@@ -50,20 +50,20 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, customIcon: "vr-phone-mic", label: "Call Starts", description: "An inbound or outbound call begins", color: "text-cyan-500" },
-  { icon: Bot, customIcon: "ai-voice-head", label: "AI Discloses", description: "The agent tells the caller they are speaking with an AI", color: "text-teal-500" },
-  { icon: UserX, label: "Checks DNC Registry", description: "Outbound calls are screened against the Do Not Call list", color: "text-pink-500" },
-  { icon: FileCheck, label: "Records Consent", description: "Caller consent is captured and stored securely", color: "text-green-500" },
-  { icon: Eye, label: "Auto-Redacts PII", description: "Personal data is scrubbed from transcripts and logs", color: "text-sky-500" },
-  { icon: Lock, customIcon: "vr-voice-lock", label: "Encrypted Storage", description: "All data is encrypted at rest and in transit", color: "text-blue-500" },
-  { icon: ClipboardList, label: "Audit Trail Created", description: "A complete compliance record is generated", color: "text-indigo-500" },
+  { icon: Phone, customIcon: "vr-phone-mic", label: "Call Starts", description: "An inbound or outbound call begins", color: "text-[#2DD4A8]" },
+  { icon: Bot, customIcon: "ai-voice-head", label: "AI Discloses", description: "The agent tells the caller they are speaking with an AI", color: "text-[#2DD4A8]" },
+  { icon: UserX, label: "Checks DNC Registry", description: "Outbound calls are screened against the Do Not Call list", color: "text-[#2DD4A8]" },
+  { icon: FileCheck, label: "Records Consent", description: "Caller consent is captured and stored securely", color: "text-[#2DD4A8]" },
+  { icon: Eye, label: "Auto-Redacts PII", description: "Personal data is scrubbed from transcripts and logs", color: "text-[#2DD4A8]" },
+  { icon: Lock, customIcon: "vr-voice-lock", label: "Encrypted Storage", description: "All data is encrypted at rest and in transit", color: "text-[#2DD4A8]" },
+  { icon: ClipboardList, label: "Audit Trail Created", description: "A complete compliance record is generated", color: "text-[#2DD4A8]" },
 ];
 
 const benefits = [
   {
     icon: ShieldCheck,
     title: "No Manual Compliance Work",
-    color: "text-blue-500",
+    color: "text-[#2DD4A8]",
     description:
       "Compliance happens automatically on every single call. Your team does not need to remember checklists, fill in forms, or manually scrub data. The system handles it all in real time.",
   },
@@ -71,21 +71,21 @@ const benefits = [
     icon: Bot,
     customIcon: "ai-voice-head",
     title: "Automatic AI Disclosure",
-    color: "text-teal-500",
+    color: "text-[#2DD4A8]",
     description:
       "Regulations across multiple jurisdictions require that callers are informed when they are speaking with an AI. GoRigo delivers this disclosure automatically in 12 languages at the start of every call, keeping you compliant from the first second.",
   },
   {
     icon: UserX,
     title: "DNC Registry Checking",
-    color: "text-pink-500",
+    color: "text-[#2DD4A8]",
     description:
       "Before any outbound call is placed, GoRigo automatically checks the number against the relevant national Do-Not-Call registry for that country (e.g. TPS in the UK, National DNC in the US, Robinson List in Germany). Numbers on the list are blocked from being called.",
   },
   {
     icon: Eye,
     title: "PII Auto-Scrubbed from Transcripts",
-    color: "text-sky-500",
+    color: "text-[#2DD4A8]",
     description:
       "Personal information such as names, addresses, dates of birth, and payment details are automatically detected and redacted from call transcripts and logs, reducing your data exposure risk.",
   },
@@ -95,21 +95,21 @@ const useCases = [
   {
     icon: Landmark,
     title: "Financial Services and FCA Compliance",
-    color: "text-purple-500",
+    color: "text-[#2DD4A8]",
     scenario:
       "A financial advisory firm needs to ensure every client call meets FCA record-keeping requirements. GoRigo automatically logs all interactions, records consent for advice given, redacts sensitive financial details from transcripts, and produces audit-ready reports that regulators can review.",
   },
   {
     icon: Stethoscope,
     title: "Healthcare Provider Handling Patient Data",
-    color: "text-rose-500",
+    color: "text-[#2DD4A8]",
     scenario:
       "A private clinic manages hundreds of patient calls daily. GoRigo ensures that patient health information is handled according to local data protection standards (e.g. NHS in the UK, HIPAA in the US), PII is redacted from accessible logs, and all call records are encrypted and stored securely.",
   },
   {
     icon: Heart,
     title: "Charity Managing Donor Calls",
-    color: "text-pink-500",
+    color: "text-[#2DD4A8]",
     scenario:
       "A charity running a fundraising campaign must comply with Fundraising Regulator standards. GoRigo checks donor numbers against the Fundraising Preference Service, records opt-in consent before discussing donations, and creates a transparent audit trail of every interaction.",
   },

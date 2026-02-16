@@ -50,40 +50,40 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, customIcon: "vr-phone-mic", label: "Call Happens", description: "A customer call takes place with your AI agent", color: "text-cyan-500" },
-  { icon: Database, customIcon: "vr-voice-database", label: "Data Captured", description: "Duration, sentiment, quality, and outcome are recorded", color: "text-indigo-500" },
-  { icon: Cpu, customIcon: "vr-waveform-scan", label: "Processed in Real-Time", description: "Data is analysed instantly as calls complete", color: "text-teal-500" },
-  { icon: LayoutDashboard, label: "Dashboard Updates", description: "Your live dashboard reflects the latest figures", color: "text-sky-500" },
-  { icon: TrendingUp, label: "Trends Visible", description: "Patterns and trends emerge across hours and days", color: "text-violet-500" },
-  { icon: Lightbulb, label: "Insights Generated", description: "Actionable recommendations are surfaced for you", color: "text-amber-500" },
+  { icon: Phone, customIcon: "vr-phone-mic", label: "Call Happens", description: "A customer call takes place with your AI agent", color: "text-[#2DD4A8]" },
+  { icon: Database, customIcon: "vr-voice-database", label: "Data Captured", description: "Duration, sentiment, quality, and outcome are recorded", color: "text-[#2DD4A8]" },
+  { icon: Cpu, customIcon: "vr-waveform-scan", label: "Processed in Real-Time", description: "Data is analysed instantly as calls complete", color: "text-[#2DD4A8]" },
+  { icon: LayoutDashboard, label: "Dashboard Updates", description: "Your live dashboard reflects the latest figures", color: "text-[#2DD4A8]" },
+  { icon: TrendingUp, label: "Trends Visible", description: "Patterns and trends emerge across hours and days", color: "text-[#2DD4A8]" },
+  { icon: Lightbulb, label: "Insights Generated", description: "Actionable recommendations are surfaced for you", color: "text-[#2DD4A8]" },
 ];
 
 const benefits = [
   {
     icon: AlertTriangle,
     title: "Spot Problems Instantly",
-    color: "text-orange-500",
+    color: "text-[#2DD4A8]",
     description:
       "If call quality drops or customer sentiment shifts, you will know straight away. Real-time monitoring means you can address issues the moment they appear, not hours or days later when the damage is already done.",
   },
   {
     icon: Users,
     title: "Track Agent Performance",
-    color: "text-pink-500",
+    color: "text-[#2DD4A8]",
     description:
       "See how each AI agent is performing across key metrics like resolution rate, average call duration, and customer satisfaction. Identify which agents are excelling and which configurations need fine-tuning.",
   },
   {
     icon: Heart,
     title: "Understand Customer Sentiment",
-    color: "text-rose-500",
+    color: "text-[#2DD4A8]",
     description:
       "Our sentiment analysis engine listens to the tone and language of every call, scoring each interaction as positive, neutral, or negative. This helps you understand how your customers truly feel about your service.",
   },
   {
     icon: Target,
     title: "Data-Driven Decisions",
-    color: "text-emerald-500",
+    color: "text-[#2DD4A8]",
     description:
       "Stop guessing and start knowing. With clear metrics and trends at your fingertips, you can make informed decisions about staffing, training, product changes, and customer experience improvements.",
   },
@@ -93,21 +93,21 @@ const useCases = [
   {
     icon: Briefcase,
     title: "Morning Performance Review",
-    color: "text-purple-500",
+    color: "text-[#2DD4A8]",
     scenario:
       "A call centre manager arrives at work and opens the GoRigo dashboard. Within seconds, they can see overnight call volumes, average wait times, resolution rates, and any calls that were flagged for follow-up. They spot a spike in negative sentiment around a billing issue and immediately update the knowledge base to address it.",
   },
   {
     icon: Megaphone,
     title: "Campaign Call Quality",
-    color: "text-amber-500",
+    color: "text-[#2DD4A8]",
     scenario:
       "A marketing team launches a new advertising campaign that drives a surge in inbound calls. Using the analytics dashboard, they track call quality in real time, monitoring how well the AI agents handle campaign-specific questions. They can see which ad channels are driving the highest quality leads based on call outcomes.",
   },
   {
     icon: LineChart,
     title: "Weekly Conversion Trends",
-    color: "text-violet-500",
+    color: "text-[#2DD4A8]",
     scenario:
       "A business owner reviews their weekly analytics report every Friday. They track conversion rates from call to sale, identify the busiest hours for high-value calls, and compare performance week over week. This data helps them optimise their marketing spend and agent configurations for the following week.",
   },

@@ -77,7 +77,6 @@ const steps = [
     description:
       "Set up your AI agent's persona, knowledge base, and call handling rules through our dashboard. No coding required.",
     customIcon: "ai-voice-setting",
-    color: "text-teal-500",
   },
   {
     number: "2",
@@ -85,7 +84,6 @@ const steps = [
     description:
       "Link your existing business number or get a new one. Your AI agent starts handling calls immediately.",
     customIcon: "vr-voice-signal",
-    color: "text-cyan-500",
   },
   {
     number: "3",
@@ -93,7 +91,6 @@ const steps = [
     description:
       "Track every call in real time. Review transcripts, quality scores, and analytics to continuously improve.",
     customIcon: "ai-voice-record",
-    color: "text-violet-500",
   },
 ];
 
@@ -363,7 +360,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-4 mb-6">
                     <span className="text-3xl font-light text-muted-foreground/40">{step.number}</span>
                     <div className="h-px flex-1 bg-border/50" />
-                    <CustomIcon name={step.customIcon} size={22} className={step.color} />
+                    <CustomIcon name={step.customIcon} size={22} className="text-[#2DD4A8]" />
                   </div>
                   <h3 className="font-medium text-lg mb-2">{step.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">

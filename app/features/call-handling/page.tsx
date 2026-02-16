@@ -50,11 +50,11 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, customIcon: "vr-phone-mic", label: "Customer Calls Any Time", description: "Day, night, weekend, or bank holiday", color: "text-cyan-500" },
-  { icon: Bot, customIcon: "ai-voice-head", label: "AI Agent Answers Instantly", description: "Zero wait time, no hold music", color: "text-teal-500" },
-  { icon: CalendarCheck, label: "Handles Request", description: "Booking, enquiry, or support handled on the spot", color: "text-rose-500" },
-  { icon: ClipboardList, label: "Confirms and Logs", description: "Caller gets confirmation, you get a full record", color: "text-indigo-500" },
-  { icon: BellRing, label: "Follow-up Scheduled", description: "Reminders and next steps are set automatically", color: "text-amber-500" },
+  { icon: Phone, customIcon: "vr-phone-mic", label: "Customer Calls Any Time", description: "Day, night, weekend, or bank holiday", color: "text-[#2DD4A8]" },
+  { icon: Bot, customIcon: "ai-voice-head", label: "AI Agent Answers Instantly", description: "Zero wait time, no hold music", color: "text-[#2DD4A8]" },
+  { icon: CalendarCheck, label: "Handles Request", description: "Booking, enquiry, or support handled on the spot", color: "text-[#2DD4A8]" },
+  { icon: ClipboardList, label: "Confirms and Logs", description: "Caller gets confirmation, you get a full record", color: "text-[#2DD4A8]" },
+  { icon: BellRing, label: "Follow-up Scheduled", description: "Reminders and next steps are set automatically", color: "text-[#2DD4A8]" },
 ];
 
 const benefits = [
@@ -62,28 +62,28 @@ const benefits = [
     icon: PhoneOff,
     customIcon: "vr-phone-mic",
     title: "Zero Missed Calls",
-    color: "text-cyan-500",
+    color: "text-[#2DD4A8]",
     description:
       "Every call is answered, no matter when it comes in. No voicemail, no call-back queues. Your customers always reach someone who can help them right away.",
   },
   {
     icon: Zap,
     title: "Instant Response",
-    color: "text-emerald-500",
+    color: "text-[#2DD4A8]",
     description:
       "There is no hold time. The AI agent picks up within a single ring, greets the caller by name if their number is recognised, and gets straight to helping them.",
   },
   {
     icon: CheckCircle2,
     title: "Consistent Experience",
-    color: "text-green-500",
+    color: "text-[#2DD4A8]",
     description:
       "Whether a customer calls at 3am or 3pm, they get the same professional, friendly service. No tired voices, no rushed responses during busy periods.",
   },
   {
     icon: TrendingUp,
     title: "Handles Volume Spikes",
-    color: "text-violet-500",
+    color: "text-[#2DD4A8]",
     description:
       "Unexpected rush of calls? Seasonal peak? Product launch day? Your AI agents scale up automatically to handle any volume without degradation in service quality.",
   },
@@ -93,21 +93,21 @@ const useCases = [
   {
     icon: Stethoscope,
     title: "After-Hours Medical Clinic",
-    color: "text-rose-500",
+    color: "text-[#2DD4A8]",
     scenario:
       "A GP practice closes at 6pm, but patients still need to book appointments, request repeat prescriptions, and get advice on whether to visit A&E. The AI agent handles these calls after hours, triaging urgency levels and booking morning appointments so the surgery opens with a full, organised schedule.",
   },
   {
     icon: ShoppingCart,
     title: "Holiday Season Retail Overflow",
-    color: "text-orange-500",
+    color: "text-[#2DD4A8]",
     scenario:
       "An online retailer sees call volume triple during Black Friday and Christmas. Rather than hiring and training temporary staff, their AI agents absorb the entire spike, handling order tracking, returns, and gift card queries without a single customer waiting on hold.",
   },
   {
     icon: Home,
     title: "Property Viewing Requests at Midnight",
-    color: "text-purple-500",
+    color: "text-[#2DD4A8]",
     scenario:
       "Potential buyers often browse property listings in the evening. When they call an estate agency at 11pm to arrange a viewing, the AI agent takes their details, checks the diary, confirms a viewing slot, and sends a follow-up email, all while the human team sleeps.",
   },

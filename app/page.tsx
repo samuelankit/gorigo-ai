@@ -436,6 +436,109 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="py-24 border-t border-border/50 bg-muted/30" data-testid="section-download-app">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
+            <div className="flex-1 text-center md:text-left">
+              <h2 className="text-3xl sm:text-4xl font-light tracking-tight mb-4" data-testid="text-download-title">
+                Download the App Today
+              </h2>
+              <p className="text-muted-foreground mb-8 max-w-md">
+                Run your AI call center from anywhere. Manage agents, monitor calls, and track revenue — all from your phone.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center md:items-start gap-3 mb-8">
+                <Button asChild size="lg" data-testid="link-download-appstore">
+                  <a href="#">
+                    <SiApple className="h-5 w-5" />
+                    App Store
+                  </a>
+                </Button>
+                <Button asChild size="lg" data-testid="link-download-googleplay">
+                  <a href="#">
+                    <SiGoogleplay className="h-5 w-5" />
+                    Google Play
+                  </a>
+                </Button>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center md:items-start gap-4">
+                <div className="flex items-center justify-center w-24 h-24 rounded-lg border bg-background p-2" data-testid="qr-code-placeholder">
+                  <svg viewBox="0 0 100 100" className="w-full h-full text-foreground">
+                    <rect x="5" y="5" width="30" height="30" rx="2" fill="currentColor" />
+                    <rect x="10" y="10" width="20" height="20" rx="1" fill="none" stroke="currentColor" strokeWidth="3" />
+                    <rect x="16" y="16" width="8" height="8" fill="currentColor" />
+                    <rect x="65" y="5" width="30" height="30" rx="2" fill="currentColor" />
+                    <rect x="70" y="10" width="20" height="20" rx="1" fill="none" stroke="currentColor" strokeWidth="3" />
+                    <rect x="76" y="16" width="8" height="8" fill="currentColor" />
+                    <rect x="5" y="65" width="30" height="30" rx="2" fill="currentColor" />
+                    <rect x="10" y="70" width="20" height="20" rx="1" fill="none" stroke="currentColor" strokeWidth="3" />
+                    <rect x="16" y="76" width="8" height="8" fill="currentColor" />
+                    <rect x="40" y="5" width="5" height="5" fill="currentColor" />
+                    <rect x="50" y="5" width="5" height="5" fill="currentColor" />
+                    <rect x="40" y="15" width="5" height="5" fill="currentColor" />
+                    <rect x="50" y="20" width="5" height="5" fill="currentColor" />
+                    <rect x="40" y="30" width="5" height="5" fill="currentColor" />
+                    <rect x="5" y="40" width="5" height="5" fill="currentColor" />
+                    <rect x="15" y="45" width="5" height="5" fill="currentColor" />
+                    <rect x="25" y="40" width="5" height="5" fill="currentColor" />
+                    <rect x="40" y="40" width="5" height="5" fill="currentColor" />
+                    <rect x="50" y="45" width="5" height="5" fill="currentColor" />
+                    <rect x="60" y="40" width="5" height="5" fill="currentColor" />
+                    <rect x="70" y="45" width="5" height="5" fill="currentColor" />
+                    <rect x="80" y="40" width="5" height="5" fill="currentColor" />
+                    <rect x="90" y="45" width="5" height="5" fill="currentColor" />
+                    <rect x="5" y="55" width="5" height="5" fill="currentColor" />
+                    <rect x="20" y="55" width="5" height="5" fill="currentColor" />
+                    <rect x="45" y="55" width="5" height="5" fill="currentColor" />
+                    <rect x="55" y="55" width="5" height="5" fill="currentColor" />
+                    <rect x="65" y="65" width="5" height="5" fill="currentColor" />
+                    <rect x="75" y="70" width="5" height="5" fill="currentColor" />
+                    <rect x="85" y="65" width="5" height="5" fill="currentColor" />
+                    <rect x="65" y="80" width="5" height="5" fill="currentColor" />
+                    <rect x="80" y="80" width="5" height="5" fill="currentColor" />
+                    <rect x="90" y="90" width="5" height="5" fill="currentColor" />
+                    <rect x="65" y="90" width="5" height="5" fill="currentColor" />
+                    <rect x="75" y="85" width="5" height="5" fill="currentColor" />
+                  </svg>
+                </div>
+                <div className="text-center md:text-left">
+                  <p className="text-sm font-medium">Scan to download</p>
+                  <p className="text-xs text-muted-foreground mt-1">Point your camera at the QR code</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative shrink-0" data-testid="phone-mockup">
+              <div className="relative w-[260px] h-[520px] rounded-[3rem] border-[6px] border-foreground/90 bg-background shadow-xl overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-foreground/90 rounded-b-2xl" />
+                <div className="flex flex-col items-center justify-center h-full px-6">
+                  <img src="/logo.png" alt="GoRigo" className="w-20 h-20 rounded-2xl shadow-lg mb-4 object-contain" />
+                  <p className="text-lg font-semibold tracking-tight">GoRigo<span className="text-primary">.ai</span></p>
+                  <p className="text-xs text-muted-foreground mt-1 text-center">AI Call Centre Engine</p>
+                  <div className="mt-6 w-full space-y-2">
+                    <div className="h-2 rounded-full bg-primary/20 w-full" />
+                    <div className="h-2 rounded-full bg-primary/10 w-4/5" />
+                    <div className="h-2 rounded-full bg-primary/10 w-3/5" />
+                  </div>
+                  <div className="mt-6 flex gap-2 w-full">
+                    <div className="flex-1 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <div className="w-3 h-3 rounded-full bg-primary/40" />
+                    </div>
+                    <div className="flex-1 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <div className="w-3 h-3 rounded-full bg-primary/40" />
+                    </div>
+                    <div className="flex-1 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <div className="w-3 h-3 rounded-full bg-primary/40" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="py-24 border-t border-border/50" data-testid="section-cta">
         <div className="max-w-2xl mx-auto px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-light tracking-tight mb-4" data-testid="text-cta-title">

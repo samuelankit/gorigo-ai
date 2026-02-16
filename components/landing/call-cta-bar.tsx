@@ -12,25 +12,25 @@ export function CallCtaBar() {
     <>
       {chatOpen && <ChatWidget onClose={() => setChatOpen(false)} />}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-primary text-primary-foreground"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border"
         data-testid="cta-call-bar"
       >
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
           <p
-            className="text-sm sm:text-base font-semibold tracking-tight"
+            className="text-sm sm:text-base font-semibold tracking-tight text-primary"
             data-testid="text-cta-punchline"
           >
             Talk to Our AI — It Picks Up Instantly
           </p>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" asChild className="bg-white/15 border-white/20 text-primary-foreground">
+            <Button variant="outline" asChild className="border-primary/30 text-primary">
               <a
                 href="tel:+440000000000"
                 data-testid="link-cta-phone"
               >
                 <span className="relative flex h-5 w-5 items-center justify-center">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/40" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/30" />
                   <Phone className="relative h-4 w-4" />
                 </span>
                 +44 (0) 000 000 0000
@@ -40,7 +40,7 @@ export function CallCtaBar() {
             <Button
               variant="outline"
               onClick={() => setChatOpen(!chatOpen)}
-              className="bg-white/15 border-white/20 text-primary-foreground"
+              className="border-primary/30 text-primary"
               data-testid="button-cta-chat"
             >
               <MessageCircle className="h-4 w-4" />
@@ -49,12 +49,12 @@ export function CallCtaBar() {
           </div>
 
           <span
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium opacity-90"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-primary"
             data-testid="text-cta-availability"
           >
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-300 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-200" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
             </span>
             Available 24/7
           </span>

@@ -10,5 +10,18 @@ export async function register() {
     const { startAutomationEngine } = await import("@/lib/automation-engine");
     startAutomationEngine(10 * 60 * 1000);
     console.log("[GoRigo] Automation engine started (10 min interval)");
+
+    const { seedPlatformKnowledge } = await import("@/lib/platform-knowledge");
+    seedPlatformKnowledge()
+      .then((result) => {
+        if (result.skipped) {
+          console.log("[GoRigo] Platform knowledge base already seeded");
+        } else {
+          console.log(`[GoRigo] Platform knowledge base seeded: ${result.seeded} chunks`);
+        }
+      })
+      .catch((err) => {
+        console.error("[GoRigo] Platform knowledge seed failed:", err);
+      });
   }
 }

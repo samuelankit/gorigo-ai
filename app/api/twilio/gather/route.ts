@@ -4,7 +4,7 @@ import { agents, callLogs, knowledgeChunks } from "@/shared/schema";
 import { eq, and, count } from "drizzle-orm";
 import { generateAgentResponse } from "@/lib/ai";
 import { evaluateTransition, isValidState, STATE_ALLOWED_ACTIONS, type FSMState, type FSMConfig } from "@/lib/fsm";
-import { searchKnowledge, buildRAGContext, checkResponseCache } from "@/lib/rag";
+import { searchKnowledge, buildRAGContext } from "@/lib/rag";
 import { DEFAULT_VOICE, DEFAULT_LANGUAGE, validateTwilioSignature } from "@/lib/twilio";
 import { analyzeSentimentLocal } from "@/lib/sentiment";
 import { redactPII } from "@/lib/pii-redaction";
@@ -12,6 +12,7 @@ import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_VOICE } from "@
 import twilio from "twilio";
 import { detectOptOut, handleOptOut } from "@/lib/compliance-engine";
 import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
+import { validateLLMOutput, KNOWLEDGE_ONLY_REFUSAL_VOICE, RAG_GROUNDING_INSTRUCTION } from "@/lib/output-guard";
 
 const MAX_TURNS_BEFORE_CLOSE = 15;
 
@@ -27,6 +28,10 @@ function getWebhookUrl(request: NextRequest): string {
   const host = request.headers.get("host") || "";
   const url = new URL(request.url);
   return `${proto}://${host}${url.pathname}${url.search}`;
+}
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
 }
 
 export async function POST(request: NextRequest) {
@@ -99,6 +104,23 @@ export async function POST(request: NextRequest) {
       return twimlResponse(vr.toString());
     }
 
+    const maxTokensPerCall = agent.maxTokensPerCall ?? 4096;
+    const existingTranscript = callLog.transcript || "";
+    const currentTokenUsage = estimateTokens(existingTranscript);
+    if (currentTokenUsage > maxTokensPerCall) {
+      const vr = new twilio.twiml.VoiceResponse();
+      vr.say({ voice: agentVoice, language: agentLanguage }, "Thank you for the conversation. For further assistance, please call back or I can connect you with a team member. Goodbye.");
+      vr.hangup();
+      await db.update(callLogs).set({
+        currentState: "CLOSE",
+        turnCount,
+        status: "completed",
+        finalOutcome: "token_budget_exceeded",
+        endedAt: new Date(),
+      }).where(eq(callLogs.id, callLogId));
+      return twimlResponse(vr.toString());
+    }
+
     const optOutCheck = detectOptOut(speechResult);
     if (optOutCheck.detected) {
       const callerNumber = callLog.callerNumber || "";
@@ -152,12 +174,14 @@ export async function POST(request: NextRequest) {
     };
 
     let ragContext = "";
+    let hasKnowledgeBase = false;
     const [hasKnowledge] = await db
       .select({ total: count() })
       .from(knowledgeChunks)
       .where(eq(knowledgeChunks.orgId, orgId));
 
     if (Number(hasKnowledge.total) > 0) {
+      hasKnowledgeBase = true;
       try {
         const relevantChunks = await searchKnowledge(orgId, speechResult);
         if (relevantChunks.length > 0) {
@@ -168,13 +192,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const strictMode = agent.strictKnowledgeMode ?? false;
+    const hasFaqMatch = checkFaqRelevance(speechResult, agentConfig.faqEntries);
+
+    if (strictMode && hasKnowledgeBase && !ragContext && !hasFaqMatch && !userRequestedHuman) {
+      const vr = new twilio.twiml.VoiceResponse();
+      vr.say({ voice: agentVoice, language: agentLanguage }, KNOWLEDGE_ONLY_REFUSAL_VOICE);
+      const gather = vr.gather({
+        input: ["speech"] as any,
+        action: `/api/twilio/gather?callLogId=${callLogId}&agentId=${agentId}&orgId=${orgId}`,
+        method: "POST",
+        speechTimeout: "auto",
+        language: agentLanguage,
+      });
+      gather.say({ voice: agentVoice, language: agentLanguage }, "Is there something else I can help with?");
+
+      const updatedTranscript = existingTranscript + `Caller: ${speechResult}\nAgent: ${KNOWLEDGE_ONLY_REFUSAL_VOICE}\n`;
+      await db.update(callLogs).set({
+        turnCount,
+        transcript: updatedTranscript,
+      }).where(eq(callLogs.id, callLogId));
+
+      return twimlResponse(vr.toString());
+    }
+
+    const groundingRule = (strictMode || hasKnowledgeBase) ? RAG_GROUNDING_INSTRUCTION : "";
+
     const fsmConstraints = `
 You are on a LIVE PHONE CALL. Respond naturally as if speaking. Keep responses concise (2-3 sentences max).
 Current conversation state: ${currentState}
 Turn: ${turnCount}/${fsmConfig.maxTurns}
 Allowed actions: ${STATE_ALLOWED_ACTIONS[currentState]?.join(", ") || "none"}
 ${userRequestedHuman ? "IMPORTANT: The caller has requested to speak with a human. Acknowledge this and prepare for handoff." : ""}
-
+${groundingRule}
 Respond with ONLY the text you want to speak to the caller. Do NOT include JSON, state transitions, or metadata.
 Be conversational, warm, and concise. This is a voice call, so keep it natural.
 `;
@@ -183,7 +233,6 @@ Be conversational, warm, and concise. This is a voice call, so keep it natural.
       { role: "system", content: fsmConstraints + ragContext },
     ];
 
-    const existingTranscript = callLog.transcript || "";
     if (existingTranscript) {
       const lines = existingTranscript.split("\n").filter(Boolean);
       for (const line of lines.slice(-6)) {
@@ -238,6 +287,15 @@ Be conversational, warm, and concise. This is a voice call, so keep it natural.
 
     if (!responseText) {
       responseText = "I'm sorry, could you repeat that?";
+    }
+
+    const outputCheck = validateLLMOutput(responseText, ragContext, {
+      strictGrounding: strictMode,
+      maxResponseLength: 1000,
+    });
+    if (!outputCheck.safe) {
+      console.warn(`[Twilio] Output guard blocked response for call ${callLogId}: ${outputCheck.reason}`);
+      responseText = outputCheck.sanitizedResponse || "I'm sorry, could you repeat that?";
     }
 
     const fsmContext = {
@@ -359,4 +417,23 @@ Be conversational, warm, and concise. This is a voice call, so keep it natural.
     });
     return twimlResponse(vr.toString());
   }
+}
+
+function checkFaqRelevance(
+  userMessage: string,
+  faqEntries: Array<{ question: string; answer: string }> | null
+): boolean {
+  if (!faqEntries || faqEntries.length === 0) return false;
+  const messageLower = userMessage.toLowerCase();
+  const messageWords = messageLower.split(/\s+/).filter((w) => w.length > 2);
+
+  for (const faq of faqEntries) {
+    const questionLower = faq.question.toLowerCase();
+    const questionWords = questionLower.split(/\s+/).filter((w) => w.length > 2);
+    const matchingWords = messageWords.filter((w) => questionWords.includes(w));
+    if (matchingWords.length >= 2 || (questionWords.length <= 3 && matchingWords.length >= 1)) {
+      return true;
+    }
+  }
+  return false;
 }

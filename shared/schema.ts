@@ -107,6 +107,9 @@ export const agents = pgTable("agents", {
   voiceName: text("voice_name").notNull().default("Polly.Amy"),
   speechModel: text("speech_model").notNull().default("default"),
   deletedAt: timestamp("deleted_at"),
+  strictKnowledgeMode: boolean("strict_knowledge_mode").default(false),
+  maxTokensPerCall: integer("max_tokens_per_call").default(4096),
+  maxTokensPerSession: integer("max_tokens_per_session").default(16384),
 }, (table) => [
   index("idx_agents_org_id").on(table.orgId),
   index("idx_agents_user_id").on(table.userId),
@@ -1455,5 +1458,19 @@ export type TwilioSubAccount = typeof twilioSubAccounts.$inferSelect;
 export const insertCampaignContactSchema = createInsertSchema(campaignContacts).omit({ id: true, createdAt: true });
 export type InsertCampaignContact = z.infer<typeof insertCampaignContactSchema>;
 export type CampaignContact = typeof campaignContacts.$inferSelect;
+
+export const platformKnowledgeChunks = pgTable("platform_knowledge_chunks", {
+  id: serial("id").primaryKey(),
+  category: text("category").notNull(),
+  content: text("content").notNull(),
+  embedding: vector("embedding", { dimensions: 768 }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_platform_knowledge_category").on(table.category),
+]);
+
+export const insertPlatformKnowledgeChunkSchema = createInsertSchema(platformKnowledgeChunks).omit({ id: true, createdAt: true });
+export type InsertPlatformKnowledgeChunk = z.infer<typeof insertPlatformKnowledgeChunkSchema>;
+export type PlatformKnowledgeChunk = typeof platformKnowledgeChunks.$inferSelect;
 
 export * from "./models/chat";

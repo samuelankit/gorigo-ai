@@ -91,3 +91,11 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - 2026-02-16: Lead capture now links conversations to leads when contact info is submitted (both web call post-call and chatbot pre-chat)
 - 2026-02-16: Built admin Conversations page (`/admin/conversations`) — stats cards, channel/status filters, paginated table, click-to-expand inline transcript viewer
 - 2026-02-16: Added stale conversation auto-cleanup to background jobs — conversations active for 30+ minutes auto-end
+- 2026-02-16: Implemented RAG security architecture — all AI endpoints enforce RAG-first approach; no queries go directly to LLM without knowledge grounding
+- 2026-02-16: Created `platformKnowledgeChunks` table with 14 vector-embedded chunks covering GoRigo company info, pricing, features, compliance
+- 2026-02-16: Platform knowledge auto-seeds on startup via instrumentation.ts
+- 2026-02-16: Built output guardrails module (`lib/output-guard.ts`) — validates LLM responses for prompt leaks, unsafe content, role-breaking, and ungrounded claims
+- 2026-02-16: Added agent-level controls: `strictKnowledgeMode` flag, `maxTokensPerCall` (default 4096), `maxTokensPerSession` (default 16384) in agents schema
+- 2026-02-16: Updated `/api/public/chat` with RAG grounding — searches platform knowledge base before calling LLM, includes grounding instructions, stream-based output validation
+- 2026-02-16: Updated `/api/twilio/gather` with strict knowledge mode, output guards, token budget enforcement (per-call limit), FAQ relevance matching
+- 2026-02-16: Updated `/api/ai/chat` with strict knowledge mode, output guards, token budget enforcement (per-session limit), stream validation, cached response validation

@@ -15,6 +15,7 @@ import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_TEXT } from "@/
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
+import { validateLLMOutput, validateStreamChunk, KNOWLEDGE_ONLY_REFUSAL, RAG_GROUNDING_INSTRUCTION } from "@/lib/output-guard";
 
 const aiChatSchema = z.object({
   message: z.string().min(1).max(5000),
@@ -26,6 +27,29 @@ const aiChatSchema = z.object({
   callLogId: z.number().int().positive().optional(),
   currentState: z.string().optional(),
 }).strict();
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+function checkFaqRelevance(
+  userMessage: string,
+  faqEntries: Array<{ question: string; answer: string }> | null
+): boolean {
+  if (!faqEntries || faqEntries.length === 0) return false;
+  const messageLower = userMessage.toLowerCase();
+  const messageWords = messageLower.split(/\s+/).filter((w) => w.length > 2);
+
+  for (const faq of faqEntries) {
+    const questionLower = faq.question.toLowerCase();
+    const questionWords = questionLower.split(/\s+/).filter((w) => w.length > 2);
+    const matchingWords = messageWords.filter((w) => questionWords.includes(w));
+    if (matchingWords.length >= 2 || (questionWords.length <= 3 && matchingWords.length >= 1)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,6 +119,7 @@ export async function POST(request: NextRequest) {
     };
 
     let turnCount = 0;
+    let existingTranscript = "";
     if (callLogId) {
       const [log] = await db
         .select()
@@ -103,7 +128,21 @@ export async function POST(request: NextRequest) {
         .limit(1);
       if (log) {
         turnCount = log.turnCount ?? 0;
+        existingTranscript = log.transcript || "";
       }
+    }
+
+    const maxTokensPerSession = agent.maxTokensPerSession ?? 16384;
+    const sessionTokenUsage = estimateTokens(
+      conversationHistory.map((m) => m.content).join(" ") + " " + message
+    );
+    if (sessionTokenUsage > maxTokensPerSession) {
+      return NextResponse.json({
+        response: "This conversation has reached its token limit. Please start a new conversation to continue.",
+        currentState: "CLOSE",
+        confidenceScore: 1.0,
+        tokenBudgetExceeded: true,
+      });
     }
 
     const agentConfig = {
@@ -117,22 +156,12 @@ export async function POST(request: NextRequest) {
       negotiationGuardrails: agent.negotiationGuardrails,
     };
 
-    const fsmConstraints = `
-Current FSM State: ${currentState}
-Allowed Actions: ${allowedActions.join(", ")}
-Turn: ${turnCount + 1}/${fsmConfig.maxTurns}
-Rules:
-- Stay within your allowed actions for this state
-- If the user requests a human, acknowledge and prepare for handoff
-- Provide a confidence score (0.0-1.0) for your understanding of the user's intent
-- Suggest the next state from: GREETING, INTENT_CAPTURE, CONFIRM, EXECUTE, CLOSE, HANDOFF, FAILSAFE
-Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidenceScore": 0.0-1.0, "toolCalls": []}`;
-
     const [hasKnowledge] = await db
       .select({ total: count() })
       .from(knowledgeChunks)
       .where(eq(knowledgeChunks.orgId, auth.orgId));
     const ragEnabled = Number(hasKnowledge.total) > 0;
+    const strictMode = agent.strictKnowledgeMode ?? false;
 
     let ragContext = "";
     let cacheHit = false;
@@ -144,6 +173,9 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
         if (cached.hit && cached.response) {
           cacheHit = true;
           ragSource = "cache";
+
+          const outputCheck = validateLLMOutput(cached.response, "", { strictGrounding: false });
+          const safeResponse = outputCheck.safe ? cached.response : (outputCheck.sanitizedResponse || KNOWLEDGE_ONLY_REFUSAL);
 
           const fsmContext = {
             currentState,
@@ -176,7 +208,7 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
           }
 
           return NextResponse.json({
-            response: cached.response,
+            response: safeResponse,
             model: "cache",
             usedFallback: false,
             currentState: transition.nextState,
@@ -205,22 +237,68 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
       }
     }
 
+    const hasFaqMatch = checkFaqRelevance(message, agentConfig.faqEntries);
+
+    if (strictMode && ragEnabled && !ragContext && !hasFaqMatch && !userRequestedHuman && !stream) {
+      return NextResponse.json({
+        response: KNOWLEDGE_ONLY_REFUSAL,
+        currentState,
+        confidenceScore: 0.0,
+        ragSource: "strict_refusal",
+        strictKnowledgeBlocked: true,
+      });
+    }
+
+    const groundingRule = (strictMode || ragEnabled) ? RAG_GROUNDING_INSTRUCTION : "";
+
+    const fsmConstraints = `
+Current FSM State: ${currentState}
+Allowed Actions: ${allowedActions.join(", ")}
+Turn: ${turnCount + 1}/${fsmConfig.maxTurns}
+Rules:
+- Stay within your allowed actions for this state
+- If the user requests a human, acknowledge and prepare for handoff
+- Provide a confidence score (0.0-1.0) for your understanding of the user's intent
+- Suggest the next state from: GREETING, INTENT_CAPTURE, CONFIRM, EXECUTE, CLOSE, HANDOFF, FAILSAFE
+${groundingRule}
+Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidenceScore": 0.0-1.0, "toolCalls": []}`;
+
     if (stream) {
+      const streamHistory = ragContext
+        ? [...conversationHistory, { role: "system" as const, content: fsmConstraints + ragContext }]
+        : conversationHistory;
+
       const streamResponse = await streamAgentResponse(
         agentConfig,
-        conversationHistory,
+        streamHistory,
         message,
         undefined,
         auth.orgId
       );
 
       const encoder = new TextEncoder();
+      let fullStreamResponse = "";
+      let streamBlocked = false;
+
       const readableStream = new ReadableStream({
         async start(controller) {
           try {
             for await (const chunk of streamResponse) {
               const content = chunk.choices[0]?.delta?.content || "";
               if (content) {
+                const streamCheck = validateStreamChunk(content, fullStreamResponse);
+                if (!streamCheck.safe) {
+                  streamBlocked = true;
+                  console.warn("[AI Chat] Output guard blocked stream:", streamCheck.reason);
+                  break;
+                }
+
+                fullStreamResponse += content;
+
+                if (fullStreamResponse.length > 2000) {
+                  break;
+                }
+
                 controller.enqueue(
                   encoder.encode(`data: ${JSON.stringify({ content })}\n\n`)
                 );
@@ -301,10 +379,19 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
     } catch {
     }
 
+    const outputCheck = validateLLMOutput(assistantText, ragContext, {
+      strictGrounding: strictMode,
+      maxResponseLength: 2000,
+    });
+    if (!outputCheck.safe) {
+      console.warn(`[AI Chat] Output guard blocked response for org ${auth.orgId}: ${outputCheck.reason}`);
+      assistantText = outputCheck.sanitizedResponse || KNOWLEDGE_ONLY_REFUSAL;
+    }
+
     const piiResult = redactPII(message);
     const redactedMessage = piiResult.redactedText;
 
-    if (ragEnabled && confidenceScore >= 0.7) {
+    if (ragEnabled && confidenceScore >= 0.7 && outputCheck.safe) {
       cacheResponse(auth.orgId, redactedMessage, assistantText, confidenceScore).catch(() => {});
     }
 

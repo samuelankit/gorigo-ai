@@ -5,6 +5,8 @@ import { db } from "@/server/db";
 import { chatLeads, chatMessages, publicConversations } from "@/shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { detectPromptInjection, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
+import { searchPlatformKnowledge, buildPlatformRAGContext, getPlatformKnowledgeFallback } from "@/lib/platform-knowledge";
+import { validateStreamChunk, RAG_GROUNDING_INSTRUCTION } from "@/lib/output-guard";
 
 const publicChatStore = new Map<string, { count: number; resetAt: number }>();
 const PUBLIC_CHAT_WINDOW_MS = 60_000;
@@ -46,25 +48,11 @@ function getIp(req: NextRequest): string {
   return cfIp || forwarded?.split(",")[0]?.trim() || "unknown";
 }
 
-const SYSTEM_PROMPT = `You are Rigo, the AI assistant for GoRigo.ai — an AI-powered call centre platform based in the UK.
+const BASE_SYSTEM_PROMPT = `You are Rigo, the AI assistant for GoRigo.ai — an AI-powered call centre platform based in the UK.
 
 Your role is to help website visitors understand what GoRigo does, answer their questions, and guide them toward trying the platform. You are warm, professional, and concise. British English. Never use emoji.
 
-Your mission: Convert visitors into users. Introduce GoRigo, qualify their needs, and guide them to register or book a demo. Emphasise the mobile-first voice control experience — users can run their entire AI call centre from their phone using voice commands.
-
-Key facts about GoRigo:
-- AI voice agents that answer calls 24/7 with natural conversation
-- Pay only for actual talk time — no seat licences or subscriptions
-- Run your entire call centre from your phone using voice commands (Rigo assistant)
-- Mobile app available for Managed and BYOK deployment packages
-- UK compliant: GDPR, DNC checks, consent management, PII redaction built in
-- Supports 30+ languages with automatic detection
-- Real-time analytics dashboard with sentiment analysis and quality scoring
-- Handles thousands of concurrent calls with consistent quality
-- Four deployment options: Managed, BYOK (Bring Your Own Key), Self-Hosted, Custom
-- Company: International Business Exchange Limited, UK Company No. 15985956
-- Contact: hello@gorigo.ai
-- For demos or sales enquiries, suggest they visit /contact or call the AI line
+Your mission: Convert visitors into users. Introduce GoRigo, qualify their needs, and guide them to register or book a demo. Emphasise the mobile-first voice control experience.
 
 Engagement strategy:
 1. Ask what their business does and what kind of calls they handle
@@ -73,10 +61,11 @@ Engagement strategy:
 4. Guide them to register (/register) or book a demo (/contact)
 5. If they ask about pricing, briefly explain pay-per-talk-time and direct to /pricing
 
-Keep responses brief (2-4 sentences). If asked technical questions beyond your scope, suggest they contact the team.`;
+Keep responses brief (2-4 sentences). If asked technical questions beyond your scope, suggest they contact the team at hello@gorigo.ai.`;
 
 const MAX_HISTORY = 10;
 const MAX_MESSAGE_LENGTH = 500;
+const MAX_OUTPUT_TOKENS = 300;
 
 function sanitizeHistory(
   history: unknown
@@ -130,6 +119,18 @@ async function getOrCreateConversation(
     console.error("[Chat] Failed to create conversation:", err);
     return null;
   }
+}
+
+async function getRAGContext(userMessage: string): Promise<string> {
+  try {
+    const chunks = await searchPlatformKnowledge(userMessage, 4);
+    if (chunks.length > 0) {
+      return buildPlatformRAGContext(chunks);
+    }
+  } catch (err) {
+    console.error("[Chat] Platform RAG search failed, using fallback:", err);
+  }
+  return "\n\nGoRigo Knowledge Base:\n" + getPlatformKnowledgeFallback();
 }
 
 export async function POST(req: NextRequest) {
@@ -226,22 +227,51 @@ export async function POST(req: NextRequest) {
 
     await storeUserMsg();
 
+    const ragContext = await getRAGContext(message.trim());
+
+    const systemPrompt = BASE_SYSTEM_PROMPT + RAG_GROUNDING_INSTRUCTION + ragContext;
+
     const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
       ...safeHistory,
       { role: "user", content: message.trim() },
     ];
 
-    const stream = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-      stream: true,
-      max_completion_tokens: 300,
-      temperature: 0.7,
-    });
+    let stream;
+    try {
+      stream = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages,
+        stream: true,
+        max_completion_tokens: MAX_OUTPUT_TOKENS,
+        temperature: 0.5,
+      });
+    } catch (llmErr) {
+      console.error("[Chat] LLM call failed:", llmErr);
+      const encoder = new TextEncoder();
+      const errorStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ content: "I'm sorry, I'm having trouble processing your request right now. Please try again in a moment, or contact us at hello@gorigo.ai.", done: false })}\n\n`)
+          );
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ content: "", done: true })}\n\n`)
+          );
+          controller.close();
+        },
+      });
+      return new Response(errorStream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
 
     const encoder = new TextEncoder();
     let fullResponse = "";
+    let outputBlocked = false;
 
     const readable = new ReadableStream({
       async start(controller) {
@@ -249,7 +279,23 @@ export async function POST(req: NextRequest) {
           for await (const chunk of stream) {
             const delta = chunk.choices[0]?.delta?.content;
             if (delta) {
+              const streamCheck = validateStreamChunk(delta, fullResponse);
+              if (!streamCheck.safe) {
+                outputBlocked = true;
+                console.warn("[Chat] Output guard blocked stream:", streamCheck.reason);
+                const fallback = "I can help you with questions about GoRigo's AI call centre platform. What would you like to know?";
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({ content: fallback, done: false })}\n\n`)
+                );
+                break;
+              }
+
               fullResponse += delta;
+
+              if (fullResponse.length > 1500) {
+                break;
+              }
+
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify({ content: delta, done: false })}\n\n`)
               );
@@ -260,11 +306,15 @@ export async function POST(req: NextRequest) {
           );
           controller.close();
 
-          if (fullResponse && (conversationId || (leadId && typeof leadId === "number"))) {
+          const responseToStore = outputBlocked
+            ? "I can help you with questions about GoRigo's AI call centre platform. What would you like to know?"
+            : fullResponse;
+
+          if (responseToStore && (conversationId || (leadId && typeof leadId === "number"))) {
             try {
               const assistantValues: Record<string, unknown> = {
                 role: "assistant",
-                content: fullResponse,
+                content: responseToStore,
               };
               if (conversationId) assistantValues.conversationId = conversationId;
               if (leadId && typeof leadId === "number") assistantValues.leadId = leadId;

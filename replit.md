@@ -35,7 +35,7 @@ The platform includes a Unit Economics System for real-time cost tracking and ma
 Deployment utilizes Docker containers on Azure Container Apps in the UK South region, with Azure PostgreSQL Flexible Server and Azure Key Vault. CI/CD is managed via GitHub Actions.
 
 ### Feature Specifications
-- **Deployment Packages**: Four commercial packages (Managed, BYOK, Self-Hosted, Custom) selected during onboarding, affecting billing rates.
+- **Deployment Packages**: Four commercial packages (Managed, BYOK, Self-Hosted, Custom) selected during onboarding, affecting billing rates. The mobile app is available for Managed and BYOK packages only; Self-Hosted and Custom are web-only.
 - **Agent Configuration**: Customizable AI agents with roles, FAQs, knowledge bases, and language/voice selection.
 - **Knowledge Management**: Supports document upload, chunking, embedding, and audio transcription.
 - **Multi-Tier Partner Management**: Business Partners can create resellers, D2C clients, and affiliate partners.

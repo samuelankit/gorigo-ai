@@ -23,6 +23,7 @@ import {
   Headphones,
   Activity,
   Lock,
+  Smartphone,
 } from "lucide-react";
 
 const features = [
@@ -145,9 +146,11 @@ const packages = [
       "Dedicated account manager",
       "Custom integrations",
       "Priority support",
+      "Mobile app included",
     ],
     cta: "Book a Demo",
     href: "/contact",
+    mobileApp: true,
   },
   {
     name: "Bring Your Own Key",
@@ -157,10 +160,12 @@ const packages = [
       "Full engine access",
       "Lower per-minute costs",
       "Self-service setup",
+      "Mobile app included",
     ],
     cta: "Get Started",
     href: "/register",
     featured: true,
+    mobileApp: true,
   },
   {
     name: "Self-Hosted",
@@ -418,8 +423,12 @@ export default function HomePage() {
                         key={h}
                         className="flex items-start gap-2 text-sm"
                       >
-                        <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                        <span className="text-muted-foreground">{h}</span>
+                        {h === "Mobile app included" ? (
+                          <Smartphone className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        ) : (
+                          <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                        )}
+                        <span className={h === "Mobile app included" ? "text-primary font-medium" : "text-muted-foreground"}>{h}</span>
                       </li>
                     ))}
                   </ul>

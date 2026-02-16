@@ -8,6 +8,7 @@ import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { CustomIcon } from "@/components/ui/custom-icon";
 import {
   Shield,
   Phone,
@@ -49,12 +50,12 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, label: "Call Starts", description: "An inbound or outbound call begins", color: "text-cyan-500" },
-  { icon: Bot, label: "AI Discloses", description: "The agent tells the caller they are speaking with an AI", color: "text-teal-500" },
+  { icon: Phone, customIcon: "vr-phone-mic", label: "Call Starts", description: "An inbound or outbound call begins", color: "text-cyan-500" },
+  { icon: Bot, customIcon: "ai-voice-head", label: "AI Discloses", description: "The agent tells the caller they are speaking with an AI", color: "text-teal-500" },
   { icon: UserX, label: "Checks DNC Registry", description: "Outbound calls are screened against the Do Not Call list", color: "text-pink-500" },
   { icon: FileCheck, label: "Records Consent", description: "Caller consent is captured and stored securely", color: "text-green-500" },
   { icon: Eye, label: "Auto-Redacts PII", description: "Personal data is scrubbed from transcripts and logs", color: "text-sky-500" },
-  { icon: Lock, label: "Encrypted Storage", description: "All data is encrypted at rest and in transit", color: "text-blue-500" },
+  { icon: Lock, customIcon: "vr-voice-lock", label: "Encrypted Storage", description: "All data is encrypted at rest and in transit", color: "text-blue-500" },
   { icon: ClipboardList, label: "Audit Trail Created", description: "A complete compliance record is generated", color: "text-indigo-500" },
 ];
 
@@ -68,6 +69,7 @@ const benefits = [
   },
   {
     icon: Bot,
+    customIcon: "ai-voice-head",
     title: "Automatic AI Disclosure",
     color: "text-teal-500",
     description:
@@ -226,7 +228,11 @@ export default function CompliancePage() {
                     <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
                   </div>
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center mb-3">
-                    <step.icon className={`h-4 w-4 ${step.color}`} />
+                    {step.customIcon ? (
+                      <CustomIcon name={step.customIcon} size={16} className={step.color} />
+                    ) : (
+                      <step.icon className={`h-4 w-4 ${step.color}`} />
+                    )}
                   </div>
                   <p className="font-medium text-sm mb-1">{step.label}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
@@ -254,7 +260,11 @@ export default function CompliancePage() {
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
+                  {benefit.customIcon ? (
+                    <CustomIcon name={benefit.customIcon} size={20} className={`${benefit.color} mb-5`} />
+                  ) : (
+                    <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
+                  )}
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}

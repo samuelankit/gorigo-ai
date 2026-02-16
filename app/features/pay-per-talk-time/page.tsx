@@ -8,6 +8,7 @@ import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { CustomIcon } from "@/components/ui/custom-icon";
 import {
   Zap,
   Calculator,
@@ -262,7 +263,7 @@ export default function PayPerTalkTimePage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                    <Clock className="h-4 w-4 text-rose-500" />
+                    <CustomIcon name="vr-speaking" size={16} className="text-rose-500" />
                   </div>
                   <span className="text-sm">Actual Talk Minutes</span>
                 </div>
@@ -271,7 +272,7 @@ export default function PayPerTalkTimePage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                    <DollarSign className="h-4 w-4 text-orange-500" />
+                    <CustomIcon name="vr-microphone" size={16} className="text-orange-500" />
                   </div>
                   <span className="text-sm">Your Per-Minute Rate</span>
                 </div>

@@ -76,3 +76,5 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - 2026-02-16: Built BusinessSwitcher component in dashboard header — dropdown shows user's businesses with switch and "Add New Business" options
 - 2026-02-16: Created /dashboard/businesses/new page with name input and deployment package selection (Managed, BYOK, Self-Hosted)
 - 2026-02-16: Added mobile API client functions for business listing, switching, and creation
+- 2026-02-16: Created CustomIcon component (`components/ui/custom-icon.tsx`) — inline SVG renderer with caching, currentColor support, and error fallback for custom voice/AI icon packs
+- 2026-02-16: Integrated 32 custom voice/AI SVG icons (`public/icons/`) throughout the platform: landing page features & how-it-works, dashboard sidebar navigation, all 6 feature detail pages, and 5 dashboard pages (agent, calls, knowledge, analytics, main)

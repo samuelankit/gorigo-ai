@@ -8,6 +8,7 @@ import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { CustomIcon } from "@/components/ui/custom-icon";
 import {
   Clock,
   Phone,
@@ -49,8 +50,8 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, label: "Customer Calls Any Time", description: "Day, night, weekend, or bank holiday", color: "text-cyan-500" },
-  { icon: Bot, label: "AI Agent Answers Instantly", description: "Zero wait time, no hold music", color: "text-teal-500" },
+  { icon: Phone, customIcon: "vr-phone-mic", label: "Customer Calls Any Time", description: "Day, night, weekend, or bank holiday", color: "text-cyan-500" },
+  { icon: Bot, customIcon: "ai-voice-head", label: "AI Agent Answers Instantly", description: "Zero wait time, no hold music", color: "text-teal-500" },
   { icon: CalendarCheck, label: "Handles Request", description: "Booking, enquiry, or support handled on the spot", color: "text-rose-500" },
   { icon: ClipboardList, label: "Confirms and Logs", description: "Caller gets confirmation, you get a full record", color: "text-indigo-500" },
   { icon: BellRing, label: "Follow-up Scheduled", description: "Reminders and next steps are set automatically", color: "text-amber-500" },
@@ -59,6 +60,7 @@ const flowSteps = [
 const benefits = [
   {
     icon: PhoneOff,
+    customIcon: "vr-phone-mic",
     title: "Zero Missed Calls",
     color: "text-cyan-500",
     description:
@@ -221,7 +223,11 @@ export default function CallHandlingPage() {
                   data-testid={`flow-step-${index}`}
                 >
                   <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center mb-3">
-                    <step.icon className={`h-5 w-5 ${step.color}`} />
+                    {step.customIcon ? (
+                      <CustomIcon name={step.customIcon} size={20} className={step.color} />
+                    ) : (
+                      <step.icon className={`h-5 w-5 ${step.color}`} />
+                    )}
                   </div>
                   <p className="font-medium text-sm mb-1">{step.label}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
@@ -259,7 +265,11 @@ export default function CallHandlingPage() {
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
+                  {benefit.customIcon ? (
+                    <CustomIcon name={benefit.customIcon} size={20} className={`${benefit.color} mb-5`} />
+                  ) : (
+                    <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
+                  )}
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}

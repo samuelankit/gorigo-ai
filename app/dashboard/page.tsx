@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
+import { CustomIcon } from "@/components/ui/custom-icon";
 
 interface Usage {
   minutesUsed: number;
@@ -346,7 +347,7 @@ export default function DashboardPage() {
           </Button>
           <Button asChild size="sm" data-testid="button-configure-agent">
             <Link href="/dashboard/agent">
-              <Bot className="h-3.5 w-3.5 mr-1.5" />
+              <CustomIcon name="ai-voice-head" size={14} className="mr-1.5" />
               Configure Agent
             </Link>
           </Button>
@@ -480,7 +481,7 @@ export default function DashboardPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between gap-3 mb-1">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Calls</span>
-              <PhoneCall className="h-4 w-4 text-muted-foreground/60" />
+              <CustomIcon name="vr-phone-mic" size={16} className="text-muted-foreground/60" />
             </div>
             {loadingUsage ? <Skeleton className="h-7 w-16" /> : (
               <p className="text-2xl font-semibold" data-testid="text-total-calls">{usage?.callCount ?? 0}</p>

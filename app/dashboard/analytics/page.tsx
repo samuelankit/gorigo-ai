@@ -11,6 +11,7 @@ import {
   TrendingUp, BarChart3, Users, Clock, Heart, Shield, Activity,
   Smile, Frown, Meh, AlertTriangle, Target, DollarSign, ArrowUpRight,
 } from "lucide-react";
+import { CustomIcon } from "@/components/ui/custom-icon";
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart as RechartsPie, Pie,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend,
@@ -1227,7 +1228,7 @@ export default function AnalyticsDashboardPage() {
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-start gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-violet-500/10">
-              <BarChart3 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+              <CustomIcon name="vr-waveform-scan" size={20} className="text-violet-600 dark:text-violet-400" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-foreground" data-testid="text-analytics-title">

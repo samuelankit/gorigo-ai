@@ -8,6 +8,7 @@ import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { CustomIcon } from "@/components/ui/custom-icon";
 import {
   Globe,
   Phone,
@@ -48,10 +49,10 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, label: "Customer Calls", description: "A caller dials your business number in any language", color: "text-cyan-500" },
-  { icon: Ear, label: "Language Detected", description: "The AI automatically identifies the caller's language", color: "text-rose-500" },
-  { icon: Languages, label: "AI Switches Language", description: "The agent seamlessly transitions to that language", color: "text-amber-500" },
-  { icon: MessageCircle, label: "Conversation Flows", description: "The call continues naturally in the caller's language", color: "text-emerald-500" },
+  { icon: Phone, customIcon: "vr-phone-mic", label: "Customer Calls", description: "A caller dials your business number in any language", color: "text-cyan-500" },
+  { icon: Ear, customIcon: "vr-speaking", label: "Language Detected", description: "The AI automatically identifies the caller's language", color: "text-rose-500" },
+  { icon: Languages, customIcon: "vr-speech-to-text", label: "AI Switches Language", description: "The agent seamlessly transitions to that language", color: "text-amber-500" },
+  { icon: MessageCircle, customIcon: "vr-voice-chat", label: "Conversation Flows", description: "The call continues naturally in the caller's language", color: "text-emerald-500" },
   { icon: FileText, label: "Transcript Available", description: "Full transcript provided in original language and English", color: "text-indigo-500" },
 ];
 
@@ -72,6 +73,7 @@ const benefits = [
   },
   {
     icon: Mic,
+    customIcon: "ai-smart-mic",
     title: "Automatic Accent Adaptation",
     color: "text-cyan-500",
     description:
@@ -220,7 +222,11 @@ export default function MultiLanguagePage() {
                   data-testid={`flow-step-${index}`}
                 >
                   <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center mb-3">
-                    <step.icon className={`h-5 w-5 ${step.color}`} />
+                    {step.customIcon ? (
+                      <CustomIcon name={step.customIcon} size={20} className={step.color} />
+                    ) : (
+                      <step.icon className={`h-5 w-5 ${step.color}`} />
+                    )}
                   </div>
                   <p className="font-medium text-sm mb-1">{step.label}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
@@ -258,7 +264,11 @@ export default function MultiLanguagePage() {
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
+                  {benefit.customIcon ? (
+                    <CustomIcon name={benefit.customIcon} size={20} className={`${benefit.color} mb-5`} />
+                  ) : (
+                    <benefit.icon className={`h-5 w-5 ${benefit.color} mb-5`} />
+                  )}
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}

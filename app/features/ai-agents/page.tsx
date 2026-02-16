@@ -8,6 +8,7 @@ import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { CustomIcon } from "@/components/ui/custom-icon";
 import {
   Bot,
   Phone,
@@ -48,10 +49,10 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, label: "Call Arrives", description: "A customer dials your business number", color: "text-cyan-500" },
-  { icon: Bot, label: "AI Listens", description: "The agent picks up and actively listens", color: "text-teal-500" },
-  { icon: Brain, label: "Understands Intent", description: "Natural language processing identifies what the caller needs", color: "text-violet-500" },
-  { icon: MessageSquare, label: "Responds Naturally", description: "The agent speaks back in a natural, conversational tone", color: "text-amber-500" },
+  { icon: Phone, customIcon: "vr-phone-mic", label: "Call Arrives", description: "A customer dials your business number", color: "text-cyan-500" },
+  { icon: Bot, customIcon: "ai-voice-head", label: "AI Listens", description: "The agent picks up and actively listens", color: "text-teal-500" },
+  { icon: Brain, customIcon: "ai-voice-chip", label: "Understands Intent", description: "Natural language processing identifies what the caller needs", color: "text-violet-500" },
+  { icon: MessageSquare, customIcon: "vr-voice-chat", label: "Responds Naturally", description: "The agent speaks back in a natural, conversational tone", color: "text-amber-500" },
   { icon: ClipboardList, label: "Logs Everything", description: "Every detail is recorded for your review", color: "text-indigo-500" },
 ];
 
@@ -220,7 +221,11 @@ export default function AIAgentsPage() {
                   data-testid={`flow-step-${index}`}
                 >
                   <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center mb-3">
-                    <step.icon className={`h-5 w-5 ${step.color}`} />
+                    {step.customIcon ? (
+                      <CustomIcon name={step.customIcon} size={20} className={step.color} />
+                    ) : (
+                      <step.icon className={`h-5 w-5 ${step.color}`} />
+                    )}
                   </div>
                   <p className="font-medium text-sm mb-1">{step.label}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>

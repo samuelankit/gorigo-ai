@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/json-ld";
+import { CustomIcon } from "@/components/ui/custom-icon";
 import {
   Phone,
   Bot,
@@ -27,42 +28,42 @@ import {
 
 const features = [
   {
-    icon: Bot,
+    customIcon: "ai-voice-head",
     title: "AI-Powered Agents",
     href: "/features/ai-agents",
     description:
       "Deploy intelligent voice agents that handle inbound and outbound calls with natural, human-like conversation.",
   },
   {
-    icon: Phone,
+    customIcon: "vr-phone-mic",
     title: "24/7 Call Handling",
     href: "/features/call-handling",
     description:
       "Never miss a call. Your AI agents work around the clock, handling enquiries, bookings, and support requests.",
   },
   {
-    icon: Shield,
+    customIcon: "vr-voice-lock",
     title: "Globally Compliant",
     href: "/features/compliance",
     description:
       "Per-country DNC registries, calling hours enforcement, AI disclosure in 12 languages, and PII redaction. Compliant across 20 countries from day one.",
   },
   {
-    icon: BarChart3,
+    customIcon: "vr-waveform-scan",
     title: "Real-Time Analytics",
     href: "/features/analytics",
     description:
       "Live dashboards with call quality scoring, sentiment analysis, and actionable insights to improve every interaction.",
   },
   {
-    icon: Globe,
+    customIcon: "vr-voice-chat",
     title: "20 Countries, 12+ Languages",
     href: "/features/multi-language",
     description:
       "Call internationally across 20 countries. AI agents detect languages, adapt to accents, and handle multilingual conversations naturally.",
   },
   {
-    icon: Zap,
+    customIcon: "vr-speaking",
     title: "Pay Per Talk Time",
     href: "/features/pay-per-talk-time",
     description:
@@ -76,7 +77,7 @@ const steps = [
     title: "Configure",
     description:
       "Set up your AI agent's persona, knowledge base, and call handling rules through our dashboard. No coding required.",
-    icon: Bot,
+    customIcon: "ai-voice-setting",
     color: "text-teal-500",
   },
   {
@@ -84,7 +85,7 @@ const steps = [
     title: "Connect",
     description:
       "Link your existing business number or get a new one. Your AI agent starts handling calls immediately.",
-    icon: Phone,
+    customIcon: "vr-voice-signal",
     color: "text-cyan-500",
   },
   {
@@ -92,7 +93,7 @@ const steps = [
     title: "Monitor",
     description:
       "Track every call in real time. Review transcripts, quality scores, and analytics to continuously improve.",
-    icon: Activity,
+    customIcon: "ai-voice-record",
     color: "text-violet-500",
   },
 ];
@@ -304,9 +305,12 @@ export default function HomePage() {
                 className="bg-background p-8 group"
                 data-testid={`card-feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-medium text-base mb-2">{feature.title}</h3>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1 shrink-0" />
+                <div className="flex items-start gap-3 mb-3">
+                  <CustomIcon name={feature.customIcon} size={28} className="text-primary shrink-0 mt-0.5" />
+                  <div className="flex items-start justify-between gap-2 flex-1 min-w-0">
+                    <h3 className="font-medium text-base">{feature.title}</h3>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1 shrink-0" />
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {feature.description}
@@ -334,7 +338,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-4 mb-6">
                     <span className="text-3xl font-light text-muted-foreground/40">{step.number}</span>
                     <div className="h-px flex-1 bg-border/50" />
-                    <step.icon className={`h-5 w-5 ${step.color}`} />
+                    <CustomIcon name={step.customIcon} size={22} className={step.color} />
                   </div>
                   <h3 className="font-medium text-lg mb-2">{step.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">

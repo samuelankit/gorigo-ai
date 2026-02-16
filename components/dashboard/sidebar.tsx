@@ -16,35 +16,44 @@ import {
 } from "@/components/ui/sidebar";
 import { LayoutDashboard, Bot, PhoneCall, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Server } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CustomIcon } from "@/components/ui/custom-icon";
+import type { ReactNode } from "react";
 
-const mainMenuItems = [
+type MenuItemDef = {
+  title: string;
+  url: string;
+  icon?: typeof LayoutDashboard;
+  customIcon?: string;
+};
+
+const mainMenuItems: MenuItemDef[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Live Demo", url: "/dashboard/demo", icon: Sparkles },
 ];
 
-const manageMenuItems = [
-  { title: "Agents & Flow", url: "/dashboard/agent", icon: Bot },
-  { title: "Agent Testing", url: "/dashboard/agent-test", icon: MessageSquare },
-  { title: "Knowledge Base", url: "/dashboard/knowledge", icon: BookOpen },
+const manageMenuItems: MenuItemDef[] = [
+  { title: "Agents & Flow", url: "/dashboard/agent", customIcon: "ai-voice-head" },
+  { title: "Agent Testing", url: "/dashboard/agent-test", customIcon: "vr-voice-chat" },
+  { title: "Knowledge Base", url: "/dashboard/knowledge", customIcon: "ai-voice-chip" },
   { title: "Campaigns", url: "/dashboard/campaigns", icon: Send },
-  { title: "Call History", url: "/dashboard/calls", icon: PhoneCall },
-  { title: "Analytics", url: "/dashboard/analytics", icon: BarChart3 },
+  { title: "Call History", url: "/dashboard/calls", customIcon: "vr-phone-mic" },
+  { title: "Analytics", url: "/dashboard/analytics", customIcon: "vr-waveform-scan" },
   { title: "Compliance", url: "/dashboard/compliance", icon: Shield },
   { title: "Webhooks", url: "/dashboard/webhooks", icon: Webhook },
 ];
 
-const partnerMenuItems = [
+const partnerMenuItems: MenuItemDef[] = [
   { title: "My Affiliates", url: "/dashboard/affiliates", icon: Link2 },
 ];
 
-const financeMenuItems = [
+const financeMenuItems: MenuItemDef[] = [
   { title: "Finance Home", url: "/dashboard/finance", icon: Landmark },
   { title: "Sales & Invoices", url: "/dashboard/finance/sales", icon: Receipt },
   { title: "Purchases & Bills", url: "/dashboard/finance/purchases", icon: ShoppingCart },
   { title: "Reports", url: "/dashboard/finance/reports", icon: FileText },
 ];
 
-const accountMenuItems = [
+const accountMenuItems: MenuItemDef[] = [
   { title: "Wallet", url: "/dashboard/wallet", icon: Wallet },
   { title: "Billing & Usage", url: "/dashboard/billing", icon: CreditCard },
   { title: "API Keys", url: "/dashboard/api-keys", icon: Key },
@@ -85,7 +94,7 @@ export function DashboardSidebar() {
 
   const renderMenuGroup = (
     label: string,
-    items: typeof mainMenuItems,
+    items: MenuItemDef[],
     matchFn: (url: string) => boolean
   ) => (
     <SidebarGroup>
@@ -102,7 +111,11 @@ export function DashboardSidebar() {
                 tooltip={item.title}
               >
                 <Link href={item.url} data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, "-")}`}>
-                  <item.icon className="h-4 w-4" />
+                  {item.customIcon ? (
+                    <CustomIcon name={item.customIcon} size={16} className="shrink-0" />
+                  ) : item.icon ? (
+                    <item.icon className="h-4 w-4" />
+                  ) : null}
                   <span className="text-[13px]">{item.title}</span>
                 </Link>
               </SidebarMenuButton>

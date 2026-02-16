@@ -8,6 +8,7 @@ import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { CustomIcon } from "@/components/ui/custom-icon";
 import {
   BarChart3,
   Phone,
@@ -49,9 +50,9 @@ export const metadata: Metadata = {
 };
 
 const flowSteps = [
-  { icon: Phone, label: "Call Happens", description: "A customer call takes place with your AI agent", color: "text-cyan-500" },
-  { icon: Database, label: "Data Captured", description: "Duration, sentiment, quality, and outcome are recorded", color: "text-indigo-500" },
-  { icon: Cpu, label: "Processed in Real-Time", description: "Data is analysed instantly as calls complete", color: "text-teal-500" },
+  { icon: Phone, customIcon: "vr-phone-mic", label: "Call Happens", description: "A customer call takes place with your AI agent", color: "text-cyan-500" },
+  { icon: Database, customIcon: "vr-voice-database", label: "Data Captured", description: "Duration, sentiment, quality, and outcome are recorded", color: "text-indigo-500" },
+  { icon: Cpu, customIcon: "vr-waveform-scan", label: "Processed in Real-Time", description: "Data is analysed instantly as calls complete", color: "text-teal-500" },
   { icon: LayoutDashboard, label: "Dashboard Updates", description: "Your live dashboard reflects the latest figures", color: "text-sky-500" },
   { icon: TrendingUp, label: "Trends Visible", description: "Patterns and trends emerge across hours and days", color: "text-violet-500" },
   { icon: Lightbulb, label: "Insights Generated", description: "Actionable recommendations are surfaced for you", color: "text-amber-500" },
@@ -222,7 +223,11 @@ export default function AnalyticsPage() {
                   data-testid={`flow-step-${index}`}
                 >
                   <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center mb-3">
-                    <step.icon className={`h-5 w-5 ${step.color}`} />
+                    {step.customIcon ? (
+                      <CustomIcon name={step.customIcon} size={20} className={step.color} />
+                    ) : (
+                      <step.icon className={`h-5 w-5 ${step.color}`} />
+                    )}
                   </div>
                   <p className="font-medium text-sm mb-1">{step.label}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>

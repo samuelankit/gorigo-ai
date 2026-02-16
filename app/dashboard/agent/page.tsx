@@ -22,6 +22,7 @@ import {
   PhoneIncoming, GitBranch, PhoneOff, Headphones, TrendingUp, LifeBuoy, CheckCircle2, XCircle, AlertCircle, Eye, Wand2, Globe, Copy, Briefcase, CalendarCheck, Wrench,
   MessageSquare, Send, User
 } from "lucide-react";
+import { CustomIcon } from "@/components/ui/custom-icon";
 
 interface FaqEntry {
   question: string;
@@ -1062,7 +1063,7 @@ export default function AgentPage() {
       <div className="flex items-start gap-4 flex-wrap">
         <div className="flex-shrink-0">
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950">
-            <Bot className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <CustomIcon name="ai-voice-head" size={24} className="text-blue-600 dark:text-blue-400" />
           </div>
         </div>
         <div>

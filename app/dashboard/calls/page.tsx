@@ -54,6 +54,7 @@ import {
   Zap,
   RefreshCw,
 } from "lucide-react";
+import { CustomIcon } from "@/components/ui/custom-icon";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend,
@@ -701,7 +702,7 @@ export default function CallsPage() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-start gap-3">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/10">
-            <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <CustomIcon name="vr-phone-mic" size={20} className="text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-foreground flex items-center gap-2 flex-wrap" data-testid="text-calls-title">

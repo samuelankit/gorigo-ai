@@ -344,6 +344,18 @@ export function PricingContent() {
           </div>
         </section>
 
+        <section className="py-12 border-t border-border/50" data-testid="section-sla-link">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              All packages are backed by our{" "}
+              <Link href="/sla" className="text-primary underline underline-offset-4" data-testid="link-sla">
+                Service Level Agreement
+              </Link>
+              {" "}with uptime guarantees, support response times, and automatic compensation if we fall short.
+            </p>
+          </div>
+        </section>
+
         <section className="py-20 border-t border-border/50" data-testid="section-faq">
           <div className="max-w-3xl mx-auto px-6">
             <div className="mb-12">

@@ -33,6 +33,7 @@ const legalLinks = [
   { label: "Terms of Service", href: "/policies/terms" },
   { label: "Cookie Policy", href: "/policies/cookies" },
   { label: "Acceptable Use", href: "/policies/acceptable-use" },
+  { label: "Service Level Agreement", href: "/sla" },
 ];
 
 export function Footer() {

@@ -110,7 +110,7 @@ function FeatureIcon({ included }: { included: boolean }) {
 
 export function PricingContent() {
   const [visibility, setVisibility] = useState<PackageVisibility>({
-    managed: false,
+    managed: true,
     byok: true,
     selfHosted: false,
   });

@@ -10,7 +10,7 @@ const PACKAGE_KEYS = [
 ];
 
 const DEFAULTS: Record<string, boolean> = {
-  deployment_package_managed_enabled: false,
+  deployment_package_managed_enabled: true,
   deployment_package_byok_enabled: true,
   deployment_package_self_hosted_enabled: false,
 };
@@ -34,7 +34,7 @@ export async function GET() {
     });
   } catch {
     return NextResponse.json({
-      managed: false,
+      managed: true,
       byok: true,
       selfHosted: false,
     });

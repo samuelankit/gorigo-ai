@@ -7,7 +7,6 @@ import Link from "next/link";
 import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/json-ld";
 import { CustomIcon } from "@/components/ui/custom-icon";
 import {
-  Phone,
   Bot,
   Shield,
   BarChart3,
@@ -242,7 +241,7 @@ export default function HomePage() {
                   >
                     <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40" />
-                      <Phone className="relative h-5 w-5 text-primary-foreground" />
+                      <CustomIcon name="phone-call" size={22} className="relative text-primary-foreground" />
                     </span>
                     <span className="flex flex-col items-start">
                       <span className="text-base font-semibold tracking-tight">Talk to Our AI</span>

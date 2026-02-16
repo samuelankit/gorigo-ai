@@ -1459,6 +1459,36 @@ export const insertCampaignContactSchema = createInsertSchema(campaignContacts).
 export type InsertCampaignContact = z.infer<typeof insertCampaignContactSchema>;
 export type CampaignContact = typeof campaignContacts.$inferSelect;
 
+export const drafts = pgTable("drafts", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  prompt: text("prompt"),
+  status: text("status").default("draft").notNull(),
+  tone: text("tone").default("professional"),
+  language: text("language").default("en"),
+  version: integer("version").default(1).notNull(),
+  parentDraftId: integer("parent_draft_id"),
+  qualityScore: real("quality_score"),
+  metadata: jsonb("metadata"),
+  publishedToAgentId: integer("published_to_agent_id"),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_drafts_org").on(table.orgId),
+  index("idx_drafts_type").on(table.type),
+  index("idx_drafts_status").on(table.status),
+  index("idx_drafts_parent").on(table.parentDraftId),
+]);
+
+export const insertDraftSchema = createInsertSchema(drafts).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertDraft = z.infer<typeof insertDraftSchema>;
+export type Draft = typeof drafts.$inferSelect;
+
 export const platformKnowledgeChunks = pgTable("platform_knowledge_chunks", {
   id: serial("id").primaryKey(),
   category: text("category").notNull(),

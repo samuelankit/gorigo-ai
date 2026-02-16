@@ -35,6 +35,7 @@ const manageMenuItems: MenuItemDef[] = [
   { title: "Agents & Flow", url: "/dashboard/agent", customIcon: "ai-voice-head" },
   { title: "Agent Testing", url: "/dashboard/agent-test", customIcon: "vr-voice-chat" },
   { title: "Knowledge Base", url: "/dashboard/knowledge", customIcon: "ai-voice-chip" },
+  { title: "Smart Drafts", url: "/dashboard/drafts", icon: FileText },
   { title: "Campaigns", url: "/dashboard/campaigns", icon: Send },
   { title: "Call History", url: "/dashboard/calls", customIcon: "vr-phone-mic" },
   { title: "Analytics", url: "/dashboard/analytics", customIcon: "vr-waveform-scan" },

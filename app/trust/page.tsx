@@ -461,6 +461,7 @@ export default function TrustCenterPage() {
         subheadline="Our team is happy to walk through our security practices, answer compliance questions, or discuss specific requirements for your industry."
         primaryAction={{ label: "Talk to Us", href: "/contact" }}
         secondaryAction={{ label: "View Pricing", href: "/pricing" }}
+        talkToAiMessage="Talk to AI about Security & Compliance"
       />
       <Footer />
     </div>

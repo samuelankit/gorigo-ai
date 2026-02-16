@@ -378,7 +378,7 @@ export default function MultiLanguagePage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI about Multi-Language support" />
       <Footer />
     </div>
     </PublicLayout>

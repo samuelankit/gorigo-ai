@@ -372,7 +372,7 @@ export default function AIAgentsPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI about our AI Agents" />
       <Footer />
     </div>
     </PublicLayout>

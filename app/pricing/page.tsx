@@ -364,7 +364,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI to understand our Pricing" />
       <Footer />
     </div>
     </PublicLayout>

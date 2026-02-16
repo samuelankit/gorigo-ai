@@ -693,7 +693,7 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI about Partnership opportunities" />
       <Footer />
     </div>
     </PublicLayout>

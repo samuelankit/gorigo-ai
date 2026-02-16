@@ -303,6 +303,7 @@ export default function CapabilitiesPage() {
       <ConversionCta
         headline="See What GoRigo Can Do for Your Business"
         subheadline="From AI agents to real-time analytics, GoRigo handles your calls so you can focus on growth. No subscriptions, no seat licences."
+        talkToAiMessage="Talk to AI to explore our Capabilities"
       />
 
       <Footer />

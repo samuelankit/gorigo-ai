@@ -434,7 +434,7 @@ export default function PayPerTalkTimePage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI about Pay-Per-Talk-Time billing" />
       <Footer />
     </div>
     </PublicLayout>

@@ -705,7 +705,7 @@ export default function WhitelabelPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI about White Label solutions" />
       <Footer />
     </div>
     </PublicLayout>

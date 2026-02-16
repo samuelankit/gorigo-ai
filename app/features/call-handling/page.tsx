@@ -379,7 +379,7 @@ export default function CallHandlingPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI about Call Handling" />
       <Footer />
     </div>
     </PublicLayout>

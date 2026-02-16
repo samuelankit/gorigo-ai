@@ -375,7 +375,7 @@ export default function CompliancePage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI about Compliance features" />
       <Footer />
     </div>
     </PublicLayout>

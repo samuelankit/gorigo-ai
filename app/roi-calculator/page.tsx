@@ -744,7 +744,7 @@ export default function RoiCalculatorPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI to explore your ROI" />
       <Footer />
     </div>
     </PublicLayout>

@@ -236,7 +236,7 @@ export default function DocsPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI for guidance and support" />
       <Footer />
     </div>
     </PublicLayout>

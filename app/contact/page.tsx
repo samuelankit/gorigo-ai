@@ -289,6 +289,7 @@ export default function ContactPage() {
         subheadline="Book a personalised demo and discover how AI voice agents can transform your call centre operations."
         primaryAction={{ label: "Get Started", href: "/register" }}
         secondaryAction={{ label: "View Pricing", href: "/pricing" }}
+        talkToAiMessage="Talk to AI — we're ready to help right now"
       />
       <Footer />
     </div>

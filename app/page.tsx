@@ -234,20 +234,21 @@ export default function HomePage() {
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row items-center gap-4" data-testid="hero-talk-to-ai">
-                <a
-                  href="tel:+440000000000"
-                  className="group flex items-center gap-3 rounded-md border-2 border-primary bg-primary/5 px-6 py-4 hover-elevate"
-                  data-testid="link-hero-call-ai"
-                >
-                  <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40" />
-                    <Phone className="relative h-5 w-5 text-primary-foreground" />
-                  </span>
-                  <span className="flex flex-col items-start">
-                    <span className="text-base font-semibold tracking-tight">Talk to Our AI</span>
-                    <span className="text-sm text-muted-foreground">+44 (0) 000 000 0000</span>
-                  </span>
-                </a>
+                <Button variant="outline" asChild className="border-2 border-primary bg-primary/5">
+                  <a
+                    href="tel:+440000000000"
+                    data-testid="link-hero-call-ai"
+                  >
+                    <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40" />
+                      <Phone className="relative h-5 w-5 text-primary-foreground" />
+                    </span>
+                    <span className="flex flex-col items-start">
+                      <span className="text-base font-semibold tracking-tight">Talk to Our AI</span>
+                      <span className="text-sm text-muted-foreground">+44 (0) 000 000 0000</span>
+                    </span>
+                  </a>
+                </Button>
                 <span className="inline-flex items-center gap-2 text-sm font-medium text-primary" data-testid="text-hero-availability">
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />

@@ -267,7 +267,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="We want to hear your story — Talk to our AI" />
       <Footer />
     </div>
     </PublicLayout>

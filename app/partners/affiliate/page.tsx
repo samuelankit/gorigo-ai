@@ -764,7 +764,7 @@ export default function AffiliatePartnerPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI about our Affiliate Programme" />
       <Footer />
     </div>
     </PublicLayout>

@@ -380,7 +380,7 @@ export default function AnalyticsPage() {
         </div>
       </section>
 
-      <ConversionCta />
+      <ConversionCta talkToAiMessage="Talk to AI about our Analytics" />
       <Footer />
     </div>
     </PublicLayout>

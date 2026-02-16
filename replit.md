@@ -69,3 +69,10 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - 2026-02-16: Mobile login screen now supports partner code entry with dynamic branding via BrandingProvider context
 - 2026-02-16: All 5 mobile tabs use dynamic branding (brand name, color, logo) from useBranding hook
 - 2026-02-16: Updated white-label partner page with branded mobile app feature card and FAQ
+- 2026-02-16: Implemented multi-business architecture — one user can own/manage multiple businesses, each with its own agents, calls, wallet, and billing
+- 2026-02-16: Added `activeOrgId` to sessions table for tracking current business context; auth layer resolves orgId from session with fallback
+- 2026-02-16: Created business management APIs: GET/POST /api/businesses, POST /api/businesses/switch
+- 2026-02-16: /api/auth/me now returns `businesses` array with id, name, role, deploymentModel, isActive flags
+- 2026-02-16: Built BusinessSwitcher component in dashboard header — dropdown shows user's businesses with switch and "Add New Business" options
+- 2026-02-16: Created /dashboard/businesses/new page with name input and deployment package selection (Managed, BYOK, Self-Hosted)
+- 2026-02-16: Added mobile API client functions for business listing, switching, and creation

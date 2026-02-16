@@ -329,7 +329,7 @@ export default function TrustCenterPage() {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2">
-                      <practice.icon className="h-4 w-4 text-blue-500 shrink-0" />
+                      <practice.icon className="h-4 w-4 text-[#2DD4A8] shrink-0" />
                       <h3 className="font-medium text-sm">{practice.title}</h3>
                     </div>
                     <StatusBadge status={practice.status} />
@@ -366,7 +366,7 @@ export default function TrustCenterPage() {
                 data-testid={`card-infra-${practice.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-6">
-                  <practice.icon className="h-4 w-4 text-violet-500 mb-3" />
+                  <practice.icon className="h-4 w-4 text-[#2DD4A8] mb-3" />
                   <h3 className="font-medium text-sm mb-2">{practice.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {practice.description}

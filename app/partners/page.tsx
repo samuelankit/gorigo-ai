@@ -64,19 +64,19 @@ const opportunityStats = [
     icon: TrendingUp,
     stat: "$12.9 billion",
     label: "AI call centre market projected value by 2032",
-    color: "text-violet-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Users,
     stat: "64%",
     label: "of businesses exploring AI for customer service",
-    color: "text-pink-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Rocket,
     stat: "3x",
     label: "year-on-year growth in AI voice solution adoption",
-    color: "text-emerald-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 
@@ -93,7 +93,7 @@ const partnershipModels = [
       "Dedicated account manager and priority support",
       "Revenue share model with no upfront fees",
     ],
-    color: "text-purple-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Handshake,
@@ -107,7 +107,7 @@ const partnershipModels = [
       "Marketing materials and landing page templates",
       "Monthly payouts with transparent reporting",
     ],
-    color: "text-amber-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Code,
@@ -121,7 +121,7 @@ const partnershipModels = [
       "Dedicated technical account manager",
       "Co-marketing and joint go-to-market opportunities",
     ],
-    color: "text-teal-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 
@@ -130,37 +130,37 @@ const partnerBenefits = [
     icon: LayoutDashboard,
     title: "Partner Dashboard",
     description: "Dedicated dashboard with real-time analytics, client management, and performance tracking.",
-    color: "text-sky-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: GraduationCap,
     title: "Training and Onboarding",
     description: "Structured onboarding programme with product training, sales enablement, and certification.",
-    color: "text-yellow-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: FileText,
     title: "Marketing Materials",
     description: "Ready-to-use sales collateral, pitch decks, case studies, and co-branded content.",
-    color: "text-indigo-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Headphones,
     title: "Technical Support",
     description: "Priority access to our support team, comprehensive documentation, and integration guides.",
-    color: "text-cyan-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Rocket,
     title: "Product Updates",
     description: "Regular product roadmap access, early feature previews, and beta programme invitations.",
-    color: "text-emerald-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: BarChart3,
     title: "Transparent Reporting",
     description: "Clear commission tracking, detailed revenue reports, and automated monthly statements.",
-    color: "text-violet-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 
@@ -170,28 +170,28 @@ const steps = [
     title: "Apply",
     description: "Fill in your details and tell us about your business. We review every application within 48 hours.",
     icon: ClipboardCheck,
-    color: "text-green-500",
+    color: "text-[#2DD4A8]",
   },
   {
     number: "2",
     title: "Onboard",
     description: "We set up your partner account, provide product training, and equip you with everything you need.",
     icon: GraduationCap,
-    color: "text-yellow-500",
+    color: "text-[#2DD4A8]",
   },
   {
     number: "3",
     title: "Launch",
     description: "Start selling, referring, or integrating GoRigo. Use our materials or create your own approach.",
     icon: Rocket,
-    color: "text-emerald-500",
+    color: "text-[#2DD4A8]",
   },
   {
     number: "4",
     title: "Earn",
     description: "Track your revenue and commissions in real-time through your partner dashboard.",
     icon: DollarSign,
-    color: "text-orange-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 
@@ -200,37 +200,37 @@ const idealPartners = [
     icon: Phone,
     title: "BPO and Call Centre Operators",
     description: "Enhance your existing operations with AI-powered agents that scale without adding headcount.",
-    color: "text-cyan-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Wifi,
     title: "Telecoms Companies and ISPs",
     description: "Bundle AI call centre capabilities with your connectivity products for added value.",
-    color: "text-fuchsia-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Briefcase,
     title: "Business Consultants and Advisors",
     description: "Recommend GoRigo to clients seeking to modernise their customer service operations.",
-    color: "text-purple-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Megaphone,
     title: "Digital Agencies and Marketing Firms",
     description: "Add AI voice solutions to your service portfolio and deliver more value to your clients.",
-    color: "text-red-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Monitor,
     title: "IT Service Providers and MSPs",
     description: "Integrate AI call handling into your managed service offerings for business clients.",
-    color: "text-sky-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Pen,
     title: "Industry Influencers and Bloggers",
     description: "Earn commissions by sharing GoRigo with your audience through authentic content and reviews.",
-    color: "text-pink-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 
@@ -240,56 +240,56 @@ const terms = [
     title: "Governing Law",
     description:
       "All partnerships are governed by UK law. GoRigo is operated by International Business Exchange Limited, registered in England and Wales (Company No. 15985956).",
-    color: "text-blue-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Handshake,
     title: "Non-Exclusive Agreements",
     description:
       "Partnership agreements are non-exclusive. Partners are free to work with other providers and offer competing products alongside GoRigo.",
-    color: "text-purple-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: CheckCircle2,
     title: "Minimum Standards",
     description:
       "Partners must represent GoRigo professionally and accurately. Misleading claims, spam, or unethical marketing practices are not permitted.",
-    color: "text-green-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Shield,
     title: "Data Protection",
     description:
       "Partners must comply with GDPR and UK data protection laws. Any client data shared during the partnership must be handled in accordance with applicable regulations.",
-    color: "text-sky-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Lock,
     title: "Intellectual Property",
     description:
       "The GoRigo brand, technology, and platform remain the property of International Business Exchange Limited. Partners receive a licence to use approved branding materials.",
-    color: "text-slate-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: CreditCard,
     title: "Commission Payments",
     description:
       "Commissions are processed monthly. A minimum payout threshold applies. Detailed commission statements are available through the partner dashboard.",
-    color: "text-orange-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Calendar,
     title: "Termination",
     description:
       "Either party can end the partnership with 30 days written notice. Outstanding commissions earned before termination will be paid in the next billing cycle.",
-    color: "text-rose-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Eye,
     title: "Confidentiality",
     description:
       "Partners must keep commercial terms, pricing structures, and client data confidential. This obligation survives the termination of the partnership.",
-    color: "text-amber-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 
@@ -467,7 +467,7 @@ export default function PartnersPage() {
                         key={bullet}
                         className="flex items-start gap-2 text-sm"
                       >
-                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="h-4 w-4 text-[#2DD4A8] shrink-0 mt-0.5" />
                         <span className="text-muted-foreground">{bullet}</span>
                       </li>
                     ))}

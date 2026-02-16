@@ -24,7 +24,7 @@ const modules = [
     icon: LayoutDashboard,
     href: "/guide/overview",
     time: "5 min",
-    color: "text-violet-500",
+    color: "text-[#2DD4A8]",
   },
   {
     title: "AI Agents",
@@ -32,7 +32,7 @@ const modules = [
     icon: Bot,
     href: "/guide/agents",
     time: "8 min",
-    color: "text-teal-500",
+    color: "text-[#2DD4A8]",
   },
   {
     title: "Knowledge Base",
@@ -40,7 +40,7 @@ const modules = [
     icon: BookOpen,
     href: "/guide/knowledge-base",
     time: "6 min",
-    color: "text-indigo-500",
+    color: "text-[#2DD4A8]",
   },
   {
     title: "Clients & Partners",
@@ -48,7 +48,7 @@ const modules = [
     icon: Users,
     href: "/guide/clients",
     time: "7 min",
-    color: "text-pink-500",
+    color: "text-[#2DD4A8]",
   },
   {
     title: "Billing & Wallets",
@@ -56,7 +56,7 @@ const modules = [
     icon: Wallet,
     href: "/guide/billing",
     time: "5 min",
-    color: "text-orange-500",
+    color: "text-[#2DD4A8]",
   },
   {
     title: "Outbound Campaigns",
@@ -64,7 +64,7 @@ const modules = [
     icon: Megaphone,
     href: "/guide/campaigns",
     time: "7 min",
-    color: "text-rose-500",
+    color: "text-[#2DD4A8]",
   },
   {
     title: "Call Monitoring",
@@ -72,7 +72,7 @@ const modules = [
     icon: PhoneCall,
     href: "/guide/monitoring",
     time: "6 min",
-    color: "text-cyan-500",
+    color: "text-[#2DD4A8]",
   },
   {
     title: "Compliance & DNC",
@@ -80,7 +80,7 @@ const modules = [
     icon: ShieldCheck,
     href: "/guide/compliance",
     time: "5 min",
-    color: "text-blue-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 

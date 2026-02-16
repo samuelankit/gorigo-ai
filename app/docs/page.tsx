@@ -54,7 +54,7 @@ const docCategories = [
       "Webhooks",
     ],
     href: "/docs",
-    color: "text-violet-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: BookOpen,
@@ -63,7 +63,7 @@ const docCategories = [
       "Step-by-step tutorials for setting up your AI call centre.",
     links: [],
     href: "/guide",
-    color: "text-indigo-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Plug,
@@ -72,7 +72,7 @@ const docCategories = [
       "Connect GoRigo with your existing tools and workflows.",
     links: ["CRM Integration", "Telephony Setup", "Webhook Configuration"],
     href: "/docs",
-    color: "text-orange-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Package,
@@ -81,7 +81,7 @@ const docCategories = [
       "Official client libraries for popular programming languages.",
     links: ["Node.js", "Python", "REST"],
     href: "/docs",
-    color: "text-emerald-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Brain,
@@ -90,7 +90,7 @@ const docCategories = [
       "Learn how to upload, manage, and optimise your AI agent's knowledge.",
     links: [],
     href: "/guide/knowledge-base",
-    color: "text-teal-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Shield,
@@ -98,7 +98,7 @@ const docCategories = [
     description: "GDPR, DNC, and data protection documentation.",
     links: [],
     href: "/guide/compliance",
-    color: "text-blue-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 

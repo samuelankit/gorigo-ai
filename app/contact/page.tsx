@@ -192,7 +192,7 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card data-testid="card-contact-phone">
               <CardContent className="p-6">
-                <Phone className="h-5 w-5 text-teal-500 mb-4" />
+                <Phone className="h-5 w-5 text-[#2DD4A8] mb-4" />
                 <h3 className="font-medium text-base mb-2">Call Our AI Demo Line</h3>
                 <p className="text-sm text-foreground" data-testid="text-phone-number">
                   +44 (0) 000 000 0000
@@ -205,7 +205,7 @@ export default function ContactPage() {
 
             <Card data-testid="card-contact-address">
               <CardContent className="p-6">
-                <MapPin className="h-5 w-5 text-rose-500 mb-4" />
+                <MapPin className="h-5 w-5 text-[#2DD4A8] mb-4" />
                 <h3 className="font-medium text-base mb-2">Our Office</h3>
                 <p className="text-sm text-foreground" data-testid="text-address-country">
                   United Kingdom
@@ -220,7 +220,7 @@ export default function ContactPage() {
 
             <Card data-testid="card-contact-response">
               <CardContent className="p-6">
-                <Clock className="h-5 w-5 text-amber-500 mb-4" />
+                <Clock className="h-5 w-5 text-[#2DD4A8] mb-4" />
                 <h3 className="font-medium text-base mb-2">Response Times</h3>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">

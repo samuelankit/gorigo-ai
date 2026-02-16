@@ -44,21 +44,21 @@ const values = [
     title: "Automation First",
     description:
       "We believe the best call centre is one that runs itself. Every feature is designed to reduce manual work.",
-    color: "text-emerald-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Eye,
     title: "Transparency",
     description:
       "No hidden fees, no lock-in contracts, no surprises. Talk-time billing means you only pay for what you use.",
-    color: "text-sky-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Shield,
     title: "Compliance by Design",
     description:
       "From DNC registries to PII redaction, compliance isn\u2019t an afterthought \u2014 it\u2019s built into the platform from the ground up.",
-    color: "text-blue-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 
@@ -68,21 +68,21 @@ const partners = [
     title: "Business Partners",
     description:
       "White-label GoRigo under your own brand. Resell AI call centre capabilities to your clients with full platform access and dedicated support.",
-    color: "text-violet-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Users,
     title: "Direct-to-Consumer",
     description:
       "Sign up directly and deploy your own AI agents. Ideal for businesses that want to manage their call centre operations in-house.",
-    color: "text-pink-500",
+    color: "text-[#2DD4A8]",
   },
   {
     icon: Handshake,
     title: "Affiliate Partners",
     description:
       "Refer businesses to GoRigo and earn commissions on every customer you bring to the platform. Simple tracking, transparent payouts.",
-    color: "text-amber-500",
+    color: "text-[#2DD4A8]",
   },
 ];
 

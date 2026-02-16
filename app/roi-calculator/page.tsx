@@ -563,7 +563,7 @@ export default function RoiCalculatorPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card data-testid="card-cost-ai">
               <CardContent className="p-6">
-                <Cpu className="h-5 w-5 text-emerald-500 mb-3" />
+                <Cpu className="h-5 w-5 text-[#2DD4A8] mb-3" />
                 <h3 className="font-medium mb-1">AI Processing</h3>
                 <p className="text-xs text-muted-foreground mb-3">
                   OpenAI Whisper (STT) + GPT-4o-mini (LLM) + TTS for natural voice
@@ -576,7 +576,7 @@ export default function RoiCalculatorPage() {
 
             <Card data-testid="card-cost-telephony">
               <CardContent className="p-6">
-                <Headphones className="h-5 w-5 text-blue-500 mb-3" />
+                <Headphones className="h-5 w-5 text-[#2DD4A8] mb-3" />
                 <h3 className="font-medium mb-1">Telephony</h3>
                 <p className="text-xs text-muted-foreground mb-3">
                   Twilio Programmable Voice for UK inbound and outbound calls
@@ -589,7 +589,7 @@ export default function RoiCalculatorPage() {
 
             <Card data-testid="card-cost-azure">
               <CardContent className="p-6">
-                <Server className="h-5 w-5 text-violet-500 mb-3" />
+                <Server className="h-5 w-5 text-[#2DD4A8] mb-3" />
                 <h3 className="font-medium mb-1">Azure UK South</h3>
                 <p className="text-xs text-muted-foreground mb-3">
                   Container Apps (2 vCPU, 4 GB) + PostgreSQL Flexible Server + bandwidth
@@ -602,7 +602,7 @@ export default function RoiCalculatorPage() {
 
             <Card data-testid="card-cost-platform">
               <CardContent className="p-6">
-                <Calculator className="h-5 w-5 text-amber-500 mb-3" />
+                <Calculator className="h-5 w-5 text-[#2DD4A8] mb-3" />
                 <h3 className="font-medium mb-1">GoRigo Platform</h3>
                 <p className="text-xs text-muted-foreground mb-3">
                   Orchestration, analytics, compliance, agent management, and support

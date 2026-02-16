@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/json-ld";
 import { CustomIcon } from "@/components/ui/custom-icon";
+import { SiApple, SiGoogleplay } from "react-icons/si";
 import {
   Bot,
   Shield,
@@ -259,14 +260,10 @@ export default function HomePage() {
 
               <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
                 <Link href="/register">
-                  <Button size="lg" data-testid="button-hero-get-started">
-                    Get the App
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/register">
-                  <Button variant="outline" size="lg" data-testid="button-hero-web-app">
-                    Use Web App
+                  <Button size="lg" data-testid="button-hero-download-app">
+                    <SiApple className="h-4 w-4" />
+                    <SiGoogleplay className="h-4 w-4" />
+                    Download the App Today
                   </Button>
                 </Link>
                 <Link href="/contact">
@@ -275,9 +272,6 @@ export default function HomePage() {
                   </Button>
                 </Link>
               </div>
-              <p className="mt-4 text-xs text-muted-foreground" data-testid="text-hero-platforms">
-                Available on iOS, Android, and Web
-              </p>
           </div>
         </div>
       </section>

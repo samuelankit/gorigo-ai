@@ -4,6 +4,7 @@ import { useEffect, useState, createContext, useContext, useCallback } from "rea
 import { AppState } from "react-native";
 import { Colors } from "../constants/theme";
 import { isAuthenticated, logout as apiLogout } from "../lib/api";
+import { BrandingProvider } from "../lib/branding-context";
 
 interface AuthContextType {
   loggedIn: boolean | null;
@@ -66,20 +67,22 @@ export default function RootLayout() {
   useProtectedRoute(loggedIn);
 
   return (
-    <AuthContext.Provider value={{ loggedIn, signOut, refreshAuth }}>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: Colors.background },
-          headerTintColor: Colors.text,
-          headerTitleStyle: { fontWeight: "600" },
-          contentStyle: { backgroundColor: Colors.background },
-          headerShadowVisible: false,
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-      </Stack>
-    </AuthContext.Provider>
+    <BrandingProvider>
+      <AuthContext.Provider value={{ loggedIn, signOut, refreshAuth }}>
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: Colors.background },
+            headerTintColor: Colors.text,
+            headerTitleStyle: { fontWeight: "600" },
+            contentStyle: { backgroundColor: Colors.background },
+            headerShadowVisible: false,
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+        </Stack>
+      </AuthContext.Provider>
+    </BrandingProvider>
   );
 }

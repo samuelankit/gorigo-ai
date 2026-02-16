@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
 import { getAdminStats, getWallet } from "../../lib/api";
+import { useBranding } from "../../lib/branding-context";
 
 interface StatCard {
   label: string;
@@ -13,6 +14,7 @@ interface StatCard {
 }
 
 export default function DashboardScreen() {
+  const { branding } = useBranding();
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<StatCard[]>([
     { label: "Total Calls", value: "0", icon: "call", color: Colors.primary },
@@ -67,7 +69,7 @@ export default function DashboardScreen() {
       }
     >
       <View style={styles.header}>
-        <Text style={styles.greeting}>GoRigo</Text>
+        <Text style={styles.greeting}>{branding?.brandName || "GoRigo"}</Text>
         <Text style={styles.subtitle}>Your AI Call Center</Text>
       </View>
 

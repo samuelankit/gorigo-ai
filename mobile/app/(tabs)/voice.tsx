@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
 import { sendVoiceCommand } from "../../lib/api";
+import { useBranding } from "../../lib/branding-context";
 
 interface Message {
   id: string;
@@ -12,6 +13,8 @@ interface Message {
 }
 
 export default function VoiceScreen() {
+  const { branding } = useBranding();
+  const activeColor = branding?.brandColor || Colors.primary;
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -145,7 +148,7 @@ export default function VoiceScreen() {
             editable={!isProcessing}
           />
           <Pressable
-            style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+            style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled, { backgroundColor: inputText.trim() ? activeColor : undefined }]}
             onPress={() => handleSend()}
             disabled={!inputText.trim() || isProcessing}
           >
@@ -160,7 +163,7 @@ export default function VoiceScreen() {
         <View style={styles.micContainer}>
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
             <Pressable
-              style={[styles.micButton, isListening && styles.micButtonActive]}
+              style={[styles.micButton, isListening && styles.micButtonActive, !isListening && { backgroundColor: activeColor }]}
               onPress={toggleListening}
               disabled={isProcessing}
             >

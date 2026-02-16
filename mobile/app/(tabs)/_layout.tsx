@@ -1,12 +1,16 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
+import { useBranding } from "../../lib/branding-context";
 
 export default function TabLayout() {
+  const { branding } = useBranding();
+  const activeColor = branding?.brandColor || Colors.primary;
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
+        tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: Colors.textTertiary,
         tabBarStyle: {
           backgroundColor: Colors.background,

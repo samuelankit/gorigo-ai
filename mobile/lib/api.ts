@@ -105,3 +105,36 @@ export async function sendVoiceCommand(command: string) {
     body: { message: command },
   });
 }
+
+export interface BrandingConfig {
+  brandName: string;
+  brandLogo: string | null;
+  brandColor: string;
+}
+
+export async function fetchBranding(partnerCode: string): Promise<BrandingConfig> {
+  const response = await fetch(`${API_BASE}/api/branding/${encodeURIComponent(partnerCode)}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Invalid partner code" }));
+    throw new Error(error.error || "Partner not found");
+  }
+  return response.json();
+}
+
+export async function saveBranding(branding: BrandingConfig & { partnerCode: string }) {
+  await AsyncStorage.setItem("gorigo-branding", JSON.stringify(branding));
+}
+
+export async function loadBranding(): Promise<(BrandingConfig & { partnerCode: string }) | null> {
+  const data = await AsyncStorage.getItem("gorigo-branding");
+  if (!data) return null;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return null;
+  }
+}
+
+export async function clearBranding() {
+  await AsyncStorage.removeItem("gorigo-branding");
+}

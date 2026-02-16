@@ -24,8 +24,11 @@ const updatePartnerSchema = z.object({
   canCreateResellers: z.boolean().optional(),
   canSellDirect: z.boolean().optional(),
   canCreateAffiliates: z.boolean().optional(),
+  partnerCode: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_-]+$/).optional(),
+  brandingLogo: z.string().url().nullable().optional(),
   brandingPrimaryColor: z.string().optional(),
   brandingCompanyName: z.string().optional(),
+  mobileAppEnabled: z.boolean().optional(),
   customDomain: z.string().optional(),
   notes: z.string().max(5000).nullable().optional(),
 }).strict();

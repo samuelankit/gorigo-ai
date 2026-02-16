@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from "react-nati
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
 import { useAuth } from "../_layout";
+import { useBranding } from "../../lib/branding-context";
 
 interface SettingsItem {
   icon: keyof typeof Ionicons.glyphMap;
@@ -12,6 +13,7 @@ interface SettingsItem {
 }
 
 export default function SettingsScreen() {
+  const { branding } = useBranding();
   const { signOut } = useAuth();
 
   const handleLogout = () => {
@@ -32,7 +34,7 @@ export default function SettingsScreen() {
       title: "Account",
       items: [
         { icon: "person-outline", label: "Profile", value: "SuperAdmin" },
-        { icon: "business-outline", label: "Organization", value: "GoRigo" },
+        { icon: "business-outline", label: "Organization", value: branding?.brandName || "GoRigo" },
         { icon: "wallet-outline", label: "Billing & Wallet" },
       ],
     },
@@ -110,7 +112,7 @@ export default function SettingsScreen() {
         </View>
       ))}
 
-      <Text style={styles.footer}>GoRigo AI Call Center v1.0.0</Text>
+      <Text style={styles.footer}>{branding?.brandName || "GoRigo"} AI Call Center v1.0.0</Text>
     </ScrollView>
   );
 }

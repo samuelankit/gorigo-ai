@@ -64,8 +64,11 @@ interface Partner {
   canSellDirect: boolean;
   canCreateAffiliates: boolean;
   customDomain?: string;
+  partnerCode?: string;
+  brandingLogo?: string;
   brandingPrimaryColor?: string;
   brandingCompanyName?: string;
+  mobileAppEnabled?: boolean;
   notes?: string;
 }
 
@@ -139,6 +142,9 @@ export default function EditPartnerPage() {
   const [canCreateResellers, setCanCreateResellers] = useState(false);
   const [canSellDirect, setCanSellDirect] = useState(false);
   const [canCreateAffiliates, setCanCreateAffiliates] = useState(false);
+  const [partnerCode, setPartnerCode] = useState("");
+  const [brandingLogo, setBrandingLogo] = useState("");
+  const [mobileAppEnabled, setMobileAppEnabled] = useState(false);
 
   const [resellers, setResellers] = useState<Reseller[]>([]);
   const [resellersLoading, setResellersLoading] = useState(false);
@@ -186,6 +192,9 @@ export default function EditPartnerPage() {
           setCanCreateResellers(!!p.canCreateResellers);
           setCanSellDirect(!!p.canSellDirect);
           setCanCreateAffiliates(!!p.canCreateAffiliates);
+          setPartnerCode(p.partnerCode || "");
+          setBrandingLogo(p.brandingLogo || "");
+          setMobileAppEnabled(!!p.mobileAppEnabled);
         }
         if (d?.clientCount !== undefined) setClientCount(d.clientCount);
         if (d?.clients) setClients(d.clients);
@@ -256,8 +265,11 @@ export default function EditPartnerPage() {
         status,
         whitelabelMode,
         customDomain: customDomain || undefined,
+        partnerCode: partnerCode || undefined,
+        brandingLogo: brandingLogo || undefined,
         brandingPrimaryColor: brandingPrimaryColor || undefined,
         brandingCompanyName: brandingCompanyName || undefined,
+        mobileAppEnabled,
         notes: notes || undefined,
         canCreateResellers,
         canSellDirect,
@@ -629,6 +641,50 @@ export default function EditPartnerPage() {
               <Label htmlFor="edit-notes">Notes</Label>
               <Textarea id="edit-notes" value={notes} onChange={(e) => setNotes(e.target.value)} data-testid="input-edit-notes" />
             </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Mobile App Branding</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Mobile App Enabled</p>
+                    <p className="text-xs text-muted-foreground">Allow this partner's clients to use the GoRigo mobile app with their branding</p>
+                  </div>
+                  <Switch
+                    checked={mobileAppEnabled}
+                    onCheckedChange={setMobileAppEnabled}
+                    data-testid="switch-mobile-app-enabled"
+                  />
+                </div>
+                {mobileAppEnabled && (
+                  <div className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-partner-code">Partner Code</Label>
+                      <Input
+                        id="edit-partner-code"
+                        value={partnerCode}
+                        onChange={(e) => setPartnerCode(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ""))}
+                        placeholder="e.g. ACME-CALL"
+                        data-testid="input-edit-partner-code"
+                      />
+                      <p className="text-xs text-muted-foreground">Clients enter this code in the GoRigo app to load your branding. Letters, numbers, hyphens and underscores only.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-branding-logo">Logo URL</Label>
+                      <Input
+                        id="edit-branding-logo"
+                        value={brandingLogo}
+                        onChange={(e) => setBrandingLogo(e.target.value)}
+                        placeholder="https://example.com/logo.png"
+                        data-testid="input-edit-branding-logo"
+                      />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>

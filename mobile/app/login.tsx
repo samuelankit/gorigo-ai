@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator, Image } from "react-native";
 import { useState } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Spacing, FontSize, BorderRadius } from "../constants/theme";
-import { login } from "../lib/api";
+import { login, fetchBranding } from "../lib/api";
+import { useBranding } from "../lib/branding-context";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -11,6 +12,33 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [partnerCodeInput, setPartnerCodeInput] = useState("");
+  const [showPartnerCode, setShowPartnerCode] = useState(false);
+  const [brandingLoading, setBrandingLoading] = useState(false);
+
+  const { branding, isWhiteLabel, setBranding, resetBranding } = useBranding();
+  const activeColor = branding?.brandColor || Colors.primary;
+
+  const handleApplyPartnerCode = async () => {
+    if (!partnerCodeInput.trim()) return;
+
+    setBrandingLoading(true);
+    setError("");
+    try {
+      const config = await fetchBranding(partnerCodeInput.trim());
+      await setBranding(config, partnerCodeInput.trim());
+      setShowPartnerCode(false);
+    } catch (err: any) {
+      setError(err.message || "Invalid partner code");
+    } finally {
+      setBrandingLoading(false);
+    }
+  };
+
+  const handleClearBranding = async () => {
+    await resetBranding();
+    setPartnerCodeInput("");
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -38,10 +66,18 @@ export default function LoginScreen() {
     >
       <View style={styles.inner}>
         <View style={styles.logo}>
-          <View style={styles.logoCircle}>
-            <Ionicons name="call" size={32} color={Colors.white} />
-          </View>
-          <Text style={styles.logoText}>GoRigo</Text>
+          {branding?.brandLogo ? (
+            <Image
+              source={{ uri: branding.brandLogo }}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={[styles.logoCircle, { backgroundColor: activeColor }]}>
+              <Ionicons name="call" size={32} color={Colors.white} />
+            </View>
+          )}
+          <Text style={[styles.logoText, { color: activeColor }]}>{branding?.brandName || "GoRigo"}</Text>
           <Text style={styles.tagline}>AI Call Center</Text>
         </View>
 
@@ -94,7 +130,7 @@ export default function LoginScreen() {
           </View>
 
           <Pressable
-            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+            style={[styles.loginButton, { backgroundColor: activeColor }, loading && styles.loginButtonDisabled]}
             onPress={handleLogin}
             disabled={loading}
           >
@@ -106,8 +142,55 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
+        <View style={styles.partnerSection}>
+          {isWhiteLabel ? (
+            <Pressable onPress={handleClearBranding}>
+              <Text style={[styles.partnerToggle, { color: activeColor }]}>
+                Using partner branding — tap to reset
+              </Text>
+            </Pressable>
+          ) : showPartnerCode ? (
+            <View style={styles.partnerCodeBox}>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="business-outline" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={partnerCodeInput}
+                  onChangeText={setPartnerCodeInput}
+                  placeholder="Enter partner code"
+                  placeholderTextColor={Colors.textTertiary}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+              <View style={styles.partnerActions}>
+                <Pressable
+                  style={[styles.partnerApplyButton, { backgroundColor: activeColor }, brandingLoading && styles.loginButtonDisabled]}
+                  onPress={handleApplyPartnerCode}
+                  disabled={brandingLoading}
+                >
+                  {brandingLoading ? (
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  ) : (
+                    <Text style={styles.partnerApplyText}>Apply</Text>
+                  )}
+                </Pressable>
+                <Pressable onPress={() => { setShowPartnerCode(false); setError(""); }}>
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <Pressable onPress={() => setShowPartnerCode(true)}>
+              <Text style={[styles.partnerToggle, { color: activeColor }]}>
+                Have a partner code?
+              </Text>
+            </Pressable>
+          )}
+        </View>
+
         <Text style={styles.footer}>
-          GoRigo AI Call Center v1.0.0
+          {branding?.brandName || "GoRigo"} AI Call Center v1.0.0
         </Text>
       </View>
     </KeyboardAvoidingView>
@@ -132,15 +215,19 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primary,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: Spacing.md,
+  },
+  logoImage: {
+    width: 72,
+    height: 72,
+    borderRadius: BorderRadius.md,
     marginBottom: Spacing.md,
   },
   logoText: {
     fontSize: FontSize.hero,
     fontWeight: "700",
-    color: Colors.primary,
     letterSpacing: -0.5,
   },
   tagline: {
@@ -196,7 +283,6 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   loginButton: {
-    backgroundColor: Colors.primary,
     height: 52,
     borderRadius: BorderRadius.md,
     alignItems: "center",
@@ -210,6 +296,40 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     fontWeight: "600",
     color: Colors.white,
+  },
+  partnerSection: {
+    marginTop: Spacing.lg,
+    alignItems: "center",
+  },
+  partnerToggle: {
+    fontSize: FontSize.sm,
+    fontWeight: "500",
+  },
+  partnerCodeBox: {
+    width: "100%",
+    gap: Spacing.sm,
+  },
+  partnerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    justifyContent: "center",
+  },
+  partnerApplyButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  partnerApplyText: {
+    fontSize: FontSize.sm,
+    fontWeight: "600",
+    color: Colors.white,
+  },
+  cancelText: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
   },
   footer: {
     textAlign: "center",

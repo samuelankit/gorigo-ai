@@ -47,6 +47,7 @@ import {
   Eye,
   Handshake,
   Clock,
+  Smartphone,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -92,6 +93,7 @@ const included = [
   { icon: RefreshCw, title: "Regular platform updates", description: "Automatic updates with no downtime for your clients", color: "text-emerald-500" },
   { icon: Rocket, title: "White-glove onboarding", description: "Hands-on setup assistance for your first 3 clients", color: "text-rose-500" },
   { icon: FileText, title: "Marketing templates", description: "Ready-to-use sales collateral and pitch materials", color: "text-amber-500" },
+  { icon: Smartphone, title: "Branded mobile app", description: "Your clients get a mobile app with your logo, name, and colours via a simple partner code at login", color: "text-green-500" },
 ];
 
 const benefits = [
@@ -297,6 +299,11 @@ const faqs = [
     answer:
       "You can start with one client, but the partner agreement requires a minimum of 3 clients within the first 6 months. We recommend starting with a pilot client to learn the platform, then scaling from there.",
   },
+  {
+    question: "Do my clients get a branded mobile app?",
+    answer:
+      "Yes. When you enable the mobile app in your partner settings, your clients can download the GoRigo app and enter your unique partner code at login. The app automatically loads your branding, including your logo, name, and brand colour. Your clients see your brand throughout the entire mobile experience.",
+  },
 ];
 
 export default function WhitelabelPage() {
@@ -353,7 +360,8 @@ export default function WhitelabelPage() {
             data-testid="text-hero-intro"
           >
             Whitelabelling means taking GoRigo's AI call centre technology and
-            putting your own brand on it. Your logo, your colours, your domain.
+            putting your own brand on it. Your logo, your colours, your domain,
+            and even a branded mobile app for your clients.
             Your clients use the platform under your name and never know that
             GoRigo exists behind the scenes. You sell it, you support it, you
             set the price, and you keep the margin.

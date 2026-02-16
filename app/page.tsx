@@ -259,15 +259,8 @@ export default function HomePage() {
               </div>
 
               <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
-                <Link href="/register">
-                  <Button size="lg" data-testid="button-hero-download-app">
-                    <SiApple className="h-4 w-4" />
-                    <SiGoogleplay className="h-4 w-4" />
-                    Download the App Today
-                  </Button>
-                </Link>
                 <Link href="/contact">
-                  <Button variant="outline" size="lg" data-testid="button-hero-demo">
+                  <Button size="lg" data-testid="button-hero-demo">
                     Book a Demo
                   </Button>
                 </Link>
@@ -276,7 +269,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-24 bg-muted/30" data-testid="section-download-app">
+      <section className="pt-8 pb-24 bg-white dark:bg-background" data-testid="section-download-app">
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
             <div className="flex-1 text-center md:text-left">

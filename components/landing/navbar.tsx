@@ -14,7 +14,6 @@ const navLinks = [
   { label: "ROI Calculator", href: "/roi-calculator" },
   { label: "Trust", href: "/trust" },
   { label: "Partners", href: "/partners" },
-  { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
   { label: "Guide", href: "/guide" },
 ];

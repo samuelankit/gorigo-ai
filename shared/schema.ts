@@ -27,6 +27,7 @@ export const sessions = pgTable("sessions", {
   userAgent: text("user_agent"),
   lastSeenAt: timestamp("last_seen_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
+  activeOrgId: integer("active_org_id"),
 }, (table) => [
   index("idx_sessions_user_id").on(table.userId),
   index("idx_sessions_token").on(table.token),

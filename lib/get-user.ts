@@ -17,6 +17,7 @@ export interface AuthResult {
   globalRole: string;
   authMethod?: "session" | "api_key";
   apiKeyScopes?: string[];
+  sessionId?: number;
 }
 
 function hashApiKey(key: string): string {
@@ -122,18 +123,35 @@ export async function getAuthenticatedUser(): Promise<AuthResult | null> {
     .execute()
     .catch(() => {});
 
-  const [membership] = await db
-    .select()
-    .from(orgMembers)
-    .where(eq(orgMembers.userId, user.id))
-    .limit(1);
+  let orgId: number | null = null;
+  let role: string | null = null;
 
-  const orgId = membership?.orgId ?? null;
-  const role = membership?.role ?? null;
+  if (session.activeOrgId) {
+    const [activeMembership] = await db
+      .select()
+      .from(orgMembers)
+      .where(and(eq(orgMembers.userId, user.id), eq(orgMembers.orgId, session.activeOrgId)))
+      .limit(1);
+    if (activeMembership) {
+      orgId = activeMembership.orgId;
+      role = activeMembership.role;
+    }
+  }
+
+  if (!orgId) {
+    const [membership] = await db
+      .select()
+      .from(orgMembers)
+      .where(eq(orgMembers.userId, user.id))
+      .limit(1);
+    orgId = membership?.orgId ?? null;
+    role = membership?.role ?? null;
+  }
+
   const isDemo = user.isDemo ?? false;
   const globalRole = user.globalRole ?? "CLIENT";
 
-  return { user, orgId, role, isDemo, globalRole, authMethod: "session" };
+  return { user, orgId, role, isDemo, globalRole, authMethod: "session", sessionId: session.id };
 }
 
 export function requireWriteAccess(auth: { isDemo: boolean } | null) {

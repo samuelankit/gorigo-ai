@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
         expiresAt,
         ipAddress: ip,
         userAgent,
+        activeOrgId: newOrg.id,
       });
 
       return { newUser, token, verificationToken };

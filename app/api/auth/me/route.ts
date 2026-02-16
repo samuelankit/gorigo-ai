@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { db } from "@/lib/db";
-import { orgs } from "@/shared/schema";
+import { orgs, orgMembers } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { authLimiter } from "@/lib/rate-limit";
 
@@ -25,7 +25,26 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ user: userWithoutPassword, orgId: auth.orgId, role: auth.role, org }, { status: 200 });
+    const memberships = await db
+      .select({
+        orgId: orgMembers.orgId,
+        role: orgMembers.role,
+        orgName: orgs.name,
+        deploymentModel: orgs.deploymentModel,
+      })
+      .from(orgMembers)
+      .innerJoin(orgs, eq(orgMembers.orgId, orgs.id))
+      .where(eq(orgMembers.userId, auth.user.id));
+
+    const businesses = memberships.map((m) => ({
+      id: m.orgId,
+      name: m.orgName,
+      role: m.role,
+      deploymentModel: m.deploymentModel,
+      isActive: m.orgId === auth.orgId,
+    }));
+
+    return NextResponse.json({ user: userWithoutPassword, orgId: auth.orgId, role: auth.role, org, businesses }, { status: 200 });
   } catch (error) {
     console.error("Auth me error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

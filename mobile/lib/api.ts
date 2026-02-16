@@ -138,3 +138,22 @@ export async function loadBranding(): Promise<(BrandingConfig & { partnerCode: s
 export async function clearBranding() {
   await AsyncStorage.removeItem("gorigo-branding");
 }
+
+export async function getBusinesses() {
+  const data = await getUser();
+  return data.businesses || [];
+}
+
+export async function switchBusiness(businessId: number) {
+  return apiRequest("/api/businesses/switch", {
+    method: "POST",
+    body: { businessId },
+  });
+}
+
+export async function createBusiness(name: string, deploymentModel: string) {
+  return apiRequest("/api/businesses", {
+    method: "POST",
+    body: { name, deploymentModel },
+  });
+}

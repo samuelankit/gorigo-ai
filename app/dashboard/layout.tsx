@@ -7,6 +7,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/dashboard/notification-bell";
+import { BusinessSwitcher } from "@/components/dashboard/business-switcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -26,6 +27,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [businesses, setBusinesses] = useState<{ id: number; name: string; role: string; deploymentModel: string; isActive: boolean }[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [emailVerified, setEmailVerified] = useState(true);
   const [resendingVerification, setResendingVerification] = useState(false);
@@ -43,8 +45,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (data?.user) {
           setAuthenticated(true);
           setEmail(data.user.email || "");
-          setBusinessName(data.user.businessName || "");
+          setBusinessName(data.org?.name || data.user.businessName || "");
           setEmailVerified(data.user.emailVerified !== false);
+          if (data.businesses) {
+            setBusinesses(data.businesses);
+          }
         }
         setLoading(false);
       })
@@ -113,6 +118,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             data-testid="header-command-bar"
           >
             <SidebarTrigger data-testid="button-sidebar-toggle" />
+
+            <BusinessSwitcher
+              businesses={businesses}
+              currentBusinessName={businessName}
+              onSwitch={(bizId) => {
+                const biz = businesses.find((b) => b.id === bizId);
+                if (biz) {
+                  setBusinessName(biz.name);
+                  setBusinesses((prev) => prev.map((b) => ({ ...b, isActive: b.id === bizId })));
+                }
+              }}
+            />
 
             <form onSubmit={handleSearch} className="flex-1 max-w-md">
               <div className="relative">

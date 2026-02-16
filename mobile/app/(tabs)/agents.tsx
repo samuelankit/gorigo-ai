@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
 import { getAgents } from "../../lib/api";
+import { useBranding } from "../../lib/branding-context";
 
 interface Agent {
   id: string;
@@ -14,6 +15,10 @@ interface Agent {
 }
 
 export default function AgentsScreen() {
+  const { branding } = useBranding();
+  const activeColor = branding?.brandColor || Colors.primary;
+  const activeLightColor = branding?.brandColor ? `${branding.brandColor}20` : Colors.primaryLight;
+
   const [agents, setAgents] = useState<Agent[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -40,8 +45,8 @@ export default function AgentsScreen() {
 
   const renderAgent = ({ item }: { item: Agent }) => (
     <Pressable style={styles.agentCard}>
-      <View style={styles.avatar}>
-        <Ionicons name="person" size={20} color={Colors.primary} />
+      <View style={[styles.avatar, { backgroundColor: activeLightColor }]}>
+        <Ionicons name="person" size={20} color={activeColor} />
       </View>
       <View style={styles.agentInfo}>
         <Text style={styles.agentName}>{item.name}</Text>
@@ -55,14 +60,14 @@ export default function AgentsScreen() {
             styles.statusBadge,
             {
               backgroundColor:
-                item.status === "active" ? Colors.primaryLight : Colors.borderLight,
+                item.status === "active" ? activeLightColor : Colors.borderLight,
             },
           ]}
         >
           <Text
             style={[
               styles.statusBadgeText,
-              { color: item.status === "active" ? Colors.primary : Colors.textTertiary },
+              { color: item.status === "active" ? activeColor : Colors.textTertiary },
             ]}
           >
             {item.status || "inactive"}
@@ -88,7 +93,7 @@ export default function AgentsScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={activeColor} />
         }
         ListEmptyComponent={!loading ? EmptyState : null}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -116,7 +121,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
   },

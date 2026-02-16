@@ -63,3 +63,9 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - 2026-02-16: Updated public chatbot system prompt to align with Rigo brand and drive voice/mobile conversion
 - 2026-02-16: Created mobile app foundation with Expo Router, 5-tab navigation, voice command interface, and login screen
 - 2026-02-16: Updated web landing page hero to mobile-first messaging ("Run Your AI Call Center From Your Phone")
+- 2026-02-16: Implemented white-label mobile app branding system — partners table extended with partnerCode, brandingLogo, mobileAppEnabled fields
+- 2026-02-16: Created public branding API (GET /api/branding/:partnerCode) for mobile app to fetch partner branding without auth
+- 2026-02-16: Added Mobile App Branding config section to admin partner detail page
+- 2026-02-16: Mobile login screen now supports partner code entry with dynamic branding via BrandingProvider context
+- 2026-02-16: All 5 mobile tabs use dynamic branding (brand name, color, logo) from useBranding hook
+- 2026-02-16: Updated white-label partner page with branded mobile app feature card and FAQ

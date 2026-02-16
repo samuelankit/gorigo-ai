@@ -9,18 +9,7 @@ import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/
 import { CustomIcon } from "@/components/ui/custom-icon";
 import { SiApple, SiGoogleplay } from "react-icons/si";
 import {
-  Bot,
-  Shield,
-  BarChart3,
-  Globe,
-  Zap,
   ArrowRight,
-  Building2,
-  ShoppingCart,
-  Plane,
-  Stethoscope,
-  Landmark,
-  Wifi,
   Activity,
   MessageCircle,
 } from "lucide-react";
@@ -96,32 +85,32 @@ const steps = [
 
 const industries = [
   {
-    icon: Landmark,
+    customIcon: "industry-financial",
     title: "Financial Services",
     description: "Account enquiries, loan applications, fraud alerts, and appointment scheduling.",
   },
   {
-    icon: ShoppingCart,
+    customIcon: "industry-retail",
     title: "Retail & E-Commerce",
     description: "Order tracking, returns processing, product recommendations, and customer support.",
   },
   {
-    icon: Wifi,
+    customIcon: "industry-telecoms",
     title: "Telecoms",
     description: "Service activations, billing enquiries, technical support, and plan upgrades.",
   },
   {
-    icon: Plane,
+    customIcon: "industry-travel",
     title: "Travel & Hospitality",
     description: "Booking management, itinerary changes, loyalty programmes, and concierge services.",
   },
   {
-    icon: Stethoscope,
+    customIcon: "industry-healthcare",
     title: "Healthcare",
     description: "Appointment booking, prescription refills, patient follow-ups, and triage assistance.",
   },
   {
-    icon: Building2,
+    customIcon: "industry-professional",
     title: "Professional Services",
     description: "Client intake, scheduling, follow-ups, and after-hours reception for law firms, agencies, and consultancies.",
   },
@@ -391,7 +380,7 @@ export default function HomePage() {
                 data-testid={`card-industry-${industry.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <div className="flex items-center justify-center w-10 h-10 rounded-md bg-[#2DD4A8]/10 mb-4">
-                  <industry.icon className="h-5 w-5 text-[#2DD4A8]" />
+                  <CustomIcon name={industry.customIcon} size={22} className="text-[#2DD4A8]" />
                 </div>
                 <h3 className="font-medium mb-1.5">{industry.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">

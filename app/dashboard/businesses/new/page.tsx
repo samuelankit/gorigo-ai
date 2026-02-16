@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,21 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Building2, Check, Loader2 } from "lucide-react";
 
-const deploymentOptions = [
+const allDeploymentOptions = [
   {
     value: "managed",
+    key: "managed" as const,
     title: "Managed",
     description: "We run everything. You focus on your business.",
     rate: "From 12p/min",
   },
   {
     value: "byok",
+    key: "byok" as const,
     title: "Bring Your Own Key",
     description: "Use your own API keys for maximum cost control.",
     rate: "From 5p/min",
   },
   {
     value: "self-hosted",
+    key: "selfHosted" as const,
     title: "Self-Hosted",
     description: "Deploy on your own infrastructure with full control.",
     rate: "From 8p/min",
@@ -32,9 +35,26 @@ const deploymentOptions = [
 export default function NewBusinessPage() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [deploymentModel, setDeploymentModel] = useState("managed");
+  const [deploymentModel, setDeploymentModel] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [deploymentOptions, setDeploymentOptions] = useState(allDeploymentOptions);
+
+  useEffect(() => {
+    fetch("/api/public/deployment-packages")
+      .then((r) => r.json())
+      .then((data: Record<string, boolean>) => {
+        const filtered = allDeploymentOptions.filter((opt) => data[opt.key]);
+        setDeploymentOptions(filtered);
+        if (filtered.length > 0 && !filtered.some((f) => f.value === deploymentModel)) {
+          setDeploymentModel(filtered[0].value);
+        }
+      })
+      .catch(() => {
+        setDeploymentOptions(allDeploymentOptions);
+        if (!deploymentModel) setDeploymentModel("byok");
+      });
+  }, []);
 
   const handleCreate = async () => {
     if (!name.trim()) {

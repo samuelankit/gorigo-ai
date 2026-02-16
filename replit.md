@@ -78,3 +78,7 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - 2026-02-16: Added mobile API client functions for business listing, switching, and creation
 - 2026-02-16: Created CustomIcon component (`components/ui/custom-icon.tsx`) — inline SVG renderer with caching, currentColor support, and error fallback for custom voice/AI icon packs
 - 2026-02-16: Integrated 32 custom voice/AI SVG icons (`public/icons/`) throughout the platform: landing page features & how-it-works, dashboard sidebar navigation, all 6 feature detail pages, and 5 dashboard pages (agent, calls, knowledge, analytics, main)
+- 2026-02-16: Implemented deployment package visibility system — admin can toggle Managed, BYOK, Self-Hosted packages on/off via Settings > Packages tab
+- 2026-02-16: Created public API (GET /api/public/deployment-packages) returning enabled package flags without auth
+- 2026-02-16: Pricing page dynamically filters visible packages and comparison table columns based on admin settings
+- 2026-02-16: New business creation page filters deployment options based on enabled packages

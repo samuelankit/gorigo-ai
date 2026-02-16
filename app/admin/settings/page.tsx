@@ -107,6 +107,9 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   default_language: "en-GB",
   business_hours_start: "09:00",
   business_hours_end: "18:00",
+  deployment_package_managed_enabled: "false",
+  deployment_package_byok_enabled: "true",
+  deployment_package_self_hosted_enabled: "false",
 };
 
 function SettingInput({ label, description, settingKey, type = "text", settings, onChange, testId, min, max, step, placeholder }: {
@@ -416,6 +419,10 @@ export default function PlatformSettingsPage() {
           <TabsTrigger value="branding" data-testid="tab-branding">
             <Palette className="h-3.5 w-3.5 mr-1.5" />
             Branding
+          </TabsTrigger>
+          <TabsTrigger value="packages" data-testid="tab-packages">
+            <Settings className="h-3.5 w-3.5 mr-1.5" />
+            Packages
           </TabsTrigger>
         </TabsList>
 
@@ -850,6 +857,73 @@ export default function PlatformSettingsPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="packages" className="space-y-4 mt-4">
+          <div>
+            <h2 className="text-lg font-semibold">Deployment Package Visibility</h2>
+            <p className="text-sm text-muted-foreground">Control which deployment packages are visible on the pricing page and available during registration.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Managed</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">Fully managed AI call centre. You handle everything for the client.</p>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="pkg-managed" className="text-sm">Visible on site</Label>
+                  <Switch
+                    id="pkg-managed"
+                    data-testid="switch-package-managed"
+                    checked={settings.deployment_package_managed_enabled === "true"}
+                    onCheckedChange={(checked) => updateSetting("deployment_package_managed_enabled", checked ? "true" : "false")}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Bring Your Own Key (BYOK)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">Clients use their own API keys with your platform for cost control.</p>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="pkg-byok" className="text-sm">Visible on site</Label>
+                  <Switch
+                    id="pkg-byok"
+                    data-testid="switch-package-byok"
+                    checked={settings.deployment_package_byok_enabled === "true"}
+                    onCheckedChange={(checked) => updateSetting("deployment_package_byok_enabled", checked ? "true" : "false")}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Self-Hosted</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">Deploy on client infrastructure with full data sovereignty.</p>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="pkg-self-hosted" className="text-sm">Visible on site</Label>
+                  <Switch
+                    id="pkg-self-hosted"
+                    data-testid="switch-package-self-hosted"
+                    checked={settings.deployment_package_self_hosted_enabled === "true"}
+                    onCheckedChange={(checked) => updateSetting("deployment_package_self_hosted_enabled", checked ? "true" : "false")}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">
+                Disabled packages will be hidden from the public pricing page and will not appear as options during business registration. The Enterprise / Custom package is always visible as a contact option.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

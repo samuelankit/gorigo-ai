@@ -44,6 +44,7 @@ import {
   Megaphone,
   GraduationCap,
   MessageCircle,
+  MessageSquare,
   Globe,
   Activity,
 } from "lucide-react";
@@ -56,6 +57,7 @@ const overviewItems = [
   { title: "Calls", url: "/admin/calls", icon: PhoneCall },
   { title: "Operations", url: "/admin/operations", icon: Activity },
   { title: "Chat Leads", url: "/admin/chats", icon: MessageCircle },
+  { title: "Conversations", url: "/admin/conversations", icon: MessageSquare },
 ];
 
 const managementItems = [

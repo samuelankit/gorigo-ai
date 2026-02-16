@@ -1236,20 +1236,44 @@ export const chatLeads = pgTable("chat_leads", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const publicConversations = pgTable("public_conversations", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull().unique(),
+  channel: text("channel").notNull().default("chatbot"),
+  status: text("status").notNull().default("active"),
+  messageCount: integer("message_count").notNull().default(0),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  leadId: integer("lead_id").references(() => chatLeads.id, { onDelete: "set null" }),
+  startedAt: timestamp("started_at").defaultNow(),
+  endedAt: timestamp("ended_at"),
+  duration: integer("duration"),
+}, (table) => [
+  index("idx_public_conversations_session_id").on(table.sessionId),
+  index("idx_public_conversations_channel").on(table.channel),
+  index("idx_public_conversations_started_at").on(table.startedAt),
+]);
+
 export const chatMessages = pgTable("chat_messages", {
   id: serial("id").primaryKey(),
-  leadId: integer("lead_id").notNull().references(() => chatLeads.id, { onDelete: "cascade" }),
+  leadId: integer("lead_id").references(() => chatLeads.id, { onDelete: "cascade" }),
+  conversationId: integer("conversation_id").references(() => publicConversations.id, { onDelete: "cascade" }),
   role: text("role").notNull(),
   content: text("content").notNull(),
   rating: integer("rating"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_chat_messages_lead_id").on(table.leadId),
+  index("idx_chat_messages_conversation_id").on(table.conversationId),
 ]);
 
 export const insertChatLeadSchema = createInsertSchema(chatLeads).omit({ id: true, createdAt: true, totalMessages: true, lastMessageAt: true });
 export type InsertChatLead = z.infer<typeof insertChatLeadSchema>;
 export type ChatLead = typeof chatLeads.$inferSelect;
+
+export const insertPublicConversationSchema = createInsertSchema(publicConversations).omit({ id: true, startedAt: true, messageCount: true });
+export type InsertPublicConversation = z.infer<typeof insertPublicConversationSchema>;
+export type PublicConversation = typeof publicConversations.$inferSelect;
 
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;

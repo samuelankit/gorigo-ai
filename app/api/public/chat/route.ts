@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { openai } from "@/replit_integrations/chat/client-openai";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { db } from "@/server/db";
-import { chatLeads, chatMessages } from "@/shared/schema";
+import { chatLeads, chatMessages, publicConversations } from "@/shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { detectPromptInjection, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 
@@ -99,6 +99,39 @@ function sanitizeHistory(
   return safe;
 }
 
+async function getOrCreateConversation(
+  sessionId: string,
+  channel: string,
+  ip: string,
+  userAgent: string | null
+): Promise<number | null> {
+  try {
+    const [existing] = await db
+      .select({ id: publicConversations.id })
+      .from(publicConversations)
+      .where(eq(publicConversations.sessionId, sessionId))
+      .limit(1);
+
+    if (existing) return existing.id;
+
+    const [created] = await db
+      .insert(publicConversations)
+      .values({
+        sessionId,
+        channel: channel === "web_call" ? "web_call" : "chatbot",
+        status: "active",
+        ipAddress: ip,
+        userAgent: userAgent?.slice(0, 500) || null,
+      })
+      .returning({ id: publicConversations.id });
+
+    return created?.id ?? null;
+  } catch (err) {
+    console.error("[Chat] Failed to create conversation:", err);
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     if (!checkPublicRateLimit(req)) {
@@ -112,10 +145,12 @@ export async function POST(req: NextRequest) {
     if (sizeError) return sizeError;
 
     const body = await req.json();
-    const { message, history, leadId } = body as {
+    const { message, history, leadId, sessionId, channel } = body as {
       message: string;
       history?: unknown;
       leadId?: number;
+      sessionId?: string;
+      channel?: string;
     };
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {
@@ -149,23 +184,47 @@ export async function POST(req: NextRequest) {
     }
 
     const safeHistory = sanitizeHistory(history);
+    const ip = getIp(req);
+    const userAgent = req.headers.get("user-agent");
 
-    if (leadId && typeof leadId === "number") {
-      try {
-        await db.insert(chatMessages).values({
-          leadId,
-          role: "user",
-          content: message.trim(),
-        });
-        await db
-          .update(chatLeads)
-          .set({
-            totalMessages: sql`${chatLeads.totalMessages} + 1`,
-            lastMessageAt: sql`CURRENT_TIMESTAMP`,
-          })
-          .where(eq(chatLeads.id, leadId));
-      } catch {}
+    let conversationId: number | null = null;
+    if (sessionId && typeof sessionId === "string" && sessionId.length <= 100) {
+      conversationId = await getOrCreateConversation(sessionId, channel || "chatbot", ip, userAgent);
     }
+
+    const storeUserMsg = async () => {
+      const msgValues: Record<string, unknown> = {
+        role: "user",
+        content: message.trim(),
+      };
+      if (conversationId) msgValues.conversationId = conversationId;
+      if (leadId && typeof leadId === "number") msgValues.leadId = leadId;
+
+      if (conversationId || (leadId && typeof leadId === "number")) {
+        try {
+          await db.insert(chatMessages).values(msgValues as typeof chatMessages.$inferInsert);
+          if (conversationId) {
+            await db
+              .update(publicConversations)
+              .set({ messageCount: sql`${publicConversations.messageCount} + 1` })
+              .where(eq(publicConversations.id, conversationId));
+          }
+          if (leadId && typeof leadId === "number") {
+            await db
+              .update(chatLeads)
+              .set({
+                totalMessages: sql`${chatLeads.totalMessages} + 1`,
+                lastMessageAt: sql`CURRENT_TIMESTAMP`,
+              })
+              .where(eq(chatLeads.id, leadId));
+          }
+        } catch (err) {
+          console.error("[Chat] Failed to store user message:", err);
+        }
+      }
+    };
+
+    await storeUserMsg();
 
     const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
       { role: "system", content: SYSTEM_PROMPT },
@@ -201,21 +260,34 @@ export async function POST(req: NextRequest) {
           );
           controller.close();
 
-          if (leadId && typeof leadId === "number" && fullResponse) {
+          if (fullResponse && (conversationId || (leadId && typeof leadId === "number"))) {
             try {
-              await db.insert(chatMessages).values({
-                leadId,
+              const assistantValues: Record<string, unknown> = {
                 role: "assistant",
                 content: fullResponse,
-              });
-              await db
-                .update(chatLeads)
-                .set({
-                  totalMessages: sql`${chatLeads.totalMessages} + 1`,
-                  lastMessageAt: sql`CURRENT_TIMESTAMP`,
-                })
-                .where(eq(chatLeads.id, leadId));
-            } catch {}
+              };
+              if (conversationId) assistantValues.conversationId = conversationId;
+              if (leadId && typeof leadId === "number") assistantValues.leadId = leadId;
+
+              await db.insert(chatMessages).values(assistantValues as typeof chatMessages.$inferInsert);
+              if (conversationId) {
+                await db
+                  .update(publicConversations)
+                  .set({ messageCount: sql`${publicConversations.messageCount} + 1` })
+                  .where(eq(publicConversations.id, conversationId));
+              }
+              if (leadId && typeof leadId === "number") {
+                await db
+                  .update(chatLeads)
+                  .set({
+                    totalMessages: sql`${chatLeads.totalMessages} + 1`,
+                    lastMessageAt: sql`CURRENT_TIMESTAMP`,
+                  })
+                  .where(eq(chatLeads.id, leadId));
+              }
+            } catch (err) {
+              console.error("[Chat] Failed to store assistant message:", err);
+            }
           }
         } catch {
           controller.enqueue(

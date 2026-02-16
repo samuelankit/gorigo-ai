@@ -51,7 +51,7 @@ function playNotificationSound() {
   } catch {}
 }
 
-function saveSession(leadId: number, name: string, email: string, messages: ChatMsg[]) {
+function saveSession(leadId: number, name: string, email: string, messages: ChatMsg[], sessionId: string) {
   try {
     sessionStorage.setItem(
       SESSION_KEY,
@@ -59,6 +59,7 @@ function saveSession(leadId: number, name: string, email: string, messages: Chat
         leadId,
         name,
         email,
+        sessionId,
         messages: messages.map((m) => ({
           ...m,
           timestamp: m.timestamp.toISOString(),
@@ -72,6 +73,7 @@ function loadSession(): {
   leadId: number;
   name: string;
   email: string;
+  sessionId?: string;
   messages: ChatMsg[];
 } | null {
   try {
@@ -104,6 +106,7 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const sessionIdRef = useRef(`cb_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
 
   useEffect(() => {
     const session = loadSession();
@@ -113,6 +116,9 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
       setEmail(session.email);
       setMessages(session.messages);
       setStep("chat");
+      if (session.sessionId) {
+        sessionIdRef.current = session.sessionId;
+      }
     }
   }, []);
 
@@ -132,7 +138,7 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     if (leadId && name && step === "chat") {
-      saveSession(leadId, name, email, messages);
+      saveSession(leadId, name, email, messages, sessionIdRef.current);
     }
   }, [messages, leadId, name, email, step]);
 
@@ -157,7 +163,7 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/public/chat/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmedName, email: trimmedEmail }),
+        body: JSON.stringify({ name: trimmedName, email: trimmedEmail, sessionId: sessionIdRef.current }),
       });
 
       if (!res.ok) {
@@ -210,7 +216,7 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/public/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed, history, leadId }),
+        body: JSON.stringify({ message: trimmed, history, leadId, sessionId: sessionIdRef.current, channel: "chatbot" }),
       });
 
       if (!res.ok) {

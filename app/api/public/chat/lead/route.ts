@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db";
-import { chatLeads, chatMessages } from "@/shared/schema";
+import { chatLeads, chatMessages, publicConversations } from "@/shared/schema";
 import { checkBodySize } from "@/lib/body-limit";
+import { eq } from "drizzle-orm";
 
 const leadRateStore = new Map<string, { count: number; resetAt: number }>();
 const LEAD_WINDOW_MS = 300_000;
@@ -13,7 +14,9 @@ const cleanupInterval = setInterval(() => {
     if (entry.resetAt <= now) leadRateStore.delete(key);
   });
 }, 60_000);
-if (cleanupInterval.unref) cleanupInterval.unref();
+if (typeof cleanupInterval === "object" && cleanupInterval && "unref" in cleanupInterval) {
+  (cleanupInterval as NodeJS.Timeout).unref();
+}
 
 function checkLeadRateLimit(req: NextRequest): boolean {
   const cfIp = req.headers.get("cf-connecting-ip");
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
     if (sizeError) return sizeError;
 
     const body = await req.json();
-    const { name, email } = body as { name: string; email: string };
+    const { name, email, sessionId } = body as { name: string; email: string; sessionId?: string };
 
     if (!name || typeof name !== "string" || name.trim().length < 1 || name.trim().length > 100) {
       return NextResponse.json({ error: "Valid name is required" }, { status: 400 });
@@ -73,6 +76,17 @@ export async function POST(req: NextRequest) {
       totalMessages: 1,
       lastMessageAt: new Date(),
     }).returning();
+
+    if (sessionId && typeof sessionId === "string" && sessionId.length <= 100) {
+      try {
+        await db
+          .update(publicConversations)
+          .set({ leadId: lead.id })
+          .where(eq(publicConversations.sessionId, sessionId));
+      } catch (err) {
+        console.error("[Lead] Failed to link conversation:", err);
+      }
+    }
 
     const greeting = `Hi ${name.trim().split(" ")[0]}! I'm GoRigo, your AI assistant. How can I help you today?`;
 

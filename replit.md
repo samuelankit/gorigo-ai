@@ -85,3 +85,9 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - 2026-02-16: Built browser-based Web Call system — WebCallModal component with phone-call UI (connecting/active/ended phases), Web Speech API for STT, speechSynthesis for TTS, live transcript, waveform animations, call timer, keyboard fallback for non-Chrome browsers, 5-min call limit, tab visibility handling, post-call lead capture
 - 2026-02-16: Created WebCallButton client component for hero section — "Call from Browser" CTA shown on desktop (sm+), phone CTA shown on mobile only
 - 2026-02-16: Web call reuses existing /api/public/chat endpoint (no new backend needed) with streaming responses, conversation history
+- 2026-02-16: Built conversation tracking system — `publicConversations` table records every web call and chatbot session with sessionId, channel, status, duration, messageCount, IP, user agent, and lead linkage
+- 2026-02-16: Updated `/api/public/chat` to auto-create conversation records on first message; added `/api/public/chat/end` to finalize conversations with duration
+- 2026-02-16: WebCallModal and ChatWidget both generate unique sessionIds, pass channel (web_call/chatbot) with each message, and persist sessionId in sessionStorage for continuity
+- 2026-02-16: Lead capture now links conversations to leads when contact info is submitted (both web call post-call and chatbot pre-chat)
+- 2026-02-16: Built admin Conversations page (`/admin/conversations`) — stats cards, channel/status filters, paginated table, click-to-expand inline transcript viewer
+- 2026-02-16: Added stale conversation auto-cleanup to background jobs — conversations active for 30+ minutes auto-end

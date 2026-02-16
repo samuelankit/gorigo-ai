@@ -98,6 +98,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
   const abortRef = useRef<AbortController | null>(null);
   const phaseRef = useRef<CallPhase>("idle");
   const endCallCalledRef = useRef(false);
+  const sessionIdRef = useRef(`wc_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
 
   const TIME_LIMIT_SECONDS = 300;
 
@@ -163,6 +164,8 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
         body: JSON.stringify({
           message: userText,
           history: historyRef.current.slice(-10),
+          sessionId: sessionIdRef.current,
+          channel: "web_call",
         }),
         signal: abortRef.current.signal,
       });
@@ -381,7 +384,16 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
     setIsProcessing(false);
     setCurrentInterim("");
     setTimeLimitWarning(false);
-  }, []);
+
+    fetch("/api/public/chat/end", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: sessionIdRef.current,
+        duration: callDuration,
+      }),
+    }).catch(() => {});
+  }, [callDuration]);
 
   useEffect(() => {
     if (callDuration === TIME_LIMIT_SECONDS - 30 && phase === "active") {
@@ -447,7 +459,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
       const res = await fetch("/api/public/chat/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmedName, email: trimmedEmail }),
+        body: JSON.stringify({ name: trimmedName, email: trimmedEmail, sessionId: sessionIdRef.current }),
       });
       if (!res.ok) {
         const data = await res.json();

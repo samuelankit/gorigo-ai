@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { sessions, responseCache, knowledgeDocuments, jobs } from "@/shared/schema";
+import { sessions, responseCache, knowledgeDocuments, jobs, publicConversations } from "@/shared/schema";
 import { lt, eq, and, sql } from "drizzle-orm";
 import { retryFailedDistributions } from "@/lib/distribution";
 
@@ -60,12 +60,28 @@ export async function retryFailedDocuments(): Promise<number> {
   return retried;
 }
 
-export async function runAllCleanupJobs(): Promise<{ sessions: number; cache: number; documents: number; distributions: { total: number; resolved: number } }> {
-  const [sessions, cache, documents, distributions] = await Promise.allSettled([
+export async function cleanupStaleConversations(): Promise<number> {
+  const cutoff = new Date(Date.now() - 30 * 60 * 1000);
+  const result = await db
+    .update(publicConversations)
+    .set({ status: "ended", endedAt: new Date() })
+    .where(
+      and(
+        eq(publicConversations.status, "active"),
+        lt(publicConversations.startedAt, cutoff)
+      )
+    )
+    .returning({ id: publicConversations.id });
+  return result.length;
+}
+
+export async function runAllCleanupJobs(): Promise<{ sessions: number; cache: number; documents: number; distributions: { total: number; resolved: number }; staleConversations: number }> {
+  const [sessions, cache, documents, distributions, staleConversations] = await Promise.allSettled([
     cleanupExpiredSessions(),
     cleanupExpiredCache(),
     retryFailedDocuments(),
     retryFailedDistributions(),
+    cleanupStaleConversations(),
   ]);
 
   return {
@@ -73,6 +89,7 @@ export async function runAllCleanupJobs(): Promise<{ sessions: number; cache: nu
     cache: cache.status === "fulfilled" ? cache.value : 0,
     documents: documents.status === "fulfilled" ? documents.value : 0,
     distributions: distributions.status === "fulfilled" ? distributions.value : { total: 0, resolved: 0 },
+    staleConversations: staleConversations.status === "fulfilled" ? staleConversations.value : 0,
   };
 }
 
@@ -83,7 +100,7 @@ export function startPeriodicCleanup(intervalMs: number = 5 * 60 * 1000) {
   cleanupInterval = setInterval(async () => {
     try {
       const result = await runAllCleanupJobs();
-      if (result.sessions > 0 || result.cache > 0 || result.documents > 0 || result.distributions.total > 0) {
+      if (result.sessions > 0 || result.cache > 0 || result.documents > 0 || result.distributions.total > 0 || result.staleConversations > 0) {
         console.log("[Cleanup]", JSON.stringify(result));
       }
     } catch (err) {

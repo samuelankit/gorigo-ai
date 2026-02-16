@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_3" data-name="Layer 3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <rect x="10" y="94" width="480" height="384" rx="48" ry="48" fill="currentColor" stroke-width="0"/>
+  <path d="M311.4,22h-122.81c-20.66,0-39,13.22-45.54,32.82l-13.06,39.18h240l-13.06-39.18c-6.53-19.6-24.88-32.82-45.54-32.82Z" fill="currentColor" stroke-width="0"/>
+  <circle cx="250" cy="286" r="132" fill="currentColor" stroke-width="0"/>
+  <circle cx="250" cy="286" r="96" fill="currentColor" stroke-width="0"/>
+</svg>

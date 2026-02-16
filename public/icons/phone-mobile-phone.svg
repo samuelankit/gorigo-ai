@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_3" data-name="Layer 3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <rect x="106" y="10" width="288" height="480" rx="48" ry="48" fill="currentColor" stroke-width="0"/>
+  <rect x="46" y="142" width="408" height="216" rx="12" ry="12" transform="translate(500 0) rotate(90)" fill="currentColor" stroke-width="0"/>
+  <path d="M298,43.91h-96l18.89,17.11c3.29,2.98,7.57,4.63,12.01,4.63h34.21c4.44,0,8.72-1.65,12.01-4.63l18.89-17.11Z" fill="currentColor" stroke-width="0"/>
+</svg>

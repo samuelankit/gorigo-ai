@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_3" data-name="Layer 3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <rect x="70" y="10" width="408" height="480" rx="48" ry="48" fill="currentColor" stroke-width="0"/>
+  <path d="M351.96,272.02c-4.86-4.86-12.74-4.86-17.6,0l-9.05,9.05c-3.99,3.99-7.79,8.21-10.74,13.01-5.41,8.79-21.75,24.37-59.39-13.26-37.64-37.64-22.05-53.98-13.26-59.39,4.8-2.95,9.03-6.76,13.01-10.74l9.05-9.05c4.86-4.86,4.86-12.74,0-17.6l-26.39-26.39c-4.86-4.86-12.74-4.86-17.6,0l-17.6,17.6s-41.1,64.47,26.39,131.97c67.5,67.5,131.97,26.39,131.97,26.39l17.6-17.6c4.86-4.86,4.86-12.74,0-17.6l-26.39-26.39Z" fill="currentColor" stroke-width="0"/>
+  <rect x="22" y="106" width="96" height="72" rx="24" ry="24" fill="currentColor" stroke-width="0"/>
+  <rect x="22" y="322" width="96" height="72" rx="24" ry="24" fill="currentColor" stroke-width="0"/>
+</svg>

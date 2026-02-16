@@ -20,10 +20,9 @@ import {
   Stethoscope,
   Landmark,
   Wifi,
-  Headphones,
   Activity,
-  Lock,
   Smartphone,
+  MessageCircle,
 } from "lucide-react";
 
 const features = [
@@ -193,14 +192,6 @@ const packages = [
   },
 ];
 
-const capabilities = [
-  { icon: Headphones, label: "Voice AI", color: "text-teal-500" },
-  { icon: Globe, label: "20 Countries", color: "text-amber-500" },
-  { icon: Shield, label: "Compliance", color: "text-blue-500" },
-  { icon: BarChart3, label: "Analytics", color: "text-violet-500" },
-  { icon: Lock, label: "Data Security", color: "text-rose-500" },
-  { icon: Zap, label: "Pay-Per-Use", color: "text-emerald-500" },
-];
 
 export default function HomePage() {
   return (
@@ -218,23 +209,7 @@ export default function HomePage() {
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
         <div className="relative max-w-6xl mx-auto px-6 pt-28 pb-24">
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-            <div className="w-full lg:w-1/2 flex-shrink-0">
-              <div className="rounded-md overflow-hidden border border-border/50 shadow-lg">
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                  className="w-full h-auto object-cover"
-                  data-testid="video-hero-intro"
-                >
-                  <source src="/intro-video.mp4" type="video/mp4" />
-                </video>
-              </div>
-            </div>
-            <div className="w-full lg:w-1/2 text-center lg:text-left">
+          <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
               <p
                 className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6"
                 data-testid="text-hero-label"
@@ -257,7 +232,32 @@ export default function HomePage() {
                 conversations. Manage everything by voice from your mobile.
                 No subscriptions — pay only for talk time.
               </p>
-              <div className="mt-8 flex items-center justify-center lg:justify-start gap-3 flex-wrap">
+
+              <div className="mt-10 flex flex-col sm:flex-row items-center gap-4" data-testid="hero-talk-to-ai">
+                <a
+                  href="tel:+440000000000"
+                  className="group flex items-center gap-3 rounded-md border-2 border-primary bg-primary/5 px-6 py-4 hover-elevate"
+                  data-testid="link-hero-call-ai"
+                >
+                  <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40" />
+                    <Phone className="relative h-5 w-5 text-primary-foreground" />
+                  </span>
+                  <span className="flex flex-col items-start">
+                    <span className="text-base font-semibold tracking-tight">Talk to Our AI</span>
+                    <span className="text-sm text-muted-foreground">+44 (0) 000 000 0000</span>
+                  </span>
+                </a>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-primary" data-testid="text-hero-availability">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
+                  </span>
+                  Available 24/7
+                </span>
+              </div>
+
+              <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
                 <Link href="/register">
                   <Button size="lg" data-testid="button-hero-get-started">
                     Get the App
@@ -278,27 +278,10 @@ export default function HomePage() {
               <p className="mt-4 text-xs text-muted-foreground" data-testid="text-hero-platforms">
                 Available on iOS, Android, and Web
               </p>
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-border/50" data-testid="section-stats">
-        <div className="max-w-5xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between gap-6 flex-wrap">
-            {capabilities.map((cap) => (
-              <div
-                key={cap.label}
-                className="flex items-center gap-2 text-muted-foreground"
-                data-testid={`stat-${cap.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
-              >
-                <cap.icon className={`h-4 w-4 ${cap.color}`} />
-                <span className="text-sm">{cap.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <section className="py-24" data-testid="section-features" id="features">
         <div className="max-w-6xl mx-auto px-6">

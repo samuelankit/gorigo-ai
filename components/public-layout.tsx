@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useTheme } from "@/components/theme-provider";
+import { FloatingChat } from "@/components/landing/floating-chat";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   const { setForceLightMode } = useTheme();
@@ -13,5 +14,10 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     };
   }, [setForceLightMode]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <FloatingChat />
+    </>
+  );
 }

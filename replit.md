@@ -56,5 +56,10 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - **Mobile**: Expo SDK 54, expo-router, expo-speech, expo-av, expo-haptics.
 
 ## Recent Changes
+- 2026-02-16: Redesigned hero section — removed intro video, added prominent "Talk to Our AI" CTA with phone number and "Available 24/7" indicator
+- 2026-02-16: Removed bottom ribbon (CallCtaBar) and capabilities ribbon from landing page
+- 2026-02-16: Added floating GoRigo chatbot icon on all public pages (opens existing ChatWidget)
+- 2026-02-16: Updated Rigo agent system prompt with 5-stage end-to-end strategy: First Call → Onboarding → Training → Support → Wallet Recharge
+- 2026-02-16: Updated public chatbot system prompt to align with Rigo brand and drive voice/mobile conversion
 - 2026-02-16: Created mobile app foundation with Expo Router, 5-tab navigation, voice command interface, and login screen
 - 2026-02-16: Updated web landing page hero to mobile-first messaging ("Run Your AI Call Center From Your Phone")

@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No AI agent configured for your organization" }, { status: 400 });
     }
 
-    let capturedRate: { deploymentModel: string; ratePerMinute: number } = { deploymentModel: "managed", ratePerMinute: 0.15 };
+    let capturedRate: { deploymentModel: string; ratePerMinute: number } = { deploymentModel: "managed", ratePerMinute: 0.20 };
     try {
       const resolved = await resolveRate(auth.orgId, "voice_outbound");
       capturedRate = { deploymentModel: resolved.deploymentModel, ratePerMinute: resolved.ratePerMinute };

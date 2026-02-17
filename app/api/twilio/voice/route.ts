@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     const callDirection = direction?.includes("inbound") ? "inbound" : "outbound";
     const rateCategory: UsageCategory = callDirection === "outbound" ? "voice_outbound" : "voice_inbound";
-    let capturedRate: { deploymentModel: string; ratePerMinute: number } = { deploymentModel: "managed", ratePerMinute: 0.15 };
+    let capturedRate: { deploymentModel: string; ratePerMinute: number } = { deploymentModel: "managed", ratePerMinute: 0.20 };
     try {
       const resolved = await resolveRate(orgId, rateCategory);
       capturedRate = { deploymentModel: resolved.deploymentModel, ratePerMinute: resolved.ratePerMinute };

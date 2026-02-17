@@ -98,7 +98,7 @@ export async function seedPlatformKnowledge(): Promise<{ seeded: number; skipped
       seeded++;
     }
 
-    console.log(`[Platform Knowledge] Seeded ${seeded} knowledge chunks`);
+    console.info(`[Platform Knowledge] Seeded ${seeded} knowledge chunks`);
     return { seeded, skipped: false };
   } catch (err) {
     console.error("[Platform Knowledge] Seeding failed:", err);

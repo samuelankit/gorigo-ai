@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest) {
     const [updated] = await db
       .update(callLogs)
       .set(updateData)
-      .where(eq(callLogs.id, callId))
+      .where(and(eq(callLogs.id, callId), eq(callLogs.orgId, auth.orgId)))
       .returning();
 
     return NextResponse.json({ call: updated });

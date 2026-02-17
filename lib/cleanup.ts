@@ -101,7 +101,7 @@ export function startPeriodicCleanup(intervalMs: number = 5 * 60 * 1000) {
     try {
       const result = await runAllCleanupJobs();
       if (result.sessions > 0 || result.cache > 0 || result.documents > 0 || result.distributions.total > 0 || result.staleConversations > 0) {
-        console.log("[Cleanup]", JSON.stringify(result));
+        console.info("[Cleanup]", JSON.stringify(result));
       }
     } catch (err) {
       console.error("[Cleanup] Error:", err);

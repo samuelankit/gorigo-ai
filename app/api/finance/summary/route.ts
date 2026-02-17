@@ -3,9 +3,15 @@ import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { finInvoices, finBills, finWorkspaces, finJournalLines, finJournalEntries, finAccounts } from "@/shared/schema";
 import { eq, and, sql, gte, lt, inArray } from "drizzle-orm";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

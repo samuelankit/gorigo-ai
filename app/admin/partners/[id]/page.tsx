@@ -203,7 +203,7 @@ export default function EditPartnerPage() {
         if (d?.totalRevenue !== undefined) setTotalRevenue(d.totalRevenue);
         if (d?.parentPartnerName) setParentPartnerName(d.parentPartnerName);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch partner details failed:", error); })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -215,7 +215,7 @@ export default function EditPartnerPage() {
         if (d?.resellers) setResellers(d.resellers);
         else if (Array.isArray(d)) setResellers(d);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch partner resellers failed:", error); })
       .finally(() => setResellersLoading(false));
   };
 
@@ -227,7 +227,7 @@ export default function EditPartnerPage() {
         if (d?.clients) setClients(d.clients);
         else setClients([]);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch partner clients failed:", error); })
       .finally(() => setClientsLoading(false));
   };
 
@@ -240,7 +240,7 @@ export default function EditPartnerPage() {
         else if (Array.isArray(d)) setAffiliates(d);
         else setAffiliates([]);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch partner affiliates failed:", error); })
       .finally(() => setAffiliatesLoading(false));
   };
 
@@ -290,7 +290,8 @@ export default function EditPartnerPage() {
       if (res.ok) {
         router.push("/admin/partners");
       }
-    } catch {
+    } catch (error) {
+      console.error("Update partner details failed:", error);
     } finally {
       setSaving(false);
     }
@@ -323,7 +324,8 @@ export default function EditPartnerPage() {
         resetResellerForm();
         fetchResellers();
       }
-    } catch {
+    } catch (error) {
+      console.error("Create reseller failed:", error);
     } finally {
       setResellerSaving(false);
     }

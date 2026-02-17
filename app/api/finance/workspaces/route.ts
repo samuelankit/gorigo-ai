@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { finWorkspaces, finAccounts, finTaxCodes, finAuditLog } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { createWorkspaceSchema, getClientIp } from "@/lib/finance-validation";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 const PERSONAL_COA = [
   { code: "1000", name: "Cash/Bank", type: "asset" },
@@ -61,8 +62,13 @@ const DEFAULT_TAX_CODES = [
   { code: "EXEMPT", name: "Exempt", rate: 0, isDefault: false },
 ];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -78,6 +84,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

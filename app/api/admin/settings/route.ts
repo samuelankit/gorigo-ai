@@ -13,7 +13,7 @@ const adminSettingsSchema = z.object({
   settings: z.record(z.string(), z.any()),
 }).passthrough();
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser();
     const access = requireSuperAdmin(auth);

@@ -82,7 +82,7 @@ export async function DELETE(request: NextRequest) {
         await clearSessionCookie();
       }
 
-      logSessionEvent("sessions.invalidate_all", auth.user.id).catch(() => {});
+      logSessionEvent("sessions.invalidate_all", auth.user.id).catch((error) => { console.error("Log invalidate all sessions event failed:", error); });
 
       return NextResponse.json({ message: "All other sessions have been invalidated" });
     }
@@ -112,7 +112,7 @@ export async function DELETE(request: NextRequest) {
 
       await db.delete(sessions).where(eq(sessions.id, id));
 
-      logSessionEvent("session.revoked", auth.user.id, { sessionId: id }).catch(() => {});
+      logSessionEvent("session.revoked", auth.user.id, { sessionId: id }).catch((error) => { console.error("Log session revoked event failed:", error); });
 
       return NextResponse.json({ message: "Session revoked" });
     }

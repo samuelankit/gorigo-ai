@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
           ON CONFLICT (org_id, month) DO UPDATE
           SET minutes_used = usage_records.minutes_used + ${minutesUsed},
               call_count = usage_records.call_count + 1
-        `).catch(() => {});
+        `).catch((error) => { console.error("Update usage records failed:", error); });
 
         results.push({ index: i, category, durationSeconds, cost, status: "billed" });
       } catch (err) {

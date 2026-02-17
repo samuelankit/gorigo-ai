@@ -4,14 +4,20 @@ import { db } from "@/lib/db";
 import { orgs, orgMembers, agents, usageRecords, wallets, sessions } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 const createBusinessSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters").max(100),
   deploymentModel: z.enum(["managed", "byok", "self-hosted", "custom"]).default("managed"),
 });
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -47,6 +53,11 @@ export async function GET(_request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

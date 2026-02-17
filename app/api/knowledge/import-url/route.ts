@@ -4,6 +4,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { knowledgeLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance } from "@/lib/wallet";
+import { z } from "zod";
+
+const urlEntrySchema = z.union([
+  z.string().url(),
+  z.object({ url: z.string().url(), title: z.string().optional() }).strict(),
+]);
+
+const bodySchema = z.object({
+  urls: z.array(urlEntrySchema).min(1).max(10),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,19 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { urls } = body;
-
-    if (!urls || !Array.isArray(urls) || urls.length === 0) {
-      return NextResponse.json({ error: "At least one URL is required" }, { status: 400 });
-    }
-
-    if (urls.length > 10) {
-      return NextResponse.json({ error: "Maximum 10 URLs per batch" }, { status: 400 });
-    }
+    const parsed = bodySchema.parse(body);
 
     const results: { url: string; title: string; documentId?: number; status: string; error?: string }[] = [];
 
-    for (const entry of urls) {
+    for (const entry of parsed.urls) {
       const url = typeof entry === "string" ? entry : entry.url;
       const title = typeof entry === "string" ? extractTitleFromUrl(url) : (entry.title || extractTitleFromUrl(url));
 
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       results,
-      summary: { total: urls.length, success: successCount, errors: errorCount },
+      summary: { total: parsed.urls.length, success: successCount, errors: errorCount },
     });
   } catch (error) {
     console.error("Import audio URL error:", error);

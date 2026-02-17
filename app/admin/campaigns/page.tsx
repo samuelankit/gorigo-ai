@@ -157,7 +157,9 @@ export default function AdminCampaignsPage() {
         setTotal(data.total ?? 0);
         setStats(data.stats ?? null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch admin campaigns failed:", error);
+    } finally {
       setLoading(false);
     }
   }, [search, status, page]);

@@ -174,7 +174,7 @@ export default function OnboardingPage() {
           })));
         }
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch available countries failed:", error); });
   }, [router]);
 
   const addFaqEntry = () => {
@@ -236,7 +236,7 @@ export default function OnboardingPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ countries: selectedCountries }),
-        }).catch(() => {});
+        }).catch((error) => { console.error("Save international countries failed:", error); });
       }
 
       toast({ title: "Agent launched successfully", description: "Your AI agent is ready to go." });

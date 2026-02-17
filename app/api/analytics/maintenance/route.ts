@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 const RETENTION_DAYS = 90;
 
@@ -12,6 +13,11 @@ const maintenanceSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth || auth.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

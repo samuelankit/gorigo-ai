@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
     try {
       const auth = await getAuthenticatedUser();
       isSuperAdmin = auth?.globalRole === "SUPERADMIN";
-    } catch {}
+    } catch (error) {
+      console.error("Health check auth lookup failed:", error);
+    }
 
     if (isSuperAdmin) {
       const mem = process.memoryUsage();

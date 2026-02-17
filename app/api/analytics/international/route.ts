@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 const COUNTRY_NAMES: Record<string, string> = {
   GB: "United Kingdom", US: "United States", FR: "France", DE: "Germany",
@@ -20,6 +21,11 @@ const COUNTRY_CURRENCIES: Record<string, string> = {
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

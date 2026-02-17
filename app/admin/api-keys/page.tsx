@@ -113,7 +113,9 @@ export default function AdminApiKeysPage() {
         setTotal(data.total ?? 0);
         setStats(data.stats ?? null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch admin API keys failed:", error);
+    } finally {
       setLoading(false);
     }
   }, [search, status, page]);
@@ -131,7 +133,9 @@ export default function AdminApiKeysPage() {
         fetchKeys();
         setRevokeTarget(null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Revoke API key failed:", error);
+    } finally {
       setRevoking(false);
     }
   };

@@ -3,12 +3,18 @@ import { db } from "@/lib/db";
 import { campaigns, campaignContacts } from "@/shared/schema";
 import { eq, and, count, desc } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

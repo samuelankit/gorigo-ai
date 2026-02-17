@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { chatStorage } from "../../../../replit_integrations/chat/storage";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { settingsLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const patchBodySchema = z.object({
+  title: z.string().min(1).optional(),
+}).strict();
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const rl = await settingsLimiter(_req);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
   const auth = await getAuthenticatedUser();
   if (!auth) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -15,6 +25,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const rl = await settingsLimiter(_req);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
   const auth = await getAuthenticatedUser();
   if (!auth) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });

@@ -116,7 +116,8 @@ export default function AdminWalletsPage() {
         resetForm();
         fetchWallets();
       }
-    } catch {
+    } catch (error) {
+      console.error("Wallet top-up failed:", error);
     } finally {
       setSaving(false);
     }
@@ -167,7 +168,8 @@ export default function AdminWalletsPage() {
         setRefundDescription("");
         fetchWallets();
       }
-    } catch {
+    } catch (error) {
+      console.error("Wallet refund failed:", error);
     } finally {
       setRefundSaving(false);
     }

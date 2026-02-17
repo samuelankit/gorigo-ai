@@ -3,6 +3,11 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { isOnDNCList } from "@/lib/dnc";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { z } from "zod";
+
+const bodySchema = z.object({
+  phoneNumber: z.string().min(1),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,14 +24,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { phoneNumber } = await request.json();
-    if (!phoneNumber || typeof phoneNumber !== "string") {
-      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
-    }
+    const body = await request.json();
+    const parsed = bodySchema.parse(body);
 
-    const blocked = await isOnDNCList(auth.orgId, phoneNumber);
+    const blocked = await isOnDNCList(auth.orgId, parsed.phoneNumber);
 
-    return NextResponse.json({ phoneNumber, blocked });
+    return NextResponse.json({ phoneNumber: parsed.phoneNumber, blocked });
   } catch (error) {
     console.error("DNC check error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

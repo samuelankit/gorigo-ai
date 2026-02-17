@@ -2,6 +2,11 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { getLastAutomationResult, runAutomationCycle, isAutomationRunning } from "@/lib/automation-engine";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const bodySchema = z.object({
+  trigger: z.string().optional(),
+}).strict();
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +45,9 @@ export async function POST(request: NextRequest) {
     if (!access.allowed) {
       return NextResponse.json({ error: access.error }, { status: 403 });
     }
+
+    const body = await request.json().catch(() => ({}));
+    const parsed = bodySchema.parse(body);
 
     const result = await runAutomationCycle();
     return NextResponse.json({ result });

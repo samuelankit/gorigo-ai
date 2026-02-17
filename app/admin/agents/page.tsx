@@ -101,7 +101,9 @@ export default function AdminAgentsPage() {
         setTotal(data.total ?? 0);
         setStats(data.stats ?? null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch admin agents failed:", error);
+    } finally {
       setLoading(false);
     }
   }, [search, status, type, page]);

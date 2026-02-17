@@ -520,7 +520,7 @@ export default function CallsPage() {
       .then((d) => {
         if (d?.calls) setCalls(d.calls);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch calls failed:", error); })
       .finally(() => setLoading(false));
   };
 
@@ -555,7 +555,7 @@ export default function CallsPage() {
         .then((d) => {
           if (d && !d.error) setAnalytics(d);
         })
-        .catch(() => {})
+        .catch((error) => { console.error("Fetch call analytics failed:", error); })
         .finally(() => setAnalyticsLoading(false));
     }
   }, [showAnalytics]);

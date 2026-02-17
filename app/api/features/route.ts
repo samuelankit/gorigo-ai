@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { partners, partnerClients, affiliates } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 const FEATURE_MATRIX: Record<string, string[]> = {
   SUPERADMIN: [
@@ -27,6 +28,11 @@ const FEATURE_MATRIX: Record<string, string[]> = {
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

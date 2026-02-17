@@ -4,9 +4,14 @@ import { doNotCallList } from "@/shared/schema";
 import { eq, and, desc, like } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { addToDNCList, removeFromDNCList, normalizePhoneNumber } from "@/lib/dnc";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   try {
+    const rl = await settingsLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -38,6 +43,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const rl = await settingsLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -71,6 +80,10 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const rl = await settingsLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

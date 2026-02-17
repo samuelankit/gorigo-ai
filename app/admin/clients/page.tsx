@@ -122,7 +122,7 @@ export default function ClientsPage() {
           setPartners(list.map((p: { id: number; name: string }) => ({ id: p.id, name: p.name })));
         }
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch admin partners list failed:", error); });
   }, []);
 
   const handleSearch = () => {

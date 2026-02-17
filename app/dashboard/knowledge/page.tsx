@@ -64,7 +64,7 @@ export default function KnowledgePage() {
       .then((d) => {
         if (d?.documents) setDocuments(d.documents);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch knowledge documents failed:", error); })
       .finally(() => setLoading(false));
   };
 
@@ -74,7 +74,7 @@ export default function KnowledgePage() {
       .then((d) => {
         if (d && !d.error) setStats(d);
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch knowledge stats failed:", error); });
   };
 
   useEffect(() => {

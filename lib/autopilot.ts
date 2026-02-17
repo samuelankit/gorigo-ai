@@ -53,7 +53,7 @@ function addEvent(type: HealthEvent["type"], component: string, message: string)
   const logPrefix = `[Autopilot] [${type.toUpperCase()}] [${component}]`;
   if (type === "critical") console.error(`${logPrefix} ${message}`);
   else if (type === "warning") console.warn(`${logPrefix} ${message}`);
-  else console.log(`${logPrefix} ${message}`);
+  else console.info(`${logPrefix} ${message}`);
 }
 
 let lastDbStatus = true;
@@ -227,7 +227,7 @@ export function startAutopilotMonitor(intervalMs: number = 60_000): void {
 
   if (interval.unref) interval.unref();
 
-  runHealthCheck().then(r => { lastHealthReport = r; }).catch(() => {});
+  runHealthCheck().then(r => { lastHealthReport = r; }).catch((error) => { console.error("Autopilot health check failed:", error); });
 }
 
 export function stopAutopilotMonitor(): void {

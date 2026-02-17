@@ -13,6 +13,7 @@ import twilio from "twilio";
 import { detectOptOut, handleOptOut } from "@/lib/compliance-engine";
 import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
 import { validateLLMOutput, KNOWLEDGE_ONLY_REFUSAL_VOICE, RAG_GROUNDING_INSTRUCTION } from "@/lib/output-guard";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 const MAX_TURNS_BEFORE_CLOSE = 15;
 
@@ -36,6 +37,11 @@ function estimateTokens(text: string): number {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const { searchParams } = new URL(request.url);
     const callLogId = parseInt(searchParams.get("callLogId") || "0");
     const agentId = parseInt(searchParams.get("agentId") || "0");
@@ -265,7 +271,7 @@ Be conversational, warm, and concise. This is a voice call, so keep it natural.
         unitCost: llmCost.costGBP,
         totalCost: llmCost.costGBP,
         metadata: { source: "twilio_call", agentId, turnCount },
-      }).catch(() => {});
+      }).catch((error) => { console.error("Track Twilio call usage cost failed:", error); });
     }
 
     let responseText = aiResponse.content;
@@ -276,7 +282,9 @@ Be conversational, warm, and concise. This is a voice call, so keep it natural.
         const parsed = JSON.parse(jsonMatch[0]);
         responseText = parsed.assistantText || parsed.text || parsed.response || responseText;
       }
-    } catch {}
+    } catch (error) {
+      console.error("Parse AI response JSON failed:", error);
+    }
 
     responseText = responseText
       .replace(/\{[\s\S]*\}/g, "")
@@ -357,7 +365,9 @@ Be conversational, warm, and concise. This is a voice call, so keep it natural.
           orgId
         );
         handoffContext = contextSummary;
-      } catch {}
+      } catch (error) {
+        console.error("Generate handoff context summary failed:", error);
+      }
 
       if (handoffNumber) {
         vr.say({ voice: agentVoice, language: agentLanguage }, "I'm now transferring you to a team member. Please hold.");

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { webhooks, orgMembers } from "@/shared/schema";
+import { webhooks, orgs, orgMembers } from "@/shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { createNotification } from "@/lib/notifications";
@@ -18,10 +18,25 @@ const BASE_DELAY_MS = 1000;
 const MAX_FAILURES_BEFORE_DISABLE = 10;
 const DELIVERY_TIMEOUT_MS = 10000;
 
+export function computeWebhookSignature(payload: string, secret: string, timestamp: number): string {
+  const signedContent = `${timestamp}.${payload}`;
+  return crypto.createHmac("sha256", secret).update(signedContent).digest("hex");
+}
+
 function calculateBackoff(attempt: number): number {
   const delay = BASE_DELAY_MS * Math.pow(2, attempt);
   const jitter = Math.random() * delay * 0.3;
   return Math.min(delay + jitter, 30000);
+}
+
+async function getOrCreateOrgWebhookSecret(orgId: number): Promise<string> {
+  const [org] = await db.select({ webhookSecret: orgs.webhookSecret }).from(orgs).where(eq(orgs.id, orgId));
+  if (org?.webhookSecret) {
+    return org.webhookSecret;
+  }
+  const newSecret = crypto.randomBytes(32).toString("hex");
+  await db.update(orgs).set({ webhookSecret: newSecret }).where(eq(orgs.id, orgId));
+  return newSecret;
 }
 
 async function deliverWebhook(
@@ -77,6 +92,10 @@ export async function dispatchWebhook(orgId: number, event: WebhookEvent, payloa
         sql`${webhooks.events} @> ARRAY[${event}]::text[]`
       ));
 
+    if (activeWebhooks.length === 0) return;
+
+    const orgSecret = await getOrCreateOrgWebhookSecret(orgId);
+
     for (const webhook of activeWebhooks) {
       try {
         const body = JSON.stringify({
@@ -86,19 +105,16 @@ export async function dispatchWebhook(orgId: number, event: WebhookEvent, payloa
           data: payload,
         });
 
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = computeWebhookSignature(body, orgSecret, timestamp);
+
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
           "X-GoRigo-Event": event,
           "X-GoRigo-Delivery-Id": crypto.randomUUID(),
+          "X-GoRigo-Signature": signature,
+          "X-GoRigo-Timestamp": String(timestamp),
         };
-
-        if (webhook.secret) {
-          const signature = crypto
-            .createHmac("sha256", webhook.secret)
-            .update(body)
-            .digest("hex");
-          headers["X-GoRigo-Signature"] = signature;
-        }
 
         const result = await deliverWebhook(webhook.url, body, headers);
 
@@ -112,7 +128,7 @@ export async function dispatchWebhook(orgId: number, event: WebhookEvent, payloa
           const updates: Record<string, any> = { failureCount: newFailureCount };
           if (newFailureCount >= MAX_FAILURES_BEFORE_DISABLE) {
             updates.isActive = false;
-            notifyWebhookDisabled(orgId, webhook.url).catch(() => {});
+            notifyWebhookDisabled(orgId, webhook.url).catch((error) => { console.error("Notify webhook disabled failed:", error); });
           }
           await db.update(webhooks).set(updates).where(eq(webhooks.id, webhook.id));
         }
@@ -122,7 +138,7 @@ export async function dispatchWebhook(orgId: number, event: WebhookEvent, payloa
         const updates: Record<string, any> = { failureCount: newFailureCount };
         if (newFailureCount >= MAX_FAILURES_BEFORE_DISABLE) {
           updates.isActive = false;
-          notifyWebhookDisabled(orgId, webhook.url).catch(() => {});
+          notifyWebhookDisabled(orgId, webhook.url).catch((error) => { console.error("Notify webhook disabled failed:", error); });
         }
         await db.update(webhooks).set(updates).where(eq(webhooks.id, webhook.id));
       }

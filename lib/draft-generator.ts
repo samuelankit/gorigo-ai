@@ -218,7 +218,9 @@ export async function generateDraft(
         callContext = `\n\nRecent Call Context (use these to understand common caller patterns):\n${summaries.join("\n")}`;
       }
     }
-  } catch {}
+  } catch (error) {
+    console.error("Draft generator call context retrieval failed:", error);
+  }
 
   const languageInstruction = language !== "en"
     ? `\n\nIMPORTANT: Write the draft in the language with code "${language}". Do NOT write in English unless the language code is "en".`
@@ -318,7 +320,7 @@ Output ONLY the draft content. Do not include explanations, notes, or meta-comme
       entityType: "drafts",
       entityId: orgId,
       details: { type, tone, language, qualityScore, cost, source: input.source || "web", agentId },
-    }).catch(() => {});
+    }).catch((error) => { console.error("Log draft generation audit failed:", error); });
   } catch (costErr) {
     console.error("[DraftGenerator] Cost tracking error:", costErr);
   }

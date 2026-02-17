@@ -79,7 +79,7 @@ export default function AdminCountriesPage() {
       const data = await res.json();
       if (Array.isArray(data)) setCountries(data);
       else if (data?.countries) setCountries(data.countries);
-    } catch {} finally { setLoading(false); }
+    } catch (error) { console.error("Fetch countries failed:", error); } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchCountries(); }, [fetchCountries]);
@@ -91,7 +91,7 @@ export default function AdminCountriesPage() {
       const res = await fetch(`/api/countries/${id}`);
       const data = await res.json();
       setCompliance(data?.compliance || null);
-    } catch {} finally { setComplianceLoading(false); }
+    } catch (error) { console.error("Fetch country compliance failed:", error); } finally { setComplianceLoading(false); }
   }, []);
 
   const fetchRateCards = useCallback(async (id: string) => {
@@ -103,7 +103,7 @@ export default function AdminCountriesPage() {
       if (Array.isArray(data)) setRateCards(data);
       else if (data?.rateCards) setRateCards(data.rateCards);
       else setRateCards([]);
-    } catch {} finally { setRateCardsLoading(false); }
+    } catch (error) { console.error("Fetch country rate cards failed:", error); } finally { setRateCardsLoading(false); }
   }, []);
 
   useEffect(() => { if (complianceCountryId) fetchCompliance(complianceCountryId); }, [complianceCountryId, fetchCompliance]);
@@ -124,7 +124,7 @@ export default function AdminCountriesPage() {
         body: JSON.stringify(editForm),
       });
       if (res.ok) { setEditCountry(null); fetchCountries(); }
-    } catch {} finally { setSaving(false); }
+    } catch (error) { console.error("Save country failed:", error); } finally { setSaving(false); }
   };
 
   const handleEditCompliance = () => {
@@ -142,7 +142,7 @@ export default function AdminCountriesPage() {
         body: JSON.stringify(complianceForm),
       });
       if (res.ok) { setEditCompliance(false); fetchCompliance(complianceCountryId); }
-    } catch {} finally { setComplianceSaving(false); }
+    } catch (error) { console.error("Save country compliance failed:", error); } finally { setComplianceSaving(false); }
   };
 
   const handleEditRateCard = (card: RateCard) => {
@@ -160,7 +160,7 @@ export default function AdminCountriesPage() {
         body: JSON.stringify(rateForm),
       });
       if (res.ok) { setEditRateCard(null); fetchRateCards(rateCountryId); }
-    } catch {} finally { setRateSaving(false); }
+    } catch (error) { console.error("Save country rate card failed:", error); } finally { setRateSaving(false); }
   };
 
   const filtered = countries.filter((c) => {

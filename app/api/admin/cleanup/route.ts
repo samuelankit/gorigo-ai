@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { cleanupExpiredSessions, cleanupExpiredCache, retryFailedDocuments } from "@/lib/cleanup";
 import { adminLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const bodySchema = z.object({
+  type: z.string().min(1).optional(),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +20,9 @@ export async function POST(request: NextRequest) {
     if (!access.allowed) {
       return NextResponse.json({ error: access.error }, { status: 403 });
     }
+
+    const body = await request.json().catch(() => ({}));
+    const parsed = bodySchema.parse(body);
 
     const [expiredSessions, expiredCache, retriedDocs] = await Promise.all([
       cleanupExpiredSessions(),

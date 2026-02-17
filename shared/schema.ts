@@ -56,6 +56,7 @@ export const orgs = pgTable("orgs", {
   byokTwilioPhone: text("byok_twilio_phone"),
   byokMode: text("byok_mode").default("platform"),
   deploymentModel: text("deployment_model").default("managed"),
+  webhookSecret: text("webhook_secret"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

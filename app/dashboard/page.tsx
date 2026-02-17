@@ -197,7 +197,7 @@ export default function DashboardPage() {
         if (d?.user) setBusinessName(d.user.businessName || "");
         if (d?.org?.deploymentModel) setDeploymentModel(d.org.deploymentModel);
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch dashboard user data failed:", error); });
 
     fetch("/api/usage")
       .then((r) => r.json())
@@ -220,21 +220,21 @@ export default function DashboardPage() {
       .then((d) => {
         if (d?.subscription) setSubscription(d.subscription);
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch subscription failed:", error); });
 
     fetch("/api/wallet")
       .then((r) => r.json())
       .then((d) => {
         if (d?.wallet) setWalletBalance(d.wallet.balance);
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch wallet balance failed:", error); });
 
     fetch("/api/agents/stats")
       .then((r) => r.json())
       .then((d) => {
         if (d && !d.error) setAgentStats(d);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch agent stats failed:", error); })
       .finally(() => setLoadingAgentStats(false));
 
     fetch("/api/onboarding")
@@ -242,14 +242,14 @@ export default function DashboardPage() {
       .then((d) => {
         if (d && !d.error) setOnboarding(d);
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch onboarding status failed:", error); });
 
     fetch("/api/international/summary")
       .then((r) => r.json())
       .then((d) => {
         if (d && !d.error) setInternationalData(d);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch international summary failed:", error); })
       .finally(() => setLoadingInternational(false));
 
     const fetchTodayStats = () => {
@@ -258,7 +258,7 @@ export default function DashboardPage() {
         .then((d) => {
           if (d && !d.error) setTodayStats(d);
         })
-        .catch(() => {});
+        .catch((error) => { console.error("Fetch today call stats failed:", error); });
     };
     fetchTodayStats();
     const todayInterval = setInterval(fetchTodayStats, 15000);
@@ -269,7 +269,7 @@ export default function DashboardPage() {
         .then((d) => {
           if (d && !d.error) setLiveData(d);
         })
-        .catch(() => {});
+        .catch((error) => { console.error("Fetch live call data failed:", error); });
     };
     fetchLiveData();
     const liveInterval = setInterval(fetchLiveData, 5000);

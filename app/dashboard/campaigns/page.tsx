@@ -198,7 +198,7 @@ export default function CampaignsPage() {
           setAgents([data.agent]);
         }
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch agents for campaigns failed:", error); })
       .finally(() => setLoadingAgents(false));
   };
 

@@ -11,9 +11,15 @@ import {
   PLATFORM_COSTS,
 } from "@/lib/unit-economics";
 import { handleRouteError } from "@/lib/api-error";
+import { adminLimiter } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const user = await getAuthenticatedUser();
     if (!user || user.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -63,6 +69,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const user = await getAuthenticatedUser();
     if (!user || user.globalRole !== "SUPERADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

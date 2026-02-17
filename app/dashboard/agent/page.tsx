@@ -463,7 +463,8 @@ export default function AgentPage() {
         setFlowEdges(first.edges || []);
         setFlowName(first.name || "Main Flow");
       }
-    } catch {
+    } catch (error) {
+      console.error("Fetch agent flows failed:", error);
     } finally {
       setFlowsLoading(false);
     }
@@ -484,7 +485,8 @@ export default function AgentPage() {
         const data = await statsRes.json();
         setRagStats(data);
       }
-    } catch {
+    } catch (error) {
+      console.error("Fetch knowledge docs failed:", error);
     } finally {
       setLoadingKnowledge(false);
     }
@@ -499,7 +501,7 @@ export default function AgentPage() {
         if (data.voices) setAvailableVoices(data.voices);
         if (data.languages) setSupportedLanguages(data.languages);
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch supported languages failed:", error); });
   }, [fetchAgents, fetchKnowledge]);
 
   useEffect(() => {

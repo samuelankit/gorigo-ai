@@ -4,6 +4,11 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { aiLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance, deductFromWallet } from "@/lib/wallet";
+import { z } from "zod";
+
+const bodySchema = z.object({
+  transcript: z.string().min(1),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,13 +40,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { transcript } = body;
+    const parsed = bodySchema.parse(body);
 
-    if (!transcript) {
-      return NextResponse.json({ error: "Transcript is required" }, { status: 400 });
-    }
-
-    const summary = await generateCallSummary(transcript, auth.orgId);
+    const summary = await generateCallSummary(parsed.transcript, auth.orgId);
 
     if (!auth.isDemo && auth.orgId) {
       const summaryCost = 0.005;

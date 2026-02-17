@@ -173,7 +173,7 @@ export async function deductFromWallet(
       })
       .returning();
 
-    checkAndNotifyBalance(orgId, actualBalanceAfter).catch(() => {});
+    checkAndNotifyBalance(orgId, actualBalanceAfter).catch((error) => { console.error("Check and notify wallet balance failed:", error); });
 
     return { transaction: txn, newBalance: actualBalanceAfter };
   });

@@ -184,7 +184,9 @@ export default function AdminCallsPage() {
         setTotal(data.total ?? 0);
         setStats(data.stats ?? null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch admin calls failed:", error);
+    } finally {
       setLoading(false);
     }
   }, [search, status, direction, page]);

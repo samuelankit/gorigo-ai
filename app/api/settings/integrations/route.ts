@@ -3,6 +3,33 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { getOrgByokStatus, saveOrgKeys, validateOpenAIKey, validateTwilioCredentials, type ByokMode } from "@/lib/byok";
 import { logAudit } from "@/lib/audit";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const bodySchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("validate_openai"),
+    apiKey: z.string().min(1),
+    baseUrl: z.string().optional(),
+  }).strict(),
+  z.object({
+    action: z.literal("validate_twilio"),
+    accountSid: z.string().min(1),
+    authToken: z.string().min(1),
+  }).strict(),
+  z.object({
+    action: z.literal("save"),
+    mode: z.enum(["platform", "byok"]).optional(),
+    openaiKey: z.string().optional(),
+    openaiBaseUrl: z.string().optional(),
+    twilioSid: z.string().optional(),
+    twilioToken: z.string().optional(),
+    twilioPhone: z.string().optional(),
+  }).strict(),
+  z.object({
+    action: z.literal("clear"),
+    provider: z.enum(["openai", "twilio", "all"]),
+  }).strict(),
+]);
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,32 +64,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { action } = body;
+    const parsed = bodySchema.parse(body);
 
-    if (action === "validate_openai") {
-      const { apiKey, baseUrl } = body;
-      if (!apiKey || typeof apiKey !== "string") {
-        return NextResponse.json({ error: "API key is required" }, { status: 400 });
-      }
-      const result = await validateOpenAIKey(apiKey.trim(), baseUrl?.trim());
+    if (parsed.action === "validate_openai") {
+      const result = await validateOpenAIKey(parsed.apiKey.trim(), parsed.baseUrl?.trim());
       return NextResponse.json(result);
     }
 
-    if (action === "validate_twilio") {
-      const { accountSid, authToken } = body;
-      if (!accountSid || !authToken) {
-        return NextResponse.json({ error: "Account SID and Auth Token are required" }, { status: 400 });
-      }
-      const result = await validateTwilioCredentials(accountSid.trim(), authToken.trim());
+    if (parsed.action === "validate_twilio") {
+      const result = await validateTwilioCredentials(parsed.accountSid.trim(), parsed.authToken.trim());
       return NextResponse.json(result);
     }
 
-    if (action === "save") {
-      const { mode, openaiKey, openaiBaseUrl, twilioSid, twilioToken, twilioPhone } = body;
-
-      if (mode && !["platform", "byok"].includes(mode)) {
-        return NextResponse.json({ error: "Mode must be 'platform' or 'byok'" }, { status: 400 });
-      }
+    if (parsed.action === "save") {
+      const { mode, openaiKey, openaiBaseUrl, twilioSid, twilioToken, twilioPhone } = parsed;
 
       await saveOrgKeys(auth.orgId, {
         mode: mode as ByokMode | undefined,
@@ -91,13 +106,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, ...status });
     }
 
-    if (action === "clear") {
-      const { provider } = body;
+    if (parsed.action === "clear") {
+      const { provider } = parsed;
       if (provider === "openai") {
         await saveOrgKeys(auth.orgId, { openaiKey: "", openaiBaseUrl: "" });
       } else if (provider === "twilio") {
         await saveOrgKeys(auth.orgId, { twilioSid: "", twilioToken: "", twilioPhone: "" });
-      } else if (provider === "all") {
+      } else {
         await saveOrgKeys(auth.orgId, {
           mode: "platform",
           openaiKey: "",
@@ -106,8 +121,6 @@ export async function POST(request: NextRequest) {
           twilioToken: "",
           twilioPhone: "",
         });
-      } else {
-        return NextResponse.json({ error: "Provider must be 'openai', 'twilio', or 'all'" }, { status: 400 });
       }
 
       await logAudit({
@@ -123,7 +136,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, ...status });
     }
 
-    return NextResponse.json({ error: "Invalid action. Use: validate_openai, validate_twilio, save, clear" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     console.error("BYOK POST error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

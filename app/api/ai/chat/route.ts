@@ -357,7 +357,7 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
         totalCost: llmCost.costGBP,
         revenueCharged: 0.003,
         metadata: { source: "ai_chat", agentId: body.agentId },
-      }).catch(() => {});
+      }).catch((error) => { console.error("Track AI chat usage cost failed:", error); });
     }
 
     let assistantText = response.content;
@@ -392,7 +392,7 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
     const redactedMessage = piiResult.redactedText;
 
     if (ragEnabled && confidenceScore >= 0.7 && outputCheck.safe) {
-      cacheResponse(auth.orgId, redactedMessage, assistantText, confidenceScore).catch(() => {});
+      cacheResponse(auth.orgId, redactedMessage, assistantText, confidenceScore).catch((error) => { console.error("Cache AI chat response failed:", error); });
     }
 
     const fsmContext = {

@@ -1,9 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { settingsLimiter } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rl = await settingsLimiter(request);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const auth = await getAuthenticatedUser();
   if (!auth) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });

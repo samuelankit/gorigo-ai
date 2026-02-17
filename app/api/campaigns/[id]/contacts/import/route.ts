@@ -4,6 +4,7 @@ import { campaigns, campaignContacts } from "@/shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { isOnDNCList, normalizePhoneNumber } from "@/lib/dnc";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 const COUNTRY_PREFIXES: [string, string][] = [
   ["+971", "AE"], ["+353", "IE"],
@@ -34,6 +35,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

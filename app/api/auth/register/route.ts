@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
 
     await setSessionCookie(result.token);
 
-    logAuthEvent("register.success", result.newUser.id, result.newUser.email, { businessName }).catch(() => {});
+    logAuthEvent("register.success", result.newUser.id, result.newUser.email, { businessName }).catch((error) => { console.error("Log register event failed:", error); });
 
     const { password: _, emailVerificationToken: __, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, ...userWithoutSensitive } = result.newUser;
     return NextResponse.json({

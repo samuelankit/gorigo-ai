@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     await clearSessionCookie();
 
     if (userId) {
-      logAuthEvent("logout", userId, "").catch(() => {});
+      logAuthEvent("logout", userId, "").catch((error) => { console.error("Log logout event failed:", error); });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });

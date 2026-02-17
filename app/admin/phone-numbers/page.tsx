@@ -84,7 +84,7 @@ export default function PhoneNumbersPage() {
           setOrgOptions(d.clients.map((c: { id: number; name: string }) => ({ id: c.id, name: c.name })));
         }
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch org options for phone numbers failed:", error); });
   };
 
   useEffect(() => {
@@ -110,7 +110,8 @@ export default function PhoneNumbersPage() {
         resetForm();
         fetchPhoneNumbers();
       }
-    } catch {
+    } catch (error) {
+      console.error("Create phone number failed:", error);
     } finally {
       setSaving(false);
     }
@@ -132,7 +133,8 @@ export default function PhoneNumbersPage() {
         setSelectedOrgId("");
         fetchPhoneNumbers();
       }
-    } catch {
+    } catch (error) {
+      console.error("Assign phone number failed:", error);
     } finally {
       setSaving(false);
     }
@@ -147,7 +149,9 @@ export default function PhoneNumbersPage() {
       if (res.ok) {
         fetchPhoneNumbers();
       }
-    } catch {}
+    } catch (error) {
+      console.error("Deactivate phone number failed:", error);
+    }
   };
 
   const openAssignDialog = (pn: PhoneNumber) => {

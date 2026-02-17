@@ -137,7 +137,7 @@ export default function BillingPage() {
       .then((d) => {
         if (d?.transactions) setTransactions(d.transactions);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch wallet transactions failed:", error); })
       .finally(() => setLoadingTx(false));
   }, []);
 

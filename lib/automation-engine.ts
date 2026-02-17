@@ -260,7 +260,7 @@ export async function runAutomationCycle(): Promise<AutomationRunResult> {
 
     const hasActions = result.autoSuspend.suspended > 0 || result.spendingCap.alerted > 0;
     if (hasActions) {
-      console.log("[Automation]", JSON.stringify(result));
+      console.info("[Automation]", JSON.stringify(result));
     }
 
     return result;
@@ -293,7 +293,7 @@ export function startAutomationEngine(intervalMs: number = 10 * 60 * 1000): void
   if (_global.__automationEngineStarted) return;
   _global.__automationEngineStarted = true;
 
-  console.log("[Automation] Engine started (interval: " + (intervalMs / 1000) + "s)");
+  console.info("[Automation] Engine started (interval: " + (intervalMs / 1000) + "s)");
 
   const interval = setInterval(async () => {
     try {
@@ -306,11 +306,11 @@ export function startAutomationEngine(intervalMs: number = 10 * 60 * 1000): void
   if (interval.unref) interval.unref();
 
   setTimeout(() => {
-    runAutomationCycle().catch(() => {});
+    runAutomationCycle().catch((error) => { console.error("Automation cycle failed:", error); });
   }, 30_000);
 }
 
 export function stopAutomationEngine(): void {
   _global.__automationEngineStarted = false;
-  console.log("[Automation] Engine stopped");
+  console.info("[Automation] Engine stopped");
 }

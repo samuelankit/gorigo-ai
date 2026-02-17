@@ -151,7 +151,8 @@ function PartnersContent() {
         resetForm();
         fetchPartners();
       }
-    } catch {
+    } catch (error) {
+      console.error("Create partner failed:", error);
     } finally {
       setSaving(false);
     }
@@ -176,7 +177,8 @@ function PartnersContent() {
         setApprovalNotes("");
         fetchPartners();
       }
-    } catch {
+    } catch (error) {
+      console.error("Partner approval action failed:", error);
     } finally {
       setSaving(false);
     }
@@ -193,7 +195,9 @@ function PartnersContent() {
       if (res.ok) {
         fetchPartners();
       }
-    } catch {}
+    } catch (error) {
+      console.error("Toggle partner status failed:", error);
+    }
   };
 
   const openApprovalDialog = (partner: Partner, action: "approve" | "reject") => {

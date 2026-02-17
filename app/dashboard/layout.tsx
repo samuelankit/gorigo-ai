@@ -62,7 +62,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setResendingVerification(true);
     try {
       await fetch("/api/auth/resend-verification", { method: "POST" });
-    } catch {}
+    } catch (error) {
+      console.error("Resend email verification failed:", error);
+    }
     setResendingVerification(false);
   }, []);
 

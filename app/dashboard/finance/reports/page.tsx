@@ -93,7 +93,9 @@ function ReportsContent() {
         }));
         setCashflowData(rows);
       }
-    } catch {}
+    } catch (error) {
+      console.error("Fetch finance report failed:", error);
+    }
     setReportLoading(false);
   }, [activeWsId, dateFrom, dateTo]);
 

@@ -128,7 +128,9 @@ export default function AdminKnowledgePage() {
         setTotal(data.total ?? 0);
         setStats(data.stats ?? null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch admin knowledge docs failed:", error);
+    } finally {
       setLoading(false);
     }
   }, [search, status, source, page]);

@@ -8,6 +8,7 @@ import { isWithinBusinessHours, getNextOpenTime, type BusinessHoursConfig } from
 import twilio from "twilio";
 import { recordConsent } from "@/lib/dnc";
 import { getCountryVoiceConfig, getDisclosureText } from "@/lib/compliance-engine";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 function twimlResponse(xml: string) {
   return new NextResponse(xml, {
@@ -24,6 +25,11 @@ function getWebhookUrl(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const formData = await request.formData();
 
     const callSid = formData.get("CallSid") as string;

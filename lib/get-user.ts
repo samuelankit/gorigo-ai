@@ -59,7 +59,7 @@ async function authenticateViaApiKey(): Promise<AuthResult | null> {
     .set({ lastUsedAt: new Date() })
     .where(eq(apiKeys.id, keyRecord.id))
     .execute()
-    .catch(() => {});
+    .catch((error) => { console.error("Update API key lastUsedAt failed:", error); });
 
   return {
     user,
@@ -79,7 +79,9 @@ async function getBearerToken(): Promise<string | null> {
     if (authHeader?.startsWith("Bearer ")) {
       return authHeader.slice(7);
     }
-  } catch {}
+  } catch (error) {
+    console.error("Bearer token extraction failed:", error);
+  }
   return null;
 }
 
@@ -121,7 +123,7 @@ export async function getAuthenticatedUser(): Promise<AuthResult | null> {
     .set({ lastSeenAt: now })
     .where(eq(sessions.id, session.id))
     .execute()
-    .catch(() => {});
+    .catch((error) => { console.error("Update session lastSeenAt failed:", error); });
 
   let orgId: number | null = null;
   let role: string | null = null;

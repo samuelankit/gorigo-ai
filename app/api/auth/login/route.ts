@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
       await db.update(users).set(updates).where(eq(users.id, user.id));
 
-      logAuthEvent("login.failed", user.id, user.email, { attempts, locked: attempts >= MAX_FAILED_ATTEMPTS }).catch(() => {});
+      logAuthEvent("login.failed", user.id, user.email, { attempts, locked: attempts >= MAX_FAILED_ATTEMPTS }).catch((error) => { console.error("Log login failed event failed:", error); });
 
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     await setSessionCookie(token);
 
-    logAuthEvent("login.success", user.id, user.email).catch(() => {});
+    logAuthEvent("login.success", user.id, user.email).catch((error) => { console.error("Log login success event failed:", error); });
 
     const { password: _, emailVerificationToken: _evt, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, ...userWithoutPassword } = user;
     const isMobile = request.headers.get("x-client-type") === "mobile";

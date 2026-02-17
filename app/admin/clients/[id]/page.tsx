@@ -125,7 +125,8 @@ export default function ClientDetailPage() {
         setStatusAction(null);
         setStatusReason("");
       }
-    } catch {
+    } catch (error) {
+      console.error("Update client status failed:", error);
     } finally {
       setStatusLoading(false);
     }

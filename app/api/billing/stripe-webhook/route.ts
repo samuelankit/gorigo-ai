@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
           .limit(1);
 
         if (existing) {
-          console.log(`[Stripe] Duplicate webhook ignored: org=${orgId}, pi=${paymentIntent}`);
+          console.info(`[Stripe] Duplicate webhook ignored: org=${orgId}, pi=${paymentIntent}`);
           return NextResponse.json({ received: true, duplicate: true });
         }
 
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        console.log(`[Stripe] Wallet credited: org=${orgId}, amount=\u00a3${amount}`);
+        console.info(`[Stripe] Wallet credited: org=${orgId}, amount=\u00a3${amount}`);
       }
     }
 

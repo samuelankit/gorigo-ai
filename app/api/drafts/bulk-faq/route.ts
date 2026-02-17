@@ -67,7 +67,9 @@ export async function POST(request: NextRequest) {
       if (chunks.length > 0) {
         ragContext = buildRAGContext(chunks);
       }
-    } catch {}
+    } catch (error) {
+      console.error("Search knowledge for FAQ generation failed:", error);
+    }
 
     if (!ragContext) {
       return NextResponse.json({

@@ -133,7 +133,9 @@ export default function AdminAffiliatesPage() {
         setTotal(data.total ?? 0);
         setStats(data.stats ?? null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch admin affiliates failed:", error);
+    } finally {
       setLoading(false);
     }
   }, [search, ownerTypeFilter, statusFilter, page]);
@@ -164,7 +166,9 @@ export default function AdminAffiliatesPage() {
         resetCreateForm();
         fetchAffiliates();
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Create affiliate failed:", error);
+    } finally {
       setSaving(false);
     }
   };
@@ -189,7 +193,9 @@ export default function AdminAffiliatesPage() {
         setEditDialogOpen(false);
         fetchAffiliates();
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Edit affiliate failed:", error);
+    } finally {
       setSaving(false);
     }
   };
@@ -204,7 +210,9 @@ export default function AdminAffiliatesPage() {
         setDeactivateTarget(null);
         fetchAffiliates();
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Deactivate affiliate failed:", error);
+    } finally {
       setSaving(false);
     }
   };

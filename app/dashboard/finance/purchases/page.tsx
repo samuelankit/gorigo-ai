@@ -130,8 +130,8 @@ function PurchasesContent() {
 
   const fetchData = useCallback(() => {
     if (!activeWsId) return;
-    fetch(`/api/finance/suppliers?workspaceId=${activeWsId}`).then((r) => r.json()).then((d) => setSuppliers(d.suppliers || [])).catch(() => {});
-    fetch(`/api/finance/bills?workspaceId=${activeWsId}`).then((r) => r.json()).then((d) => setBills(d.bills || [])).catch(() => {});
+    fetch(`/api/finance/suppliers?workspaceId=${activeWsId}`).then((r) => r.json()).then((d) => setSuppliers(d.suppliers || [])).catch((error) => { console.error("Fetch suppliers failed:", error); });
+    fetch(`/api/finance/bills?workspaceId=${activeWsId}`).then((r) => r.json()).then((d) => setBills(d.bills || [])).catch((error) => { console.error("Fetch bills failed:", error); });
   }, [activeWsId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -152,7 +152,9 @@ function PurchasesContent() {
       setSupForm({ name: "", email: "", phone: "", address: "" });
       setShowNewSupplier(false);
       fetchData();
-    } catch {}
+    } catch (error) {
+      console.error("Create supplier failed:", error);
+    }
     setSavingSup(false);
   };
 
@@ -194,7 +196,9 @@ function PurchasesContent() {
       setBillNotes("");
       setBillLines([{ description: "", quantity: 1, unitPrice: 0, taxRate: 0, amount: 0 }]);
       fetchData();
-    } catch {}
+    } catch (error) {
+      console.error("Create bill failed:", error);
+    }
     setSavingBill(false);
   };
 
@@ -226,7 +230,9 @@ function PurchasesContent() {
       setPayBillId(null);
       setPayAmount("");
       fetchData();
-    } catch {}
+    } catch (error) {
+      console.error("Record bill payment failed:", error);
+    }
     setSavingPay(false);
   };
 

@@ -120,7 +120,7 @@ export function PricingContent() {
     fetch("/api/public/deployment-packages")
       .then((r) => r.json())
       .then((data) => setVisibility(data))
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch deployment packages failed:", error); });
   }, []);
 
   const visiblePackages = allPackages.filter((pkg) => visibility[pkg.key]);

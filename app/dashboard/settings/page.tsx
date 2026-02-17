@@ -162,7 +162,7 @@ export default function SettingsPage() {
     fetch("/api/webhooks")
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setWebhookList(d); })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch webhooks failed:", error); })
       .finally(() => setLoadingWebhooks(false));
   };
 
@@ -171,7 +171,7 @@ export default function SettingsPage() {
     fetch("/api/settings/integrations")
       .then(r => r.json())
       .then(d => { if (d && !d.error) setByokStatus(d); })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch BYOK integration status failed:", error); })
       .finally(() => setLoadingByok(false));
   };
 
@@ -323,7 +323,7 @@ export default function SettingsPage() {
         }
         if (d?.org?.deploymentModel) setDeploymentModel(d.org.deploymentModel);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch settings user data failed:", error); })
       .finally(() => setLoading(false));
 
     fetch("/api/agents")
@@ -333,7 +333,7 @@ export default function SettingsPage() {
           setComplianceDisclosure(d.agent.complianceDisclosure ?? true);
         }
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch agent compliance settings failed:", error); });
 
     fetch("/api/settings/business-hours")
       .then((r) => r.json())
@@ -363,7 +363,7 @@ export default function SettingsPage() {
           setTimezone(d.timezone || "America/New_York");
         }
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch business hours failed:", error); })
       .finally(() => setLoadingBusinessHours(false));
 
     fetch("/api/settings/call-limits")
@@ -375,7 +375,7 @@ export default function SettingsPage() {
           setActiveCalls(d.activeCalls ?? 0);
         }
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch call limits failed:", error); })
       .finally(() => setLoadingCallLimits(false));
 
     fetch("/api/phone-numbers")
@@ -383,7 +383,7 @@ export default function SettingsPage() {
       .then((d) => {
         if (d?.phoneNumbers) setPhoneNumbers(d.phoneNumbers);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch phone numbers failed:", error); })
       .finally(() => setLoadingPhones(false));
 
     fetchWebhooks();

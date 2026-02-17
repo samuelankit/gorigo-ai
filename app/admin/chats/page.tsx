@@ -137,7 +137,9 @@ export default function AdminChatsPage() {
         setTotalPages(data.totalPages || 1);
         setStats(data.stats || null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch admin chat leads failed:", error);
+    } finally {
       setLoading(false);
     }
   }, [page, search, status]);
@@ -153,7 +155,9 @@ export default function AdminChatsPage() {
           setSelectedLead(data.lead);
         }
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch chat messages failed:", error);
+    } finally {
       setMessagesLoading(false);
     }
   }, []);
@@ -170,7 +174,9 @@ export default function AdminChatsPage() {
         setSelectedLead((prev) => prev ? { ...prev, status: newStatus } : prev);
         fetchLeads();
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Update chat lead status failed:", error);
+    } finally {
       setStatusUpdating(false);
     }
   }, [fetchLeads]);

@@ -3,6 +3,11 @@ import { createJob } from "@/lib/jobs";
 import { NextRequest, NextResponse } from "next/server";
 import { knowledgeLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { z } from "zod";
+
+const bodySchema = z.object({
+  documentId: z.union([z.number(), z.string().min(1)]),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,18 +29,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { documentId } = body;
+    const parsed = bodySchema.parse(body);
 
-    if (!documentId) {
-      return NextResponse.json({ error: "Document ID is required" }, { status: 400 });
-    }
-
-    await createJob("DOCUMENT_PROCESS", { documentId, orgId: auth.orgId });
+    await createJob("DOCUMENT_PROCESS", { documentId: parsed.documentId, orgId: auth.orgId });
 
     return NextResponse.json({ 
       success: true, 
       message: "Document processing started",
-      documentId,
+      documentId: parsed.documentId,
     });
   } catch (error) {
     console.error("Process document error:", error);

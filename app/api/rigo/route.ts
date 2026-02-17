@@ -371,7 +371,7 @@ async function attemptRefund(
       `rigo-refund-${deductionResult.transaction.id}`,
       deductionResult.transaction.id
     );
-    console.log("[Rigo] Refund issued, txn:", deductionResult.transaction.id);
+    console.info("[Rigo] Refund issued, txn:", deductionResult.transaction.id);
     return true;
   } catch (refundErr) {
     console.error("[Rigo] Refund failed:", refundErr);
@@ -432,7 +432,7 @@ export async function POST(request: NextRequest) {
             draftType: draftResult.draft?.type,
             latencyMs: Date.now() - startTime,
           },
-        }).catch(() => {});
+        }).catch((error) => { console.error("Log Rigo draft audit event failed:", error); });
 
         return NextResponse.json({
           response: draftResult.response,
@@ -534,7 +534,7 @@ export async function POST(request: NextRequest) {
           latencyMs: Date.now() - startTime,
           free: isFreeGreeting,
         },
-      }).catch(() => {});
+      }).catch((error) => { console.error("Log Rigo LLM error audit event failed:", error); });
 
       const refundMsg = refunded
         ? "Your wallet has been refunded."
@@ -569,7 +569,7 @@ export async function POST(request: NextRequest) {
         free: isFreeGreeting,
         cost: isFreeGreeting ? 0 : rigoCost,
       },
-    }).catch(() => {});
+    }).catch((error) => { console.error("Log Rigo success audit event failed:", error); });
 
     if (llmResult.inputTokens || llmResult.outputTokens) {
       const llmCost = calculateLLMCost(
@@ -590,7 +590,7 @@ export async function POST(request: NextRequest) {
         totalCost: llmCost.costGBP,
         revenueCharged: isFreeGreeting ? 0 : rigoCost,
         metadata: { source: "rigo", intent: intentCategory },
-      }).catch(() => {});
+      }).catch((error) => { console.error("Track Rigo usage cost failed:", error); });
     }
 
     return NextResponse.json({

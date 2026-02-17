@@ -78,7 +78,7 @@ export default function FinanceHomePage() {
           overdueBills: data.overdueBillsCount || 0,
         });
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch finance summary failed:", error); });
   }, [activeWsId]);
 
   useEffect(() => {

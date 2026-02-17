@@ -13,7 +13,7 @@ async function requireSuperAdmin() {
   return auth;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const auth = await requireSuperAdmin();
     if (!auth) {

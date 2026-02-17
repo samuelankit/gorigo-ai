@@ -84,7 +84,9 @@ export async function executePartnerCascade(
             .set({ isActive: false })
             .where(eq(wallets.orgId, client.orgId));
           result.walletsDeactivated++;
-        } catch {}
+        } catch (error) {
+          console.error("Wallet deactivation during partner cascade failed:", error);
+        }
 
         try {
           await db
@@ -96,7 +98,9 @@ export async function executePartnerCascade(
             })
             .where(eq(twilioSubAccounts.orgId, client.orgId));
           result.twilioSuspended++;
-        } catch {}
+        } catch (error) {
+          console.error("Twilio sub-account suspension during partner cascade failed:", error);
+        }
       } catch (err) {
         result.errors.push(`Failed to ${action} client org ${client.orgId}: ${String(err)}`);
       }
@@ -239,7 +243,9 @@ export async function executePartnerCascade(
         errors: result.errors,
       },
     });
-  } catch {}
+  } catch (error) {
+    console.error("Partner cascade lifecycle event logging failed:", error);
+  }
 
   return result;
 }
@@ -318,7 +324,9 @@ export async function reversePartnerCascade(
       affectedAffiliates: result.affiliatesFrozen,
       cascadeActions: { reversed: true },
     });
-  } catch {}
+  } catch (error) {
+    console.error("Reverse partner cascade lifecycle event logging failed:", error);
+  }
 
   return result;
 }

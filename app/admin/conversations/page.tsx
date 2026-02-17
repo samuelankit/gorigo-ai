@@ -125,7 +125,9 @@ export default function AdminConversationsPage() {
         setTotalPages(data.totalPages || 1);
         setStats(data.stats || null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch admin conversations failed:", error);
+    } finally {
       setLoading(false);
     }
   }, [page, channel, status, search]);
@@ -138,7 +140,9 @@ export default function AdminConversationsPage() {
       if (data && !data.error) {
         setTranscriptMessages(data.messages || []);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch conversation transcript failed:", error);
+    } finally {
       setTranscriptLoading(false);
     }
   }, []);

@@ -89,7 +89,7 @@ export default function ActivityPage() {
       .then((d) => {
         if (d?.logs) setLogs(d.logs);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch audit logs failed:", error); })
       .finally(() => setLoading(false));
   };
 

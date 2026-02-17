@@ -83,7 +83,7 @@ export default function WalletPage() {
         if (d?.user?.isDemo) setIsDemo(true);
         if (d?.org?.deploymentModel) setDeploymentModel(d.org.deploymentModel);
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch wallet user data failed:", error); });
   }, []);
 
   const handleTopUp = async () => {

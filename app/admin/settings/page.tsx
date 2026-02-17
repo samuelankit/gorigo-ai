@@ -200,7 +200,8 @@ export default function PlatformSettingsPage() {
         setSettings(map);
         setOriginalSettings(map);
       }
-    } catch {
+    } catch (error) {
+      console.error("Fetch admin settings failed:", error);
     } finally {
       setLoading(false);
     }
@@ -211,7 +212,8 @@ export default function PlatformSettingsPage() {
       const res = await fetch("/api/admin/rate-cards");
       const d = await res.json();
       if (d?.rateCards) setRateCards(d.rateCards);
-    } catch {
+    } catch (error) {
+      console.error("Fetch rate cards failed:", error);
     } finally {
       setRateCardsLoading(false);
     }
@@ -222,7 +224,9 @@ export default function PlatformSettingsPage() {
       const res = await fetch("/api/admin/automation");
       const d = await res.json();
       if (d) setAutomationStatus(d);
-    } catch {}
+    } catch (error) {
+      console.error("Fetch automation status failed:", error);
+    }
   }, []);
 
   useEffect(() => {
@@ -273,7 +277,9 @@ export default function PlatformSettingsPage() {
       if (data?.result) {
         setAutomationStatus({ lastRun: data.result, engineRunning: true });
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Trigger automation failed:", error);
+    } finally {
       setTriggeringAutomation(false);
     }
   };
@@ -338,7 +344,9 @@ export default function PlatformSettingsPage() {
           cancelCardEdit();
         }
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Save rate card failed:", error);
+    } finally {
       setCardSaving(false);
     }
   };

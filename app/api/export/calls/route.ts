@@ -104,7 +104,9 @@ export async function GET(request: NextRequest) {
         entityType: "call_log",
         details: { recordCount: calls.length, startDate, endDate },
       });
-    } catch {}
+    } catch (error) {
+      console.error("Log calls export audit failed:", error);
+    }
 
     const responseHeaders: Record<string, string> = {
       "Content-Type": "text/csv",

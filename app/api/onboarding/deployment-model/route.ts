@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { orgs } from "@/shared/schema";
-import { eq } from "drizzle-orm";
+import { orgs, deploymentModelChanges } from "@/shared/schema";
+import { eq, and, gte } from "drizzle-orm";
 import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
+import { getOrgByokStatus, validateOpenAIKey, validateTwilioCredentials, getOrgKeys } from "@/lib/byok";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 
 const deploymentModelSchema = z.object({
   deploymentModel: z.enum(["managed", "byok", "self_hosted", "custom"]),
 }).strict();
+
+const PLAN_SWITCH_COOLDOWN_HOURS = 24;
 
 export async function PUT(request: NextRequest) {
   try {
@@ -40,12 +43,104 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { deploymentModel } = deploymentModelSchema.parse(body);
 
+    const [currentOrg] = await db
+      .select({ deploymentModel: orgs.deploymentModel })
+      .from(orgs)
+      .where(eq(orgs.id, auth.orgId))
+      .limit(1);
+
+    const oldModel = currentOrg?.deploymentModel || "managed";
+
+    if (oldModel === deploymentModel) {
+      return NextResponse.json({ error: "Already on this plan" }, { status: 400 });
+    }
+
+    const cooldownCutoff = new Date(Date.now() - PLAN_SWITCH_COOLDOWN_HOURS * 60 * 60 * 1000);
+    const [recentSwitch] = await db
+      .select({ id: deploymentModelChanges.id })
+      .from(deploymentModelChanges)
+      .where(
+        and(
+          eq(deploymentModelChanges.orgId, auth.orgId),
+          gte(deploymentModelChanges.createdAt, cooldownCutoff)
+        )
+      )
+      .limit(1);
+
+    if (recentSwitch) {
+      return NextResponse.json({
+        error: `Plan changes are limited to once every ${PLAN_SWITCH_COOLDOWN_HOURS} hours. Please try again later.`,
+        code: "PLAN_SWITCH_COOLDOWN",
+      }, { status: 429 });
+    }
+
+    if (deploymentModel === "byok") {
+      const byokStatus = await getOrgByokStatus(auth.orgId);
+      const keys = await getOrgKeys(auth.orgId);
+      const prerequisites: Record<string, { ready: boolean; message: string }> = {};
+
+      if (byokStatus.openai.source === "org" && byokStatus.openai.configured) {
+        try {
+          const validation = await validateOpenAIKey(keys.openai.apiKey, keys.openai.baseUrl);
+          prerequisites.openai = validation.valid
+            ? { ready: true, message: "OpenAI API key validated" }
+            : { ready: false, message: `OpenAI key validation failed: ${validation.error}` };
+        } catch {
+          prerequisites.openai = { ready: false, message: "OpenAI key could not be validated (network error)" };
+        }
+      } else {
+        prerequisites.openai = { ready: false, message: "You must configure your own OpenAI API key before switching to BYOK. Go to Settings > Integrations." };
+      }
+
+      if (byokStatus.twilio.source === "org" && byokStatus.twilio.configured) {
+        try {
+          const validation = await validateTwilioCredentials(keys.twilio.accountSid, keys.twilio.authToken);
+          prerequisites.twilio = validation.valid
+            ? { ready: true, message: "Twilio credentials validated" }
+            : { ready: false, message: `Twilio validation failed: ${validation.error}` };
+        } catch {
+          prerequisites.twilio = { ready: false, message: "Twilio credentials could not be validated (network error)" };
+        }
+      } else {
+        prerequisites.twilio = { ready: false, message: "You must configure your own Twilio credentials before switching to BYOK. Go to Settings > Integrations." };
+      }
+
+      const allMet = Object.values(prerequisites).every((p) => p.ready);
+      if (!allMet) {
+        return NextResponse.json({
+          error: "BYOK prerequisites not met. You must provide and validate your own API keys before switching.",
+          code: "BYOK_PREREQUISITES_NOT_MET",
+          prerequisites,
+        }, { status: 422 });
+      }
+    }
+
+    if (deploymentModel === "self_hosted" || deploymentModel === "custom") {
+      return NextResponse.json({
+        error: "White-Label and Custom plans require admin approval. Please contact our team to discuss your requirements.",
+        code: "REQUIRES_ADMIN_APPROVAL",
+      }, { status: 403 });
+    }
+
     const byokMode = deploymentModel === "byok" ? "byok" : "platform";
 
     await db
       .update(orgs)
       .set({ deploymentModel, byokMode })
       .where(eq(orgs.id, auth.orgId));
+
+    await db.insert(deploymentModelChanges).values({
+      orgId: auth.orgId,
+      oldModel,
+      newModel: deploymentModel,
+      status: "completed",
+      reason: "User-initiated plan switch via onboarding",
+      initiatedBy: auth.user.id,
+      initiatedByEmail: auth.user.email,
+      effectiveAt: new Date(),
+      completedAt: new Date(),
+      activeCallsAtSwitch: 0,
+    });
 
     try {
       await logAudit({
@@ -54,13 +149,13 @@ export async function PUT(request: NextRequest) {
         action: "deployment_model_update",
         entityType: "org",
         entityId: auth.orgId,
-        details: { deploymentModel, byokMode },
+        details: { oldModel, newModel: deploymentModel, byokMode, source: "onboarding" },
       });
     } catch (auditErr) {
       console.error("Audit log error:", auditErr);
     }
 
-    return NextResponse.json({ success: true, deploymentModel }, { status: 200 });
+    return NextResponse.json({ success: true, deploymentModel, previousModel: oldModel }, { status: 200 });
   } catch (error) {
     return handleRouteError(error, "DeploymentModel");
   }

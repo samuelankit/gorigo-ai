@@ -64,7 +64,9 @@ export async function GET(request: NextRequest) {
         entityType: "do_not_call_list",
         details: { recordCount: records.length },
       });
-    } catch {}
+    } catch (error) {
+      console.error("Log DNC export audit failed:", error);
+    }
 
     const responseHeaders: Record<string, string> = {
       "Content-Type": "text/csv",

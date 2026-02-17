@@ -149,7 +149,7 @@ export default function AdminPricingPage() {
       .then((d) => {
         if (d?.rateCards) setRateCards(d.rateCards);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch rate cards failed:", error); })
       .finally(() => setRateCardsLoading(false));
   };
 
@@ -182,7 +182,9 @@ export default function AdminPricingPage() {
         setEditRateDialogOpen(false);
         fetchRateCards();
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Save rate card failed:", error);
+    } finally {
       setSaving(false);
     }
   };
@@ -210,7 +212,8 @@ export default function AdminPricingPage() {
         resetForm();
         fetchPricing();
       }
-    } catch {
+    } catch (error) {
+      console.error("Create pricing config failed:", error);
     } finally {
       setSaving(false);
     }
@@ -237,7 +240,8 @@ export default function AdminPricingPage() {
         setEditDialogOpen(false);
         fetchPricing();
       }
-    } catch {
+    } catch (error) {
+      console.error("Update pricing config failed:", error);
     } finally {
       setSaving(false);
     }
@@ -253,7 +257,9 @@ export default function AdminPricingPage() {
       if (res.ok) {
         fetchPricing();
       }
-    } catch {}
+    } catch (error) {
+      console.error("Toggle pricing config active status failed:", error);
+    }
   };
 
   const openEditDialog = (config: CostConfigData) => {

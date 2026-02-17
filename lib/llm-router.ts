@@ -84,14 +84,14 @@ function isCircuitAllowing(key: string): boolean {
 
   const now = Date.now();
   if (now >= state.halfOpenAt && state.halfOpenAt > 0) {
-    console.log(`[LLM Router] Circuit HALF-OPEN for ${key}, allowing test request`);
+    console.info(`[LLM Router] Circuit HALF-OPEN for ${key}, allowing test request`);
     return true;
   }
 
   if (now - state.lastFailure > CIRCUIT_BREAKER_RESET_MS) {
     state.isOpen = false;
     state.failures = 0;
-    console.log(`[LLM Router] Circuit RESET for ${key} after cooldown`);
+    console.info(`[LLM Router] Circuit RESET for ${key} after cooldown`);
     return true;
   }
 
@@ -472,7 +472,7 @@ export function resetCircuitBreaker(provider: string): void {
     state.isOpen = false;
     state.halfOpenAt = 0;
     state.lastFailure = 0;
-    console.log(`[LLM Router] Circuit manually reset for ${provider}`);
+    console.info(`[LLM Router] Circuit manually reset for ${provider}`);
   }
 }
 

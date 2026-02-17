@@ -166,7 +166,7 @@ export default function UnitEconomicsPage() {
         if (d?.revenue) setRevenueData(d.revenue);
         if (d?.distribution) setDistributionData(d.distribution);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch unit economics summary failed:", error); })
       .finally(() => setSummaryLoading(false));
   }, []);
 
@@ -177,7 +177,7 @@ export default function UnitEconomicsPage() {
       .then((d) => {
         if (d?.trends) setTrendsData(d.trends);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch unit economics trends failed:", error); })
       .finally(() => setTrendsLoading(false));
   }, []);
 
@@ -209,7 +209,7 @@ export default function UnitEconomicsPage() {
       .then((d) => {
         if (d?.simulation) setSimResult(d.simulation);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Run unit economics simulation failed:", error); })
       .finally(() => setSimLoading(false));
   }, [callsPerMonth, avgCallDuration, avgLLMTokens, ratePerMinute, llmModel, country, partnerCommission, affiliateCommission, avgTopUp]);
 

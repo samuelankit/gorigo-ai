@@ -173,7 +173,7 @@ export default function SmartDraftsPage() {
           setOrgAgents(data.agents.map((a: Agent) => ({ id: a.id, name: a.name })));
         }
       })
-      .catch(() => {});
+      .catch((error) => { console.error("Fetch org agents for drafts failed:", error); });
   }, []);
 
   const fetchDrafts = useCallback(async () => {
@@ -190,7 +190,9 @@ export default function SmartDraftsPage() {
         setSavedDrafts(data.drafts || []);
         setPagination(prev => ({ ...prev, total: data.pagination.total, totalPages: data.pagination.totalPages }));
       }
-    } catch {}
+    } catch (error) {
+      console.error("Fetch drafts failed:", error);
+    }
     setDraftsLoading(false);
   }, [filterType, filterStatus, searchQuery, pagination.page]);
 
@@ -450,7 +452,9 @@ export default function SmartDraftsPage() {
         const data = await res.json();
         setVersionHistory(data.drafts || []);
       }
-    } catch {}
+    } catch (error) {
+      console.error("Fetch draft version history failed:", error);
+    }
     setVersionsLoading(false);
   };
 

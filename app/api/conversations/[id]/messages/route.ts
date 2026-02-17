@@ -4,6 +4,14 @@ import { openai } from "../../../../../replit_integrations/chat/client-openai";
 import { anthropic } from "../../../../../replit_integrations/chat/client-anthropic";
 import { openrouter } from "../../../../../replit_integrations/chat/client-openrouter";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { settingsLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const messageBodySchema = z.object({
+  content: z.string().min(1),
+  provider: z.enum(["openai", "anthropic", "openrouter"]).optional().default("openai"),
+  model: z.string().optional(),
+}).strict();
 
 type Provider = "openai" | "anthropic" | "openrouter";
 
@@ -11,6 +19,10 @@ const DEFAULT_OPENAI_MODEL = "gpt-5.2";
 const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const rl = await settingsLimiter(_req);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
   const auth = await getAuthenticatedUser();
   if (!auth) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -22,6 +34,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const rl = await settingsLimiter(req);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
   const auth = await getAuthenticatedUser();
   if (!auth) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -30,15 +46,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   const conversationId = Number(id);
   const body = await req.json();
-  const { content, provider = "openai", model } = body as {
-    content: string;
-    provider?: Provider;
-    model?: string;
-  };
-
-  if (!content || typeof content !== "string") {
-    return NextResponse.json({ message: "content is required" }, { status: 400 });
-  }
+  const parsed = messageBodySchema.parse(body);
+  const { content, provider, model } = parsed;
 
   const conv = await chatStorage.getConversation(conversationId);
   if (!conv) return NextResponse.json({ message: "Conversation not found" }, { status: 404 });

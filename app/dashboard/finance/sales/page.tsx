@@ -125,8 +125,8 @@ function SalesContent() {
 
   const fetchData = useCallback(() => {
     if (!activeWsId) return;
-    fetch(`/api/finance/customers?workspaceId=${activeWsId}`).then((r) => r.json()).then((d) => setCustomers(d.customers || [])).catch(() => {});
-    fetch(`/api/finance/invoices?workspaceId=${activeWsId}`).then((r) => r.json()).then((d) => setInvoices(d.invoices || [])).catch(() => {});
+    fetch(`/api/finance/customers?workspaceId=${activeWsId}`).then((r) => r.json()).then((d) => setCustomers(d.customers || [])).catch((error) => { console.error("Fetch customers failed:", error); });
+    fetch(`/api/finance/invoices?workspaceId=${activeWsId}`).then((r) => r.json()).then((d) => setInvoices(d.invoices || [])).catch((error) => { console.error("Fetch invoices failed:", error); });
   }, [activeWsId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -147,7 +147,9 @@ function SalesContent() {
       setCustForm({ name: "", email: "", phone: "", address: "" });
       setShowNewCustomer(false);
       fetchData();
-    } catch {}
+    } catch (error) {
+      console.error("Create customer failed:", error);
+    }
     setSavingCust(false);
   };
 
@@ -225,7 +227,9 @@ function SalesContent() {
       setPayInvoiceId(null);
       setPayAmount("");
       fetchData();
-    } catch {}
+    } catch (error) {
+      console.error("Record invoice payment failed:", error);
+    }
     setSavingPay(false);
   };
 

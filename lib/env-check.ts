@@ -43,5 +43,5 @@ export function validateEnvironment(): void {
     );
   }
 
-  console.log("[GoRigo] Environment validation passed");
+  console.info("[GoRigo] Environment validation passed");
 }

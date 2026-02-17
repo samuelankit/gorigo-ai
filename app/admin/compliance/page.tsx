@@ -140,7 +140,9 @@ export default function AdminCompliancePage() {
       const res = await fetch(`/api/admin/compliance?tab=overview&days=${days}`);
       const d = await res.json();
       if (d && !d.error) setOverview(d);
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch compliance overview failed:", error);
+    } finally {
       setLoading(false);
     }
   }, [days]);
@@ -153,7 +155,9 @@ export default function AdminCompliancePage() {
       const res = await fetch(`/api/admin/compliance?${params}`);
       const d = await res.json();
       if (d?.entries) { setDncEntries(d.entries); setDncTotal(d.total || 0); }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch DNC entries failed:", error);
+    } finally {
       setDncLoading(false);
     }
   }, [dncSearch, dncPage]);
@@ -167,7 +171,9 @@ export default function AdminCompliancePage() {
       const res = await fetch(`/api/admin/compliance?${params}`);
       const d = await res.json();
       if (d?.records) { setConsentRecords(d.records); setConsentTotal(d.total || 0); }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Fetch consent records failed:", error);
+    } finally {
       setConsentLoading(false);
     }
   }, [consentSearch, consentStatus, consentPage]);
@@ -185,7 +191,9 @@ export default function AdminCompliancePage() {
         fetchDNC();
         setDeleteTarget(null);
       }
-    } catch {} finally {
+    } catch (error) {
+      console.error("Delete DNC entry failed:", error);
+    } finally {
       setDeleting(false);
     }
   };

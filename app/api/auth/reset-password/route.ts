@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       .delete(sessions)
       .where(eq(sessions.userId, resetRecord.userId));
 
-    logAuthEvent("password_reset.completed", resetRecord.userId, "").catch(() => {});
+    logAuthEvent("password_reset.completed", resetRecord.userId, "").catch((error) => { console.error("Log password reset event failed:", error); });
 
     return NextResponse.json({ message: "Password has been reset successfully. Please log in." }, { status: 200 });
   } catch (error) {

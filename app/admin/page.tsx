@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
       .then((d) => {
         if (d) setStats(d);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch admin stats failed:", error); })
       .finally(() => setLoadingStats(false));
 
     fetch("/api/admin/analytics")
@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
       .then((d) => {
         if (d && !d.error) setAnalytics(d);
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch admin analytics failed:", error); })
       .finally(() => setLoadingAnalytics(false));
 
     fetch("/api/admin/activity")
@@ -125,7 +125,7 @@ export default function AdminDashboardPage() {
         if (d?.feed) setActivity(d.feed.slice(0, 8));
         else if (Array.isArray(d)) setActivity(d.slice(0, 8));
       })
-      .catch(() => {})
+      .catch((error) => { console.error("Fetch admin activity feed failed:", error); })
       .finally(() => setLoadingActivity(false));
   }, []);
 

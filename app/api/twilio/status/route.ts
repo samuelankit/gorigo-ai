@@ -12,6 +12,7 @@ import { dispatchWebhook } from "@/lib/webhook-dispatcher";
 import { createNotification } from "@/lib/notifications";
 import { redactForDisplay } from "@/lib/pii-redaction";
 import type { UsageCategory } from "@/lib/rate-resolver";
+import { settingsLimiter } from "@/lib/rate-limit";
 
 function getWebhookUrl(request: NextRequest): string {
   const proto = request.headers.get("x-forwarded-proto") || "https";
@@ -21,6 +22,11 @@ function getWebhookUrl(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const formData = await request.formData();
 
     const callSid = formData.get("CallSid") as string;
@@ -207,7 +213,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (callStatus === "failed" || callStatus === "busy" || callStatus === "no-answer") {
-      notifyCallFailure(callLog.orgId, callLog.id, callStatus, callLog.direction).catch(() => {});
+      notifyCallFailure(callLog.orgId, callLog.id, callStatus, callLog.direction).catch((error) => { console.error("Notify call failure failed:", error); });
     }
 
     if (callStatus === "completed" || callStatus === "no-answer" || callStatus === "busy" || callStatus === "failed" || callStatus === "canceled") {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { partners, partnerClients, affiliates, affiliateLinks, affiliateCommissions, partnerAgreements, partnerLifecycleEvents, orgs, wallets } from "@/shared/schema";
+import { partners, partnerClients, affiliates, affiliateClicks, affiliateCommissions, partnerAgreements, partnerLifecycleEvents, orgs, wallets } from "@/shared/schema";
 import { eq, and, sql, count } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
@@ -57,8 +57,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (affiliateIds.length > 0) {
       links = await db
         .select()
-        .from(affiliateLinks)
-        .where(sql`${affiliateLinks.affiliateId} = ANY(${affiliateIds})`);
+        .from(affiliateClicks)
+        .where(sql`${affiliateClicks.affiliateId} = ANY(${affiliateIds})`);
 
       commissions = await db
         .select()
@@ -106,12 +106,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         status: a.status,
         commissionRate: a.commissionRate,
       })),
-      affiliateLinks: links.map(l => ({
+      affiliateClicks: links.map(l => ({
         id: l.id,
         affiliateId: l.affiliateId,
-        code: l.code,
-        clicks: l.clickCount,
-        conversions: l.conversionCount,
+        landingPage: l.landingPage,
+        convertedToSignup: l.convertedToSignup,
+        createdAt: l.createdAt,
       })),
       commissions: commissions.map(c => ({
         id: c.id,

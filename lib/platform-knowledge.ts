@@ -17,7 +17,7 @@ const GORIGO_KNOWLEDGE: Array<{ category: string; content: string }> = [
   },
   {
     category: "pricing",
-    content: "GoRigo uses a talk-time only billing model. Businesses pay only for actual talk time used by AI agents on calls. There are no seat licences, monthly subscriptions, or per-agent fees. Users top up a prepaid wallet and costs are deducted per second of call time. Detailed pricing is available at the /pricing page on the website.",
+    content: "GoRigo uses a talk-time only billing model. Talk time covers all platform usage — not just calls. This includes AI agent calls, AI content generation (drafts, scripts, email templates, FAQ answers), Rigo voice assistant queries, and knowledge base processing. There are no seat licences, monthly subscriptions, or per-agent fees. Users top up a prepaid wallet and costs are deducted per operation. Server infrastructure is covered by GoRigo. Detailed pricing is available at the /pricing page on the website.",
   },
   {
     category: "deployment",

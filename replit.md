@@ -5,7 +5,7 @@ GoRigo is an AI-powered call center platform designed to automate call center op
 
 ## User Preferences
 - Default to light mode (day vision), with dark mode (night vision) toggle available.
-- Talk-time only billing model.
+- Talk-time only billing model. Talk time = ALL platform usage (calls, AI content generation, assistant queries, knowledge processing). Server infrastructure is GoRigo's cost, not the customer's. Customer's prepaid wallet is deducted per operation. Margin is built into every transaction rate.
 - AI disclosure on calls (compliance).
 - Solo founder - automate everything, SuperAdmin Console for all analytics and operations.
 

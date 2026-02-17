@@ -155,7 +155,7 @@ export default function WalletPage() {
               Wallet
             </h1>
           </div>
-          <p className="text-muted-foreground text-sm">Manage your wallet balance and view transaction history.</p>
+          <p className="text-muted-foreground text-sm">Manage your wallet balance and view transaction history. Talk time covers all platform usage including calls, AI content generation, and assistant queries.</p>
         </div>
       </div>
 
@@ -226,10 +226,10 @@ export default function WalletPage() {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {deploymentModel === "managed"
-                    ? "All costs included in your per-minute rate"
+                    ? "All costs included in your talk-time rate"
                     : deploymentModel === "byok"
-                      ? "Platform fee deducted per minute of talk time"
-                      : "Licence fee deducted per minute of talk time"}
+                      ? "Platform fee deducted per unit of talk time"
+                      : "Licence fee deducted per unit of talk time"}
                 </p>
               </div>
             </div>

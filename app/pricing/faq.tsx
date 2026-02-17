@@ -11,7 +11,7 @@ const faqs = [
   {
     question: "How does talk-time billing work?",
     answer:
-      "You only pay for the actual minutes your AI agents spend on calls. There are no monthly seat fees, no subscriptions, and no hidden charges. Your usage is tracked in real time through your dashboard.",
+      "Talk time covers all platform usage — not just calls. This includes AI agent calls, content generation (drafts, scripts, FAQs), Rigo assistant queries, and knowledge base processing. There are no monthly seat fees, no subscriptions, and no hidden charges. Your usage is tracked in real time through your dashboard.",
   },
   {
     question: "Can I switch between packages?",
@@ -41,7 +41,7 @@ const faqs = [
   {
     question: "How does the Custom Plan billing work?",
     answer:
-      "Custom Plan rates are negotiated individually based on your specific needs, expected call volume, and chosen features. Your dedicated account manager will work with you to agree on rates that work for your business. All billing is still based on talk-time only, with no hidden fees.",
+      "Custom Plan rates are negotiated individually based on your specific needs, expected usage, and chosen features. Your dedicated account manager will work with you to agree on rates that work for your business. All billing is still based on talk time only — covering calls, AI content generation, and all platform usage — with no hidden fees.",
   },
 ];
 

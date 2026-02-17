@@ -9,7 +9,7 @@ export default function BillingGuidePage() {
       icon={Wallet}
       title="Billing, Wallets & Pricing"
       subtitle="Understand how billing works and manage finances"
-      intro="GoRigo uses a simple talk-time only billing model - you only pay for actual call minutes. Every client has a prepaid wallet that gets deducted in real-time during calls. This guide covers how to top up wallets, set spending caps, understand pricing tiers, and review transaction history."
+      intro="GoRigo uses a simple talk-time only billing model. Talk time covers all platform usage — calls, AI content generation, assistant queries, and knowledge processing. Every client has a prepaid wallet that gets deducted in real-time as they use the platform. This guide covers how to top up wallets, set spending caps, understand pricing tiers, and review transaction history."
       steps={[
         {
           title: "Navigate to the Wallets Page",
@@ -63,8 +63,8 @@ export default function BillingGuidePage() {
         },
       ]}
       keyTerms={[
-        { term: "Talk-Time Billing", definition: "You only pay for actual call duration - no monthly fees or per-seat charges." },
-        { term: "Wallet", definition: "A prepaid balance that gets deducted in real-time during calls." },
+        { term: "Talk-Time Billing", definition: "You only pay for actual platform usage — calls, AI content generation, assistant queries, and knowledge processing. No monthly fees or per-seat charges." },
+        { term: "Wallet", definition: "A prepaid balance that gets deducted in real-time as you use the platform." },
         { term: "Spending Cap", definition: "A maximum amount a client can spend before being automatically suspended." },
         { term: "Rate Card", definition: "The pricing structure that determines how much each minute costs." },
         { term: "Double-Entry", definition: "An accounting method where every transaction has a debit and credit entry for accuracy." },

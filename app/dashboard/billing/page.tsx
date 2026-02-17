@@ -278,7 +278,7 @@ export default function BillingPage() {
               Billing & Usage
             </h1>
           </div>
-          <p className="text-muted-foreground text-sm">Monitor your usage and manage your subscription.</p>
+          <p className="text-muted-foreground text-sm">Monitor your usage and manage your subscription. Talk time covers all platform usage including calls, AI content generation, and assistant queries.</p>
         </div>
       </div>
 

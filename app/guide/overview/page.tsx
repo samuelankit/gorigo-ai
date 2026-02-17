@@ -57,7 +57,7 @@ export default function OverviewGuidePage() {
       keyTerms={[
         { term: "KPI", definition: "Key Performance Indicator - a measurable value showing how well something is performing." },
         { term: "SuperAdmin", definition: "The highest access level with full control over all platform features and settings." },
-        { term: "Talk Time", definition: "The actual duration of a call - this is what you're billed for." },
+        { term: "Talk Time", definition: "All platform usage — calls, AI content generation, assistant queries, and knowledge processing. This is what you are billed for." },
         { term: "Agent", definition: "An AI-powered virtual assistant that handles phone calls on your behalf." },
       ]}
       imageSrc="/guide/overview-hero.png"

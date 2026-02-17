@@ -1,5 +1,3 @@
-import { db } from "@/lib/db";
-
 let shutdownInProgress = false;
 
 export function setupGracefulShutdown(cleanupFns: Array<() => Promise<void> | void>) {

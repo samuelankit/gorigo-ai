@@ -11,6 +11,12 @@ export async function register() {
     startAutomationEngine(10 * 60 * 1000);
     console.log("[GoRigo] Automation engine started (10 min interval)");
 
+    const { setupGracefulShutdown } = await import("@/lib/shutdown");
+    setupGracefulShutdown([
+      () => console.info("[Shutdown] Stopping background services..."),
+    ]);
+    console.log("[GoRigo] Graceful shutdown handler registered");
+
     const { seedPlatformKnowledge } = await import("@/lib/platform-knowledge");
     seedPlatformKnowledge()
       .then((result) => {

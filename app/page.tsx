@@ -135,7 +135,7 @@ export default function HomePage() {
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
-        <div className="relative max-w-6xl mx-auto px-6 pt-28 pb-24">
+        <div className="relative max-w-6xl mx-auto px-6 pt-16 sm:pt-28 pb-24">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
               <p
                 className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6"

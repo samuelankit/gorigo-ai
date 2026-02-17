@@ -431,15 +431,19 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
     }
 
     if (!auth.isDemo && auth.orgId) {
-      const aiCostPerRequest = 0.003;
       try {
-        await deductFromWallet(
-          auth.orgId,
-          aiCostPerRequest,
-          "AI chat request",
-          "ai_chat",
-          callLogId ? String(callLogId) : undefined
-        );
+        const { calculateUsageCost } = await import("@/lib/billing");
+        const AI_CHAT_EQUIVALENT_SECONDS = 15;
+        const billing = await calculateUsageCost(auth.orgId, AI_CHAT_EQUIVALENT_SECONDS, "ai_chat");
+        if (billing.cost > 0) {
+          await deductFromWallet(
+            auth.orgId,
+            billing.cost,
+            `AI chat request (${billing.deploymentModel} @ \u00a3${billing.ratePerMinute}/min)`,
+            "ai_chat",
+            callLogId ? String(callLogId) : undefined
+          );
+        }
       } catch (walletErr) {
         console.error("Wallet deduction failed for AI chat:", walletErr);
       }

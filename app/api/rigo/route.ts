@@ -6,6 +6,7 @@ import { hasInsufficientBalance, deductFromWallet, getWalletBalance, refundToWal
 import { callLLM, type ConversationMessage } from "@/lib/llm-router";
 import { logAudit } from "@/lib/audit";
 import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
+import { safeParseNumeric } from "@/lib/money";
 import { db } from "@/lib/db";
 import { agents, callLogs, campaigns, drafts } from "@/shared/schema";
 import { eq, and, sql, count, desc } from "drizzle-orm";
@@ -21,7 +22,7 @@ const rigoSchema = z.object({
   })).optional(),
 }).strict();
 
-const RIGO_COST_PER_INTERACTION = 0.01;
+const RIGO_EQUIVALENT_SECONDS = 30;
 
 const RIGO_SYSTEM_PROMPT = `You are Rigo, the AI personal assistant for GoRigo — an AI call centre platform. You help users manage their call centre operations entirely by voice. Your ultimate mission is to make users prefer voice commands over the web dashboard, because voice usage is how GoRigo generates revenue.
 
@@ -360,9 +361,11 @@ async function attemptRefund(
 ): Promise<boolean> {
   if (!deductionResult?.transaction) return false;
   try {
+    const refundAmount = Math.abs(safeParseNumeric(deductionResult.transaction.amount, 0));
+    if (refundAmount <= 0) return false;
     await refundToWallet(
       orgId,
-      RIGO_COST_PER_INTERACTION,
+      refundAmount,
       "Automatic refund — Rigo AI processing failed",
       "rigo_assistant",
       `rigo-refund-${deductionResult.transaction.id}`,
@@ -447,8 +450,13 @@ export async function POST(request: NextRequest) {
 
     isFreeGreeting = intentCategory === "greeting" && isFirstGreetingForOrg(auth.orgId);
 
+    let rigoCost = 0;
     if (!isFreeGreeting) {
-      const insufficientBalance = await hasInsufficientBalance(auth.orgId, RIGO_COST_PER_INTERACTION);
+      const { calculateUsageCost } = await import("@/lib/billing");
+      const billing = await calculateUsageCost(auth.orgId, RIGO_EQUIVALENT_SECONDS, "ai_chat");
+      rigoCost = billing.cost;
+
+      const insufficientBalance = await hasInsufficientBalance(auth.orgId, rigoCost);
       if (insufficientBalance) {
         return NextResponse.json({
           error: "Insufficient wallet balance. Please top up your wallet to continue using Rigo.",
@@ -460,8 +468,8 @@ export async function POST(request: NextRequest) {
       try {
         deductionResult = await deductFromWallet(
           auth.orgId,
-          RIGO_COST_PER_INTERACTION,
-          "Rigo voice assistant interaction",
+          rigoCost,
+          `Rigo voice assistant interaction (${billing.deploymentModel} @ \u00a3${billing.ratePerMinute}/min)`,
           "rigo_assistant"
         );
       } catch (walletErr) {
@@ -559,7 +567,7 @@ export async function POST(request: NextRequest) {
         provider: llmResult.provider,
         latencyMs,
         free: isFreeGreeting,
-        cost: isFreeGreeting ? 0 : RIGO_COST_PER_INTERACTION,
+        cost: isFreeGreeting ? 0 : rigoCost,
       },
     }).catch(() => {});
 
@@ -580,7 +588,7 @@ export async function POST(request: NextRequest) {
         unitType: "tokens",
         unitCost: llmCost.costGBP,
         totalCost: llmCost.costGBP,
-        revenueCharged: isFreeGreeting ? 0 : RIGO_COST_PER_INTERACTION,
+        revenueCharged: isFreeGreeting ? 0 : rigoCost,
         metadata: { source: "rigo", intent: intentCategory },
       }).catch(() => {});
     }
@@ -589,7 +597,7 @@ export async function POST(request: NextRequest) {
       response: llmResult.content,
       model: llmResult.model,
       provider: llmResult.provider,
-      cost: isFreeGreeting ? 0 : RIGO_COST_PER_INTERACTION,
+      cost: isFreeGreeting ? 0 : rigoCost,
       free: isFreeGreeting,
     });
   } catch (error) {

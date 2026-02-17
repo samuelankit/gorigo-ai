@@ -29,6 +29,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Demo accounts cannot top up wallet" }, { status: 403 });
     }
 
+    if (auth.user.globalRole !== "superadmin") {
+      return NextResponse.json({ error: "Direct wallet top-up is restricted to administrators. Use Stripe checkout at /api/billing/topup instead." }, { status: 403 });
+    }
+
     const body = await request.json();
     const parsed = topupSchema.safeParse(body);
     if (!parsed.success) {
@@ -37,15 +41,15 @@ export async function POST(request: NextRequest) {
 
     const { amount } = parsed.data;
 
-    const result = await topUpWallet(auth.orgId, amount);
+    const result = await topUpWallet(auth.orgId, amount, "Admin manual top-up", "manual");
 
     await logAudit({
       actorId: auth.user.id,
       actorEmail: auth.user.email,
-      action: "wallet.topup",
+      action: "wallet.admin_topup",
       entityType: "wallet",
       entityId: auth.orgId,
-      details: { amount, newBalance: result.newBalance },
+      details: { amount, newBalance: result.newBalance, method: "admin_manual" },
     });
 
     return NextResponse.json({

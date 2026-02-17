@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { topUpWallet } from "@/lib/wallet";
 import { logAudit } from "@/lib/audit";
 import { billingLimiter } from "@/lib/rate-limit";
+import { db } from "@/lib/db";
+import { walletTransactions } from "@/shared/schema";
+import { eq, and } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,14 +38,32 @@ export async function POST(request: NextRequest) {
       const amount = parseFloat(session.metadata?.amount || "0");
       const userId = parseInt(session.metadata?.userId || "0");
       const type = session.metadata?.type;
+      const paymentIntent = session.payment_intent;
 
       if (type === "wallet_topup" && orgId > 0 && amount > 0) {
+        const idempotencyRef = `stripe_${paymentIntent}`;
+        const [existing] = await db
+          .select({ id: walletTransactions.id })
+          .from(walletTransactions)
+          .where(
+            and(
+              eq(walletTransactions.orgId, orgId),
+              eq(walletTransactions.referenceId, idempotencyRef)
+            )
+          )
+          .limit(1);
+
+        if (existing) {
+          console.log(`[Stripe] Duplicate webhook ignored: org=${orgId}, pi=${paymentIntent}`);
+          return NextResponse.json({ received: true, duplicate: true });
+        }
+
         const result = await topUpWallet(
           orgId,
           amount,
-          `Wallet top-up via Stripe ($${amount.toFixed(2)})`,
+          `Wallet top-up via Stripe (\u00a3${amount.toFixed(2)})`,
           "manual",
-          session.payment_intent
+          idempotencyRef
         );
 
         await logAudit({
@@ -54,11 +75,11 @@ export async function POST(request: NextRequest) {
             amount,
             newBalance: result.newBalance,
             stripeSessionId: session.id,
-            paymentIntent: session.payment_intent,
+            paymentIntent,
           },
         });
 
-        console.log(`[Stripe] Wallet credited: org=${orgId}, amount=$${amount}`);
+        console.log(`[Stripe] Wallet credited: org=${orgId}, amount=\u00a3${amount}`);
       }
     }
 

@@ -47,10 +47,10 @@ export async function POST(request: NextRequest) {
         payment_method_types: ["card"],
         line_items: [{
           price_data: {
-            currency: "usd",
+            currency: "gbp",
             product_data: {
               name: "GoRigo Wallet Top-Up",
-              description: `Add $${amount.toFixed(2)} to your GoRigo wallet`,
+              description: `Add \u00a3${amount.toFixed(2)} to your GoRigo wallet`,
             },
             unit_amount: Math.round(amount * 100),
           },

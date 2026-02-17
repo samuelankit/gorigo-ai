@@ -18,24 +18,24 @@ export interface ResolvedRate {
 
 const DEFAULT_RATES: Record<DeploymentModel, Record<UsageCategory, ResolvedRate>> = {
   managed: {
-    voice_inbound: { deploymentModel: "managed", category: "voice_inbound", ratePerMinute: 0.15, platformFeePerMinute: 0.15, includesAiCost: true, includesTelephonyCost: true, label: "Managed - Inbound Voice" },
-    voice_outbound: { deploymentModel: "managed", category: "voice_outbound", ratePerMinute: 0.18, platformFeePerMinute: 0.18, includesAiCost: true, includesTelephonyCost: true, label: "Managed - Outbound Voice" },
-    ai_chat: { deploymentModel: "managed", category: "ai_chat", ratePerMinute: 0.05, platformFeePerMinute: 0.05, includesAiCost: true, includesTelephonyCost: false, label: "Managed - AI Chat" },
+    voice_inbound: { deploymentModel: "managed", category: "voice_inbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Direct/Managed - Inbound Voice" },
+    voice_outbound: { deploymentModel: "managed", category: "voice_outbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Direct/Managed - Outbound Voice" },
+    ai_chat: { deploymentModel: "managed", category: "ai_chat", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: false, label: "Direct/Managed - AI Chat" },
   },
   byok: {
-    voice_inbound: { deploymentModel: "byok", category: "voice_inbound", ratePerMinute: 0.05, platformFeePerMinute: 0.05, includesAiCost: false, includesTelephonyCost: false, label: "BYOK - Inbound Voice" },
-    voice_outbound: { deploymentModel: "byok", category: "voice_outbound", ratePerMinute: 0.06, platformFeePerMinute: 0.06, includesAiCost: false, includesTelephonyCost: false, label: "BYOK - Outbound Voice" },
-    ai_chat: { deploymentModel: "byok", category: "ai_chat", ratePerMinute: 0.02, platformFeePerMinute: 0.02, includesAiCost: false, includesTelephonyCost: false, label: "BYOK - AI Chat" },
+    voice_inbound: { deploymentModel: "byok", category: "voice_inbound", ratePerMinute: 0.08, platformFeePerMinute: 0.08, includesAiCost: false, includesTelephonyCost: false, label: "BYOK - Inbound Voice" },
+    voice_outbound: { deploymentModel: "byok", category: "voice_outbound", ratePerMinute: 0.08, platformFeePerMinute: 0.08, includesAiCost: false, includesTelephonyCost: false, label: "BYOK - Outbound Voice" },
+    ai_chat: { deploymentModel: "byok", category: "ai_chat", ratePerMinute: 0.08, platformFeePerMinute: 0.08, includesAiCost: false, includesTelephonyCost: false, label: "BYOK - AI Chat" },
   },
   self_hosted: {
-    voice_inbound: { deploymentModel: "self_hosted", category: "voice_inbound", ratePerMinute: 0.03, platformFeePerMinute: 0.03, includesAiCost: false, includesTelephonyCost: false, label: "Self-Hosted - Inbound Voice" },
-    voice_outbound: { deploymentModel: "self_hosted", category: "voice_outbound", ratePerMinute: 0.04, platformFeePerMinute: 0.04, includesAiCost: false, includesTelephonyCost: false, label: "Self-Hosted - Outbound Voice" },
-    ai_chat: { deploymentModel: "self_hosted", category: "ai_chat", ratePerMinute: 0.01, platformFeePerMinute: 0.01, includesAiCost: false, includesTelephonyCost: false, label: "Self-Hosted - AI Chat" },
+    voice_inbound: { deploymentModel: "self_hosted", category: "voice_inbound", ratePerMinute: 0.12, platformFeePerMinute: 0.12, includesAiCost: false, includesTelephonyCost: false, label: "White-Label - Inbound Voice" },
+    voice_outbound: { deploymentModel: "self_hosted", category: "voice_outbound", ratePerMinute: 0.12, platformFeePerMinute: 0.12, includesAiCost: false, includesTelephonyCost: false, label: "White-Label - Outbound Voice" },
+    ai_chat: { deploymentModel: "self_hosted", category: "ai_chat", ratePerMinute: 0.12, platformFeePerMinute: 0.12, includesAiCost: false, includesTelephonyCost: false, label: "White-Label - AI Chat" },
   },
   custom: {
-    voice_inbound: { deploymentModel: "custom", category: "voice_inbound", ratePerMinute: 0.15, platformFeePerMinute: 0.15, includesAiCost: true, includesTelephonyCost: true, label: "Custom - Inbound Voice" },
-    voice_outbound: { deploymentModel: "custom", category: "voice_outbound", ratePerMinute: 0.18, platformFeePerMinute: 0.18, includesAiCost: true, includesTelephonyCost: true, label: "Custom - Outbound Voice" },
-    ai_chat: { deploymentModel: "custom", category: "ai_chat", ratePerMinute: 0.05, platformFeePerMinute: 0.05, includesAiCost: true, includesTelephonyCost: false, label: "Custom - AI Chat" },
+    voice_inbound: { deploymentModel: "custom", category: "voice_inbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Custom - Inbound Voice" },
+    voice_outbound: { deploymentModel: "custom", category: "voice_outbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Custom - Outbound Voice" },
+    ai_chat: { deploymentModel: "custom", category: "ai_chat", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: false, label: "Custom - AI Chat" },
   },
 };
 
@@ -147,19 +147,19 @@ export async function getAllRateCards(): Promise<ResolvedRate[]> {
 
 export function getDeploymentModelLabel(model: DeploymentModel): string {
   switch (model) {
-    case "managed": return "Managed";
-    case "byok": return "BYOK (Bring Your Own Keys)";
-    case "self_hosted": return "Self-Hosted";
+    case "managed": return "Direct / Managed (20p/min)";
+    case "byok": return "BYOK - Bring Your Own Keys (8p/min)";
+    case "self_hosted": return "White-Label / Reseller (12p/min)";
     case "custom": return "Custom Plan";
-    default: return "Managed";
+    default: return "Direct / Managed (20p/min)";
   }
 }
 
 export function getDeploymentModelDescription(model: DeploymentModel): string {
   switch (model) {
-    case "managed": return "We host and run everything. AI, telephony, and platform costs included in rate.";
-    case "byok": return "Use our platform with your own API keys. You pay AI/telephony providers directly, we charge platform fee only.";
-    case "self_hosted": return "Run the platform on your own infrastructure. License fee per minute of usage.";
+    case "managed": return "Fully managed AI agents. AI, telephony, and platform costs included at 20p/min.";
+    case "byok": return "Platform fee only at 8p/min. You pay AI/telephony providers directly with your own keys.";
+    case "self_hosted": return "Wholesale rate for partners to resell under their own brand at 12p/min.";
     case "custom": return "Bespoke package with custom rates, features, and SLAs configured by our sales team.";
     default: return "";
   }

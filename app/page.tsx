@@ -8,7 +8,7 @@ import Link from "next/link";
 import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/json-ld";
 import { CustomIcon } from "@/components/ui/custom-icon";
 import { WebCallButton } from "@/components/landing/web-call-button";
-import { SiApple, SiGoogleplay } from "react-icons/si";
+import { SiApple } from "react-icons/si";
 import { TalkTimeInfo } from "@/components/talk-time-info";
 import {
   ArrowRight,
@@ -202,18 +202,33 @@ export default function HomePage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center md:items-start gap-3 mb-8">
-                <Button asChild size="lg" data-testid="link-download-appstore">
-                  <a href="#">
-                    <SiApple className="h-5 w-5" />
-                    App Store
-                  </a>
-                </Button>
-                <Button asChild size="lg" data-testid="link-download-googleplay">
-                  <a href="#">
-                    <SiGoogleplay className="h-5 w-5" />
-                    Google Play
-                  </a>
-                </Button>
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-3 rounded-xl bg-black px-5 py-3 hover-elevate transition-transform"
+                  data-testid="link-download-appstore"
+                >
+                  <SiApple className="h-8 w-8 text-white" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-[10px] leading-tight text-gray-300 uppercase tracking-wide">Download on the</span>
+                    <span className="text-lg font-semibold leading-tight text-white -mt-0.5">App Store</span>
+                  </div>
+                </a>
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-3 rounded-xl bg-black px-5 py-3 hover-elevate transition-transform"
+                  data-testid="link-download-googleplay"
+                >
+                  <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none">
+                    <path d="M3.609 1.814L13.793 12 3.609 22.186a.996.996 0 0 1-.609-.92V2.734a.996.996 0 0 1 .609-.92z" fill="#4285F4"/>
+                    <path d="M17.727 8.268L5.25.87a1.004 1.004 0 0 0-.516-.13L13.793 12l3.934-3.732z" fill="#EA4335"/>
+                    <path d="M17.727 15.732L13.793 12l3.934-3.732L21.15 10.5c.78.45.78 1.55 0 2l-3.423 3.232z" fill="#FBBC04"/>
+                    <path d="M4.734 23.26a1.004 1.004 0 0 0 .516-.13l12.477-7.398L13.793 12 4.734 23.26z" fill="#34A853"/>
+                  </svg>
+                  <div className="flex flex-col items-start">
+                    <span className="text-[10px] leading-tight text-gray-300 uppercase tracking-wide">Get it on</span>
+                    <span className="text-lg font-semibold leading-tight text-white -mt-0.5">Google Play</span>
+                  </div>
+                </a>
               </div>
 
               <div className="hidden sm:flex flex-col sm:flex-row items-center md:items-start gap-4">

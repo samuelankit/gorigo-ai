@@ -47,11 +47,13 @@ import {
   MessageSquare,
   Globe,
   Activity,
+  MousePointerClick,
 } from "lucide-react";
 
 const overviewItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Web Traffic", url: "/admin/web-traffic", icon: MousePointerClick },
   { title: "Revenue", url: "/admin/revenue", icon: PoundSterling },
   { title: "Unit Economics", url: "/admin/unit-economics", icon: Calculator },
   { title: "Calls", url: "/admin/calls", icon: PhoneCall },

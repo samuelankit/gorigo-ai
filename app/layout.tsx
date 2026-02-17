@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { CookieConsent } from "@/components/cookie-consent";
+import { Suspense } from "react";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -51,6 +53,9 @@ export default function RootLayout({
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
           <Toaster />
           <CookieConsent />
         </ThemeProvider>

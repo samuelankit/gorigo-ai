@@ -31,6 +31,7 @@ Key features include:
 - **Multi-Tier Distribution Engine**: Manages a commission waterfall.
 - **Billing & Usage**: Talk-time only pricing, real-time wallet deductions, billing ledger, spending caps, and Stripe for top-ups.
 - **Analytics Deep-Dive**: A 6-tab dashboard with global date range picker for detailed insights.
+- **Web Traffic Intelligence (Section 1 of Decision Intelligence)**: Custom-built analytics tracking system with client-side tracker (pageviews, clicks, scroll depth, time on page, device/browser/OS, UTM params, search keywords, conversions). Three dashboard pages: Overview (KPIs, charts, tables), User Journeys & Funnels (conversion funnel, entry/exit pages, page flows, drop-off analysis), and AI Insights (health scores, anomaly detection, trend identification, recommendations, blind spot detection). PII auto-redaction in tracker. Located at `/admin/web-traffic/`.
 - **International Calling System**: Includes country management, Twilio sub-account isolation, compliance engine, fraud detection, and currency conversion.
 - **Smart Drafts AI Content Studio**: Draft generation for call scripts, email templates, SMS templates, and FAQ answers with version history, tone, and language options.
 

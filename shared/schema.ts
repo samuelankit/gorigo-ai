@@ -1504,4 +1504,92 @@ export const insertPlatformKnowledgeChunkSchema = createInsertSchema(platformKno
 export type InsertPlatformKnowledgeChunk = z.infer<typeof insertPlatformKnowledgeChunkSchema>;
 export type PlatformKnowledgeChunk = typeof platformKnowledgeChunks.$inferSelect;
 
+// ═══════════════════════════════════════════════════
+// ANALYTICS — EVENT TRACKING & SESSIONS
+// ═══════════════════════════════════════════════════
+
+export const analyticsEvents = pgTable("analytics_events", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  visitorId: text("visitor_id").notNull(),
+  orgId: integer("org_id").references(() => orgs.id),
+  userId: integer("user_id").references(() => users.id),
+  eventType: text("event_type").notNull(),
+  page: text("page").notNull(),
+  pageTitle: text("page_title"),
+  referrer: text("referrer"),
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
+  searchKeyword: text("search_keyword"),
+  deviceType: text("device_type").notNull(),
+  browser: text("browser"),
+  os: text("os"),
+  screenWidth: integer("screen_width"),
+  screenHeight: integer("screen_height"),
+  country: text("country"),
+  city: text("city"),
+  region: text("region"),
+  scrollDepth: integer("scroll_depth"),
+  timeOnPage: integer("time_on_page"),
+  elementId: text("element_id"),
+  elementText: text("element_text"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_analytics_events_session_id").on(table.sessionId),
+  index("idx_analytics_events_visitor_id").on(table.visitorId),
+  index("idx_analytics_events_org_id").on(table.orgId),
+  index("idx_analytics_events_event_type").on(table.eventType),
+  index("idx_analytics_events_page").on(table.page),
+  index("idx_analytics_events_created_at").on(table.createdAt),
+  index("idx_analytics_events_page_event_type").on(table.page, table.eventType),
+]);
+
+export const analyticsSessions = pgTable("analytics_sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").unique().notNull(),
+  visitorId: text("visitor_id").notNull(),
+  orgId: integer("org_id").references(() => orgs.id),
+  userId: integer("user_id").references(() => users.id),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  endedAt: timestamp("ended_at"),
+  duration: integer("duration"),
+  pageCount: integer("page_count").default(0),
+  entryPage: text("entry_page").notNull(),
+  exitPage: text("exit_page"),
+  referrer: text("referrer"),
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
+  deviceType: text("device_type").notNull(),
+  browser: text("browser"),
+  os: text("os"),
+  country: text("country"),
+  city: text("city"),
+  isBounce: boolean("is_bounce").default(true),
+  isConverted: boolean("is_converted").default(false),
+  conversionPage: text("conversion_page"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_analytics_sessions_session_id").on(table.sessionId),
+  index("idx_analytics_sessions_visitor_id").on(table.visitorId),
+  index("idx_analytics_sessions_org_id").on(table.orgId),
+  index("idx_analytics_sessions_started_at").on(table.startedAt),
+  index("idx_analytics_sessions_is_bounce").on(table.isBounce),
+  index("idx_analytics_sessions_is_converted").on(table.isConverted),
+]);
+
+// ═══════════════════════════════════════════════════
+// ANALYTICS — INSERT SCHEMAS & TYPES
+// ═══════════════════════════════════════════════════
+
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, createdAt: true });
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+
+export const insertAnalyticsSessionSchema = createInsertSchema(analyticsSessions).omit({ id: true, createdAt: true });
+export type InsertAnalyticsSession = z.infer<typeof insertAnalyticsSessionSchema>;
+export type AnalyticsSession = typeof analyticsSessions.$inferSelect;
+
 export * from "./models/chat";

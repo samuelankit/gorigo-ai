@@ -4,6 +4,7 @@ const nextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: [
     '*.picard.replit.dev',
+    '*.kirk.replit.dev',
     '*.replit.dev',
     '*.replit.app',
     'http://localhost:5000',

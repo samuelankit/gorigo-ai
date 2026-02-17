@@ -175,23 +175,29 @@ Output ONLY the JSON array. No commentary.`;
       createdDrafts.push(draft);
     }
 
-    const cost = calculateLLMCost(result.model || "gpt-4o-mini", result.promptTokens || 0, result.completionTokens || 0);
+    const inputTok = result.inputTokens || 0;
+    const outputTok = result.outputTokens || 0;
+    const costResult = calculateLLMCost(result.model || "gpt-4o-mini", inputTok, outputTok);
+    const cost = costResult.costGBP;
     try {
-      await deductFromWallet(auth.orgId, cost, `Bulk FAQ generation (${validatedEntries.length} FAQs)`);
+      await deductFromWallet(auth.orgId, cost, `Bulk FAQ generation (${validatedEntries.length} FAQs)`, "ai_drafts");
       await logCostEvent({
         orgId: auth.orgId,
         category: "ai_drafts",
-        subcategory: "bulk_faq",
-        amount: cost,
+        provider: result.provider || "openai",
         model: result.model || "gpt-4o-mini",
-        promptTokens: result.promptTokens || 0,
-        completionTokens: result.completionTokens || 0,
+        inputTokens: inputTok,
+        outputTokens: outputTok,
+        unitQuantity: validatedEntries.length,
+        unitType: "faq_draft",
+        unitCost: cost,
+        totalCost: cost,
       });
       await logAudit({
-        userId: auth.user.id,
-        orgId: auth.orgId,
+        actorId: auth.user.id,
+        actorEmail: auth.user.email,
         action: "draft.bulk_faq_generate",
-        resource: "drafts",
+        entityType: "drafts",
         details: { count: validatedEntries.length, tone, language, cost },
       });
     } catch (costErr) {

@@ -163,7 +163,7 @@ export default function SmartDraftsPage() {
   const [versionDialog, setVersionDialog] = useState<Draft | null>(null);
   const [versionsLoading, setVersionsLoading] = useState(false);
 
-  const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     fetch("/api/agents")

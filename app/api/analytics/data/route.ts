@@ -183,6 +183,72 @@ export async function GET(request: NextRequest) {
         break;
       }
 
+      case "timeseries": {
+        const result = await db.execute(sql`
+          SELECT
+            DATE(e.created_at) AS day,
+            COUNT(*) FILTER (WHERE e.event_type = 'pageview') AS pageviews,
+            COUNT(DISTINCT e.visitor_id) AS visitors,
+            COUNT(DISTINCT e.session_id) AS sessions
+          FROM analytics_events e
+          WHERE ${sinceFilter} ${orgFilter}
+          GROUP BY DATE(e.created_at)
+          ORDER BY day ASC
+        `);
+        data = result.rows;
+        break;
+      }
+
+      case "funnel": {
+        const funnelStages = [
+          { label: "Landing Page", paths: ["/", "/home"] },
+          { label: "Pricing", paths: ["/pricing"] },
+          { label: "Features", paths: ["/features", "/capabilities"] },
+          { label: "Register", paths: ["/register"] },
+          { label: "Onboarding", paths: ["/onboarding"] },
+          { label: "Dashboard", paths: ["/dashboard"] },
+        ];
+
+        const stagePathChecks = funnelStages.map((stage) => {
+          const checks = stage.paths.map((p) =>
+            p === "/" ? `e.page = '/'` : `e.page LIKE '${p}%'`
+          );
+          return `(${checks.join(" OR ")})`;
+        });
+
+        const result = await db.execute(sql.raw(`
+          WITH session_stages AS (
+            SELECT
+              e.session_id,
+              ${stagePathChecks.map((check, i) =>
+                `MIN(CASE WHEN ${check} THEN e.id END) AS stage_${i}_first`
+              ).join(",\n              ")}
+            FROM analytics_events e
+            WHERE e.created_at >= NOW() - '${interval}'::interval
+              AND e.event_type = 'pageview'
+              ${isSuperAdmin ? "" : `AND e.org_id = ${auth.orgId}`}
+            GROUP BY e.session_id
+          )
+          SELECT
+            ${stagePathChecks.map((_, i) => {
+              if (i === 0) {
+                return `COUNT(CASE WHEN stage_0_first IS NOT NULL THEN 1 END) AS stage_${i}_count`;
+              }
+              const conditions = Array.from({ length: i + 1 }, (__, j) => `stage_${j}_first IS NOT NULL`).join(" AND ");
+              const ordering = Array.from({ length: i }, (__, j) => `stage_${j}_first < stage_${j + 1}_first`).join(" AND ");
+              return `COUNT(CASE WHEN ${conditions} AND ${ordering} THEN 1 END) AS stage_${i}_count`;
+            }).join(",\n            ")}
+          FROM session_stages
+        `));
+
+        const row = result.rows[0] || {};
+        data = funnelStages.map((stage, i) => ({
+          label: stage.label,
+          sessions: Number(row[`stage_${i}_count`] || 0),
+        }));
+        break;
+      }
+
       case "journeys": {
         const entryPages = await db.execute(sql`
           SELECT s.entry_page, COUNT(*) AS sessions

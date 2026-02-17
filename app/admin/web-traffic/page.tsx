@@ -35,46 +35,13 @@ import {
   Legend,
 } from "recharts";
 
-const CHART_COLORS = {
-  primary: "hsl(262, 83%, 58%)",
-  secondary: "hsl(217, 91%, 60%)",
-  success: "hsl(142, 71%, 45%)",
-  warning: "hsl(38, 92%, 50%)",
-  danger: "hsl(0, 84%, 60%)",
-  info: "hsl(199, 89%, 48%)",
-};
-
-const PIE_COLORS = [
-  "hsl(262, 83%, 58%)",
-  "hsl(217, 91%, 60%)",
-  "hsl(142, 71%, 45%)",
-  "hsl(38, 92%, 50%)",
-  "hsl(0, 84%, 60%)",
-  "hsl(199, 89%, 48%)",
-];
-
-const TOOLTIP_STYLE = {
-  backgroundColor: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
-  borderRadius: "6px",
-  fontSize: "12px",
-};
+import { CHART_COLORS, PIE_COLORS, TOOLTIP_STYLE, PERIODS, formatNumber, formatPercent, fetchAnalyticsData as fetchData } from "@/lib/analytics-shared";
 
 const formatDuration = (seconds: number) => {
   if (!seconds) return "0s";
   const m = Math.floor(seconds / 60);
   const s = Math.round(seconds % 60);
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
-};
-
-const formatNumber = (n: number) => new Intl.NumberFormat().format(n);
-
-const formatPercent = (n: number) => `${Math.round(n)}%`;
-
-const fetchData = async (period: string, metric: string) => {
-  const res = await fetch(`/api/analytics/data?period=${period}&metric=${metric}`);
-  if (!res.ok) return null;
-  return res.json();
 };
 
 interface OverviewData {
@@ -111,13 +78,12 @@ interface LocationData {
   cities: { city: string; country: string; visitors: number }[];
 }
 
-const PERIODS = ["7d", "30d", "90d"] as const;
-
 export default function WebTrafficPage() {
   const [period, setPeriod] = useState<string>("7d");
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<OverviewData | null>(null);
   const [pages, setPages] = useState<PageData[]>([]);
+  const [timeseries, setTimeseries] = useState<{ day: string; pageviews: number; visitors: number; sessions: number }[]>([]);
   const [sources, setSources] = useState<SourceData | null>(null);
   const [devices, setDevices] = useState<DeviceData | null>(null);
   const [locations, setLocations] = useState<LocationData | null>(null);
@@ -125,21 +91,29 @@ export default function WebTrafficPage() {
   const loadData = useCallback(async (p: string) => {
     setLoading(true);
     try {
-      const [overviewRes, pagesRes, sourcesRes, devicesRes, locationsRes] = await Promise.all([
+      const [overviewRes, pagesRes, timeseriesRes, sourcesRes, devicesRes, locationsRes] = await Promise.all([
         fetchData(p, "overview"),
         fetchData(p, "pages"),
+        fetchData(p, "timeseries"),
         fetchData(p, "sources"),
         fetchData(p, "devices"),
         fetchData(p, "locations"),
       ]);
       setOverview(overviewRes?.data || null);
       setPages(Array.isArray(pagesRes?.data) ? pagesRes.data : []);
+      setTimeseries(Array.isArray(timeseriesRes?.data) ? timeseriesRes.data.map((r: any) => ({
+        day: r.day ? new Date(r.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '',
+        pageviews: Number(r.pageviews || 0),
+        visitors: Number(r.visitors || 0),
+        sessions: Number(r.sessions || 0),
+      })) : []);
       setSources(sourcesRes?.data || null);
       setDevices(devicesRes?.data || null);
       setLocations(locationsRes?.data || null);
     } catch {
       setOverview(null);
       setPages([]);
+      setTimeseries([]);
       setSources(null);
       setDevices(null);
       setLocations(null);
@@ -195,7 +169,7 @@ export default function WebTrafficPage() {
 
   const utmData = sources?.utmCampaigns?.filter((c) => c.utm_campaign) || [];
 
-  const hasNoData = !overview && pages.length === 0 && !sources && !devices && !locations;
+  const hasNoData = !overview && pages.length === 0 && timeseries.length === 0 && !sources && !devices && !locations;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -362,20 +336,25 @@ export default function WebTrafficPage() {
             <CardContent>
               {loading ? (
                 <Skeleton className="h-72 w-full" />
-              ) : pages.length > 0 ? (
+              ) : timeseries.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={pages.slice(0, 30).map((p, i) => ({ name: p.page.split("/").pop() || p.page, pageviews: Number(p.pageviews), idx: i }))}>
+                  <AreaChart data={timeseries}>
                     <defs>
                       <linearGradient id="trafficGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.3} />
                         <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
                       </linearGradient>
+                      <linearGradient id="visitorsGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={CHART_COLORS.secondary} stopOpacity={0.2} />
+                        <stop offset="95%" stopColor={CHART_COLORS.secondary} stopOpacity={0} />
+                      </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 16%, 47%, 0.15)" />
-                    <XAxis dataKey="name" fontSize={11} stroke="hsl(215, 16%, 47%)" />
+                    <XAxis dataKey="day" fontSize={11} stroke="hsl(215, 16%, 47%)" />
                     <YAxis fontSize={12} stroke="hsl(215, 16%, 47%)" />
                     <Tooltip contentStyle={TOOLTIP_STYLE} />
                     <Area type="monotone" dataKey="pageviews" name="Pageviews" stroke={CHART_COLORS.primary} fill="url(#trafficGrad)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="visitors" name="Visitors" stroke={CHART_COLORS.secondary} fill="url(#visitorsGrad)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (

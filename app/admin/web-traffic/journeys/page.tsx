@@ -31,79 +31,14 @@ import {
   Legend,
 } from "recharts";
 
-const CHART_COLORS = {
-  primary: "hsl(262, 83%, 58%)",
-  secondary: "hsl(217, 91%, 60%)",
-  success: "hsl(142, 71%, 45%)",
-  warning: "hsl(38, 92%, 50%)",
-  danger: "hsl(0, 84%, 60%)",
-  info: "hsl(199, 89%, 48%)",
-};
-
-const PIE_COLORS = [
-  "hsl(262, 83%, 58%)",
-  "hsl(217, 91%, 60%)",
-  "hsl(142, 71%, 45%)",
-  "hsl(38, 92%, 50%)",
-  "hsl(0, 84%, 60%)",
-  "hsl(199, 89%, 48%)",
-];
-
-const TOOLTIP_STYLE = {
-  backgroundColor: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
-  borderRadius: "6px",
-  fontSize: "12px",
-};
-
-const FUNNEL_COLORS = [
-  "hsl(262, 83%, 48%)",
-  "hsl(262, 78%, 53%)",
-  "hsl(262, 73%, 58%)",
-  "hsl(262, 68%, 63%)",
-  "hsl(262, 63%, 68%)",
-  "hsl(262, 58%, 73%)",
-];
-
-const FUNNEL_STAGES = [
-  { label: "Landing Page", paths: ["/", "/home"] },
-  { label: "Pricing", paths: ["/pricing"] },
-  { label: "Features", paths: ["/features", "/capabilities"] },
-  { label: "Register", paths: ["/register"] },
-  { label: "Onboarding", paths: ["/onboarding"] },
-  { label: "Dashboard", paths: ["/dashboard"] },
-];
-
-const PERIODS = ["7d", "30d", "90d"] as const;
-
-const formatNumber = (n: number) => new Intl.NumberFormat().format(n);
-const formatPercent = (n: number) => `${Math.round(n)}%`;
-
-const fetchData = async (period: string, metric: string) => {
-  const res = await fetch(`/api/analytics/data?period=${period}&metric=${metric}`);
-  if (!res.ok) return null;
-  return res.json();
-};
-
-const bounceColor = (rate: number) => {
-  if (rate < 30) return CHART_COLORS.success;
-  if (rate <= 50) return CHART_COLORS.warning;
-  return CHART_COLORS.danger;
-};
-
-const bounceTextClass = (rate: number) => {
-  if (rate < 30) return "text-green-600 dark:text-green-400";
-  if (rate <= 50) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
-};
-
-const categorizeSource = (source: string): string => {
-  const s = source.toLowerCase();
-  if (s === "direct" || s === "(direct)" || s === "") return "Direct";
-  if (s.includes("google") || s.includes("bing") || s.includes("yahoo") || s.includes("duckduckgo")) return "Search";
-  if (s.includes("facebook") || s.includes("twitter") || s.includes("linkedin") || s.includes("instagram") || s.includes("tiktok") || s.includes("reddit") || s.includes("youtube")) return "Social";
-  return "Referral";
-};
+import {
+  CHART_COLORS, PIE_COLORS, TOOLTIP_STYLE, FUNNEL_COLORS, PERIODS,
+  formatNumber, formatPercent,
+  fetchAnalyticsData as fetchData,
+  bounceRateColor as bounceColor,
+  bounceRateTextClass as bounceTextClass,
+  categorizeSource,
+} from "@/lib/analytics-shared";
 
 interface JourneysData {
   entryPages: { entry_page: string; sessions: number }[];
@@ -132,21 +67,26 @@ export default function JourneysPage() {
   const [pages, setPages] = useState<PageRow[]>([]);
   const [sources, setSources] = useState<SourcesData | null>(null);
 
+  const [funnelData, setFunnelData] = useState<{ label: string; sessions: number }[]>([]);
+
   const loadData = useCallback(async (p: string) => {
     setLoading(true);
     try {
-      const [journeysRes, pagesRes, sourcesRes] = await Promise.all([
+      const [journeysRes, pagesRes, sourcesRes, funnelRes] = await Promise.all([
         fetchData(p, "journeys"),
         fetchData(p, "pages"),
         fetchData(p, "sources"),
+        fetchData(p, "funnel"),
       ]);
       setJourneys(journeysRes?.data || null);
       setPages(Array.isArray(pagesRes?.data) ? pagesRes.data : []);
       setSources(sourcesRes?.data || null);
+      setFunnelData(Array.isArray(funnelRes?.data) ? funnelRes.data : []);
     } catch {
       setJourneys(null);
       setPages([]);
       setSources(null);
+      setFunnelData([]);
     } finally {
       setLoading(false);
     }
@@ -156,15 +96,7 @@ export default function JourneysPage() {
     loadData(period);
   }, [period, loadData]);
 
-  const funnelData = FUNNEL_STAGES.map((stage) => {
-    const matchingPages = pages.filter((p) =>
-      stage.paths.some((path) => p.page === path || p.page.startsWith(path + "/") || (path === "/" && p.page === "/"))
-    );
-    const visitors = matchingPages.reduce((sum, p) => sum + Number(p.unique_visitors || 0), 0);
-    return { ...stage, visitors };
-  });
-
-  const maxFunnelVisitors = Math.max(...funnelData.map((s) => s.visitors), 1);
+  const maxFunnelSessions = Math.max(...funnelData.map((s) => s.sessions), 1);
 
   const entryPages = journeys?.entryPages || [];
   const exitPages = journeys?.exitPages || [];
@@ -280,10 +212,10 @@ export default function JourneysPage() {
               ) : (
                 <div className="space-y-3">
                   {funnelData.map((stage, i) => {
-                    const widthPct = maxFunnelVisitors > 0 ? Math.max((stage.visitors / maxFunnelVisitors) * 100, 4) : 4;
-                    const prevVisitors = i > 0 ? funnelData[i - 1].visitors : stage.visitors;
-                    const dropOff = prevVisitors > 0 && i > 0 ? Math.round(((prevVisitors - stage.visitors) / prevVisitors) * 100) : 0;
-                    const isZero = stage.visitors === 0;
+                    const widthPct = maxFunnelSessions > 0 ? Math.max((stage.sessions / maxFunnelSessions) * 100, 4) : 4;
+                    const prevSessions = i > 0 ? funnelData[i - 1].sessions : stage.sessions;
+                    const dropOff = prevSessions > 0 && i > 0 ? Math.round(((prevSessions - stage.sessions) / prevSessions) * 100) : 0;
+                    const isZero = stage.sessions === 0;
 
                     return (
                       <div key={stage.label} className="flex items-center gap-3" data-testid={`funnel-stage-${i}`}>
@@ -299,8 +231,8 @@ export default function JourneysPage() {
                               opacity: isZero ? 0.5 : 1,
                             }}
                           >
-                            <span className="text-xs font-semibold text-white whitespace-nowrap" data-testid={`funnel-visitors-${i}`}>
-                              {isZero ? "0" : formatNumber(stage.visitors)}
+                            <span className="text-xs font-semibold text-white whitespace-nowrap" data-testid={`funnel-sessions-${i}`}>
+                              {isZero ? "0" : formatNumber(stage.sessions)}
                             </span>
                           </div>
                         </div>
@@ -603,8 +535,8 @@ export default function JourneysPage() {
               ) : (
                 <div className="space-y-1">
                   {funnelData.map((stage, i) => {
-                    const nextVisitors = i < funnelData.length - 1 ? funnelData[i + 1].visitors : stage.visitors;
-                    const dropOff = stage.visitors > 0 ? Math.round(((stage.visitors - nextVisitors) / stage.visitors) * 100) : 0;
+                    const nextSessions = i < funnelData.length - 1 ? funnelData[i + 1].sessions : stage.sessions;
+                    const dropOff = stage.sessions > 0 ? Math.round(((stage.sessions - nextSessions) / stage.sessions) * 100) : 0;
                     const needsAttention = dropOff > 60;
                     const isLast = i === funnelData.length - 1;
 
@@ -621,7 +553,7 @@ export default function JourneysPage() {
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-foreground">{stage.label}</p>
                               <p className="text-xs text-muted-foreground">
-                                {formatNumber(stage.visitors)} visitors
+                                {formatNumber(stage.sessions)} sessions
                               </p>
                             </div>
                           </div>
@@ -629,7 +561,7 @@ export default function JourneysPage() {
                             <div className="flex items-center gap-2 shrink-0">
                               <div className="text-right">
                                 <p className="text-xs text-muted-foreground">
-                                  {formatNumber(nextVisitors)} continued
+                                  {formatNumber(nextSessions)} continued
                                 </p>
                                 <p className={`text-sm font-semibold ${needsAttention ? "text-red-600 dark:text-red-400" : dropOff > 30 ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"}`}>
                                   {dropOff > 0 ? `-${dropOff}%` : "0%"} drop-off

@@ -1,26 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { analyticsEvents, analyticsSessions } from "@/shared/schema";
-import { sql } from "drizzle-orm";
+import { analyticsEvents, analyticsSessions, sessions as dbSessions, orgMembers } from "@/shared/schema";
+import { sql, eq, countDistinct } from "drizzle-orm";
+import { hashToken } from "@/lib/auth";
+import { z } from "zod";
 
 const WINDOW_MS = 1000;
 const MAX_REQUESTS = 10;
 const MAX_EVENTS_PER_REQUEST = 100;
+const MAX_PAYLOAD_BYTES = 100 * 1024;
+const SESSION_COOKIE_NAME = "gorigo_session";
 
-const store = new Map<string, { count: number; resetAt: number }>();
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 setInterval(() => {
   const now = Date.now();
-  store.forEach((entry, key) => {
-    if (entry.resetAt <= now) store.delete(key);
+  rateLimitStore.forEach((entry, key) => {
+    if (entry.resetAt <= now) rateLimitStore.delete(key);
   });
 }, 30_000);
 
-function sanitizeText(raw: string): string {
-  const clean = raw.trim().slice(0, 50);
-  return clean
-    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[redacted]')
-    .replace(/\+?\d[\d\s\-()]{6,}/g, '[redacted]');
+const batchIdStore = new Map<string, number>();
+const BATCH_TTL_MS = 60_000;
+const MAX_BATCH_IDS = 10_000;
+
+setInterval(() => {
+  const now = Date.now();
+  batchIdStore.forEach((expiresAt, key) => {
+    if (expiresAt <= now) batchIdStore.delete(key);
+  });
+}, 15_000);
+
+function stripHtml(raw: string, maxLen: number): string {
+  return raw.replace(/<[^>]*>/g, "").trim().slice(0, maxLen);
+}
+
+function redactPii(text: string): string {
+  return text
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[redacted]")
+    .replace(/\+?\d[\d\s\-()]{6,}/g, "[redacted]");
+}
+
+function sanitizeField(raw: string | undefined | null, maxLen: number): string | null {
+  if (!raw || typeof raw !== "string") return null;
+  return stripHtml(raw, maxLen);
 }
 
 function getIp(request: NextRequest): string {
@@ -33,9 +56,9 @@ function getIp(request: NextRequest): string {
 
 function checkRate(ip: string): boolean {
   const now = Date.now();
-  const entry = store.get(ip);
+  const entry = rateLimitStore.get(ip);
   if (!entry || entry.resetAt <= now) {
-    store.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    rateLimitStore.set(ip, { count: 1, resetAt: now + WINDOW_MS });
     return true;
   }
   if (entry.count < MAX_REQUESTS) {
@@ -45,11 +68,96 @@ function checkRate(ip: string): boolean {
   return false;
 }
 
+const eventSchema = z.object({
+  sessionId: z.string().max(50),
+  visitorId: z.string().max(50),
+  eventType: z.enum(["pageview", "click", "scroll_depth", "time_on_page", "conversion"]),
+  page: z.string().max(500),
+  pageTitle: z.string().max(200).optional().nullable(),
+  referrer: z.string().max(1000).optional().nullable(),
+  utmSource: z.string().max(200).optional().nullable(),
+  utmMedium: z.string().max(200).optional().nullable(),
+  utmCampaign: z.string().max(200).optional().nullable(),
+  searchKeyword: z.string().max(200).optional().nullable(),
+  deviceType: z.string().max(50).optional().nullable(),
+  browser: z.string().max(100).optional().nullable(),
+  os: z.string().max(100).optional().nullable(),
+  screenWidth: z.number().int().min(0).max(10000).optional().nullable(),
+  screenHeight: z.number().int().min(0).max(10000).optional().nullable(),
+  country: z.string().max(100).optional().nullable(),
+  city: z.string().max(200).optional().nullable(),
+  scrollDepth: z.number().min(0).max(100).optional().nullable(),
+  timeOnPage: z.number().min(0).max(86400).optional().nullable(),
+  elementId: z.string().max(200).optional().nullable(),
+  elementText: z.string().max(500).optional().nullable(),
+  timestamp: z.number().optional().nullable(),
+  metadata: z.any().optional().nullable(),
+});
+
+const payloadSchema = z.object({
+  batchId: z.string().max(50).optional().nullable(),
+  events: z.array(eventSchema).min(1).max(MAX_EVENTS_PER_REQUEST),
+});
+
+async function resolveAuth(request: NextRequest): Promise<{ orgId: number | null; userId: number | null }> {
+  try {
+    const cookieHeader = request.headers.get("cookie");
+    if (!cookieHeader) return { orgId: null, userId: null };
+
+    const cookies = cookieHeader.split(";").map((c) => c.trim());
+    let sessionToken: string | null = null;
+    for (const cookie of cookies) {
+      const [name, ...rest] = cookie.split("=");
+      if (name.trim() === SESSION_COOKIE_NAME) {
+        sessionToken = rest.join("=").trim();
+        break;
+      }
+    }
+
+    if (!sessionToken) return { orgId: null, userId: null };
+
+    const tokenHash = hashToken(sessionToken);
+    const [session] = await db
+      .select()
+      .from(dbSessions)
+      .where(eq(dbSessions.token, tokenHash))
+      .limit(1);
+
+    if (!session) return { orgId: null, userId: null };
+
+    const now = new Date();
+    if (new Date(session.expiresAt) < now) return { orgId: null, userId: null };
+
+    const userId = session.userId;
+
+    let orgId: number | null = null;
+    if (session.activeOrgId) {
+      orgId = session.activeOrgId;
+    } else {
+      const [membership] = await db
+        .select()
+        .from(orgMembers)
+        .where(eq(orgMembers.userId, userId))
+        .limit(1);
+      orgId = membership?.orgId ?? null;
+    }
+
+    return { orgId, userId };
+  } catch {
+    return { orgId: null, userId: null };
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const ip = getIp(request);
     if (!checkRate(ip)) {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
+    const contentLength = request.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json({ error: "Payload too large" }, { status: 413 });
     }
 
     let body: any;
@@ -59,102 +167,122 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const events = body?.events;
-    if (!Array.isArray(events) || events.length === 0) {
-      return NextResponse.json({ error: "No events provided" }, { status: 400 });
+    const parsed = payloadSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.issues.slice(0, 5) },
+        { status: 400 },
+      );
     }
 
-    if (events.length > MAX_EVENTS_PER_REQUEST) {
-      return NextResponse.json({ error: `Max ${MAX_EVENTS_PER_REQUEST} events per request` }, { status: 400 });
+    const { events, batchId } = parsed.data;
+
+    if (batchId) {
+      if (batchIdStore.has(batchId)) {
+        return NextResponse.json({ ok: true, deduplicated: true });
+      }
+      if (batchIdStore.size >= MAX_BATCH_IDS) {
+        const oldestKey = batchIdStore.keys().next().value;
+        if (oldestKey) batchIdStore.delete(oldestKey);
+      }
+      batchIdStore.set(batchId, Date.now() + BATCH_TTL_MS);
     }
+
+    const { orgId, userId } = await resolveAuth(request);
 
     const cfCountry = request.headers.get("cf-ipcountry") || undefined;
     const cfCity = request.headers.get("cf-ipcity") || undefined;
 
-    const sessionMap = new Map<string, {
-      visitorId: string;
-      pages: Set<string>;
-      lastPage: string;
-      entryPage: string;
-      referrer?: string;
-      utmSource?: string;
-      utmMedium?: string;
-      utmCampaign?: string;
-      deviceType: string;
-      browser?: string;
-      os?: string;
-      country?: string;
-      city?: string;
-      maxTimestamp: number;
-      isConverted: boolean;
-      conversionPage?: string;
-    }>();
+    const sessionMap = new Map<
+      string,
+      {
+        visitorId: string;
+        pages: Set<string>;
+        lastPage: string;
+        entryPage: string;
+        referrer: string | null;
+        utmSource: string | null;
+        utmMedium: string | null;
+        utmCampaign: string | null;
+        deviceType: string;
+        browser: string | null;
+        os: string | null;
+        country: string | null;
+        city: string | null;
+        maxTimestamp: number;
+        isConverted: boolean;
+        conversionPage: string | null;
+      }
+    >();
 
     const eventRows: any[] = [];
 
     for (const evt of events) {
-      if (!evt.sessionId || !evt.visitorId || !evt.page) continue;
+      const deviceType = sanitizeField(evt.deviceType, 50) || "unknown";
+      const country = sanitizeField(evt.country, 100) || cfCountry || null;
+      const city = sanitizeField(evt.city, 200) || cfCity || null;
+      const page = sanitizeField(evt.page, 500) || evt.page.slice(0, 500);
 
-      const eventType = evt.eventType || "pageview";
-      const deviceType = evt.deviceType || "unknown";
-      const country = evt.country || cfCountry;
-      const city = evt.city || cfCity;
+      const elementTextRaw = sanitizeField(evt.elementText, 500);
+      const elementTextClean = elementTextRaw ? redactPii(elementTextRaw) : null;
 
       eventRows.push({
         sessionId: evt.sessionId,
         visitorId: evt.visitorId,
-        eventType,
-        page: evt.page,
-        pageTitle: evt.pageTitle || null,
-        referrer: evt.referrer || null,
-        utmSource: evt.utmSource || null,
-        utmMedium: evt.utmMedium || null,
-        utmCampaign: evt.utmCampaign || null,
-        searchKeyword: evt.searchKeyword || null,
+        orgId: orgId,
+        userId: userId,
+        eventType: evt.eventType,
+        page,
+        pageTitle: sanitizeField(evt.pageTitle, 200),
+        referrer: sanitizeField(evt.referrer, 1000),
+        utmSource: sanitizeField(evt.utmSource, 200),
+        utmMedium: sanitizeField(evt.utmMedium, 200),
+        utmCampaign: sanitizeField(evt.utmCampaign, 200),
+        searchKeyword: sanitizeField(evt.searchKeyword, 200),
         deviceType,
-        browser: evt.browser || null,
-        os: evt.os || null,
-        screenWidth: evt.screenWidth || null,
-        screenHeight: evt.screenHeight || null,
-        country: country || null,
-        city: city || null,
-        scrollDepth: evt.scrollDepth || null,
-        timeOnPage: evt.timeOnPage || null,
-        elementId: evt.elementId ? String(evt.elementId).slice(0, 100) : null,
-        elementText: evt.elementText ? sanitizeText(String(evt.elementText)) : null,
+        browser: sanitizeField(evt.browser, 100),
+        os: sanitizeField(evt.os, 100),
+        screenWidth: evt.screenWidth ?? null,
+        screenHeight: evt.screenHeight ?? null,
+        country,
+        city,
+        scrollDepth: evt.scrollDepth ?? null,
+        timeOnPage: evt.timeOnPage ?? null,
+        elementId: sanitizeField(evt.elementId, 200),
+        elementText: elementTextClean,
         metadata: null,
       });
 
       const existing = sessionMap.get(evt.sessionId);
       if (existing) {
-        existing.pages.add(evt.page);
-        existing.lastPage = evt.page;
+        existing.pages.add(page);
+        existing.lastPage = page;
         const ts = evt.timestamp || Date.now();
         if (ts > existing.maxTimestamp) existing.maxTimestamp = ts;
-        if (eventType === "conversion") {
+        if (evt.eventType === "conversion") {
           existing.isConverted = true;
-          existing.conversionPage = evt.page;
+          existing.conversionPage = page;
         }
       } else {
         const pages = new Set<string>();
-        pages.add(evt.page);
+        pages.add(page);
         sessionMap.set(evt.sessionId, {
           visitorId: evt.visitorId,
           pages,
-          lastPage: evt.page,
-          entryPage: evt.page,
-          referrer: evt.referrer,
-          utmSource: evt.utmSource,
-          utmMedium: evt.utmMedium,
-          utmCampaign: evt.utmCampaign,
+          lastPage: page,
+          entryPage: page,
+          referrer: sanitizeField(evt.referrer, 1000),
+          utmSource: sanitizeField(evt.utmSource, 200),
+          utmMedium: sanitizeField(evt.utmMedium, 200),
+          utmCampaign: sanitizeField(evt.utmCampaign, 200),
           deviceType,
-          browser: evt.browser,
-          os: evt.os,
-          country: country,
-          city: city,
+          browser: sanitizeField(evt.browser, 100),
+          os: sanitizeField(evt.os, 100),
+          country,
+          city,
           maxTimestamp: evt.timestamp || Date.now(),
-          isConverted: eventType === "conversion",
-          conversionPage: eventType === "conversion" ? evt.page : undefined,
+          isConverted: evt.eventType === "conversion",
+          conversionPage: evt.eventType === "conversion" ? page : null,
         });
       }
     }
@@ -166,44 +294,61 @@ export async function POST(request: NextRequest) {
     for (const [sessionId, data] of Array.from(sessionMap.entries())) {
       const now = new Date();
       const endedAt = new Date(data.maxTimestamp);
-      const pageCount = data.pages.size;
+      const batchPageCount = data.pages.size;
 
       await db
         .insert(analyticsSessions)
         .values({
           sessionId,
           visitorId: data.visitorId,
+          orgId: orgId,
+          userId: userId,
           entryPage: data.entryPage,
           exitPage: data.lastPage,
-          referrer: data.referrer || null,
-          utmSource: data.utmSource || null,
-          utmMedium: data.utmMedium || null,
-          utmCampaign: data.utmCampaign || null,
+          referrer: data.referrer,
+          utmSource: data.utmSource,
+          utmMedium: data.utmMedium,
+          utmCampaign: data.utmCampaign,
           deviceType: data.deviceType,
-          browser: data.browser || null,
-          os: data.os || null,
-          country: data.country || null,
-          city: data.city || null,
+          browser: data.browser,
+          os: data.os,
+          country: data.country,
+          city: data.city,
           startedAt: now,
           endedAt,
           duration: 0,
-          pageCount,
-          isBounce: pageCount <= 1,
+          pageCount: batchPageCount,
+          isBounce: batchPageCount <= 1,
           isConverted: data.isConverted,
-          conversionPage: data.conversionPage || null,
+          conversionPage: data.conversionPage,
         })
         .onConflictDoUpdate({
           target: analyticsSessions.sessionId,
           set: {
             endedAt,
             exitPage: data.lastPage,
-            pageCount: sql`${analyticsSessions.pageCount} + ${pageCount}`,
-            duration: sql`EXTRACT(EPOCH FROM (${endedAt}::timestamp - ${analyticsSessions.startedAt}))::integer`,
-            isBounce: sql`CASE WHEN ${analyticsSessions.pageCount} + ${pageCount} > 1 THEN false ELSE true END`,
             isConverted: data.isConverted ? true : sql`${analyticsSessions.isConverted}`,
             conversionPage: data.conversionPage || sql`${analyticsSessions.conversionPage}`,
+            orgId: orgId ?? sql`${analyticsSessions.orgId}`,
+            userId: userId ?? sql`${analyticsSessions.userId}`,
           },
         });
+
+      const [distinctResult] = await db
+        .select({ count: countDistinct(analyticsEvents.page) })
+        .from(analyticsEvents)
+        .where(eq(analyticsEvents.sessionId, sessionId));
+
+      const actualPageCount = distinctResult?.count ?? batchPageCount;
+
+      await db
+        .update(analyticsSessions)
+        .set({
+          pageCount: actualPageCount,
+          isBounce: actualPageCount <= 1,
+          duration: sql`GREATEST(0, EXTRACT(EPOCH FROM (${endedAt}::timestamp - ${analyticsSessions.startedAt}))::integer)`,
+        })
+        .where(eq(analyticsSessions.sessionId, sessionId));
     }
 
     return NextResponse.json({ ok: true });

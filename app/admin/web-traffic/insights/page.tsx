@@ -24,7 +24,7 @@ import {
   Star,
 } from "lucide-react";
 
-const PERIODS = ["7d", "30d", "90d"] as const;
+import { PERIODS } from "@/lib/analytics-shared";
 
 interface AnomalyInsight {
   type: "anomaly";

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, real, jsonb, vector, numeric, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, real, jsonb, vector, numeric, uniqueIndex, index, date, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -1584,6 +1584,21 @@ export const analyticsSessions = pgTable("analytics_sessions", {
 // ANALYTICS — INSERT SCHEMAS & TYPES
 // ═══════════════════════════════════════════════════
 
+export const analyticsDailyRollups = pgTable("analytics_daily_rollups", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id"),
+  day: date("day").notNull(),
+  pageviews: integer("pageviews").default(0).notNull(),
+  uniqueVisitors: integer("unique_visitors").default(0).notNull(),
+  uniqueSessions: integer("unique_sessions").default(0).notNull(),
+  totalTimeOnPage: integer("total_time_on_page").default(0).notNull(),
+  bounces: integer("bounces").default(0).notNull(),
+  conversions: integer("conversions").default(0).notNull(),
+  topPage: varchar("top_page", { length: 500 }),
+  topReferrer: varchar("top_referrer", { length: 1000 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, createdAt: true });
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
@@ -1591,5 +1606,9 @@ export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export const insertAnalyticsSessionSchema = createInsertSchema(analyticsSessions).omit({ id: true, createdAt: true });
 export type InsertAnalyticsSession = z.infer<typeof insertAnalyticsSessionSchema>;
 export type AnalyticsSession = typeof analyticsSessions.$inferSelect;
+
+export const insertAnalyticsDailyRollupSchema = createInsertSchema(analyticsDailyRollups).omit({ id: true, createdAt: true });
+export type InsertAnalyticsDailyRollup = z.infer<typeof insertAnalyticsDailyRollupSchema>;
+export type AnalyticsDailyRollup = typeof analyticsDailyRollups.$inferSelect;
 
 export * from "./models/chat";

@@ -26,6 +26,28 @@ interface AnalyticsEvent {
   timestamp: number;
 }
 
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+const CONVERSION_PAGES = ['/register', '/onboarding', '/dashboard'];
+const FLUSH_INTERVAL = 5000;
+
+const BOT_PATTERNS = [
+  /bot/i, /crawl/i, /spider/i, /slurp/i, /mediapartners/i,
+  /Googlebot/i, /Bingbot/i, /Baiduspider/i, /YandexBot/i,
+  /DuckDuckBot/i, /facebookexternalhit/i, /Twitterbot/i,
+  /LinkedInBot/i, /WhatsApp/i, /Applebot/i, /AhrefsBot/i,
+  /SemrushBot/i, /MJ12bot/i, /DotBot/i, /PetalBot/i,
+  /HeadlessChrome/i, /PhantomJS/i, /Puppeteer/i, /Selenium/i,
+  /lighthouse/i, /GTmetrix/i, /PageSpeed/i,
+];
+
+function isBot(): boolean {
+  const ua = navigator.userAgent;
+  if (!ua) return true;
+  if (BOT_PATTERNS.some((p) => p.test(ua))) return true;
+  if (navigator.webdriver) return true;
+  return false;
+}
+
 function generateId(): string {
   const s = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
   return s.replace(/[xy]/g, (c) => {
@@ -36,23 +58,49 @@ function generateId(): string {
 }
 
 function getVisitorId(): string {
-  const key = 'gorigo_visitor_id';
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = generateId();
-    localStorage.setItem(key, id);
+  const key = 'gorigo_vid';
+  try {
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = generateId();
+      localStorage.setItem(key, id);
+    }
+    return id;
+  } catch {
+    return generateId();
   }
-  return id;
 }
 
 function getSessionId(): string {
-  const key = 'gorigo_session_id';
-  let id = sessionStorage.getItem(key);
-  if (!id) {
-    id = generateId();
-    sessionStorage.setItem(key, id);
+  const sessionKey = 'gorigo_sid';
+  const tsKey = 'gorigo_sid_ts';
+  const now = Date.now();
+
+  try {
+    const existingId = sessionStorage.getItem(sessionKey);
+    const lastActivity = sessionStorage.getItem(tsKey);
+
+    if (existingId && lastActivity) {
+      const elapsed = now - Number(lastActivity);
+      if (elapsed < SESSION_TIMEOUT_MS) {
+        sessionStorage.setItem(tsKey, String(now));
+        return existingId;
+      }
+    }
+
+    const newId = generateId();
+    sessionStorage.setItem(sessionKey, newId);
+    sessionStorage.setItem(tsKey, String(now));
+    return newId;
+  } catch {
+    return generateId();
   }
-  return id;
+}
+
+function touchSession(): void {
+  try {
+    sessionStorage.setItem('gorigo_sid_ts', String(Date.now()));
+  } catch {}
 }
 
 function getDeviceType(): string {
@@ -111,8 +159,12 @@ function extractSearchKeyword(): string | null {
   }
 }
 
-const CONVERSION_PAGES = ['/register', '/onboarding', '/dashboard'];
-const FLUSH_INTERVAL = 5000;
+function sanitizeText(raw: string): string {
+  const clean = raw.trim().slice(0, 50);
+  return clean
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[redacted]')
+    .replace(/\+?\d[\d\s\-()]{6,}/g, '[redacted]');
+}
 
 function useAnalyticsTracker() {
   const pathname = usePathname();
@@ -132,42 +184,49 @@ function useAnalyticsTracker() {
   const searchKeywordRef = useRef<string | null>(null);
   const convertedPagesRef = useRef<Set<string>>(new Set());
   const prevPathnameRef = useRef<string>('');
+  const isBotRef = useRef<boolean>(false);
 
   const createEvent = useCallback(
-    (eventType: string, extra: Partial<AnalyticsEvent> = {}): AnalyticsEvent => ({
-      sessionId: sessionIdRef.current,
-      visitorId: visitorIdRef.current,
-      eventType,
-      page: pathname,
-      pageTitle: document.title,
-      referrer: document.referrer,
-      utmSource: utmRef.current.utmSource,
-      utmMedium: utmRef.current.utmMedium,
-      utmCampaign: utmRef.current.utmCampaign,
-      searchKeyword: searchKeywordRef.current,
-      deviceType: getDeviceType(),
-      browser: getBrowser(),
-      os: getOS(),
-      screenWidth: window.innerWidth,
-      screenHeight: window.innerHeight,
-      scrollDepth: null,
-      timeOnPage: null,
-      elementId: null,
-      elementText: null,
-      timestamp: Date.now(),
-      ...extra,
-    }),
+    (eventType: string, extra: Partial<AnalyticsEvent> = {}): AnalyticsEvent => {
+      sessionIdRef.current = getSessionId();
+      touchSession();
+      return {
+        sessionId: sessionIdRef.current,
+        visitorId: visitorIdRef.current,
+        eventType,
+        page: pathname,
+        pageTitle: document.title,
+        referrer: document.referrer,
+        utmSource: utmRef.current.utmSource,
+        utmMedium: utmRef.current.utmMedium,
+        utmCampaign: utmRef.current.utmCampaign,
+        searchKeyword: searchKeywordRef.current,
+        deviceType: getDeviceType(),
+        browser: getBrowser(),
+        os: getOS(),
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
+        scrollDepth: null,
+        timeOnPage: null,
+        elementId: null,
+        elementText: null,
+        timestamp: Date.now(),
+        ...extra,
+      };
+    },
     [pathname]
   );
 
   const enqueue = useCallback((event: AnalyticsEvent) => {
+    if (isBotRef.current) return;
     queueRef.current.push(event);
   }, []);
 
   const flush = useCallback((useBeacon = false) => {
     const events = queueRef.current.splice(0);
     if (events.length === 0) return;
-    const payload = JSON.stringify({ events });
+    const batchId = generateId();
+    const payload = JSON.stringify({ events, batchId });
     try {
       if (useBeacon && navigator.sendBeacon) {
         navigator.sendBeacon('/api/analytics/track', new Blob([payload], { type: 'application/json' }));
@@ -183,6 +242,10 @@ function useAnalyticsTracker() {
   }, []);
 
   useEffect(() => {
+    if (isBot()) {
+      isBotRef.current = true;
+      return;
+    }
     visitorIdRef.current = getVisitorId();
     sessionIdRef.current = getSessionId();
     utmRef.current = extractUTMParams();
@@ -190,6 +253,7 @@ function useAnalyticsTracker() {
   }, []);
 
   useEffect(() => {
+    if (isBotRef.current) return;
     if (!visitorIdRef.current) return;
     if (pathname === prevPathnameRef.current) return;
 
@@ -213,6 +277,7 @@ function useAnalyticsTracker() {
   }, [pathname, searchParams, createEvent, enqueue]);
 
   useEffect(() => {
+    if (isBotRef.current) return;
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
       const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -237,13 +302,7 @@ function useAnalyticsTracker() {
   }, [createEvent, enqueue]);
 
   useEffect(() => {
-    const sanitizeText = (raw: string): string => {
-      const clean = raw.trim().slice(0, 50);
-      const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-      const phonePattern = /\+?\d[\d\s\-()]{6,}/g;
-      return clean.replace(emailPattern, '[redacted]').replace(phonePattern, '[redacted]');
-    };
-
+    if (isBotRef.current) return;
     const handleClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement)?.closest('[data-testid]');
       if (!target) return;
@@ -259,6 +318,7 @@ function useAnalyticsTracker() {
   }, [createEvent, enqueue]);
 
   useEffect(() => {
+    if (isBotRef.current) return;
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         const timeOnPage = Math.round((Date.now() - pageEntryTimeRef.current) / 1000);
@@ -286,6 +346,7 @@ function useAnalyticsTracker() {
   }, [createEvent, enqueue, flush]);
 
   useEffect(() => {
+    if (isBotRef.current) return;
     flushTimerRef.current = setInterval(() => flush(false), FLUSH_INTERVAL);
     return () => {
       if (flushTimerRef.current) clearInterval(flushTimerRef.current);

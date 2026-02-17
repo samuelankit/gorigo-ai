@@ -133,9 +133,10 @@ export default function TermsOfServicePage() {
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-3">
               GoRigo operates on a pay-per-use model based on actual talk time.
-              You are charged only for the minutes your AI agents spend on
-              active calls. There are no seat licences, fixed subscriptions, or
-              minimum commitments unless otherwise agreed in writing.
+              Talk time covers all platform usage including calls, AI content
+              generation, assistant queries, and knowledge processing. There are
+              no seat licences, fixed subscriptions, or minimum commitments
+              unless otherwise agreed in writing.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-3">
               You must maintain a positive wallet balance or valid payment

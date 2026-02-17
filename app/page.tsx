@@ -9,6 +9,7 @@ import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/
 import { CustomIcon } from "@/components/ui/custom-icon";
 import { WebCallButton } from "@/components/landing/web-call-button";
 import { SiApple, SiGoogleplay } from "react-icons/si";
+import { TalkTimeInfo } from "@/components/talk-time-info";
 import {
   ArrowRight,
   Activity,
@@ -156,7 +157,7 @@ export default function HomePage() {
               >
                 Deploy AI-powered voice agents that handle calls with human-like
                 conversations. Manage everything by voice from your mobile.
-                No subscriptions — pay only for talk time.
+                No subscriptions — pay only for talk time<TalkTimeInfo />.
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 flex-wrap" data-testid="hero-talk-to-ai">

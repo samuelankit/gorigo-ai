@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone } from "lucide-react";
+import { TalkTimeFootnote } from "@/components/talk-time-info";
 
 interface ConversionCtaProps {
   headline?: string;
@@ -12,7 +13,7 @@ interface ConversionCtaProps {
 
 export function ConversionCta({
   headline = "Ready to Transform Your Call Centre?",
-  subheadline = "Join businesses across the UK using AI voice agents to handle calls 24/7. No subscriptions, no seat licences — just pay for talk time.",
+  subheadline = "Join businesses across the UK using AI voice agents to handle calls 24/7. No subscriptions, no seat licences — just pay for talk time.*",
   primaryAction = { label: "Get Started", href: "/contact" },
   secondaryAction = { label: "View Pricing", href: "/pricing" },
   talkToAiMessage = "Talk to Our AI",
@@ -75,7 +76,9 @@ export function ConversionCta({
           </div>
         </div>
 
-        <p className="mt-6 text-xs text-muted-foreground/70">
+        <TalkTimeFootnote className="mt-6" />
+
+        <p className="mt-4 text-xs text-muted-foreground/70">
           International Business Exchange Limited
           <span className="mx-1.5">|</span>
           UK Company No. 15985956

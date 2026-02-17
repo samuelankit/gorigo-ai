@@ -7,6 +7,7 @@ import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
+import { TalkTimeInfo } from "@/components/talk-time-info";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
@@ -160,7 +161,7 @@ export function PricingContent() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
           <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-20 text-center">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6" data-testid="badge-pricing">
-              Talk-Time Only Billing
+              Talk-Time Only Billing<TalkTimeInfo />
             </p>
             <h1
               className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1]"

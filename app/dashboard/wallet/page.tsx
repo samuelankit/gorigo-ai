@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/use-toast";
 import { Wallet, TrendingUp, TrendingDown, Hash, AlertTriangle, Cloud, Key, Server } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TalkTimeInfo } from "@/components/talk-time-info";
 
 interface WalletData {
   balance: number;
@@ -155,7 +156,7 @@ export default function WalletPage() {
               Wallet
             </h1>
           </div>
-          <p className="text-muted-foreground text-sm">Manage your wallet balance and view transaction history. Talk time covers all platform usage including calls, AI content generation, and assistant queries.</p>
+          <p className="text-muted-foreground text-sm">Manage your wallet balance and view transaction history. Billed by talk time<TalkTimeInfo /> only.</p>
         </div>
       </div>
 

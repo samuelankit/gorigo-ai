@@ -5,6 +5,7 @@ import { PublicLayout } from "@/components/public-layout";
 import { WebPageJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
+import { TalkTimeInfo, TalkTimeFootnote } from "@/components/talk-time-info";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -110,12 +111,12 @@ const faqs = [
   {
     question: "How is talk time calculated?",
     answer:
-      "Talk time is calculated from the moment the AI agent begins speaking with a caller to the moment the call ends. Hold time, ring time, and post-call processing are not included in your billable minutes. You only pay for actual conversation time.",
+      "Talk time covers all platform usage — calls, AI content generation, assistant queries, and knowledge processing. For voice calls, it is calculated from the moment the AI agent begins speaking to the moment the call ends. Hold time, ring time, and post-call processing are not included. You only pay for actual usage.",
   },
   {
     question: "Are there any hidden fees?",
     answer:
-      "No. Your bill consists of talk time minutes at your agreed rate. There are no setup fees, no platform fees, no per-agent charges, and no minimum monthly commitments. What you see on your usage dashboard is what you pay.",
+      "No. Your bill consists of talk time at your agreed rate. There are no setup fees, no platform fees, no per-agent charges, and no minimum monthly commitments. What you see on your usage dashboard is what you pay.",
   },
   {
     question: "What are the rates?",
@@ -175,21 +176,21 @@ export default function PayPerTalkTimePage() {
                 className="text-4xl sm:text-5xl lg:text-5xl font-light tracking-tight leading-[1.1]"
                 data-testid="text-hero-title"
               >
-                Pay Per Talk Time
+                Pay Per Talk Time<TalkTimeInfo />
               </h1>
               <p
                 className="mt-4 text-xl text-muted-foreground font-light"
                 data-testid="text-hero-subtitle"
               >
-                Only Pay for Minutes That Matter
+                Only Pay for What You Use
               </p>
               <p
                 className="mt-6 text-base text-muted-foreground leading-relaxed"
                 data-testid="text-hero-intro"
               >
                 Forget seat licences, monthly subscriptions, and per-agent fees. With GoRigo,
-                you only pay for the actual minutes your AI agents spend talking to customers.
-                No calls means no charges. It is the simplest, fairest way to run a call centre.
+                you only pay for actual talk time — calls, AI content generation, assistant queries,
+                and knowledge processing. No usage means no charges. It is the simplest, fairest way to run a call centre.
               </p>
             </div>
           </div>

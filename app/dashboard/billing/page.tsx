@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/use-toast";
 import { cn } from "@/lib/utils";
 import { Check, CreditCard, DollarSign, PhoneCall, Users, Clock, Crown, ArrowUpRight, ArrowDownRight, Download, Wallet, ExternalLink, FileText, CalendarDays, Cloud, Key, Server } from "lucide-react";
+import { TalkTimeInfo } from "@/components/talk-time-info";
 
 interface Usage {
   id: number;
@@ -278,7 +279,7 @@ export default function BillingPage() {
               Billing & Usage
             </h1>
           </div>
-          <p className="text-muted-foreground text-sm">Monitor your usage and manage your subscription. Talk time covers all platform usage including calls, AI content generation, and assistant queries.</p>
+          <p className="text-muted-foreground text-sm">Monitor your usage and manage your subscription. Billed by talk time<TalkTimeInfo /> only.</p>
         </div>
       </div>
 

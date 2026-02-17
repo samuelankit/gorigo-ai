@@ -124,9 +124,9 @@ const capabilities = [
   {
     slug: "pay-per-talk-time",
     title: "Pay Per Talk Time",
-    tagline: "Only pay for minutes that matter",
+    tagline: "Only pay for what you use",
     description:
-      "No seat licences, no subscriptions, no per-agent fees. You only pay for actual minutes your AI agents spend on calls. Quiet month? Lower bill. Busy month? It scales with you. Transparent, predictable, and fair.",
+      "No seat licences, no subscriptions, no per-agent fees. You only pay for actual talk time — calls, AI content generation, and all platform usage. Quiet month? Lower bill. Busy month? It scales with you. Transparent, predictable, and fair.",
     video: "/features/pay-per-talk-time-intro.mp4",
     icon: Zap,
     color: "text-[#2DD4A8]",

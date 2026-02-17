@@ -262,7 +262,12 @@ export default function AgentPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Generation failed", description: data.error || "Could not generate greeting", variant: "destructive" });
+        const msg = res.status === 422
+          ? "Your knowledge base is empty. Upload some business documents first to improve AI generation quality."
+          : res.status === 402
+          ? "Insufficient wallet balance. Please top up to generate content."
+          : data.error || "Could not generate greeting";
+        toast({ title: "Generation failed", description: msg, variant: "destructive" });
         return;
       }
       setAiGreetingPreview(data.content);
@@ -291,7 +296,12 @@ export default function AgentPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Generation failed", description: data.error || "Could not generate FAQ answer", variant: "destructive" });
+        const msg = res.status === 422
+          ? "Your knowledge base is empty. Upload some business documents first to improve AI generation quality."
+          : res.status === 402
+          ? "Insufficient wallet balance. Please top up to generate content."
+          : data.error || "Could not generate FAQ answer";
+        toast({ title: "Generation failed", description: msg, variant: "destructive" });
         return;
       }
       setAiFaqPreview({ question, answer: data.content });

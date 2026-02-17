@@ -1,10 +1,7 @@
 # GoRigo - AI Call Center Platform
 
 ## Overview
-GoRigo is an AI-powered call center platform designed to automate call center operations, provide comprehensive analytics, and manage a three-tier business hierarchy (Business Partners, Direct-to-Consumer, Affiliate Partners). The platform streamlines partner management via a SuperAdmin Console, automates commission processing, and offers capabilities like multi-agent management, visual automation flow building, knowledge management, and robust call management with real-time monitoring. Its ambition is to be a fully automated, scalable solution for AI-driven call centers.
-
-## Strategic Positioning: Mobile-First
-Primary model: "Run Your AI Call Center From Your Phone" — a React Native/Expo mobile app with AI voice control (Rigo assistant) as the main interface. Secondary model: Web SaaS platform for desktop users. Both connect to the same backend APIs.
+GoRigo is an AI-powered call center platform designed to automate call center operations, provide comprehensive analytics, and manage a three-tier business hierarchy (Business Partners, Direct-to-Consumer, Affiliate Partners). The platform streamlines partner management via a SuperAdmin Console, automates commission processing, and offers capabilities like multi-agent management, visual automation flow building, knowledge management, and robust call management with real-time monitoring. Its ambition is to be a fully automated, scalable solution for AI-driven call centers, with a strategic mobile-first approach.
 
 ## User Preferences
 - Default to light mode (day vision), with dark mode (night vision) toggle available.
@@ -15,35 +12,27 @@ Primary model: "Run Your AI Call Center From Your Phone" — a React Native/Expo
 ## System Architecture
 
 ### UI/UX Decisions
-The platform uses Next.js 14 (App Router) with Tailwind CSS and Shadcn/ui for components, and Recharts for data visualization. Dark mode is the default, inspired by Azure Portal/Fluent Design. The dashboard features a collapsible left sidebar, a sticky top command bar, and a content workspace, emphasizing flat design, compact spacing, and table-first data views.
+The platform uses Next.js 14 (App Router) with Tailwind CSS and Shadcn/ui for components, and Recharts for data visualization. Dark mode is the default, inspired by Azure Portal/Fluent Design. The dashboard features a collapsible left sidebar, a sticky top command bar, and a content workspace, emphasizing flat design, compact spacing, and table-first data views. The primary model is a React Native/Expo mobile app with AI voice control, complemented by a Web SaaS platform.
 
 ### Mobile App (React Native / Expo)
-Located in `/mobile/` directory. Uses Expo Router for navigation with 5 main tabs:
-- **Dashboard** (`mobile/app/(tabs)/index.tsx`): Stats cards, wallet balance, voice CTA, quick actions
-- **Voice** (`mobile/app/(tabs)/voice.tsx`): Primary interface - chat-like UI with mic button, sends commands to `/api/rigo`
-- **Calls** (`mobile/app/(tabs)/calls.tsx`): Call list with direction, status, duration
-- **Agents** (`mobile/app/(tabs)/agents.tsx`): Agent list with status badges
-- **Settings** (`mobile/app/(tabs)/settings.tsx`): Account, call center config, app settings
-
-Theme: Green #189553 primary, white background (matches web). API client in `mobile/lib/api.ts` uses AsyncStorage for auth tokens and hits same backend endpoints.
+Located in `/mobile/` directory, using Expo Router for navigation with 5 main tabs: Dashboard, Voice, Calls, Agents, and Settings. The theme uses Green #189553 as primary and a white background.
 
 ### Technical Implementations
 GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentication is session-based. AI functionalities leverage OpenAI via Replit AI Integrations, enhanced by a RAG system. A prepaid wallet system with atomic operations and row-level locks manages billing and commissions. Multi-tenancy is enforced via `orgId`, and Role-Based Access Control (`globalRole`) manages permissions. A 7-state Call State Machine handles call flows, integrated with Twilio Programmable Voice. Background jobs process document chunking, embedding, and audio transcription. Security features include prompt injection detection and input validation. A distribution engine manages commissions and revenue sharing. A multi-agent system supports various AI agent types and visual flow diagram building. Compliance features include TCPA/FCC DNC management, PII auto-redaction, sentiment analysis, and call quality scoring. The system supports AI model fallback, multilingual capabilities, concurrent call limits, business hours, and outgoing webhooks.
 
-The platform includes a Unit Economics System for real-time cost tracking and margin analysis across all service categories, with a pricing simulator. An optional Rigo Voice Assistant provides AI voice control over the SaaS dashboard, handling commands for call statistics, wallet balance, and campaign status. Security hardening includes audit logging for critical events, robust session management, tiered rate limiting across all API endpoints, and comprehensive input validation using Zod schemas.
+The platform includes a Unit Economics System for real-time cost tracking and margin analysis, with a pricing simulator. An optional Rigo Voice Assistant provides AI voice control over the SaaS dashboard. Security hardening includes audit logging, robust session management, tiered rate limiting, and comprehensive input validation using Zod schemas. Deployment utilizes Docker containers on Azure Container Apps with Azure PostgreSQL Flexible Server and Azure Key Vault. CI/CD is managed via GitHub Actions.
 
-Deployment utilizes Docker containers on Azure Container Apps in the UK South region, with Azure PostgreSQL Flexible Server and Azure Key Vault. CI/CD is managed via GitHub Actions.
-
-### Feature Specifications
-- **Deployment Packages**: Four commercial packages (Managed, BYOK, Self-Hosted, Custom) selected during onboarding, affecting billing rates. The mobile app is available for Managed and BYOK packages only; Self-Hosted and Custom are web-only.
+Key features include:
+- **Deployment Packages**: Four commercial packages (Managed, BYOK, Self-Hosted, Custom) selected during onboarding.
 - **Agent Configuration**: Customizable AI agents with roles, FAQs, knowledge bases, and language/voice selection.
 - **Knowledge Management**: Supports document upload, chunking, embedding, and audio transcription.
 - **Multi-Tier Partner Management**: Business Partners can create resellers, D2C clients, and affiliate partners.
 - **Affiliate Management**: Full CRUD for affiliate links, click tracking, and commission calculation.
-- **Multi-Tier Distribution Engine**: Manages a commission waterfall from customer payment to platform remainder.
+- **Multi-Tier Distribution Engine**: Manages a commission waterfall.
 - **Billing & Usage**: Talk-time only pricing, real-time wallet deductions, billing ledger, spending caps, and Stripe for top-ups.
-- **Analytics Deep-Dive**: A 6-tab dashboard with global date range picker for detailed insights into calls, trends, activity, sentiment, quality, and agents.
-- **International Calling System**: Includes country management with compliance profiles and rate cards, Twilio sub-account isolation for clients, a compliance engine for DNC and calling hours, fraud detection, and currency conversion. Campaign management supports contact import with E.164 validation and DNC pre-screening. An operations dashboard provides real-time call monitoring with fraud alerts.
+- **Analytics Deep-Dive**: A 6-tab dashboard with global date range picker for detailed insights.
+- **International Calling System**: Includes country management, Twilio sub-account isolation, compliance engine, fraud detection, and currency conversion.
+- **Smart Drafts AI Content Studio**: Draft generation for call scripts, email templates, SMS templates, and FAQ answers with version history, tone, and language options.
 
 ## External Dependencies
 - **AI Services**: OpenAI, Anthropic, OpenRouter (via Replit AI Integrations).
@@ -54,54 +43,3 @@ Deployment utilizes Docker containers on Azure Container Apps in the UK South re
 - **Telephony**: Twilio Programmable Voice.
 - **Payments**: Stripe.
 - **Mobile**: Expo SDK 54, expo-router, expo-speech, expo-av, expo-haptics.
-
-## Recent Changes
-- 2026-02-16: Redesigned hero section — removed intro video, added prominent "Talk to Our AI" CTA with phone number and "Available 24/7" indicator
-- 2026-02-16: Removed bottom ribbon (CallCtaBar) and capabilities ribbon from landing page
-- 2026-02-16: Added floating GoRigo chatbot icon on all public pages (opens existing ChatWidget)
-- 2026-02-16: Updated Rigo agent system prompt with 5-stage end-to-end strategy: First Call → Onboarding → Training → Support → Wallet Recharge
-- 2026-02-16: Updated public chatbot system prompt to align with Rigo brand and drive voice/mobile conversion
-- 2026-02-16: Created mobile app foundation with Expo Router, 5-tab navigation, voice command interface, and login screen
-- 2026-02-16: Updated web landing page hero to mobile-first messaging ("Run Your AI Call Center From Your Phone")
-- 2026-02-16: Implemented white-label mobile app branding system — partners table extended with partnerCode, brandingLogo, mobileAppEnabled fields
-- 2026-02-16: Created public branding API (GET /api/branding/:partnerCode) for mobile app to fetch partner branding without auth
-- 2026-02-16: Added Mobile App Branding config section to admin partner detail page
-- 2026-02-16: Mobile login screen now supports partner code entry with dynamic branding via BrandingProvider context
-- 2026-02-16: All 5 mobile tabs use dynamic branding (brand name, color, logo) from useBranding hook
-- 2026-02-16: Updated white-label partner page with branded mobile app feature card and FAQ
-- 2026-02-16: Implemented multi-business architecture — one user can own/manage multiple businesses, each with its own agents, calls, wallet, and billing
-- 2026-02-16: Added `activeOrgId` to sessions table for tracking current business context; auth layer resolves orgId from session with fallback
-- 2026-02-16: Created business management APIs: GET/POST /api/businesses, POST /api/businesses/switch
-- 2026-02-16: /api/auth/me now returns `businesses` array with id, name, role, deploymentModel, isActive flags
-- 2026-02-16: Built BusinessSwitcher component in dashboard header — dropdown shows user's businesses with switch and "Add New Business" options
-- 2026-02-16: Created /dashboard/businesses/new page with name input and deployment package selection (Managed, BYOK, Self-Hosted)
-- 2026-02-16: Added mobile API client functions for business listing, switching, and creation
-- 2026-02-16: Created CustomIcon component (`components/ui/custom-icon.tsx`) — inline SVG renderer with caching, currentColor support, and error fallback for custom voice/AI icon packs
-- 2026-02-16: Integrated 32 custom voice/AI SVG icons (`public/icons/`) throughout the platform: landing page features & how-it-works, dashboard sidebar navigation, all 6 feature detail pages, and 5 dashboard pages (agent, calls, knowledge, analytics, main)
-- 2026-02-16: Implemented deployment package visibility system — admin can toggle Managed, BYOK, Self-Hosted packages on/off via Settings > Packages tab
-- 2026-02-16: Created public API (GET /api/public/deployment-packages) returning enabled package flags without auth
-- 2026-02-16: Pricing page dynamically filters visible packages and comparison table columns based on admin settings
-- 2026-02-16: New business creation page filters deployment options based on enabled packages
-- 2026-02-16: Built browser-based Web Call system — WebCallModal component with phone-call UI (connecting/active/ended phases), Web Speech API for STT, speechSynthesis for TTS, live transcript, waveform animations, call timer, keyboard fallback for non-Chrome browsers, 5-min call limit, tab visibility handling, post-call lead capture
-- 2026-02-16: Created WebCallButton client component for hero section — "Call from Browser" CTA shown on desktop (sm+), phone CTA shown on mobile only
-- 2026-02-16: Web call reuses existing /api/public/chat endpoint (no new backend needed) with streaming responses, conversation history
-- 2026-02-16: Built conversation tracking system — `publicConversations` table records every web call and chatbot session with sessionId, channel, status, duration, messageCount, IP, user agent, and lead linkage
-- 2026-02-16: Updated `/api/public/chat` to auto-create conversation records on first message; added `/api/public/chat/end` to finalize conversations with duration
-- 2026-02-16: WebCallModal and ChatWidget both generate unique sessionIds, pass channel (web_call/chatbot) with each message, and persist sessionId in sessionStorage for continuity
-- 2026-02-16: Lead capture now links conversations to leads when contact info is submitted (both web call post-call and chatbot pre-chat)
-- 2026-02-16: Built admin Conversations page (`/admin/conversations`) — stats cards, channel/status filters, paginated table, click-to-expand inline transcript viewer
-- 2026-02-16: Added stale conversation auto-cleanup to background jobs — conversations active for 30+ minutes auto-end
-- 2026-02-16: Implemented RAG security architecture — all AI endpoints enforce RAG-first approach; no queries go directly to LLM without knowledge grounding
-- 2026-02-16: Created `platformKnowledgeChunks` table with 14 vector-embedded chunks covering GoRigo company info, pricing, features, compliance
-- 2026-02-16: Platform knowledge auto-seeds on startup via instrumentation.ts
-- 2026-02-16: Built output guardrails module (`lib/output-guard.ts`) — validates LLM responses for prompt leaks, unsafe content, role-breaking, and ungrounded claims
-- 2026-02-16: Added agent-level controls: `strictKnowledgeMode` flag, `maxTokensPerCall` (default 4096), `maxTokensPerSession` (default 16384) in agents schema
-- 2026-02-16: Updated `/api/public/chat` with RAG grounding — searches platform knowledge base before calling LLM, includes grounding instructions, stream-based output validation
-- 2026-02-16: Updated `/api/twilio/gather` with strict knowledge mode, output guards, token budget enforcement (per-call limit), FAQ relevance matching
-- 2026-02-16: Updated `/api/ai/chat` with strict knowledge mode, output guards, token budget enforcement (per-session limit), stream validation, cached response validation
-- 2026-02-16: Built Smart Drafts AI Content Studio — `drafts` table with version history (parentDraftId tracking), 4 draft types (call_script, email_template, sms_template, faq_answer), 5 tone options, 12 language options
-- 2026-02-16: Created `/api/drafts/generate` — RAG-grounded content generation pulling from knowledge base + agent config + recent call transcripts, type-specific length constraints, tone/language controls, output guard validation, draft quality score (RAG grounding %)
-- 2026-02-16: Created `/api/drafts` CRUD — list with type/status/search filters and pagination, create/save, update with automatic version history (previous content archived), delete with cascade
-- 2026-02-16: Created `/api/drafts/duplicate` — clone existing drafts; `/api/drafts/publish` — push FAQ answers into agent faqEntries or call scripts into agent greeting; `/api/drafts/bulk-faq` — generate N FAQ drafts from knowledge base in one go
-- 2026-02-16: Built Smart Drafts dashboard page (`/dashboard/drafts`) — 3-tab layout (Create/Library/Bulk FAQ), draft type selector cards, tone/language controls, AI preview with channel-specific formatting (email Subject line, SMS char counter), quality score indicator, save/refine/regenerate actions, TTS preview for call scripts, drafts library with type/status filters and pagination, edit dialog with version tracking, publish confirmation dialog, delete confirmation
-- 2026-02-16: Added Smart Drafts to dashboard sidebar navigation under Manage section

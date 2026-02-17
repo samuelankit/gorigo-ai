@@ -135,10 +135,10 @@ export default function HomePage() {
 
       <section className="relative" data-testid="section-hero">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
-        <div className="relative max-w-6xl mx-auto px-6 pt-12 sm:pt-28 pb-16 sm:pb-24">
+        <div className="relative max-w-6xl mx-auto px-6 pt-28 pb-24">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
               <h1
-                className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
                 data-testid="text-hero-title"
               >
                 Run Your AI Call Center
@@ -146,7 +146,7 @@ export default function HomePage() {
                 <span className="font-light">From Your Phone</span>
               </h1>
               <p
-                className="mt-4 sm:mt-6 text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed"
+                className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed"
                 data-testid="text-hero-subtitle"
               >
                 AI voice agents answer your calls naturally.
@@ -154,7 +154,7 @@ export default function HomePage() {
                 No subscriptions — pay only for talk time<TalkTimeInfo />.
               </p>
 
-              <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row items-center gap-4 flex-wrap" data-testid="hero-talk-to-ai">
+              <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 flex-wrap" data-testid="hero-talk-to-ai">
                 <a
                   href="tel:+440000000000"
                   data-testid="link-hero-call-ai"
@@ -179,7 +179,7 @@ export default function HomePage() {
                 </span>
               </div>
 
-              <div className="mt-4 sm:mt-6 flex items-center justify-center gap-3 flex-wrap">
+              <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
                 <Link href="/contact">
                   <Button size="lg" data-testid="button-hero-demo">
                     Book a Demo

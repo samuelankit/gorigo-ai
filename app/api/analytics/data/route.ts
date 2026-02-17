@@ -50,17 +50,37 @@ export async function GET(request: NextRequest) {
 
     switch (metric) {
       case "overview": {
-        const result = await db.execute(sql`
-          SELECT
-            (SELECT COUNT(*) FROM analytics_events e WHERE ${sinceFilter} ${orgFilter} AND e.event_type = 'pageview') AS total_pageviews,
-            (SELECT COUNT(DISTINCT e.visitor_id) FROM analytics_events e WHERE ${sinceFilter} ${orgFilter}) AS unique_visitors,
-            (SELECT COUNT(DISTINCT e.session_id) FROM analytics_events e WHERE ${sinceFilter} ${orgFilter}) AS unique_sessions,
-            (SELECT ROUND(AVG(CASE WHEN s.is_bounce THEN 1 ELSE 0 END) * 100, 1) FROM analytics_sessions s WHERE ${sessionSinceFilter} ${sessionOrgFilter}) AS bounce_rate,
-            (SELECT ROUND(AVG(s.duration)::numeric, 1) FROM analytics_sessions s WHERE ${sessionSinceFilter} ${sessionOrgFilter} AND s.duration IS NOT NULL) AS avg_session_duration,
-            (SELECT ROUND(AVG(s.page_count)::numeric, 1) FROM analytics_sessions s WHERE ${sessionSinceFilter} ${sessionOrgFilter}) AS avg_pages_per_session,
-            (SELECT s.conversion_page FROM analytics_sessions s WHERE ${sessionSinceFilter} ${sessionOrgFilter} AND s.is_converted = true GROUP BY s.conversion_page ORDER BY COUNT(*) DESC LIMIT 1) AS top_conversion_page
-        `);
-        data = result.rows[0] || {};
+        const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
+        const prevInterval = `${days * 2} days`;
+        const prevOrgFilter = isSuperAdmin ? sql`` : sql` AND e.org_id = ${auth.orgId}`;
+        const prevSessionOrgFilter = isSuperAdmin ? sql`` : sql` AND s.org_id = ${auth.orgId}`;
+
+        const [currentResult, previousResult] = await Promise.all([
+          db.execute(sql`
+            SELECT
+              (SELECT COUNT(*) FROM analytics_events e WHERE ${sinceFilter} ${orgFilter} AND e.event_type = 'pageview') AS total_pageviews,
+              (SELECT COUNT(DISTINCT e.visitor_id) FROM analytics_events e WHERE ${sinceFilter} ${orgFilter}) AS unique_visitors,
+              (SELECT COUNT(DISTINCT e.session_id) FROM analytics_events e WHERE ${sinceFilter} ${orgFilter}) AS unique_sessions,
+              (SELECT ROUND(AVG(CASE WHEN s.is_bounce THEN 1 ELSE 0 END) * 100, 1) FROM analytics_sessions s WHERE ${sessionSinceFilter} ${sessionOrgFilter}) AS bounce_rate,
+              (SELECT ROUND(AVG(s.duration)::numeric, 1) FROM analytics_sessions s WHERE ${sessionSinceFilter} ${sessionOrgFilter} AND s.duration IS NOT NULL) AS avg_session_duration,
+              (SELECT ROUND(AVG(s.page_count)::numeric, 1) FROM analytics_sessions s WHERE ${sessionSinceFilter} ${sessionOrgFilter}) AS avg_pages_per_session,
+              (SELECT s.conversion_page FROM analytics_sessions s WHERE ${sessionSinceFilter} ${sessionOrgFilter} AND s.is_converted = true GROUP BY s.conversion_page ORDER BY COUNT(*) DESC LIMIT 1) AS top_conversion_page
+          `),
+          db.execute(sql`
+            SELECT
+              (SELECT COUNT(*) FROM analytics_events e WHERE e.created_at >= NOW() - ${prevInterval}::interval AND e.created_at < NOW() - ${interval}::interval ${prevOrgFilter} AND e.event_type = 'pageview') AS total_pageviews,
+              (SELECT COUNT(DISTINCT e.visitor_id) FROM analytics_events e WHERE e.created_at >= NOW() - ${prevInterval}::interval AND e.created_at < NOW() - ${interval}::interval ${prevOrgFilter}) AS unique_visitors,
+              (SELECT COUNT(DISTINCT e.session_id) FROM analytics_events e WHERE e.created_at >= NOW() - ${prevInterval}::interval AND e.created_at < NOW() - ${interval}::interval ${prevOrgFilter}) AS unique_sessions,
+              (SELECT ROUND(AVG(CASE WHEN s.is_bounce THEN 1 ELSE 0 END) * 100, 1) FROM analytics_sessions s WHERE s.started_at >= NOW() - ${prevInterval}::interval AND s.started_at < NOW() - ${interval}::interval ${prevSessionOrgFilter}) AS bounce_rate,
+              (SELECT ROUND(AVG(s.duration)::numeric, 1) FROM analytics_sessions s WHERE s.started_at >= NOW() - ${prevInterval}::interval AND s.started_at < NOW() - ${interval}::interval ${prevSessionOrgFilter} AND s.duration IS NOT NULL) AS avg_session_duration,
+              (SELECT ROUND(AVG(s.page_count)::numeric, 1) FROM analytics_sessions s WHERE s.started_at >= NOW() - ${prevInterval}::interval AND s.started_at < NOW() - ${interval}::interval ${prevSessionOrgFilter}) AS avg_pages_per_session
+          `),
+        ]);
+
+        data = {
+          current: currentResult.rows[0] || {},
+          previous: previousResult.rows[0] || {},
+        };
         break;
       }
 

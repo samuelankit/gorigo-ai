@@ -35,7 +35,8 @@ import {
   Legend,
 } from "recharts";
 
-import { CHART_COLORS, PIE_COLORS, TOOLTIP_STYLE, PERIODS, formatNumber, formatPercent, fetchAnalyticsData as fetchData } from "@/lib/analytics-shared";
+import { CHART_COLORS, PIE_COLORS, TOOLTIP_STYLE, PERIODS, formatNumber, formatPercent, fetchAnalyticsData as fetchData, bounceRateTextClass, formatChange, AUTO_REFRESH_INTERVAL } from "@/lib/analytics-shared";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 const formatDuration = (seconds: number) => {
   if (!seconds) return "0s";
@@ -82,6 +83,7 @@ export default function WebTrafficPage() {
   const [period, setPeriod] = useState<string>("7d");
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<OverviewData | null>(null);
+  const [prevOverview, setPrevOverview] = useState<OverviewData | null>(null);
   const [pages, setPages] = useState<PageData[]>([]);
   const [timeseries, setTimeseries] = useState<{ day: string; pageviews: number; visitors: number; sessions: number }[]>([]);
   const [sources, setSources] = useState<SourceData | null>(null);
@@ -99,7 +101,8 @@ export default function WebTrafficPage() {
         fetchData(p, "devices"),
         fetchData(p, "locations"),
       ]);
-      setOverview(overviewRes?.data || null);
+      setOverview(overviewRes?.data?.current || overviewRes?.data || null);
+      setPrevOverview(overviewRes?.data?.previous || null);
       setPages(Array.isArray(pagesRes?.data) ? pagesRes.data : []);
       setTimeseries(Array.isArray(timeseriesRes?.data) ? timeseriesRes.data.map((r: any) => ({
         day: r.day ? new Date(r.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '',
@@ -124,13 +127,11 @@ export default function WebTrafficPage() {
 
   useEffect(() => {
     loadData(period);
+    const intervalId = setInterval(() => loadData(period), AUTO_REFRESH_INTERVAL);
+    return () => clearInterval(intervalId);
   }, [period, loadData]);
 
-  const bounceColor = (rate: number) => {
-    if (rate < 40) return "text-green-600 dark:text-green-400";
-    if (rate <= 60) return "text-amber-600 dark:text-amber-400";
-    return "text-red-600 dark:text-red-400";
-  };
+  const bounceColor = bounceRateTextClass;
 
   const engagementScore = (scrollDepth: number, timeOnPage: number) => {
     return Math.round((scrollDepth / 100 * 0.4 + Math.min(timeOnPage / 120, 1) * 0.6) * 100);
@@ -218,101 +219,44 @@ export default function WebTrafficPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Eye className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Total Pageviews</p>
-            </div>
-            {loading ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground" data-testid="stat-total-pageviews">
-                {formatNumber(Number(overview?.total_pageviews || 0))}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Unique Visitors</p>
-            </div>
-            {loading ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground" data-testid="stat-unique-visitors">
-                {formatNumber(Number(overview?.unique_visitors || 0))}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Sessions</p>
-            </div>
-            {loading ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground" data-testid="stat-sessions">
-                {formatNumber(Number(overview?.unique_sessions || 0))}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Bounce Rate</p>
-            </div>
-            {loading ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <p className={`text-2xl font-bold ${bounceColor(Number(overview?.bounce_rate || 0))}`} data-testid="stat-bounce-rate">
-                {formatPercent(Number(overview?.bounce_rate || 0))}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Avg Duration</p>
-            </div>
-            {loading ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground" data-testid="stat-avg-duration">
-                {formatDuration(Number(overview?.avg_session_duration || 0))}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Layers className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Pages/Session</p>
-            </div>
-            {loading ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground" data-testid="stat-pages-per-session">
-                {Number(overview?.avg_pages_per_session || 0).toFixed(1)}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        {[
+          { key: "total_pageviews", label: "Total Pageviews", icon: Eye, format: (v: number) => formatNumber(v) },
+          { key: "unique_visitors", label: "Unique Visitors", icon: Users, format: (v: number) => formatNumber(v) },
+          { key: "unique_sessions", label: "Sessions", icon: Activity, format: (v: number) => formatNumber(v) },
+          { key: "bounce_rate", label: "Bounce Rate", icon: TrendingDown, format: (v: number) => formatPercent(v), colorFn: bounceColor, invertChange: true },
+          { key: "avg_session_duration", label: "Avg Duration", icon: Clock, format: (v: number) => formatDuration(v) },
+          { key: "avg_pages_per_session", label: "Pages/Session", icon: Layers, format: (v: number) => Number(v).toFixed(1) },
+        ].map(({ key, label, icon: Icon, format, colorFn, invertChange }) => {
+          const current = Number(overview?.[key] || 0);
+          const previous = Number(prevOverview?.[key] || 0);
+          const change = formatChange(current, previous);
+          const changeIsPositive = invertChange ? !change?.isUp : change?.isUp;
+          return (
+            <Card key={key}>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">{label}</p>
+                </div>
+                {loading ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="flex items-end gap-2">
+                    <p className={`text-2xl font-bold ${colorFn ? colorFn(current) : "text-foreground"}`} data-testid={`stat-${key.replace(/_/g, '-')}`}>
+                      {format(current)}
+                    </p>
+                    {change && (
+                      <span className={`flex items-center text-xs font-medium ${changeIsPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`} data-testid={`change-${key.replace(/_/g, '-')}`}>
+                        {changeIsPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                        {change.label}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {!loading && hasNoData ? (

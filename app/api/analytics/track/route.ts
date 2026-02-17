@@ -209,6 +209,7 @@ export async function POST(request: NextRequest) {
         os: string | null;
         country: string | null;
         city: string | null;
+        minTimestamp: number;
         maxTimestamp: number;
         isConverted: boolean;
         conversionPage: string | null;
@@ -258,6 +259,7 @@ export async function POST(request: NextRequest) {
         existing.pages.add(page);
         existing.lastPage = page;
         const ts = evt.timestamp || Date.now();
+        if (ts < existing.minTimestamp) existing.minTimestamp = ts;
         if (ts > existing.maxTimestamp) existing.maxTimestamp = ts;
         if (evt.eventType === "conversion") {
           existing.isConverted = true;
@@ -280,6 +282,7 @@ export async function POST(request: NextRequest) {
           os: sanitizeField(evt.os, 100),
           country,
           city,
+          minTimestamp: evt.timestamp || Date.now(),
           maxTimestamp: evt.timestamp || Date.now(),
           isConverted: evt.eventType === "conversion",
           conversionPage: evt.eventType === "conversion" ? page : null,
@@ -292,7 +295,7 @@ export async function POST(request: NextRequest) {
     }
 
     for (const [sessionId, data] of Array.from(sessionMap.entries())) {
-      const now = new Date();
+      const startedAt = new Date(data.minTimestamp);
       const endedAt = new Date(data.maxTimestamp);
       const batchPageCount = data.pages.size;
 
@@ -314,7 +317,7 @@ export async function POST(request: NextRequest) {
           os: data.os,
           country: data.country,
           city: data.city,
-          startedAt: now,
+          startedAt,
           endedAt,
           duration: 0,
           pageCount: batchPageCount,

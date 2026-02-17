@@ -34,11 +34,17 @@ export const TOOLTIP_STYLE = {
 
 export const PERIODS = ["7d", "30d", "90d"] as const;
 
+export const AUTO_REFRESH_INTERVAL = 60_000;
+
 export const formatNumber = (n: number) => new Intl.NumberFormat().format(n);
 export const formatPercent = (n: number) => `${Math.round(n)}%`;
 
 export async function fetchAnalyticsData(period: string, metric: string) {
   const res = await fetch(`/api/analytics/data?period=${period}&metric=${metric}`);
+  if (res.status === 401) {
+    window.location.href = '/login';
+    return null;
+  }
   if (!res.ok) return null;
   return res.json();
 }
@@ -61,4 +67,16 @@ export function categorizeSource(source: string): string {
   if (s.includes("google") || s.includes("bing") || s.includes("yahoo") || s.includes("duckduckgo")) return "Search";
   if (s.includes("facebook") || s.includes("twitter") || s.includes("linkedin") || s.includes("instagram") || s.includes("tiktok") || s.includes("reddit") || s.includes("youtube")) return "Social";
   return "Referral";
+}
+
+export function formatChange(current: number, previous: number): { label: string; isUp: boolean; percent: number } | null {
+  if (previous === 0 && current === 0) return null;
+  if (previous === 0) return { label: "+100%", isUp: true, percent: 100 };
+  const percent = Math.round(((current - previous) / previous) * 100);
+  if (percent === 0) return null;
+  return {
+    label: `${percent > 0 ? "+" : ""}${percent}%`,
+    isUp: percent > 0,
+    percent: Math.abs(percent),
+  };
 }

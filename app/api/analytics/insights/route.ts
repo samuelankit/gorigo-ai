@@ -36,6 +36,9 @@ const NATURAL_EXIT_PAGES = [
   "/policies/privacy", "/policies/terms", "/policies/cookies",
 ];
 
+const CACHE_TTL_MS = 60_000;
+const insightsCache = new Map<string, { data: any; timestamp: number }>();
+
 export async function GET(request: NextRequest) {
   try {
     const rl = await adminLimiter(request);
@@ -55,6 +58,14 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") || "7d";
+    const cacheKey = `${period}-${auth.orgId || "all"}`;
+    const cached = insightsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return NextResponse.json(cached.data, {
+        headers: { "Cache-Control": "private, max-age=60" },
+      });
+    }
+
     const interval = periodToInterval(period);
     const days = periodToDays(period);
 
@@ -608,11 +619,11 @@ export async function GET(request: NextRequest) {
     if (blindspotCount > 0) issuesParts.push(`${blindspotCount} blind spots`);
     if (issuesParts.length > 0) summaryParts.push(`Found ${issuesParts.join(", ")} to review.`);
 
-    return NextResponse.json({
-      insights,
-      scores,
-      summary: summaryParts.join(" "),
-      period,
+    const responseData = { insights, scores, summary: summaryParts.join(" "), period };
+    insightsCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+
+    return NextResponse.json(responseData, {
+      headers: { "Cache-Control": "private, max-age=60" },
     });
   } catch (error) {
     console.error("Analytics insights error:", error);

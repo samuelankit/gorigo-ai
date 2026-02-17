@@ -55,7 +55,6 @@ jobs:
           TAG="${{ steps.meta.outputs.tag }}"
 
           docker build \
-            --build-arg NEXT_OUTPUT=standalone \
             -t "${IMAGE}:${TAG}" \
             -t "${IMAGE}:latest" \
             .

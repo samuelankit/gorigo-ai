@@ -9,4 +9,8 @@ node_modules
 replit.nix
 attached_assets
 client
+mobile
+migrations
 tsconfig.tsbuildinfo
+Dockerfile
+.dockerignore

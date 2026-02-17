@@ -149,8 +149,8 @@ export default function HomePage() {
                 className="mt-4 sm:mt-6 text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed"
                 data-testid="text-hero-subtitle"
               >
-                Deploy AI-powered voice agents that handle calls with human-like
-                conversations. Manage everything by voice from your mobile.
+                AI voice agents answer your calls naturally.
+                Control everything from your phone by voice.
                 No subscriptions — pay only for talk time<TalkTimeInfo />.
               </p>
 

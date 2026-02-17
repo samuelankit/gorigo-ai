@@ -19,7 +19,9 @@ const cleanupInterval = setInterval(() => {
     if (entry.resetAt <= now) publicChatStore.delete(key);
   });
 }, 60_000);
-if (cleanupInterval.unref) cleanupInterval.unref();
+if (typeof cleanupInterval === "object" && cleanupInterval && "unref" in cleanupInterval) {
+  (cleanupInterval as { unref: () => void }).unref();
+}
 
 function checkPublicRateLimit(req: NextRequest): boolean {
   const cfIp = req.headers.get("cf-connecting-ip");

@@ -156,6 +156,12 @@ export async function getAuthenticatedUser(): Promise<AuthResult | null> {
   return { user, orgId, role, isDemo, globalRole, authMethod: "session", sessionId: session.id };
 }
 
+export function requireReadAccess(auth: { globalRole: string } | null) {
+  if (!auth) return { allowed: false as const, error: "Not authenticated" };
+  if (!["SUPERADMIN", "ADMIN", "CLIENT"].includes(auth.globalRole)) return { allowed: false as const, error: "Access denied" };
+  return { allowed: true as const, error: null };
+}
+
 export function requireWriteAccess(auth: { isDemo: boolean } | null) {
   if (!auth) return { allowed: false, error: "Not authenticated" };
   if (auth.isDemo) return { allowed: false, error: "Demo accounts cannot modify data" };

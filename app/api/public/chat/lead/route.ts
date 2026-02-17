@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { chatLeads, chatMessages, publicConversations } from "@/shared/schema";
 import { checkBodySize } from "@/lib/body-limit";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { publicLimiter } from "@/lib/rate-limit";
+import { enrichLead } from "@/lib/enrichment-engine";
 
 const leadRateStore = new Map<string, { count: number; resetAt: number }>();
 const LEAD_WINDOW_MS = 300_000;
@@ -74,11 +75,44 @@ export async function POST(req: NextRequest) {
     const forwarded = req.headers.get("x-forwarded-for");
     const ip = cfIp || forwarded?.split(",")[0]?.trim() || null;
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const [existingLead] = await db
+      .select({ id: chatLeads.id })
+      .from(chatLeads)
+      .where(eq(chatLeads.email, normalizedEmail))
+      .limit(1);
+
+    if (existingLead) {
+      await db
+        .update(chatLeads)
+        .set({ totalMessages: sql`COALESCE(${chatLeads.totalMessages}, 0) + 1`, lastMessageAt: new Date() })
+        .where(eq(chatLeads.id, existingLead.id));
+
+      const greeting = `Welcome back, ${name.trim().split(" ")[0]}! How can I help you today?`;
+      await db.insert(chatMessages).values({
+        leadId: existingLead.id,
+        role: "assistant",
+        content: greeting,
+      });
+
+      if (sessionId && typeof sessionId === "string" && sessionId.length <= 100) {
+        await db
+          .update(publicConversations)
+          .set({ leadId: existingLead.id })
+          .where(eq(publicConversations.sessionId, sessionId))
+          .catch((err: unknown) => { console.error("[Lead] Failed to link conversation:", err); });
+      }
+
+      return NextResponse.json({ leadId: existingLead.id, greeting });
+    }
+
     const [lead] = await db.insert(chatLeads).values({
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       ipAddress: ip,
       status: "new",
+      pipelineStage: "new",
+      sourceChannel: "chatbot",
       totalMessages: 1,
       lastMessageAt: new Date(),
     }).returning();
@@ -102,11 +136,16 @@ export async function POST(req: NextRequest) {
       content: greeting,
     });
 
+    enrichLead(lead.id).catch((err: unknown) => {
+      console.error("[Lead] Auto-enrichment failed:", err);
+    });
+
     return NextResponse.json({
       leadId: lead.id,
       greeting,
     });
-  } catch {
+  } catch (error) {
+    console.error("[Lead] Lead capture failed:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

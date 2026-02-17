@@ -25,8 +25,8 @@ function rateLimit({ windowMs, maxRequests }: { windowMs: number; maxRequests: n
     });
   }, 60_000);
 
-  if (cleanup.unref) {
-    cleanup.unref();
+  if (typeof cleanup === "object" && cleanup && "unref" in cleanup) {
+    (cleanup as { unref: () => void }).unref();
   }
 
   return async function check(request: NextRequest): Promise<RateLimitResult> {

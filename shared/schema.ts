@@ -1339,6 +1339,20 @@ export const chatLeads = pgTable("chat_leads", {
   status: text("status").default("new"),
   totalMessages: integer("total_messages").default(0),
   lastMessageAt: timestamp("last_message_at"),
+  phone: text("phone"),
+  company: text("company"),
+  companyDomain: text("company_domain"),
+  industry: text("industry"),
+  estimatedSize: text("estimated_size"),
+  leadScore: integer("lead_score").default(0),
+  pipelineStage: text("pipeline_stage").default("new"),
+  assignedTo: integer("assigned_to"),
+  tags: text("tags").array(),
+  enrichedAt: timestamp("enriched_at"),
+  enrichmentData: jsonb("enrichment_data"),
+  sourceChannel: text("source_channel").default("chatbot"),
+  lastContactedAt: timestamp("last_contacted_at"),
+  orgId: integer("org_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -1373,7 +1387,7 @@ export const chatMessages = pgTable("chat_messages", {
   index("idx_chat_messages_conversation_id").on(table.conversationId),
 ]);
 
-export const insertChatLeadSchema = createInsertSchema(chatLeads).omit({ id: true, createdAt: true, totalMessages: true, lastMessageAt: true });
+export const insertChatLeadSchema = createInsertSchema(chatLeads).omit({ id: true, createdAt: true, totalMessages: true, lastMessageAt: true, leadScore: true, enrichedAt: true, enrichmentData: true });
 export type InsertChatLead = z.infer<typeof insertChatLeadSchema>;
 export type ChatLead = typeof chatLeads.$inferSelect;
 
@@ -1384,6 +1398,22 @@ export type PublicConversation = typeof publicConversations.$inferSelect;
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+
+export const leadActivities = pgTable("lead_activities", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").references(() => chatLeads.id, { onDelete: "cascade" }).notNull(),
+  type: text("type").notNull(),
+  description: text("description").notNull(),
+  metadata: jsonb("metadata"),
+  performedBy: integer("performed_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_lead_activities_lead_id").on(table.leadId),
+]);
+
+export const insertLeadActivitySchema = createInsertSchema(leadActivities).omit({ id: true, createdAt: true });
+export type InsertLeadActivity = z.infer<typeof insertLeadActivitySchema>;
+export type LeadActivity = typeof leadActivities.$inferSelect;
 
 // ═══════════════════════════════════════════════════
 // INTERNATIONAL CALLING — COUNTRIES & COMPLIANCE

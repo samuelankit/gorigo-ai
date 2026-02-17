@@ -48,6 +48,7 @@ import {
   Globe,
   Activity,
   MousePointerClick,
+  Zap,
 } from "lucide-react";
 
 const overviewItems = [
@@ -58,6 +59,7 @@ const overviewItems = [
   { title: "Unit Economics", url: "/admin/unit-economics", icon: Calculator },
   { title: "Calls", url: "/admin/calls", icon: PhoneCall },
   { title: "Operations", url: "/admin/operations", icon: Activity },
+  { title: "Leads", url: "/admin/leads", icon: Zap },
   { title: "Chat Leads", url: "/admin/chats", icon: MessageCircle },
   { title: "Conversations", url: "/admin/conversations", icon: MessageSquare },
 ];

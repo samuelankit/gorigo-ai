@@ -39,7 +39,9 @@ function startHealthCheck() {
       console.error("[DB] Health check failed:", err instanceof Error ? err.message : err);
     }
   }, 60_000);
-  if (healthCheckInterval.unref) healthCheckInterval.unref();
+  if (typeof healthCheckInterval === "object" && healthCheckInterval && "unref" in healthCheckInterval) {
+    (healthCheckInterval as { unref: () => void }).unref();
+  }
 }
 
 startHealthCheck();

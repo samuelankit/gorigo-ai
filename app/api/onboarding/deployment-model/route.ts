@@ -53,7 +53,7 @@ export async function PUT(request: NextRequest) {
     const oldModel = currentOrg?.deploymentModel || "managed";
 
     if (oldModel === deploymentModel) {
-      return NextResponse.json({ error: "Already on this plan" }, { status: 400 });
+      return NextResponse.json({ success: true, deploymentModel, previousModel: oldModel, unchanged: true }, { status: 200 });
     }
 
     const cooldownCutoff = new Date(Date.now() - PLAN_SWITCH_COOLDOWN_HOURS * 60 * 60 * 1000);

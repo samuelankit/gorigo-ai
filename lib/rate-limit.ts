@@ -69,3 +69,4 @@ export const exportLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
 export const notificationLimiter = rateLimit({ windowMs: 60_000, maxRequests: 30 });
 export const rigoLimiter = rateLimit({ windowMs: 60_000, maxRequests: 10 });
 export const analyticsTrackLimiter = rateLimit({ windowMs: 1_000, maxRequests: 10 });
+export const publicLimiter = rateLimit({ windowMs: 60_000, maxRequests: 30 });

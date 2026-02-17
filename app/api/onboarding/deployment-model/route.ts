@@ -9,6 +9,7 @@ import { logAudit } from "@/lib/audit";
 import { getOrgByokStatus, validateOpenAIKey, validateTwilioCredentials, getOrgKeys } from "@/lib/byok";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { checkEntryBarrier, TIER_ENTRY_BARRIERS, type DeploymentTier } from "@/lib/entry-barriers";
 
 const deploymentModelSchema = z.object({
   deploymentModel: z.enum(["managed", "byok", "self_hosted", "custom"]),
@@ -72,6 +73,18 @@ export async function PUT(request: NextRequest) {
         error: `Plan changes are limited to once every ${PLAN_SWITCH_COOLDOWN_HOURS} hours. Please try again later.`,
         code: "PLAN_SWITCH_COOLDOWN",
       }, { status: 429 });
+    }
+
+    const barrierCheck = await checkEntryBarrier(auth.orgId, deploymentModel as DeploymentTier);
+    if (!barrierCheck.met) {
+      const tierConfig = TIER_ENTRY_BARRIERS[deploymentModel as DeploymentTier];
+      return NextResponse.json({
+        error: `Minimum wallet balance of $${barrierCheck.requiredMinimum} required for the ${tierConfig?.label || deploymentModel} plan. Your current balance is $${barrierCheck.currentBalance.toFixed(2)}. Please top up $${barrierCheck.shortfall.toFixed(2)} more.`,
+        code: "MINIMUM_DEPOSIT_NOT_MET",
+        currentBalance: barrierCheck.currentBalance,
+        requiredMinimum: barrierCheck.requiredMinimum,
+        shortfall: barrierCheck.shortfall,
+      }, { status: 422 });
     }
 
     if (deploymentModel === "byok") {

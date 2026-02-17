@@ -93,7 +93,7 @@ export async function runAllCleanupJobs(): Promise<{ sessions: number; cache: nu
   };
 }
 
-let cleanupInterval: NodeJS.Timeout | null = null;
+let cleanupInterval: ReturnType<typeof setInterval> | null = null;
 
 export function startPeriodicCleanup(intervalMs: number = 5 * 60 * 1000) {
   if (cleanupInterval) return;

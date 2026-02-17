@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { publicConversations } from "@/shared/schema";
 import { eq } from "drizzle-orm";
+import { publicLimiter } from "@/lib/rate-limit";
 
 const endRateStore = new Map<string, { count: number; resetAt: number }>();
 const END_WINDOW_MS = 60_000;
@@ -39,6 +40,11 @@ function checkEndRateLimit(req: NextRequest): boolean {
 
 export async function POST(req: NextRequest) {
   try {
+    const rl = await publicLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     if (!checkEndRateLimit(req)) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }

@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { platformSettings } from "@/shared/schema";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { inArray } from "drizzle-orm";
+import { publicLimiter } from "@/lib/rate-limit";
 
 const PACKAGE_KEYS = [
   "deployment_package_managed_enabled",
@@ -15,8 +16,13 @@ const DEFAULTS: Record<string, boolean> = {
   deployment_package_self_hosted_enabled: false,
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const rl = await publicLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const rows = await db
       .select()
       .from(platformSettings)

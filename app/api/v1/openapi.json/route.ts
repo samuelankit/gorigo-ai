@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { corsHeaders } from "@/lib/v1-cors";
+import { publicLimiter } from "@/lib/rate-limit";
 
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders() });
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: corsHeaders(request) });
 }
 
 const OPENAPI_SPEC = {
@@ -311,8 +312,13 @@ const OPENAPI_SPEC = {
   },
 };
 
-export async function GET() {
-  const headers = corsHeaders();
+export async function GET(request: NextRequest) {
+  const rl = await publicLimiter(request);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const headers = corsHeaders(request);
   return NextResponse.json(OPENAPI_SPEC, {
     headers: {
       ...headers,

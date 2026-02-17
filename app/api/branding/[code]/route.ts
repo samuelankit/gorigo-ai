@@ -2,12 +2,18 @@ import { db } from "@/lib/db";
 import { partners } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { publicLimiter } from "@/lib/rate-limit";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
   try {
+    const rl = await publicLimiter(_request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const { code } = await params;
 
     if (!code || code.length < 3) {

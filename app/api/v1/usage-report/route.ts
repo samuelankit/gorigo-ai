@@ -11,28 +11,28 @@ import { withCors, corsOptionsResponse } from "@/lib/v1-cors";
 
 const VALID_CATEGORIES = ["voice_inbound", "voice_outbound", "ai_chat"] as const;
 
-export async function OPTIONS() {
-  return corsOptionsResponse();
+export async function OPTIONS(request: NextRequest) {
+  return corsOptionsResponse(request);
 }
 
 export async function POST(request: NextRequest) {
   try {
     const rl = await apiKeyLimiter(request);
     if (!rl.allowed) {
-      return withCors(NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 }));
+      return withCors(NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 }), request);
     }
 
     const auth = await getAuthenticatedUser();
     if (!auth) {
-      return withCors(NextResponse.json({ error: "Not authenticated. Provide a valid API key via X-Api-Key header." }, { status: 401 }));
+      return withCors(NextResponse.json({ error: "Not authenticated. Provide a valid API key via X-Api-Key header." }, { status: 401 }), request);
     }
     if (!auth.orgId) {
-      return withCors(NextResponse.json({ error: "No organization found" }, { status: 404 }));
+      return withCors(NextResponse.json({ error: "No organization found" }, { status: 404 }), request);
     }
 
     const scopeCheck = requireApiKeyScope(auth, "usage:write");
     if (!scopeCheck.allowed) {
-      return withCors(NextResponse.json({ error: scopeCheck.error }, { status: scopeCheck.status || 403 }));
+      return withCors(NextResponse.json({ error: scopeCheck.error }, { status: scopeCheck.status || 403 }), request);
     }
 
     const orgId = auth.orgId;
@@ -44,27 +44,27 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!org) {
-      return withCors(NextResponse.json({ error: "Organization not found" }, { status: 404 }));
+      return withCors(NextResponse.json({ error: "Organization not found" }, { status: 404 }), request);
     }
 
     if (org.deploymentModel !== "self_hosted" && org.deploymentModel !== "byok") {
-      return withCors(NextResponse.json({ error: "Usage reporting is only available for BYOK and Self-Hosted deployments" }, { status: 403 }));
+      return withCors(NextResponse.json({ error: "Usage reporting is only available for BYOK and Self-Hosted deployments" }, { status: 403 }), request);
     }
 
     const zeroBalance = await hasInsufficientBalance(orgId, 0.01);
     if (zeroBalance) {
-      return withCors(NextResponse.json({ error: "Wallet balance depleted. Top up to continue service.", walletDepleted: true }, { status: 402 }));
+      return withCors(NextResponse.json({ error: "Wallet balance depleted. Top up to continue service.", walletDepleted: true }, { status: 402 }), request);
     }
 
     const body = await request.json();
     const { events } = body;
 
     if (!Array.isArray(events) || events.length === 0) {
-      return withCors(NextResponse.json({ error: "events array is required and must not be empty" }, { status: 400 }));
+      return withCors(NextResponse.json({ error: "events array is required and must not be empty" }, { status: 400 }), request);
     }
 
     if (events.length > 100) {
-      return withCors(NextResponse.json({ error: "Maximum 100 events per report" }, { status: 400 }));
+      return withCors(NextResponse.json({ error: "Maximum 100 events per report" }, { status: 400 }), request);
     }
 
     const results: Array<{
@@ -144,9 +144,9 @@ export async function POST(request: NextRequest) {
       totalCost: roundMoney(totalCost),
       totalDeducted: roundMoney(totalDeducted),
       results,
-    }));
+    }), request);
   } catch (error) {
     console.error("Usage report error:", error);
-    return withCors(NextResponse.json({ error: "Failed to process usage report" }, { status: 500 }));
+    return withCors(NextResponse.json({ error: "Failed to process usage report" }, { status: 500 }), request);
   }
 }

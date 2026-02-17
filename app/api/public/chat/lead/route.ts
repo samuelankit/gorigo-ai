@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { chatLeads, chatMessages, publicConversations } from "@/shared/schema";
 import { checkBodySize } from "@/lib/body-limit";
 import { eq } from "drizzle-orm";
+import { publicLimiter } from "@/lib/rate-limit";
 
 const leadRateStore = new Map<string, { count: number; resetAt: number }>();
 const LEAD_WINDOW_MS = 300_000;
@@ -42,6 +43,11 @@ function checkLeadRateLimit(req: NextRequest): boolean {
 
 export async function POST(req: NextRequest) {
   try {
+    const rl = await publicLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     if (!checkLeadRateLimit(req)) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },

@@ -308,7 +308,8 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
               encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
             );
             controller.close();
-          } catch {
+          } catch (error) {
+            console.error("AI chat stream error:", error);
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ error: "Stream failed" })}\n\n`)
             );
@@ -376,7 +377,8 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
         confidenceScore = typeof parsed.confidenceScore === "number" ? parsed.confidenceScore : 0.8;
         toolCalls = Array.isArray(parsed.toolCalls) ? parsed.toolCalls : [];
       }
-    } catch {
+    } catch (error) {
+      console.error("AI chat JSON parse error:", error);
     }
 
     const outputCheck = validateLLMOutput(assistantText, ragContext, {

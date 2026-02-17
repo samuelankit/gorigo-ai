@@ -13,21 +13,21 @@ const demoRequestSchema = z.object({
   message: z.string().optional(),
 });
 
-export async function OPTIONS() {
-  return corsOptionsResponse();
+export async function OPTIONS(request: NextRequest) {
+  return corsOptionsResponse(request);
 }
 
 export async function POST(request: NextRequest) {
   try {
     const rl = await authLimiter(request);
     if (!rl.allowed) {
-      return withCors(NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 }));
+      return withCors(NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 }), request);
     }
 
     const body = await request.json();
     const parsed = demoRequestSchema.safeParse(body);
     if (!parsed.success) {
-      return withCors(NextResponse.json({ error: "Validation failed", details: parsed.error.flatten().fieldErrors }, { status: 400 }));
+      return withCors(NextResponse.json({ error: "Validation failed", details: parsed.error.flatten().fieldErrors }, { status: 400 }), request);
     }
 
     await db.insert(demoLeads).values({
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       source: "chatgpt",
     });
 
-    return withCors(NextResponse.json({ success: true, message: "Demo request received. We'll contact you shortly." }, { status: 200 }));
+    return withCors(NextResponse.json({ success: true, message: "Demo request received. We'll contact you shortly." }, { status: 200 }), request);
   } catch (error) {
     console.error("V1 demo error:", error);
-    return withCors(NextResponse.json({ error: "Internal server error" }, { status: 500 }));
+    return withCors(NextResponse.json({ error: "Internal server error" }, { status: 500 }), request);
   }
 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { affiliates, affiliateClicks } from "@/shared/schema";
 import { eq, sql } from "drizzle-orm";
 import crypto from "crypto";
+import { publicLimiter } from "@/lib/rate-limit";
 
 function hashIp(ip: string): string {
   const salt = process.env.SESSION_SECRET || "gorigo-ip-salt";
@@ -11,6 +12,11 @@ function hashIp(ip: string): string {
 
 export async function GET(request: NextRequest) {
   try {
+    const rl = await publicLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("ref") || searchParams.get("code");
 

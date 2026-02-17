@@ -4,6 +4,7 @@ import { analyticsEvents, analyticsSessions, sessions as dbSessions, orgMembers 
 import { sql, eq, countDistinct } from "drizzle-orm";
 import { hashToken } from "@/lib/auth";
 import { z } from "zod";
+import { publicLimiter } from "@/lib/rate-limit";
 
 const WINDOW_MS = 1000;
 const MAX_REQUESTS = 10;
@@ -150,6 +151,11 @@ async function resolveAuth(request: NextRequest): Promise<{ orgId: number | null
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await publicLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const ip = getIp(request);
     if (!checkRate(ip)) {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });

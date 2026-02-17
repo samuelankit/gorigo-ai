@@ -7,6 +7,7 @@ import { eq, sql } from "drizzle-orm";
 import { detectPromptInjection, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 import { searchPlatformKnowledge, buildPlatformRAGContext, getPlatformKnowledgeFallback } from "@/lib/platform-knowledge";
 import { validateStreamChunk, RAG_GROUNDING_INSTRUCTION } from "@/lib/output-guard";
+import { publicLimiter } from "@/lib/rate-limit";
 
 const publicChatStore = new Map<string, { count: number; resetAt: number }>();
 const PUBLIC_CHAT_WINDOW_MS = 60_000;
@@ -135,6 +136,11 @@ async function getRAGContext(userMessage: string): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
+    const rl = await publicLimiter(req);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     if (!checkPublicRateLimit(req)) {
       return NextResponse.json(
         { error: "Too many requests. Please try again shortly." },

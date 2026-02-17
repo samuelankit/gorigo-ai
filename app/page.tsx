@@ -137,12 +137,6 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
         <div className="relative max-w-6xl mx-auto px-6 pt-12 sm:pt-28 pb-16 sm:pb-24">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-              <p
-                className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-4 sm:mb-6"
-                data-testid="text-hero-label"
-              >
-                AI Call Centre Engine
-              </p>
               <h1
                 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
                 data-testid="text-hero-title"

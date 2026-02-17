@@ -40,6 +40,9 @@ export const orgs = pgTable("orgs", {
   timezone: text("timezone").notNull().default("UTC"),
   currency: text("currency").notNull().default("GBP"),
   channelType: text("channel_type").default("d2c"),
+  status: text("status").default("active"),
+  suspendedAt: timestamp("suspended_at"),
+  suspendedReason: text("suspended_reason"),
   referredByAffiliateId: integer("referred_by_affiliate_id"),
   maxConcurrentCalls: integer("max_concurrent_calls").default(5),
   minCallBalance: numeric("min_call_balance", { precision: 12, scale: 2 }).default("1.00"),
@@ -290,11 +293,75 @@ export const partners = pgTable("partners", {
   canCreateResellers: boolean("can_create_resellers").default(true),
   canSellDirect: boolean("can_sell_direct").default(true),
   canCreateAffiliates: boolean("can_create_affiliates").default(true),
+  terminatedAt: timestamp("terminated_at"),
+  terminationReason: text("termination_reason"),
+  archivedAt: timestamp("archived_at"),
+  legalHold: boolean("legal_hold").default(false),
+  legalHoldReason: text("legal_hold_reason"),
+  legalHoldSetAt: timestamp("legal_hold_set_at"),
+  lastActivityAt: timestamp("last_activity_at"),
+  lastPaymentAt: timestamp("last_payment_at"),
+  gracePeriodEndsAt: timestamp("grace_period_ends_at"),
+  autoSuspendAfterDays: integer("auto_suspend_after_days").default(30),
+  healthScore: integer("health_score").default(100),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   suspendedAt: timestamp("suspended_at"),
 }, (table) => [
   index("idx_partners_org_id").on(table.orgId),
+  index("idx_partners_status").on(table.status),
+  index("idx_partners_parent").on(table.parentPartnerId),
+]);
+
+export const partnerAgreements = pgTable("partner_agreements", {
+  id: serial("id").primaryKey(),
+  partnerId: integer("partner_id").notNull().references(() => partners.id),
+  agreementType: text("agreement_type").notNull().default("standard"),
+  status: text("status").default("active"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  autoRenew: boolean("auto_renew").default(true),
+  noticePeriodDays: integer("notice_period_days").default(30),
+  dataRetentionDays: integer("data_retention_days").default(90),
+  commissionClawbackDays: integer("commission_clawback_days").default(60),
+  minimumCommitmentAmount: numeric("minimum_commitment_amount", { precision: 12, scale: 2 }).default("0"),
+  terminationFee: numeric("termination_fee", { precision: 12, scale: 2 }).default("0"),
+  nonCompeteDays: integer("non_compete_days").default(0),
+  dataExportIncluded: boolean("data_export_included").default(true),
+  whitelabelRights: text("whitelabel_rights").default("co-branded"),
+  slaUptimePercent: numeric("sla_uptime_percent", { precision: 5, scale: 2 }).default("99.5"),
+  slaResponseTimeMinutes: integer("sla_response_time_minutes").default(60),
+  customTerms: jsonb("custom_terms"),
+  signedByPartner: boolean("signed_by_partner").default(false),
+  signedByPlatform: boolean("signed_by_platform").default(false),
+  signedAt: timestamp("signed_at"),
+  terminatedAt: timestamp("terminated_at"),
+  terminationInitiator: text("termination_initiator"),
+  terminationNotes: text("termination_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_partner_agreements_partner").on(table.partnerId),
+  index("idx_partner_agreements_status").on(table.status),
+]);
+
+export const partnerLifecycleEvents = pgTable("partner_lifecycle_events", {
+  id: serial("id").primaryKey(),
+  partnerId: integer("partner_id").notNull().references(() => partners.id),
+  eventType: text("event_type").notNull(),
+  fromStatus: text("from_status"),
+  toStatus: text("to_status"),
+  reason: text("reason"),
+  initiatedBy: integer("initiated_by"),
+  affectedClients: integer("affected_clients").default(0),
+  affectedResellers: integer("affected_resellers").default(0),
+  affectedAffiliates: integer("affected_affiliates").default(0),
+  cascadeActions: jsonb("cascade_actions"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_lifecycle_events_partner").on(table.partnerId),
+  index("idx_lifecycle_events_type").on(table.eventType),
 ]);
 
 export const partnerClients = pgTable("partner_clients", {
@@ -554,6 +621,14 @@ export type Partner = typeof partners.$inferSelect;
 export const insertPartnerClientSchema = createInsertSchema(partnerClients).omit({ id: true, createdAt: true });
 export type InsertPartnerClient = z.infer<typeof insertPartnerClientSchema>;
 export type PartnerClient = typeof partnerClients.$inferSelect;
+
+export const insertPartnerAgreementSchema = createInsertSchema(partnerAgreements).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertPartnerAgreement = z.infer<typeof insertPartnerAgreementSchema>;
+export type PartnerAgreement = typeof partnerAgreements.$inferSelect;
+
+export const insertPartnerLifecycleEventSchema = createInsertSchema(partnerLifecycleEvents).omit({ id: true, createdAt: true });
+export type InsertPartnerLifecycleEvent = z.infer<typeof insertPartnerLifecycleEventSchema>;
+export type PartnerLifecycleEvent = typeof partnerLifecycleEvents.$inferSelect;
 
 export const insertPlatformSettingSchema = createInsertSchema(platformSettings).omit({ id: true, updatedAt: true });
 export type InsertPlatformSetting = z.infer<typeof insertPlatformSettingSchema>;

@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { drafts } from "@/shared/schema";
-import { eq, and, desc, sql, ilike } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { aiLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
+
+function escapeSearchPattern(input: string): string {
+  return input.replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
 
 const createDraftSchema = z.object({
   type: z.enum(["call_script", "email_template", "sms_template", "faq_answer"]),
@@ -15,6 +20,13 @@ const createDraftSchema = z.object({
   qualityScore: z.number().min(0).max(1).optional(),
   metadata: z.record(z.unknown()).optional(),
 });
+
+const TYPE_CHAR_LIMITS: Record<string, number> = {
+  call_script: 1000,
+  email_template: 3000,
+  sms_template: 320,
+  faq_answer: 700,
+};
 
 const updateDraftSchema = z.object({
   id: z.number().int().positive(),
@@ -37,6 +49,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type");
     const status = searchParams.get("status");
     const search = searchParams.get("search");
+    const parentId = searchParams.get("parentId");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
     const offset = (page - 1) * limit;
@@ -45,17 +58,26 @@ export async function GET(request: NextRequest) {
       eq(drafts.orgId, auth.orgId),
     ];
 
-    if (type && ["call_script", "email_template", "sms_template", "faq_answer"].includes(type)) {
-      conditions.push(eq(drafts.type, type));
+    if (parentId) {
+      const pid = parseInt(parentId);
+      if (pid > 0) {
+        conditions.push(eq(drafts.parentDraftId, pid));
+      }
+    } else {
+      if (type && ["call_script", "email_template", "sms_template", "faq_answer"].includes(type)) {
+        conditions.push(eq(drafts.type, type));
+      }
+      if (status && ["draft", "published", "archived"].includes(status)) {
+        conditions.push(eq(drafts.status, status));
+      }
+      if (search) {
+        const escaped = escapeSearchPattern(search);
+        conditions.push(
+          sql`(${drafts.title} ILIKE ${'%' + escaped + '%'} ESCAPE '\\' OR ${drafts.content} ILIKE ${'%' + escaped + '%'} ESCAPE '\\')`
+        );
+      }
+      conditions.push(sql`${drafts.parentDraftId} IS NULL`);
     }
-    if (status && ["draft", "published", "archived"].includes(status)) {
-      conditions.push(eq(drafts.status, status));
-    }
-    if (search) {
-      conditions.push(ilike(drafts.title, `%${search}%`));
-    }
-
-    conditions.push(sql`${drafts.parentDraftId} IS NULL`);
 
     const whereClause = and(...conditions);
 
@@ -149,6 +171,15 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Draft not found" }, { status: 404 });
     }
 
+    if (updates.content) {
+      const charLimit = TYPE_CHAR_LIMITS[existing.type] || 10000;
+      if (updates.content.length > charLimit) {
+        return NextResponse.json({
+          error: `Content exceeds the ${charLimit} character limit for ${existing.type.replace("_", " ")}s. Current: ${updates.content.length} characters.`,
+        }, { status: 400 });
+      }
+    }
+
     if (updates.content && updates.content !== existing.content) {
       await db.insert(drafts).values({
         orgId: existing.orgId,
@@ -195,6 +226,11 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const rl = await aiLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

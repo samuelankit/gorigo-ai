@@ -3,24 +3,39 @@ import { db } from "@/lib/db";
 import { drafts } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
+import { aiLimiter } from "@/lib/rate-limit";
+import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { z } from "zod";
+
+const duplicateSchema = z.object({
+  id: z.number().int().positive(),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await aiLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
+    const sizeError = checkBodySize(request, BODY_LIMITS.chat);
+    if (sizeError) return sizeError;
+
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    const id = body.id;
-    if (!id || typeof id !== "number") {
+    const parsed = duplicateSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({ error: "Draft ID required" }, { status: 400 });
     }
 
     const [existing] = await db
       .select()
       .from(drafts)
-      .where(and(eq(drafts.id, id), eq(drafts.orgId, auth.orgId)))
+      .where(and(eq(drafts.id, parsed.data.id), eq(drafts.orgId, auth.orgId)))
       .limit(1);
 
     if (!existing) {

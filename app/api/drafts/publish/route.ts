@@ -41,6 +41,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    const MIN_QUALITY_SCORE = 0.2;
+    if (draft.qualityScore !== null && draft.qualityScore < MIN_QUALITY_SCORE) {
+      return NextResponse.json({
+        error: `Draft quality score (${Math.round(draft.qualityScore * 100)}%) is below the minimum required (${Math.round(MIN_QUALITY_SCORE * 100)}%) for publishing. Please refine the draft or regenerate it with more specific knowledge base content.`,
+      }, { status: 400 });
+    }
+
     const agentConditions = requestedAgentId
       ? and(eq(agents.id, requestedAgentId), eq(agents.orgId, auth.orgId))
       : eq(agents.orgId, auth.orgId);

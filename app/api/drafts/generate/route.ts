@@ -10,27 +10,29 @@ import { validateLLMOutput, RAG_GROUNDING_INSTRUCTION } from "@/lib/output-guard
 import { callLLM } from "@/lib/llm-router";
 import { AGENT_ANTI_INJECTION_PREAMBLE } from "@/lib/prompt-guard";
 import { z } from "zod";
-import { hasInsufficientBalance } from "@/lib/wallet";
+import { hasInsufficientBalance, deductFromWallet } from "@/lib/wallet";
+import { logAudit } from "@/lib/audit";
+import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
 
 const DRAFT_TYPES = {
   call_script: {
     label: "Call Script",
-    maxLength: 800,
+    maxLength: 1000,
     instruction: "Write a concise call script for an AI voice agent. It should sound natural when spoken aloud. Keep sentences short (under 15 words each). Include greeting, main content, and closing. Do NOT include stage directions, notes, or formatting — only the words the agent should speak.",
   },
   email_template: {
     label: "Email Template",
-    maxLength: 2000,
+    maxLength: 3000,
     instruction: "Write a professional email template. Include a subject line on the first line prefixed with 'Subject: '. Use proper greeting, body paragraphs, and sign-off. Use {{placeholders}} for personalisation fields like {{name}}, {{company}}, {{date}}.",
   },
   sms_template: {
     label: "SMS Template",
-    maxLength: 160,
+    maxLength: 320,
     instruction: "Write a concise SMS message under 160 characters. Be direct and include a clear call-to-action. No greeting or sign-off needed — keep it tight. Use {{placeholders}} for personalisation like {{name}}.",
   },
   faq_answer: {
     label: "FAQ Answer",
-    maxLength: 500,
+    maxLength: 700,
     instruction: "Write a clear, factual FAQ answer that an AI agent can use when a caller asks this question. Be concise (2-4 sentences). Only include information that is verifiably true based on the business knowledge base. If a question could have multiple answers, give the most common/helpful one.",
   },
 } as const;
@@ -52,25 +54,44 @@ const generateSchema = z.object({
   previousContent: z.string().max(5000).optional(),
 });
 
+const STOP_WORDS = new Set([
+  "this", "that", "with", "from", "your", "have", "been", "will", "would",
+  "could", "should", "about", "their", "there", "where", "when", "what",
+  "which", "these", "those", "they", "them", "than", "then", "also",
+  "just", "more", "most", "some", "such", "each", "every", "both",
+  "into", "over", "after", "before", "between", "through", "during",
+  "does", "doing", "done", "being", "make", "made", "like", "very",
+  "only", "other", "here", "still", "well", "back", "even", "much",
+  "many", "good", "need", "want", "come", "take", "give", "look",
+  "know", "think", "help", "call", "work", "time", "long", "keep",
+]);
+
 function calculateQualityScore(content: string, ragChunks: string[], agentFaqs: Array<{ question: string; answer: string }> | null): number {
   if (!content) return 0;
 
   const contentLower = content.toLowerCase();
-  const contentWords = contentLower.split(/\s+/).filter(w => w.length > 3);
-  let groundedWords = 0;
+  const contentWords = contentLower.split(/\s+/)
+    .filter(w => w.length > 3 && !STOP_WORDS.has(w));
+
+  if (contentWords.length === 0) return 0;
 
   const allContext = [
     ...ragChunks.map(c => c.toLowerCase()),
     ...(agentFaqs || []).map(f => `${f.question} ${f.answer}`.toLowerCase()),
   ].join(" ");
 
-  const contextWords = new Set(allContext.split(/\s+/).filter(w => w.length > 3));
+  const contextWords = new Set(
+    allContext.split(/\s+/).filter(w => w.length > 3 && !STOP_WORDS.has(w))
+  );
 
-  for (const word of contentWords) {
+  let groundedWords = 0;
+  const uniqueContentWords = [...new Set(contentWords)];
+
+  for (const word of uniqueContentWords) {
     if (contextWords.has(word)) groundedWords++;
   }
 
-  const rawScore = contentWords.length > 0 ? groundedWords / contentWords.length : 0;
+  const rawScore = uniqueContentWords.length > 0 ? groundedWords / uniqueContentWords.length : 0;
   return Math.min(Math.round(rawScore * 100) / 100, 1.0);
 }
 
@@ -237,6 +258,30 @@ Output ONLY the draft content. Do not include explanations, notes, or meta-comme
           ? `Email: ${prompt.slice(0, 80)}`
           : `Script: ${prompt.slice(0, 80)}`;
 
+    let cost = 0;
+    try {
+      cost = calculateLLMCost(result.model || "gpt-4o-mini", result.promptTokens || 0, result.completionTokens || 0);
+      await deductFromWallet(auth.orgId, cost, `Draft generation (${type})`);
+      await logCostEvent({
+        orgId: auth.orgId,
+        category: "ai_drafts",
+        subcategory: type,
+        amount: cost,
+        model: result.model || "gpt-4o-mini",
+        promptTokens: result.promptTokens || 0,
+        completionTokens: result.completionTokens || 0,
+      });
+      await logAudit({
+        userId: auth.user.id,
+        orgId: auth.orgId,
+        action: "draft.generate",
+        resource: "drafts",
+        details: { type, tone, language, qualityScore, cost },
+      });
+    } catch (costErr) {
+      console.error("[Drafts] Cost tracking error:", costErr);
+    }
+
     return NextResponse.json({
       content,
       type,
@@ -249,6 +294,7 @@ Output ONLY the draft content. Do not include explanations, notes, or meta-comme
       maxLength: typeConfig.maxLength,
       model: result.model,
       outputGuardSafe: outputCheck.safe,
+      cost,
     });
   } catch (error) {
     console.error("[Drafts] Generation error:", error);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,14 +38,19 @@ import {
   Filter,
   FileText,
   Volume2,
-  Check,
   AlertCircle,
   Loader2,
   Wand2,
   PenLine,
-  ChevronRight,
   Layers,
+  History,
+  Download,
+  ClipboardCopy,
+  ChevronDown,
+  ChevronUp,
+  Smartphone,
 } from "lucide-react";
+import { useToast } from "@/lib/use-toast";
 
 const DRAFT_TYPES = [
   { value: "call_script", label: "Call Script", icon: PhoneCall, description: "Voice agent scripts" },
@@ -78,10 +83,10 @@ const LANGUAGES = [
 ] as const;
 
 const TYPE_CHAR_LIMITS: Record<string, number> = {
-  call_script: 800,
-  email_template: 2000,
-  sms_template: 160,
-  faq_answer: 500,
+  call_script: 1000,
+  email_template: 3000,
+  sms_template: 320,
+  faq_answer: 700,
 };
 
 interface Draft {
@@ -105,7 +110,14 @@ interface Draft {
   updatedAt: string;
 }
 
+interface Agent {
+  id: number;
+  name: string;
+}
+
 export default function SmartDraftsPage() {
+  const { toast } = useToast();
+
   const [activeTab, setActiveTab] = useState("create");
   const [selectedType, setSelectedType] = useState("call_script");
   const [prompt, setPrompt] = useState("");
@@ -135,11 +147,34 @@ export default function SmartDraftsPage() {
   const [publishing, setPublishing] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<Draft | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState<number | null>(null);
 
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [bulkCount, setBulkCount] = useState(5);
+  const [bulkTone, setBulkTone] = useState("professional");
+  const [bulkLanguage, setBulkLanguage] = useState("en");
 
   const [ttsPlaying, setTtsPlaying] = useState(false);
+
+  const [orgAgents, setOrgAgents] = useState<Agent[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<number | undefined>(undefined);
+
+  const [versionHistory, setVersionHistory] = useState<Draft[]>([]);
+  const [versionDialog, setVersionDialog] = useState<Draft | null>(null);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+
+  const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    fetch("/api/agents")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.agents) {
+          setOrgAgents(data.agents.map((a: Agent) => ({ id: a.id, name: a.name })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchDrafts = useCallback(async () => {
     setDraftsLoading(true);
@@ -163,6 +198,14 @@ export default function SmartDraftsPage() {
     fetchDrafts();
   }, [fetchDrafts]);
 
+  const handleSearchChange = (value: string) => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      setSearchQuery(value);
+      setPagination(prev => ({ ...prev, page: 1 }));
+    }, 300);
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
     setGenerating(true);
@@ -184,7 +227,7 @@ export default function SmartDraftsPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Failed to generate draft");
+        toast({ title: "Generation failed", description: err.error || "Failed to generate draft", variant: "destructive" });
         setGenerating(false);
         return;
       }
@@ -196,8 +239,9 @@ export default function SmartDraftsPage() {
       setCharCount(data.charCount);
       setShowRefine(false);
       setRefineFeedback("");
+      toast({ title: "Draft generated", description: `Quality: ${Math.round((data.qualityScore || 0) * 100)}%` });
     } catch {
-      alert("Failed to generate draft. Please try again.");
+      toast({ title: "Error", description: "Failed to generate draft. Please try again.", variant: "destructive" });
     }
     setGenerating(false);
   };
@@ -220,14 +264,20 @@ export default function SmartDraftsPage() {
         }),
       });
       if (res.ok) {
+        toast({ title: "Draft saved", description: "Your draft has been saved to the library." });
         setActiveTab("library");
         setGeneratedContent("");
         setPrompt("");
         setGeneratedTitle("");
         setQualityScore(null);
         fetchDrafts();
+      } else {
+        const err = await res.json();
+        toast({ title: "Save failed", description: err.error || "Could not save draft", variant: "destructive" });
       }
-    } catch {}
+    } catch {
+      toast({ title: "Error", description: "Failed to save draft", variant: "destructive" });
+    }
     setSaving(false);
   };
 
@@ -245,22 +295,38 @@ export default function SmartDraftsPage() {
         }),
       });
       if (res.ok) {
+        toast({ title: "Draft updated", description: `Version ${editingDraft.version + 1} saved.` });
         setEditingDraft(null);
         fetchDrafts();
+      } else {
+        const err = await res.json();
+        toast({ title: "Update failed", description: err.error || "Could not update draft", variant: "destructive" });
       }
-    } catch {}
+    } catch {
+      toast({ title: "Error", description: "Failed to update draft", variant: "destructive" });
+    }
     setSaving(false);
   };
 
   const handleDuplicate = async (id: number) => {
+    setDuplicating(id);
     try {
       const res = await fetch("/api/drafts/duplicate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
-      if (res.ok) fetchDrafts();
-    } catch {}
+      if (res.ok) {
+        toast({ title: "Draft duplicated", description: "A copy has been created in your library." });
+        fetchDrafts();
+      } else {
+        const err = await res.json();
+        toast({ title: "Duplicate failed", description: err.error || "Could not duplicate draft", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to duplicate draft", variant: "destructive" });
+    }
+    setDuplicating(null);
   };
 
   const handleDelete = async () => {
@@ -269,10 +335,16 @@ export default function SmartDraftsPage() {
     try {
       const res = await fetch(`/api/drafts?id=${deleteDialog.id}`, { method: "DELETE" });
       if (res.ok) {
+        toast({ title: "Draft deleted", description: "The draft has been permanently removed." });
         setDeleteDialog(null);
         fetchDrafts();
+      } else {
+        const err = await res.json();
+        toast({ title: "Delete failed", description: err.error || "Could not delete draft", variant: "destructive" });
       }
-    } catch {}
+    } catch {
+      toast({ title: "Error", description: "Failed to delete draft", variant: "destructive" });
+    }
     setDeleting(false);
   };
 
@@ -283,17 +355,23 @@ export default function SmartDraftsPage() {
       const res = await fetch("/api/drafts/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ draftId: publishDialog.id }),
+        body: JSON.stringify({
+          draftId: publishDialog.id,
+          ...(selectedAgentId ? { agentId: selectedAgentId } : {}),
+        }),
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message || "Published successfully");
+        toast({ title: "Published", description: data.message || "Draft published to agent." });
         setPublishDialog(null);
+        setSelectedAgentId(undefined);
         fetchDrafts();
       } else {
-        alert(data.error || "Failed to publish");
+        toast({ title: "Publish failed", description: data.error || "Failed to publish", variant: "destructive" });
       }
-    } catch {}
+    } catch {
+      toast({ title: "Error", description: "Failed to publish draft", variant: "destructive" });
+    }
     setPublishing(false);
   };
 
@@ -303,32 +381,77 @@ export default function SmartDraftsPage() {
       const res = await fetch("/api/drafts/bulk-faq", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: bulkCount, tone }),
+        body: JSON.stringify({ count: bulkCount, tone: bulkTone, language: bulkLanguage }),
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message || `Generated ${data.count} FAQ drafts`);
+        toast({ title: "FAQs generated", description: data.message || `Generated ${data.count} FAQ drafts` });
         setActiveTab("library");
         setFilterType("faq_answer");
         fetchDrafts();
       } else {
-        alert(data.error || "Failed to generate FAQs");
+        toast({ title: "Generation failed", description: data.error || "Failed to generate FAQs", variant: "destructive" });
       }
-    } catch {}
+    } catch {
+      toast({ title: "Error", description: "Failed to generate FAQs", variant: "destructive" });
+    }
     setBulkGenerating(false);
   };
 
   const handleTtsPreview = (text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      toast({ title: "Not supported", description: "Text-to-speech is not supported in this browser.", variant: "destructive" });
+      return;
+    }
     if (ttsPlaying) {
-      speechSynthesis.cancel();
+      window.speechSynthesis.cancel();
       setTtsPlaying(false);
       return;
     }
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.95;
     utterance.onend = () => setTtsPlaying(false);
+    utterance.onerror = () => setTtsPlaying(false);
     setTtsPlaying(true);
-    speechSynthesis.speak(utterance);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleCopyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: "Copied", description: "Content copied to clipboard." });
+    } catch {
+      toast({ title: "Copy failed", description: "Could not copy to clipboard.", variant: "destructive" });
+    }
+  };
+
+  const handleExport = (draft: Draft) => {
+    const extension = draft.type === "email_template" ? "html" : "txt";
+    let content = draft.content;
+    if (draft.type === "email_template") {
+      content = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${draft.title}</title></head><body>${draft.content.split("\n").map(l => `<p>${l}</p>`).join("")}</body></html>`;
+    }
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${draft.title.replace(/[^a-zA-Z0-9]/g, "_")}.${extension}`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Exported", description: `Draft exported as .${extension} file.` });
+  };
+
+  const handleViewVersions = async (draft: Draft) => {
+    setVersionDialog(draft);
+    setVersionsLoading(true);
+    try {
+      const res = await fetch(`/api/drafts?parentId=${draft.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setVersionHistory(data.drafts || []);
+      }
+    } catch {}
+    setVersionsLoading(false);
   };
 
   const getTypeIcon = (type: string) => {
@@ -543,12 +666,24 @@ export default function SmartDraftsPage() {
 
                         {selectedType === "email_template" ? (
                           <div className="border rounded-md p-4 bg-muted/30 space-y-2">
-                            {generatedContent.split("\n").map((line, i) => {
+                            {generatedContent.split("\n").filter(l => l.trim()).map((line, i) => {
                               if (line.startsWith("Subject:")) {
                                 return <div key={i} className="font-medium text-sm">{line}</div>;
                               }
                               return <p key={i} className="text-sm">{line}</p>;
                             })}
+                          </div>
+                        ) : selectedType === "sms_template" ? (
+                          <div className="border rounded-md bg-muted/30 max-w-xs mx-auto">
+                            <div className="bg-muted/50 rounded-t-md px-3 py-1.5 flex items-center gap-1.5">
+                              <Smartphone className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground font-medium">SMS Preview</span>
+                            </div>
+                            <div className="p-3">
+                              <div className="bg-primary/10 rounded-lg p-3 text-sm" data-testid="text-sms-preview">
+                                {generatedContent}
+                              </div>
+                            </div>
                           </div>
                         ) : (
                           <div className="border rounded-md p-4 bg-muted/30">
@@ -566,17 +701,28 @@ export default function SmartDraftsPage() {
                           }`}>
                             {charCount}/{TYPE_CHAR_LIMITS[selectedType]} characters
                           </span>
-                          {selectedType === "call_script" && (
+                          <div className="flex items-center gap-1">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleTtsPreview(generatedContent)}
-                              data-testid="button-tts-preview"
+                              onClick={() => handleCopyToClipboard(generatedContent)}
+                              data-testid="button-copy-preview"
                             >
-                              <Volume2 className="h-4 w-4 mr-1" />
-                              {ttsPlaying ? "Stop" : "Listen"}
+                              <ClipboardCopy className="h-4 w-4 mr-1" />
+                              Copy
                             </Button>
-                          )}
+                            {selectedType === "call_script" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleTtsPreview(generatedContent)}
+                                data-testid="button-tts-preview"
+                              >
+                                <Volume2 className="h-4 w-4 mr-1" />
+                                {ttsPlaying ? "Stop" : "Listen"}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -630,12 +776,9 @@ export default function SmartDraftsPage() {
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search drafts..."
-                value={searchQuery}
-                onChange={e => {
-                  setSearchQuery(e.target.value);
-                  setPagination(prev => ({ ...prev, page: 1 }));
-                }}
+                placeholder="Search by title or content..."
+                defaultValue={searchQuery}
+                onChange={e => handleSearchChange(e.target.value)}
                 className="pl-9"
                 data-testid="input-search-drafts"
               />
@@ -688,6 +831,7 @@ export default function SmartDraftsPage() {
               {savedDrafts.map(draft => {
                 const TypeIcon = getTypeIcon(draft.type);
                 const qs = qualityLabel(draft.qualityScore);
+                const isDuplicating = duplicating === draft.id;
                 return (
                   <Card key={draft.id} className="hover-elevate" data-testid={`card-draft-${draft.id}`}>
                     <CardContent className="p-4">
@@ -746,10 +890,31 @@ export default function SmartDraftsPage() {
                                 <PenLine className="h-4 w-4 mr-2" />
                                 Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDuplicate(draft.id)}>
-                                <Copy className="h-4 w-4 mr-2" />
+                              <DropdownMenuItem
+                                onClick={() => handleDuplicate(draft.id)}
+                                disabled={isDuplicating}
+                              >
+                                {isDuplicating ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <Copy className="h-4 w-4 mr-2" />
+                                )}
                                 Duplicate
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleCopyToClipboard(draft.content)}>
+                                <ClipboardCopy className="h-4 w-4 mr-2" />
+                                Copy Content
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleExport(draft)}>
+                                <Download className="h-4 w-4 mr-2" />
+                                Export
+                              </DropdownMenuItem>
+                              {draft.version > 1 && (
+                                <DropdownMenuItem onClick={() => handleViewVersions(draft)}>
+                                  <History className="h-4 w-4 mr-2" />
+                                  Version History
+                                </DropdownMenuItem>
+                              )}
                               {draft.type === "call_script" && (
                                 <DropdownMenuItem onClick={() => handleTtsPreview(draft.content)}>
                                   <Volume2 className="h-4 w-4 mr-2" />
@@ -814,9 +979,9 @@ export default function SmartDraftsPage() {
                 Automatically generate FAQ answer drafts from your knowledge base. The AI will identify common topics and create factual answers grounded in your uploaded documents.
               </p>
 
-              <div className="grid grid-cols-2 gap-4 max-w-md">
+              <div className="grid grid-cols-3 gap-4 max-w-lg">
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">Number of FAQs</label>
+                  <label className="text-sm font-medium mb-1.5 block">Count</label>
                   <Select value={String(bulkCount)} onValueChange={v => setBulkCount(Number(v))}>
                     <SelectTrigger data-testid="select-bulk-count">
                       <SelectValue />
@@ -830,13 +995,26 @@ export default function SmartDraftsPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Tone</label>
-                  <Select value={tone} onValueChange={setTone}>
+                  <Select value={bulkTone} onValueChange={setBulkTone}>
                     <SelectTrigger data-testid="select-bulk-tone">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {TONES.map(t => (
                         <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Language</label>
+                  <Select value={bulkLanguage} onValueChange={setBulkLanguage}>
+                    <SelectTrigger data-testid="select-bulk-language">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.map(l => (
+                        <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -895,11 +1073,20 @@ export default function SmartDraftsPage() {
             />
             <div className="text-xs text-muted-foreground">
               {editContent.length}/{TYPE_CHAR_LIMITS[editingDraft?.type || "call_script"]} characters
+              {editContent.length > TYPE_CHAR_LIMITS[editingDraft?.type || "call_script"] && (
+                <span className="text-red-500 ml-2">
+                  (exceeds limit by {editContent.length - TYPE_CHAR_LIMITS[editingDraft?.type || "call_script"]})
+                </span>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingDraft(null)}>Cancel</Button>
-            <Button onClick={handleUpdate} disabled={saving} data-testid="button-save-edit">
+            <Button
+              onClick={handleUpdate}
+              disabled={saving || editContent.length > TYPE_CHAR_LIMITS[editingDraft?.type || "call_script"]}
+              data-testid="button-save-edit"
+            >
               {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
               Save Changes
             </Button>
@@ -907,7 +1094,7 @@ export default function SmartDraftsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!publishDialog} onOpenChange={open => !open && setPublishDialog(null)}>
+      <Dialog open={!!publishDialog} onOpenChange={open => { if (!open) { setPublishDialog(null); setSelectedAgentId(undefined); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Publish Draft to Agent</DialogTitle>
@@ -917,13 +1104,46 @@ export default function SmartDraftsPage() {
                 : "This will set this script as your agent's greeting/opening script."}
             </DialogDescription>
           </DialogHeader>
-          <div className="p-3 border rounded-md bg-muted/30">
-            <p className="text-sm font-medium mb-1">{publishDialog?.title}</p>
-            <p className="text-sm text-muted-foreground line-clamp-3">{publishDialog?.content}</p>
+          <div className="space-y-3">
+            <div className="p-3 border rounded-md bg-muted/30">
+              <p className="text-sm font-medium mb-1">{publishDialog?.title}</p>
+              <p className="text-sm text-muted-foreground line-clamp-3">{publishDialog?.content}</p>
+            </div>
+            {orgAgents.length > 1 && (
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Select Agent</label>
+                <Select
+                  value={selectedAgentId ? String(selectedAgentId) : "default"}
+                  onValueChange={v => setSelectedAgentId(v === "default" ? undefined : Number(v))}
+                >
+                  <SelectTrigger data-testid="select-publish-agent">
+                    <SelectValue placeholder="Select agent..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">First available agent</SelectItem>
+                    {orgAgents.map(a => (
+                      <SelectItem key={a.id} value={String(a.id)}>{a.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {publishDialog?.qualityScore !== null && publishDialog?.qualityScore !== undefined && publishDialog.qualityScore < 0.2 && (
+              <div className="flex items-center gap-2 p-2 rounded-md bg-destructive/10 text-sm">
+                <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                <span className="text-destructive">
+                  Quality score ({Math.round(publishDialog.qualityScore * 100)}%) is below the 20% minimum for publishing.
+                </span>
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPublishDialog(null)}>Cancel</Button>
-            <Button onClick={handlePublish} disabled={publishing} data-testid="button-confirm-publish">
+            <Button variant="outline" onClick={() => { setPublishDialog(null); setSelectedAgentId(undefined); }}>Cancel</Button>
+            <Button
+              onClick={handlePublish}
+              disabled={publishing || (publishDialog?.qualityScore !== null && publishDialog?.qualityScore !== undefined && publishDialog.qualityScore < 0.2)}
+              data-testid="button-confirm-publish"
+            >
               {publishing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
               Publish to Agent
             </Button>
@@ -946,6 +1166,51 @@ export default function SmartDraftsPage() {
               Delete
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!versionDialog} onOpenChange={open => { if (!open) { setVersionDialog(null); setVersionHistory([]); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Version History</DialogTitle>
+            <DialogDescription>
+              Previous versions of &ldquo;{versionDialog?.title}&rdquo;
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            {versionsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : versionHistory.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No previous versions found.</p>
+            ) : (
+              versionHistory.map(ver => (
+                <Card key={ver.id} data-testid={`card-version-${ver.id}`}>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">v{ver.version}</Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(ver.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCopyToClipboard(ver.content)}
+                        data-testid={`button-copy-version-${ver.id}`}
+                      >
+                        <ClipboardCopy className="h-3.5 w-3.5 mr-1" />
+                        Copy
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">{ver.content}</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

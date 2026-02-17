@@ -57,6 +57,7 @@ export const orgs = pgTable("orgs", {
   byokMode: text("byok_mode").default("platform"),
   deploymentModel: text("deployment_model").default("managed"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const orgMembers = pgTable("org_members", {
@@ -164,7 +165,7 @@ export const callLogs = pgTable("call_logs", {
   notes: text("notes"),
   billedDeploymentModel: text("billed_deployment_model"),
   billedRatePerMinute: numeric("billed_rate_per_minute", { precision: 12, scale: 6 }),
-  campaignId: integer("campaign_id"),
+  campaignId: integer("campaign_id").references(() => campaigns.id),
   campaignContactId: integer("campaign_contact_id"),
   destinationCountry: text("destination_country"),
   languageUsed: text("language_used"),
@@ -241,12 +242,15 @@ export const billingLedger = pgTable("billing_ledger", {
   endedAt: timestamp("ended_at"),
   billableSeconds: integer("billable_seconds").default(0),
   minChargeSeconds: integer("min_charge_seconds").default(30),
-  ratePerMinute: numeric("rate_per_minute", { precision: 10, scale: 4 }),
-  cost: numeric("cost", { precision: 12, scale: 2 }).default("0"),
-  currency: text("currency").default("GBP"),
+  ratePerMinute: numeric("rate_per_minute", { precision: 10, scale: 4 }).notNull(),
+  cost: numeric("cost", { precision: 12, scale: 2 }).default("0").notNull(),
+  currency: text("currency").default("GBP").notNull(),
   provider: text("provider"),
-  status: text("status").default("pending"),
+  status: text("status").default("pending").notNull(),
+  deploymentModel: text("deployment_model"),
+  idempotencyKey: text("idempotency_key").unique(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_billing_ledger_org_id").on(table.orgId),
   index("idx_billing_ledger_org_status").on(table.orgId, table.status),
@@ -371,10 +375,16 @@ export const partnerClients = pgTable("partner_clients", {
   status: text("status").default("active"),
   retailRatePerMinute: numeric("retail_rate_per_minute", { precision: 10, scale: 4 }),
   notes: text("notes"),
+  reassignedFromPartnerId: integer("reassigned_from_partner_id"),
+  reassignedAt: timestamp("reassigned_at"),
+  rateFrozenUntil: timestamp("rate_frozen_until"),
+  previousRate: numeric("previous_rate", { precision: 10, scale: 4 }),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_partner_clients_org_id").on(table.orgId),
   index("idx_partner_clients_partner_id").on(table.partnerId),
+  uniqueIndex("uq_partner_client_org").on(table.partnerId, table.orgId),
 ]);
 
 export const affiliates = pgTable("affiliates", {
@@ -384,6 +394,7 @@ export const affiliates = pgTable("affiliates", {
   email: text("email").notNull(),
   ownerType: text("owner_type").notNull().default("platform"),
   ownerId: integer("owner_id"),
+  orgId: integer("org_id").references(() => orgs.id),
   userId: integer("user_id").references(() => users.id),
   commissionRate: numeric("commission_rate", { precision: 5, scale: 2 }).default("10"),
   commissionType: text("commission_type").default("percentage"),
@@ -397,7 +408,11 @@ export const affiliates = pgTable("affiliates", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_affiliates_org").on(table.orgId),
+  index("idx_affiliates_owner").on(table.ownerType, table.ownerId),
+  index("idx_affiliates_status").on(table.status),
+]);
 
 export const affiliateClicks = pgTable("affiliate_clicks", {
   id: serial("id").primaryKey(),
@@ -407,7 +422,7 @@ export const affiliateClicks = pgTable("affiliate_clicks", {
   referrerUrl: text("referrer_url"),
   landingPage: text("landing_page"),
   convertedToSignup: boolean("converted_to_signup").default(false),
-  convertedOrgId: integer("converted_org_id"),
+  convertedOrgId: integer("converted_org_id").references(() => orgs.id),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_affiliate_clicks_affiliate_id").on(table.affiliateId),
@@ -423,9 +438,14 @@ export const affiliateCommissions = pgTable("affiliate_commissions", {
   commissionAmount: numeric("commission_amount", { precision: 12, scale: 2 }).notNull(),
   status: text("status").default("pending"),
   description: text("description"),
+  clawbackEligibleUntil: timestamp("clawback_eligible_until"),
+  clawedBackAt: timestamp("clawed_back_at"),
+  clawbackReason: text("clawback_reason"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   uniqueIndex("uq_aff_commission_txn").on(table.walletTransactionId, table.affiliateId),
+  index("idx_aff_commission_org").on(table.orgId),
+  index("idx_aff_commission_status").on(table.status),
 ]);
 
 export const affiliatePayouts = pgTable("affiliate_payouts", {
@@ -671,12 +691,14 @@ export const walletTransactions = pgTable("wallet_transactions", {
   description: text("description"),
   referenceType: text("reference_type"),
   referenceId: text("reference_id"),
+  idempotencyKey: text("idempotency_key"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_wallet_txn_org_id").on(table.orgId),
   index("idx_wallet_txn_created_at").on(table.createdAt),
   index("idx_wallet_txn_org_type").on(table.orgId, table.type),
   index("idx_wallet_txn_ref").on(table.referenceType, table.referenceId),
+  uniqueIndex("uq_wallet_txn_idempotency").on(table.idempotencyKey),
 ]);
 
 export const costEvents = pgTable("cost_events", {
@@ -818,9 +840,14 @@ export const distributionLedger = pgTable("distribution_ledger", {
   affiliateAmount: numeric("affiliate_amount", { precision: 12, scale: 2 }).default("0"),
   affiliateId: integer("affiliate_id"),
   channel: text("channel").notNull().default("d2c"),
+  referenceId: text("reference_id"),
   status: text("status").default("completed"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_distribution_ledger_org").on(table.orgId),
+  index("idx_distribution_ledger_status").on(table.status),
+  uniqueIndex("uq_distribution_ref").on(table.referenceId),
+]);
 
 export const failedDistributions = pgTable("failed_distributions", {
   id: serial("id").primaryKey(),
@@ -1536,8 +1563,8 @@ export type CampaignContact = typeof campaignContacts.$inferSelect;
 
 export const drafts = pgTable("drafts", {
   id: serial("id").primaryKey(),
-  orgId: integer("org_id").notNull(),
-  userId: integer("user_id").notNull(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  userId: integer("user_id").notNull().references(() => users.id),
   type: text("type").notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
@@ -1550,12 +1577,13 @@ export const drafts = pgTable("drafts", {
   qualityScore: real("quality_score"),
   source: text("source").default("web"),
   metadata: jsonb("metadata"),
-  publishedToAgentId: integer("published_to_agent_id"),
+  publishedToAgentId: integer("published_to_agent_id").references(() => agents.id),
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_drafts_org").on(table.orgId),
+  index("idx_drafts_org_user").on(table.orgId, table.userId),
   index("idx_drafts_type").on(table.type),
   index("idx_drafts_status").on(table.status),
   index("idx_drafts_parent").on(table.parentDraftId),

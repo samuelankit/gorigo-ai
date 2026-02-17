@@ -50,7 +50,8 @@ export default function CallsScreen() {
     try {
       const data = await getCalls({ limit: 50 });
       setCalls(data.calls || data || []);
-    } catch {
+    } catch (err) {
+      console.error("[Calls] Failed to load calls:", err);
     } finally {
       setLoading(false);
     }

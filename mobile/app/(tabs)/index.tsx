@@ -47,7 +47,9 @@ export default function DashboardScreen() {
         }
         return updated;
       });
-    } catch (e) {}
+    } catch (e) {
+      console.error("[Dashboard] Failed to load stats:", e);
+    }
   }, []);
 
   useEffect(() => {

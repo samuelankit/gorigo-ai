@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { RigoAssistant } from "@/components/rigo-assistant";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -61,6 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </main>
         </div>
       </div>
+      <RigoAssistant />
     </SidebarProvider>
   );
 }

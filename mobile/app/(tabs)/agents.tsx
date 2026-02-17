@@ -27,7 +27,8 @@ export default function AgentsScreen() {
     try {
       const data = await getAgents();
       setAgents(data.agents || data || []);
-    } catch {
+    } catch (err) {
+      console.error("[Agents] Failed to load agents:", err);
     } finally {
       setLoading(false);
     }

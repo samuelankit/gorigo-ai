@@ -91,11 +91,23 @@ export default function VoiceScreen() {
     }
   };
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (isListening) {
       setIsListening(false);
-    } else {
+      return;
+    }
+
+    try {
+      const Speech = await import("expo-speech");
       setIsListening(true);
+      setTimeout(() => {
+        if (isListening) {
+          setIsListening(false);
+        }
+      }, 10000);
+    } catch {
+      setIsListening(true);
+      setTimeout(() => setIsListening(false), 5000);
     }
   };
 

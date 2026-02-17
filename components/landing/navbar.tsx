@@ -90,9 +90,11 @@ export function Navbar() {
         </div>
       </nav>
 
-      {mobileOpen && (
-        <div className="border-t border-border/50 bg-background md:hidden">
-          <div className="mx-auto max-w-7xl px-6 py-4 flex flex-col gap-1">
+      <div className={cn(
+        "border-t border-border/50 bg-background md:hidden overflow-hidden transition-all duration-200",
+        mobileOpen ? "max-h-[500px] opacity-100 visible" : "max-h-0 opacity-0 invisible border-t-0 pointer-events-none"
+      )} aria-hidden={!mobileOpen}>
+          <div className={cn("mx-auto max-w-7xl px-6 flex flex-col gap-1", mobileOpen ? "py-4" : "py-0")}>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -125,7 +127,6 @@ export function Navbar() {
             </Link>
           </div>
         </div>
-      )}
     </header>
   );
 }

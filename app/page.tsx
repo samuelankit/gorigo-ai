@@ -216,7 +216,7 @@ export default function HomePage() {
                 </Button>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center md:items-start gap-4">
+              <div className="hidden sm:flex flex-col sm:flex-row items-center md:items-start gap-4">
                 <div className="flex items-center justify-center w-24 h-24 rounded-lg border bg-background p-2" data-testid="qr-code-placeholder">
                   <svg viewBox="0 0 100 100" className="w-full h-full text-foreground">
                     <rect x="5" y="5" width="30" height="30" rx="2" fill="currentColor" />
@@ -263,7 +263,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="relative shrink-0" data-testid="phone-mockup">
+            <div className="relative shrink-0 hidden md:block" data-testid="phone-mockup">
               <div className="relative w-[260px] h-[520px] rounded-[3rem] border-[6px] border-foreground/90 bg-background shadow-xl overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-foreground/90 rounded-b-2xl" />
                 <div className="flex flex-col items-center justify-center h-full px-6">

@@ -24,7 +24,7 @@ const allPackages = [
   {
     key: "managed" as const,
     name: "Managed",
-    rate: "From 12p",
+    rate: "From 20p",
     rateUnit: "/min",
     description: "We run everything. You focus on your business while our team handles the entire AI call centre stack.",
     features: [
@@ -45,7 +45,7 @@ const allPackages = [
   {
     key: "byok" as const,
     name: "Bring Your Own Key",
-    rate: "From 5p",
+    rate: "From 8p",
     rateUnit: "/min",
     description: "Use your own OpenAI or Anthropic API keys with our platform for maximum cost control.",
     features: [
@@ -65,7 +65,7 @@ const allPackages = [
   {
     key: "selfHosted" as const,
     name: "Self-Hosted",
-    rate: "From 8p",
+    rate: "From 12p",
     rateUnit: "/min",
     description: "Deploy on your own infrastructure with complete control over data and operations.",
     features: [

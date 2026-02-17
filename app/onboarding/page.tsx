@@ -241,7 +241,7 @@ export default function OnboardingPage() {
 
       toast({ title: "Agent launched successfully", description: "Your AI agent is ready to go." });
       router.push("/dashboard");
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to save configuration. Please try again.", variant: "destructive" });
     } finally {
       setSaving(false);

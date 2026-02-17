@@ -45,7 +45,7 @@ export function BusinessSwitcher({ businesses, currentBusinessName, onSwitch }: 
         router.refresh();
         window.location.reload();
       }
-    } catch {} finally {
+    } catch (error) {} finally {
       setSwitching(false);
     }
   };

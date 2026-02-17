@@ -64,7 +64,7 @@ function ResetPasswordForm() {
 
       setSuccess(true);
       setTimeout(() => router.push("/login"), 3000);
-    } catch {
+    } catch (error) {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

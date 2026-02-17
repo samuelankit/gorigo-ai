@@ -59,7 +59,7 @@ function isDNTEnabled(): boolean {
 function hasConsent(): boolean {
   try {
     return localStorage.getItem(CONSENT_KEY) === 'granted';
-  } catch {
+  } catch (error) {
     return false;
   }
 }
@@ -67,7 +67,7 @@ function hasConsent(): boolean {
 export function grantAnalyticsConsent(): void {
   try {
     localStorage.setItem(CONSENT_KEY, 'granted');
-  } catch {}
+  } catch (error) {}
 }
 
 export function revokeAnalyticsConsent(): void {
@@ -76,7 +76,7 @@ export function revokeAnalyticsConsent(): void {
     localStorage.removeItem('gorigo_vid');
     sessionStorage.removeItem('gorigo_sid');
     sessionStorage.removeItem('gorigo_sid_ts');
-  } catch {}
+  } catch (error) {}
 }
 
 function generateId(): string {
@@ -97,7 +97,7 @@ function getVisitorId(): string {
       localStorage.setItem(key, id);
     }
     return id;
-  } catch {
+  } catch (error) {
     return generateId();
   }
 }
@@ -123,7 +123,7 @@ function getSessionId(): string {
     sessionStorage.setItem(sessionKey, newId);
     sessionStorage.setItem(tsKey, String(now));
     return newId;
-  } catch {
+  } catch (error) {
     return generateId();
   }
 }
@@ -131,7 +131,7 @@ function getSessionId(): string {
 function touchSession(): void {
   try {
     sessionStorage.setItem('gorigo_sid_ts', String(Date.now()));
-  } catch {}
+  } catch (error) {}
 }
 
 function getDeviceType(): string {
@@ -169,7 +169,7 @@ function extractUTMParams(): { utmSource: string | null; utmMedium: string | nul
       utmMedium: params.get('utm_medium'),
       utmCampaign: params.get('utm_campaign'),
     };
-  } catch {
+  } catch (error) {
     return { utmSource: null, utmMedium: null, utmCampaign: null };
   }
 }
@@ -185,7 +185,7 @@ function extractSearchKeyword(): string | null {
     if (host.includes('yahoo.')) return url.searchParams.get('p');
     if (host.includes('duckduckgo.')) return url.searchParams.get('q');
     return null;
-  } catch {
+  } catch (error) {
     return null;
   }
 }
@@ -206,7 +206,7 @@ function normalizeReferrer(ref: string): string {
       if (host.includes(key)) return label;
     }
     return host;
-  } catch {
+  } catch (error) {
     return ref;
   }
 }
@@ -223,7 +223,7 @@ function saveRetryQueue(events: AnalyticsEvent[]): void {
     const existing = JSON.parse(localStorage.getItem(RETRY_KEY) || '[]');
     const combined = [...existing, ...events].slice(-200);
     localStorage.setItem(RETRY_KEY, JSON.stringify(combined));
-  } catch {}
+  } catch (error) {}
 }
 
 function loadAndClearRetryQueue(): AnalyticsEvent[] {
@@ -232,7 +232,7 @@ function loadAndClearRetryQueue(): AnalyticsEvent[] {
     if (!data) return [];
     localStorage.removeItem(RETRY_KEY);
     return JSON.parse(data);
-  } catch {
+  } catch (error) {
     return [];
   }
 }
@@ -319,7 +319,7 @@ function useAnalyticsTracker() {
           saveRetryQueue(events);
         });
       }
-    } catch {
+    } catch (error) {
       saveRetryQueue(events);
     }
   }, []);

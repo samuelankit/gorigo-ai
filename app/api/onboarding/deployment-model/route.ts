@@ -98,7 +98,7 @@ export async function PUT(request: NextRequest) {
           prerequisites.openai = validation.valid
             ? { ready: true, message: "OpenAI API key validated" }
             : { ready: false, message: `OpenAI key validation failed: ${validation.error}` };
-        } catch {
+        } catch (error) {
           prerequisites.openai = { ready: false, message: "OpenAI key could not be validated (network error)" };
         }
       } else {
@@ -111,7 +111,7 @@ export async function PUT(request: NextRequest) {
           prerequisites.twilio = validation.valid
             ? { ready: true, message: "Twilio credentials validated" }
             : { ready: false, message: `Twilio validation failed: ${validation.error}` };
-        } catch {
+        } catch (error) {
           prerequisites.twilio = { ready: false, message: "Twilio credentials could not be validated (network error)" };
         }
       } else {

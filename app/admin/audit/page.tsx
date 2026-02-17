@@ -121,7 +121,7 @@ export default function AuditLogPage() {
     try {
       const str = typeof details === "string" ? details : JSON.stringify(details, null, 2);
       return str;
-    } catch {
+    } catch (error) {
       return "-";
     }
   };

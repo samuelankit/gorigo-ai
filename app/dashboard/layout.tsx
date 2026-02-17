@@ -72,7 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       router.push("/");
-    } catch {
+    } catch (error) {
       router.push("/");
     }
   }, [router]);

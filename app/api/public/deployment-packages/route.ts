@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       byok: result.deployment_package_byok_enabled,
       selfHosted: result.deployment_package_self_hosted_enabled,
     });
-  } catch {
+  } catch (error) {
     return NextResponse.json({
       managed: true,
       byok: true,

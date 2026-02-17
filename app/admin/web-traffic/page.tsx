@@ -113,7 +113,7 @@ export default function WebTrafficPage() {
       setSources(sourcesRes?.data || null);
       setDevices(devicesRes?.data || null);
       setLocations(locationsRes?.data || null);
-    } catch {
+    } catch (error) {
       setOverview(null);
       setPages([]);
       setTimeseries([]);
@@ -227,8 +227,8 @@ export default function WebTrafficPage() {
           { key: "avg_session_duration", label: "Avg Duration", icon: Clock, format: (v: number) => formatDuration(v) },
           { key: "avg_pages_per_session", label: "Pages/Session", icon: Layers, format: (v: number) => Number(v).toFixed(1) },
         ].map(({ key, label, icon: Icon, format, colorFn, invertChange }) => {
-          const current = Number(overview?.[key] || 0);
-          const previous = Number(prevOverview?.[key] || 0);
+          const current = Number((overview as unknown as Record<string, unknown>)?.[key] || 0);
+          const previous = Number((prevOverview as unknown as Record<string, unknown>)?.[key] || 0);
           const change = formatChange(current, previous);
           const changeIsPositive = invertChange ? !change?.isUp : change?.isUp;
           return (

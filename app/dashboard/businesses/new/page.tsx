@@ -75,7 +75,7 @@ export default function NewBusinessPage() {
         return;
       }
       window.location.href = "/dashboard";
-    } catch {
+    } catch (error) {
       setError("Something went wrong. Please try again.");
     } finally {
       setCreating(false);

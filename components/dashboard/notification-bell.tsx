@@ -85,7 +85,7 @@ export function NotificationBell() {
         setTimeout(() => setHasNewAlert(false), 3000);
       }
       prevUnreadRef.current = newUnread;
-    } catch {
+    } catch (error) {
     }
   }, []);
 
@@ -113,7 +113,7 @@ export function NotificationBell() {
         prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch {
+    } catch (error) {
     }
   };
 
@@ -124,7 +124,7 @@ export function NotificationBell() {
       });
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
-    } catch {
+    } catch (error) {
     }
   };
 

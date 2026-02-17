@@ -242,7 +242,7 @@ export default function SmartDraftsPage() {
       setShowRefine(false);
       setRefineFeedback("");
       toast({ title: "Draft generated", description: `Quality: ${Math.round((data.qualityScore || 0) * 100)}%` });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to generate draft. Please try again.", variant: "destructive" });
     }
     setGenerating(false);
@@ -277,7 +277,7 @@ export default function SmartDraftsPage() {
         const err = await res.json();
         toast({ title: "Save failed", description: err.error || "Could not save draft", variant: "destructive" });
       }
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to save draft", variant: "destructive" });
     }
     setSaving(false);
@@ -304,7 +304,7 @@ export default function SmartDraftsPage() {
         const err = await res.json();
         toast({ title: "Update failed", description: err.error || "Could not update draft", variant: "destructive" });
       }
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to update draft", variant: "destructive" });
     }
     setSaving(false);
@@ -325,7 +325,7 @@ export default function SmartDraftsPage() {
         const err = await res.json();
         toast({ title: "Duplicate failed", description: err.error || "Could not duplicate draft", variant: "destructive" });
       }
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to duplicate draft", variant: "destructive" });
     }
     setDuplicating(null);
@@ -344,7 +344,7 @@ export default function SmartDraftsPage() {
         const err = await res.json();
         toast({ title: "Delete failed", description: err.error || "Could not delete draft", variant: "destructive" });
       }
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to delete draft", variant: "destructive" });
     }
     setDeleting(false);
@@ -371,7 +371,7 @@ export default function SmartDraftsPage() {
       } else {
         toast({ title: "Publish failed", description: data.error || "Failed to publish", variant: "destructive" });
       }
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to publish draft", variant: "destructive" });
     }
     setPublishing(false);
@@ -394,7 +394,7 @@ export default function SmartDraftsPage() {
       } else {
         toast({ title: "Generation failed", description: data.error || "Failed to generate FAQs", variant: "destructive" });
       }
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to generate FAQs", variant: "destructive" });
     }
     setBulkGenerating(false);
@@ -422,7 +422,7 @@ export default function SmartDraftsPage() {
     try {
       await navigator.clipboard.writeText(text);
       toast({ title: "Copied", description: "Content copied to clipboard." });
-    } catch {
+    } catch (error) {
       toast({ title: "Copy failed", description: "Could not copy to clipboard.", variant: "destructive" });
     }
   };

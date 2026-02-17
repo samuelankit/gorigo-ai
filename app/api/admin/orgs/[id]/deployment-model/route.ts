@@ -42,7 +42,7 @@ async function checkByokPrerequisites(orgId: number): Promise<{
       } else {
         details.openai = { ready: false, message: `OpenAI API key configured but validation failed: ${validation.error}` };
       }
-    } catch {
+    } catch (error) {
       details.openai = { ready: false, message: "OpenAI API key configured but could not be validated (network error)" };
     }
   } else {
@@ -57,7 +57,7 @@ async function checkByokPrerequisites(orgId: number): Promise<{
       } else {
         details.twilio = { ready: false, message: `Twilio credentials configured but validation failed: ${validation.error}` };
       }
-    } catch {
+    } catch (error) {
       details.twilio = { ready: false, message: "Twilio credentials configured but could not be validated (network error)" };
     }
   } else {

@@ -129,7 +129,7 @@ Output ONLY the JSON array. No commentary.`;
           );
         }
       }
-    } catch {
+    } catch (error) {
       return NextResponse.json({ error: "Failed to parse generated FAQs. Please try again." }, { status: 500 });
     }
 

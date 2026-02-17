@@ -12,7 +12,7 @@ export function getConsentState(): ConsentState | null {
     const stored = localStorage.getItem(CONSENT_KEY);
     if (!stored) return null;
     return JSON.parse(stored);
-  } catch {
+  } catch (error) {
     return null;
   }
 }

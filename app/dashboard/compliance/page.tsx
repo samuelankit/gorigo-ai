@@ -294,7 +294,7 @@ export default function CompliancePage() {
       a.click();
       URL.revokeObjectURL(url);
       toast({ title: "Export complete", description: "DNC list CSV downloaded." });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to export DNC list.", variant: "destructive" });
     } finally {
       setExportingDnc(false);

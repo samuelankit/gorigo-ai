@@ -156,7 +156,7 @@ export default function DeploymentsPage() {
       const res = await fetch("/api/admin/orgs");
       const data = await res.json();
       if (data?.orgs) setOrgList(data.orgs);
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to load organisations.", variant: "destructive" });
     } finally {
       setLoading(false);
@@ -177,7 +177,7 @@ export default function DeploymentsPage() {
       const res = await fetch(`/api/admin/orgs/${org.id}/deployment-model`);
       const data = await res.json();
       setSwitchDetails(data);
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to load deployment details.", variant: "destructive" });
     } finally {
       setLoadingDetails(false);
@@ -222,7 +222,7 @@ export default function DeploymentsPage() {
 
       setShowSwitchDialog(false);
       fetchOrgs();
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Network error during switch.", variant: "destructive" });
     } finally {
       setSwitching(false);

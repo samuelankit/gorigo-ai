@@ -9,7 +9,7 @@ async function getRequestInfo(): Promise<{ ip: string; ua: string }> {
     const ip = forwarded?.split(",")[0]?.trim() || "unknown";
     const ua = h.get("user-agent") || "unknown";
     return { ip, ua };
-  } catch {
+  } catch (error) {
     return { ip: "unknown", ua: "unknown" };
   }
 }

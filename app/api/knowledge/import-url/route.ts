@@ -85,7 +85,7 @@ function extractTitleFromUrl(url: string): string {
     const filename = pathname.split("/").pop() || "audio";
     const name = filename.replace(/\.[^.]+$/, "");
     return decodeURIComponent(name).replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim() || "Imported Audio";
-  } catch {
+  } catch (error) {
     return "Imported Audio";
   }
 }

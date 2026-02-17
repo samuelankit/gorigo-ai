@@ -113,7 +113,8 @@ export async function PUT(req: NextRequest) {
     await db.update(chatLeads).set({ status }).where(eq(chatLeads.id, leadId));
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("[AdminChatsUpdate] Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

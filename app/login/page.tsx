@@ -63,7 +63,7 @@ function LoginForm() {
       }
 
       router.push(safeRedirect);
-    } catch {
+    } catch (error) {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

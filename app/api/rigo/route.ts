@@ -284,7 +284,7 @@ async function gatherContext(orgId: number, intent: string): Promise<string> {
       const balance = await getWalletBalance(orgId);
       contextParts.push(`WALLET DATA:
 - Current balance: £${balance.toFixed(2)}`);
-    } catch {
+    } catch (error) {
       contextParts.push("WALLET DATA: Unable to retrieve balance.");
     }
   }
@@ -306,7 +306,7 @@ async function gatherContext(orgId: number, intent: string): Promise<string> {
       contextParts.push(`AGENT DATA:
 - Total agents: ${agentList.length}
 - Agents: ${agentList.map(a => `"${a.name}" (${a.roles}, inbound: ${a.inboundEnabled ? "on" : "off"}, outbound: ${a.outboundEnabled ? "on" : "off"})`).join("; ") || "None configured"}`);
-    } catch {
+    } catch (error) {
       contextParts.push("AGENT DATA: Unable to retrieve agents.");
     }
   }
@@ -326,7 +326,7 @@ async function gatherContext(orgId: number, intent: string): Promise<string> {
 
       contextParts.push(`CAMPAIGN DATA:
 - Recent campaigns: ${campaignList.map(c => `"${c.name}" (${c.status})`).join("; ") || "None created"}`);
-    } catch {
+    } catch (error) {
       contextParts.push("CAMPAIGN DATA: Unable to retrieve campaigns.");
     }
   }
@@ -347,7 +347,7 @@ async function gatherContext(orgId: number, intent: string): Promise<string> {
 - Wallet balance: £${balance.toFixed(2)}
 - Total calls: ${callCount.total}
 - Total agents: ${agentCount.total}`);
-    } catch {
+    } catch (error) {
       contextParts.push("GENERAL CONTEXT: Basic stats unavailable.");
     }
   }

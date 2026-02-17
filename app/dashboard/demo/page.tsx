@@ -138,7 +138,7 @@ export default function DemoPage() {
       }
 
       setMessages(prev => [...prev, assistantMsg]);
-    } catch {
+    } catch (error) {
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         role: "system",

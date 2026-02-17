@@ -48,7 +48,7 @@ function playNotificationSound() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.3);
-  } catch {}
+  } catch (error) {}
 }
 
 function saveSession(leadId: number, name: string, email: string, messages: ChatMsg[], sessionId: string) {
@@ -66,7 +66,7 @@ function saveSession(leadId: number, name: string, email: string, messages: Chat
         })),
       })
     );
-  } catch {}
+  } catch (error) {}
 }
 
 function loadSession(): {
@@ -88,7 +88,7 @@ function loadSession(): {
         timestamp: new Date(m.timestamp as string),
       })),
     };
-  } catch {
+  } catch (error) {
     return null;
   }
 }
@@ -183,7 +183,7 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
         },
       ]);
       setStep("chat");
-    } catch {
+    } catch (error) {
       setFormError("Connection error. Please try again.");
     }
     setFormLoading(false);
@@ -271,10 +271,10 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
             if (data.done) {
               playNotificationSound();
             }
-          } catch {}
+          } catch (error) {}
         }
       }
-    } catch {
+    } catch (error) {
       setMessages((prev) => {
         const updated = [...prev];
         updated[updated.length - 1] = {
@@ -306,7 +306,7 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messageId: msg.id, rating }),
         });
-      } catch {}
+      } catch (error) {}
     }
   };
 

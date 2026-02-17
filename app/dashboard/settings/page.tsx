@@ -195,7 +195,7 @@ export default function SettingsPage() {
       setWebhookUrl("");
       setWebhookEvents([]);
       fetchWebhooks();
-    } catch {
+    } catch (error) {
       toast({ title: "Error saving webhook", variant: "destructive" });
     } finally {
       setSavingWebhook(false);
@@ -210,7 +210,7 @@ export default function SettingsPage() {
         body: JSON.stringify({ id: wh.id, isActive: !wh.isActive }),
       });
       fetchWebhooks();
-    } catch {
+    } catch (error) {
       toast({ title: "Error toggling webhook", variant: "destructive" });
     }
   };
@@ -220,7 +220,7 @@ export default function SettingsPage() {
       await fetch(`/api/webhooks?id=${id}`, { method: "DELETE" });
       fetchWebhooks();
       toast({ title: "Webhook deleted" });
-    } catch {
+    } catch (error) {
       toast({ title: "Error deleting webhook", variant: "destructive" });
     }
   };
@@ -237,7 +237,7 @@ export default function SettingsPage() {
       setDeploymentModel(pendingPackage);
       setShowPackageSwitch(false);
       toast({ title: "Package updated", description: "Your deployment package has been changed. Active calls will continue at the previous rate." });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to switch package.", variant: "destructive" });
     } finally {
       setSwitchingPackage(false);
@@ -256,7 +256,7 @@ export default function SettingsPage() {
       const data = await res.json();
       setOpenaiValid(data.valid);
       toast({ title: data.valid ? "OpenAI key is valid" : "OpenAI key invalid", description: data.error || `${(data.models || []).length} models available`, variant: data.valid ? "default" : "destructive" });
-    } catch {
+    } catch (error) {
       toast({ title: "Validation failed", variant: "destructive" });
     } finally {
       setValidatingOpenai(false);
@@ -275,7 +275,7 @@ export default function SettingsPage() {
       const data = await res.json();
       setTwilioValid(data.valid);
       toast({ title: data.valid ? "Twilio credentials valid" : "Twilio credentials invalid", description: data.error || data.friendlyName, variant: data.valid ? "default" : "destructive" });
-    } catch {
+    } catch (error) {
       toast({ title: "Validation failed", variant: "destructive" });
     } finally {
       setValidatingTwilio(false);
@@ -306,7 +306,7 @@ export default function SettingsPage() {
       setTwilioToken("");
       setTwilioPhone("");
       fetchByokStatus();
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to save keys.", variant: "destructive" });
     } finally {
       setSavingKeys(false);
@@ -400,7 +400,7 @@ export default function SettingsPage() {
       });
       if (!res.ok) throw new Error("Failed");
       toast({ title: "Profile updated", description: "Your business profile has been saved." });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
     } finally {
       setSavingProfile(false);
@@ -432,7 +432,7 @@ export default function SettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to change password.", variant: "destructive" });
     } finally {
       setSavingPassword(false);
@@ -448,7 +448,7 @@ export default function SettingsPage() {
         body: JSON.stringify({ complianceDisclosure: checked }),
       });
       toast({ title: "Updated", description: "Compliance setting saved." });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to update compliance setting.", variant: "destructive" });
     }
   };
@@ -499,7 +499,7 @@ export default function SettingsPage() {
       });
       if (!res.ok) throw new Error("Failed");
       toast({ title: "Business hours updated", description: "Your business hours and voicemail settings have been saved." });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to save business hours.", variant: "destructive" });
     } finally {
       setSavingBusinessHours(false);
@@ -524,7 +524,7 @@ export default function SettingsPage() {
       });
       if (!res.ok) throw new Error("Failed");
       toast({ title: "Call limits updated", description: "Your call limit settings have been saved." });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to save call limits.", variant: "destructive" });
     } finally {
       setSavingCallLimits(false);

@@ -144,7 +144,7 @@ async function resolveAuth(request: NextRequest): Promise<{ orgId: number | null
     }
 
     return { orgId, userId };
-  } catch {
+  } catch (error) {
     return { orgId: null, userId: null };
   }
 }
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     let body: any;
     try {
       body = await request.json();
-    } catch {
+    } catch (error) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 

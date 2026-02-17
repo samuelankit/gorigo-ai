@@ -38,7 +38,7 @@ function playRingTone() {
     playTone(550, ctx.currentTime + 0.18, 0.15);
     playTone(440, ctx.currentTime + 0.4, 0.15);
     playTone(550, ctx.currentTime + 0.58, 0.15);
-  } catch {}
+  } catch (error) {}
 }
 
 function playEndTone() {
@@ -54,7 +54,7 @@ function playEndTone() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.6);
-  } catch {}
+  } catch (error) {}
 }
 
 function hasSpeechRecognition(): boolean {
@@ -140,7 +140,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
   useEffect(() => {
     const handleVisibility = () => {
       if (document.hidden && phaseRef.current === "active" && recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch {}
+        try { recognitionRef.current.stop(); } catch (error) {}
         setIsListening(false);
       } else if (!document.hidden && phaseRef.current === "active" && speechSupported) {
         startListening();
@@ -216,7 +216,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
                 return updated;
               });
             }
-          } catch {}
+          } catch (error) {}
         }
       }
 
@@ -287,7 +287,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
     if (phaseRef.current !== "active") return;
     if (!speechSupported) return;
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
+      try { recognitionRef.current.stop(); } catch (error) {}
     }
 
     const recognition = createRecognition();
@@ -320,7 +320,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
               ...prev,
               { role: "user", text: finalText.trim(), timestamp: new Date() },
             ]);
-            try { recognition.stop(); } catch {}
+            try { recognition.stop(); } catch (error) {}
             setIsListening(false);
             sendToAI(finalText.trim());
           }
@@ -353,7 +353,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
       recognition.start();
       setIsListening(true);
       setMicError(null);
-    } catch {
+    } catch (error) {
       setMicError("Could not start microphone. Try the keyboard instead.");
       setShowTyping(true);
     }
@@ -371,7 +371,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
       timerRef.current = null;
     }
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
+      try { recognitionRef.current.stop(); } catch (error) {}
       recognitionRef.current = null;
     }
     if (abortRef.current) {
@@ -439,7 +439,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
       { role: "user", text: trimmed, timestamp: new Date() },
     ]);
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
+      try { recognitionRef.current.stop(); } catch (error) {}
       setIsListening(false);
     }
     sendToAI(trimmed);
@@ -468,7 +468,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
         setLeadSuccess(true);
         setLeadCaptured(true);
       }
-    } catch {
+    } catch (error) {
       setLeadError("Connection error. Please try again.");
     }
     setLeadSubmitting(false);
@@ -478,7 +478,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch {}
+        try { recognitionRef.current.stop(); } catch (error) {}
       }
       if (abortRef.current) abortRef.current.abort();
       window.speechSynthesis.cancel();
@@ -707,7 +707,7 @@ export function WebCallModal({ onClose }: WebCallModalProps) {
                   size="icon"
                   onClick={() => {
                     if (isListening) {
-                      try { recognitionRef.current?.stop(); } catch {}
+                      try { recognitionRef.current?.stop(); } catch (error) {}
                       setIsListening(false);
                     } else if (!isSpeaking && !isProcessing) {
                       startListening();

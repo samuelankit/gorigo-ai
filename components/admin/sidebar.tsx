@@ -110,7 +110,7 @@ export function AdminSidebar() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       router.push("/");
-    } catch {
+    } catch (error) {
       router.push("/");
     }
   };

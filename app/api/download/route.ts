@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
         "Content-Length": fileBuffer.length.toString(),
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("[Download] Error:", error);
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 }

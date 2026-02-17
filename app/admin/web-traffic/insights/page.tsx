@@ -260,7 +260,7 @@ export default function InsightsPage() {
       }
       const json = await res.json();
       setData(json);
-    } catch {
+    } catch (error) {
       setData(null);
     } finally {
       setLoading(false);

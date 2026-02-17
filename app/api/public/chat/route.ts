@@ -347,7 +347,8 @@ export async function POST(req: NextRequest) {
               console.error("[Chat] Failed to store assistant message:", err);
             }
           }
-        } catch {
+        } catch (error) {
+          console.error("[PublicChat] Stream error:", error);
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({ content: "Sorry, something went wrong. Please try again.", done: true })}\n\n`
@@ -365,7 +366,8 @@ export async function POST(req: NextRequest) {
         Connection: "keep-alive",
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("[PublicChat] Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -272,7 +272,7 @@ export default function AgentPage() {
       }
       setAiGreetingPreview(data.content);
       toast({ title: "Greeting generated", description: `Quality score: ${Math.round((data.qualityScore || 0) * 100)}%` });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to generate greeting", variant: "destructive" });
     } finally {
       setAiGreetingLoading(false);
@@ -306,7 +306,7 @@ export default function AgentPage() {
       }
       setAiFaqPreview({ question, answer: data.content });
       toast({ title: "FAQ answer generated", description: `Quality score: ${Math.round((data.qualityScore || 0) * 100)}%` });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to generate FAQ answer", variant: "destructive" });
     } finally {
       setAiFaqLoading(false);
@@ -399,7 +399,7 @@ export default function AgentPage() {
   const [simulationActive, setSimulationActive] = useState(false);
   const [simulationStep, setSimulationStep] = useState(-1);
   const [simulationPath, setSimulationPath] = useState<string[]>([]);
-  const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const simulationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [validationMessages, setValidationMessages] = useState<{type: "error" | "warning" | "success"; message: string}[]>([]);
   const [showValidation, setShowValidation] = useState(false);
   const [showTemplateChooser, setShowTemplateChooser] = useState(false);
@@ -436,7 +436,7 @@ export default function AgentPage() {
         voiceName: a.voiceName || null,
         speechModel: a.speechModel || null,
       })));
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to load agents.", variant: "destructive" });
     } finally {
       setAgentsLoading(false);
@@ -701,7 +701,7 @@ export default function AgentPage() {
       toast({ title: "Deleted", description: "Agent has been removed." });
       setDeleteConfirmId(null);
       fetchAgents();
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to delete agent.", variant: "destructive" });
     }
   };
@@ -726,7 +726,7 @@ export default function AgentPage() {
       setNewDocContent("");
       toast({ title: "Document added", description: "Your document is being processed and will be ready shortly." });
       setTimeout(() => fetchKnowledge(), 2000);
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to upload document.", variant: "destructive" });
     } finally {
       setUploadingDoc(false);
@@ -739,7 +739,7 @@ export default function AgentPage() {
       if (!res.ok) throw new Error("Delete failed");
       toast({ title: "Deleted", description: "Document removed from knowledge base." });
       fetchKnowledge();
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to delete document.", variant: "destructive" });
     }
   };
@@ -858,7 +858,7 @@ export default function AgentPage() {
         toast({ title: "Flow created", description: "New automation flow saved." });
       }
       fetchFlows();
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to save flow.", variant: "destructive" });
     } finally {
       setSavingFlow(false);

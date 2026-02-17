@@ -22,7 +22,7 @@ function getStoredConsent(): { level: ConsentLevel; version: string } | null {
     const stored = localStorage.getItem(CONSENT_KEY);
     if (!stored) return null;
     return JSON.parse(stored);
-  } catch {
+  } catch (error) {
     return null;
   }
 }

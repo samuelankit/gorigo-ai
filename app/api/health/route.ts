@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       await db.execute(sql`SELECT 1`);
       dbLatency = Date.now() - checkStart;
       dbOk = true;
-    } catch {
+    } catch (error) {
       dbOk = false;
     }
 
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(response);
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       {
         status: "unhealthy",

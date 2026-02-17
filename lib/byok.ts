@@ -38,7 +38,7 @@ export function decryptValue(ciphertext: string): string {
     let decrypted = decipher.update(encrypted, "hex", "utf8");
     decrypted += decipher.final("utf8");
     return decrypted;
-  } catch {
+  } catch (error) {
     return "";
   }
 }

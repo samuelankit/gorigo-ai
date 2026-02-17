@@ -132,7 +132,7 @@ export default function WebhooksPage() {
       if (!res.ok) throw new Error("Failed to delete webhook");
       toast({ title: "Webhook Deleted", description: "The webhook has been removed." });
       fetchWebhooks();
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to delete webhook", variant: "destructive" });
     } finally {
       setDeletingId(null);

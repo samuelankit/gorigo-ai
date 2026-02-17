@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
     await db.update(chatMessages).set({ rating }).where(eq(chatMessages.id, messageId));
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("[PublicChatRate] Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

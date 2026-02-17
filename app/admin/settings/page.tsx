@@ -257,7 +257,7 @@ export default function PlatformSettingsPage() {
       } else {
         setSaveStatus("error");
       }
-    } catch {
+    } catch (error) {
       setSaveStatus("error");
     } finally {
       setSaving(false);

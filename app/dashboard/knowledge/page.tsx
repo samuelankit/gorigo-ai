@@ -160,7 +160,7 @@ export default function KnowledgePage() {
         fetchDocuments();
         fetchStats();
       }, 3000);
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to process document", variant: "destructive" });
     } finally {
       setProcessingId(null);
@@ -175,7 +175,7 @@ export default function KnowledgePage() {
       toast({ title: "Document deleted" });
       fetchDocuments();
       fetchStats();
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to delete document", variant: "destructive" });
     } finally {
       setDeletingId(null);

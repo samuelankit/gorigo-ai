@@ -90,7 +90,7 @@ export function RigoAssistant() {
 
   const cleanup = useCallback(() => {
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
+      try { recognitionRef.current.stop(); } catch (error) {}
       recognitionRef.current = null;
     }
     stopSpeaking();
@@ -254,7 +254,7 @@ export function RigoAssistant() {
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
+      try { recognitionRef.current.stop(); } catch (error) {}
       recognitionRef.current = null;
     }
     setState("idle");

@@ -151,7 +151,7 @@ export default function BillingPage() {
       });
       if (!res.ok) throw new Error("Failed");
       toast({ title: "Spending cap saved", description: spendingCap ? `Cap set to $${spendingCap}.` : "Spending cap removed." });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to save spending cap.", variant: "destructive" });
     } finally {
       setSavingCap(false);
@@ -170,7 +170,7 @@ export default function BillingPage() {
       const data = await res.json();
       if (data?.subscription) setSubscription(data.subscription);
       toast({ title: "Plan updated", description: "Your subscription has been updated." });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to switch plan.", variant: "destructive" });
     } finally {
       setSwitchingPlan(null);

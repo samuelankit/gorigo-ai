@@ -125,7 +125,8 @@ export async function checkKnowledgeBaseStatus(orgId: number): Promise<{ hasCont
       .from(knowledgeChunks)
       .where(eq(knowledgeChunks.orgId, orgId));
     return { hasContent: (result?.total || 0) > 0, chunkCount: result?.total || 0 };
-  } catch {
+  } catch (error) {
+    console.error("[DraftGenerator] Knowledge base status check failed:", error);
     return { hasContent: false, chunkCount: 0 };
   }
 }

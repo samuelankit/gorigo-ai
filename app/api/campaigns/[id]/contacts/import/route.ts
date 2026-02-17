@@ -109,7 +109,7 @@ export async function POST(
             status: "invalid",
             dncResult: "missing phone number",
           });
-        } catch {
+        } catch (error) {
           // skip if insert fails (e.g. duplicate empty phone)
         }
         continue;

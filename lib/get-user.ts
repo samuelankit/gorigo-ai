@@ -28,7 +28,7 @@ async function authenticateViaApiKey(): Promise<AuthResult | null> {
   let headersList;
   try {
     headersList = await headers();
-  } catch {
+  } catch (error) {
     return null;
   }
   const apiKeyHeader = headersList.get("x-api-key");

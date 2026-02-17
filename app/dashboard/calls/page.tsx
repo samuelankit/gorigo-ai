@@ -623,7 +623,7 @@ export default function CallsPage() {
       } else {
         setOutboundResult({ ok: false, message: data.error || "Failed to initiate call." });
       }
-    } catch {
+    } catch (error) {
       setOutboundResult({ ok: false, message: "Network error. Please try again." });
     } finally {
       setOutboundLoading(false);
@@ -656,7 +656,7 @@ export default function CallsPage() {
       setCalls((prev) =>
         prev.map((c) => (c.id === selectedCall.id ? { ...c, notes: editNotes, tags: editTags } : c))
       );
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to save notes.", variant: "destructive" });
     } finally {
       setSavingNotes(false);
@@ -690,7 +690,7 @@ export default function CallsPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast({ title: "Export complete", description: "CSV file downloaded." });
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to export calls.", variant: "destructive" });
     } finally {
       setExporting(false);

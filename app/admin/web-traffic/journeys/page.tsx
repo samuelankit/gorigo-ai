@@ -82,7 +82,7 @@ export default function JourneysPage() {
       setPages(Array.isArray(pagesRes?.data) ? pagesRes.data : []);
       setSources(sourcesRes?.data || null);
       setFunnelData(Array.isArray(funnelRes?.data) ? funnelRes.data : []);
-    } catch {
+    } catch (error) {
       setJourneys(null);
       setPages([]);
       setSources(null);

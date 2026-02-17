@@ -41,7 +41,8 @@ export async function GET(
       .orderBy(asc(chatMessages.createdAt));
 
     return NextResponse.json({ lead, messages: msgs });
-  } catch {
+  } catch (error) {
+    console.error("[AdminChatDetail] Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

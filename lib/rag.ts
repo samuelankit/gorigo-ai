@@ -390,7 +390,7 @@ export function validateAudioUrl(url: string): { valid: boolean; error?: string 
       return { valid: false, error: `Unsupported audio format. Supported: ${SUPPORTED_AUDIO_EXTENSIONS.join(", ")}` };
     }
     return { valid: true };
-  } catch {
+  } catch (error) {
     return { valid: false, error: "Invalid URL format" };
   }
 }

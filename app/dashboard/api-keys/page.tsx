@@ -82,7 +82,7 @@ export default function ApiKeysPage() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setKeys(data.keys || []);
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to load API keys.", variant: "destructive" });
     } finally {
       setLoading(false);
@@ -133,7 +133,7 @@ export default function ApiKeysPage() {
       if (!res.ok) throw new Error();
       toast({ title: "Revoked", description: "API key has been revoked." });
       fetchKeys();
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to revoke key.", variant: "destructive" });
     } finally {
       setRevoking(null);
@@ -146,7 +146,7 @@ export default function ApiKeysPage() {
       setCopied(true);
       toast({ title: "Copied", description: "API key copied to clipboard." });
       setTimeout(() => setCopied(false), 3000);
-    } catch {
+    } catch (error) {
       toast({ title: "Error", description: "Failed to copy.", variant: "destructive" });
     }
   };

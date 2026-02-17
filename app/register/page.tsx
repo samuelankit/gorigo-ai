@@ -80,7 +80,7 @@ function RegisterForm() {
       }
 
       router.push("/onboarding");
-    } catch {
+    } catch (error) {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

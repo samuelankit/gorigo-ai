@@ -129,7 +129,8 @@ Keep the summary concise, under 200 words.`,
   try {
     const result = await callLLM(messages, { maxTokens: 512, orgId });
     return result.content;
-  } catch {
+  } catch (error) {
+    console.error("Call summary generation failed:", error);
     return "Unable to generate summary at this time.";
   }
 }

@@ -232,6 +232,77 @@ export default function AgentPage() {
   const [testChatSending, setTestChatSending] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  const [aiGreetingOpen, setAiGreetingOpen] = useState(false);
+  const [aiGreetingLoading, setAiGreetingLoading] = useState(false);
+  const [aiGreetingPreview, setAiGreetingPreview] = useState("");
+  const [aiGreetingTone, setAiGreetingTone] = useState("professional");
+  const [aiGreetingPrompt, setAiGreetingPrompt] = useState("");
+
+  const [aiFaqOpen, setAiFaqOpen] = useState(false);
+  const [aiFaqLoading, setAiFaqLoading] = useState(false);
+  const [aiFaqPreview, setAiFaqPreview] = useState<{ question: string; answer: string } | null>(null);
+  const [aiFaqTone, setAiFaqTone] = useState("professional");
+
+  const generateGreeting = async (agent: AgentRecord) => {
+    setAiGreetingLoading(true);
+    setAiGreetingPreview("");
+    try {
+      const prompt = aiGreetingPrompt.trim() || `Write a greeting for an AI call centre agent named "${agent.name}" with role "${agent.roles}"${agent.businessDescription ? `. Business: ${agent.businessDescription}` : ""}`;
+      const res = await fetch("/api/drafts/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "call_script",
+          prompt,
+          tone: aiGreetingTone,
+          language: agent.language || "en",
+          agentId: agent.id,
+          source: "agent_config",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast({ title: "Generation failed", description: data.error || "Could not generate greeting", variant: "destructive" });
+        return;
+      }
+      setAiGreetingPreview(data.content);
+      toast({ title: "Greeting generated", description: `Quality score: ${Math.round((data.qualityScore || 0) * 100)}%` });
+    } catch {
+      toast({ title: "Error", description: "Failed to generate greeting", variant: "destructive" });
+    } finally {
+      setAiGreetingLoading(false);
+    }
+  };
+
+  const generateFaqAnswer = async (agent: AgentRecord, question: string) => {
+    setAiFaqLoading(true);
+    setAiFaqPreview(null);
+    try {
+      const res = await fetch("/api/drafts/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "faq_answer",
+          prompt: question,
+          tone: aiFaqTone,
+          agentId: agent.id,
+          source: "agent_config",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast({ title: "Generation failed", description: data.error || "Could not generate FAQ answer", variant: "destructive" });
+        return;
+      }
+      setAiFaqPreview({ question, answer: data.content });
+      toast({ title: "FAQ answer generated", description: `Quality score: ${Math.round((data.qualityScore || 0) * 100)}%` });
+    } catch {
+      toast({ title: "Error", description: "Failed to generate FAQ answer", variant: "destructive" });
+    } finally {
+      setAiFaqLoading(false);
+    }
+  };
+
   const startTestChat = (agent: AgentRecord) => {
     setTestChatAgent(agent);
     setTestChatMessages([]);
@@ -2410,8 +2481,98 @@ export default function AgentPage() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label className="font-medium">Greeting Message</Label>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <Label className="font-medium">Greeting Message</Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setAiGreetingOpen(!aiGreetingOpen); setAiGreetingPreview(""); setAiGreetingPrompt(""); }}
+                      data-testid="button-ai-greeting"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 mr-1" />
+                      {aiGreetingOpen ? "Close AI" : "Generate with AI"}
+                    </Button>
+                  </div>
                   <Textarea value={editingAgent.greeting} onChange={(e) => setEditingAgent({ ...editingAgent, greeting: e.target.value })} rows={3} data-testid="textarea-edit-greeting" />
+                  {aiGreetingOpen && (
+                    <div className="rounded-md border p-3 space-y-3 bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
+                        <p className="text-sm font-medium">AI Greeting Generator</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Input
+                          value={aiGreetingPrompt}
+                          onChange={(e) => setAiGreetingPrompt(e.target.value)}
+                          placeholder={`Optional: describe what the greeting should cover (leave blank to auto-generate from agent info)`}
+                          data-testid="input-ai-greeting-prompt"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Select value={aiGreetingTone} onValueChange={setAiGreetingTone}>
+                          <SelectTrigger className="w-[140px]" data-testid="select-ai-greeting-tone">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="professional">Professional</SelectItem>
+                            <SelectItem value="friendly">Friendly</SelectItem>
+                            <SelectItem value="concise">Concise</SelectItem>
+                            <SelectItem value="empathetic">Empathetic</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          size="sm"
+                          onClick={() => generateGreeting(editingAgent)}
+                          disabled={aiGreetingLoading}
+                          data-testid="button-generate-greeting"
+                        >
+                          {aiGreetingLoading ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Wand2 className="h-3.5 w-3.5 mr-1" />}
+                          {aiGreetingLoading ? "Generating..." : "Generate"}
+                        </Button>
+                      </div>
+                      {aiGreetingPreview && (
+                        <div className="space-y-2">
+                          <div className="rounded-md border p-3 bg-background">
+                            <p className="text-sm whitespace-pre-wrap" data-testid="text-ai-greeting-preview">{aiGreetingPreview}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setEditingAgent({ ...editingAgent, greeting: aiGreetingPreview });
+                                setAiGreetingOpen(false);
+                                setAiGreetingPreview("");
+                                toast({ title: "Greeting applied", description: "AI-generated greeting has been set. Save the agent to keep it." });
+                              }}
+                              data-testid="button-apply-greeting"
+                            >
+                              <Check className="h-3.5 w-3.5 mr-1" />
+                              Apply
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => generateGreeting(editingAgent)}
+                              disabled={aiGreetingLoading}
+                              data-testid="button-regenerate-greeting"
+                            >
+                              <Wand2 className="h-3.5 w-3.5 mr-1" />
+                              Regenerate
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setAiGreetingPreview("")}
+                              data-testid="button-discard-greeting"
+                            >
+                              <X className="h-3.5 w-3.5 mr-1" />
+                              Discard
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="font-medium">Business Description</Label>
@@ -2541,6 +2702,12 @@ export default function AgentPage() {
                 <Separator />
                 <EditFaqForm
                   onAdd={(q, a) => setEditingAgent({ ...editingAgent, faqEntries: [...editingAgent.faqEntries, { question: q, answer: a }] })}
+                  onGenerateAnswer={(question) => generateFaqAnswer(editingAgent, question)}
+                  aiFaqLoading={aiFaqLoading}
+                  aiFaqPreview={aiFaqPreview}
+                  aiFaqTone={aiFaqTone}
+                  onToneChange={setAiFaqTone}
+                  onClearPreview={() => setAiFaqPreview(null)}
                 />
               </TabsContent>
 
@@ -2700,7 +2867,23 @@ export default function AgentPage() {
   );
 }
 
-function EditFaqForm({ onAdd }: { onAdd: (q: string, a: string) => void }) {
+function EditFaqForm({
+  onAdd,
+  onGenerateAnswer,
+  aiFaqLoading,
+  aiFaqPreview,
+  aiFaqTone,
+  onToneChange,
+  onClearPreview,
+}: {
+  onAdd: (q: string, a: string) => void;
+  onGenerateAnswer: (question: string) => void;
+  aiFaqLoading: boolean;
+  aiFaqPreview: { question: string; answer: string } | null;
+  aiFaqTone: string;
+  onToneChange: (tone: string) => void;
+  onClearPreview: () => void;
+}) {
   const [q, setQ] = useState("");
   const [a, setA] = useState("");
 
@@ -2712,9 +2895,82 @@ function EditFaqForm({ onAdd }: { onAdd: (q: string, a: string) => void }) {
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="What are your business hours?" data-testid="input-edit-faq-question" />
       </div>
       <div className="space-y-2">
-        <Label className="font-medium">Answer</Label>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <Label className="font-medium">Answer</Label>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={aiFaqTone} onValueChange={onToneChange}>
+              <SelectTrigger className="w-[120px] h-8 text-xs" data-testid="select-ai-faq-tone">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="professional">Professional</SelectItem>
+                <SelectItem value="friendly">Friendly</SelectItem>
+                <SelectItem value="concise">Concise</SelectItem>
+                <SelectItem value="empathetic">Empathetic</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { if (q.trim()) onGenerateAnswer(q.trim()); }}
+              disabled={!q.trim() || aiFaqLoading}
+              data-testid="button-ai-faq-generate"
+            >
+              {aiFaqLoading ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+              {aiFaqLoading ? "Generating..." : "Generate with AI"}
+            </Button>
+          </div>
+        </div>
         <Textarea value={a} onChange={(e) => setA(e.target.value)} rows={2} placeholder="We are open Monday to Friday, 9 AM to 5 PM." data-testid="textarea-edit-faq-answer" />
       </div>
+      {aiFaqPreview && (
+        <div className="rounded-md border p-3 space-y-2 bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
+            <p className="text-sm font-medium">AI-Generated Answer</p>
+          </div>
+          <div className="rounded-md border p-3 bg-background">
+            <p className="text-xs font-medium text-muted-foreground mb-1">Q: {aiFaqPreview.question}</p>
+            <p className="text-sm" data-testid="text-ai-faq-preview">{aiFaqPreview.answer}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              onClick={() => {
+                onAdd(aiFaqPreview.question, aiFaqPreview.answer);
+                setQ("");
+                setA("");
+                onClearPreview();
+              }}
+              data-testid="button-apply-faq"
+            >
+              <Check className="h-3.5 w-3.5 mr-1" />
+              Add to FAQ
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setA(aiFaqPreview.answer);
+                onClearPreview();
+              }}
+              data-testid="button-edit-faq-answer"
+            >
+              <Edit className="h-3.5 w-3.5 mr-1" />
+              Edit First
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearPreview}
+              data-testid="button-discard-faq"
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Discard
+            </Button>
+          </div>
+        </div>
+      )}
       <Button
         variant="outline"
         onClick={() => { if (q.trim() && a.trim()) { onAdd(q.trim(), a.trim()); setQ(""); setA(""); } }}

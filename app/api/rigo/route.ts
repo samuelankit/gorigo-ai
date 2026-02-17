@@ -7,10 +7,11 @@ import { callLLM, type ConversationMessage } from "@/lib/llm-router";
 import { logAudit } from "@/lib/audit";
 import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
 import { db } from "@/lib/db";
-import { agents, callLogs, campaigns } from "@/shared/schema";
+import { agents, callLogs, campaigns, drafts } from "@/shared/schema";
 import { eq, and, sql, count, desc } from "drizzle-orm";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { generateDraft, DraftGenerationError, type DraftType, type DraftTone } from "@/lib/draft-generator";
 
 const rigoSchema = z.object({
   message: z.string().min(1).max(2000),
@@ -88,6 +89,8 @@ Always address the user naturally. If this is their first interaction, introduce
 
 function detectIntent(message: string): string {
   const lower = message.toLowerCase();
+  if (/\b(generate|create|write|draft)\b.*(script|greeting|template|email|sms|faq|answer)/i.test(lower)) return "draft";
+  if (/\b(script|greeting|template|email|sms|faq)\b.*(generate|create|write|draft)/i.test(lower)) return "draft";
   if (/call|calls|today|stat|analytic|recent|activity|busy|volume/.test(lower)) return "calls";
   if (/wallet|balance|money|credit|spend|cost|top.?up|fund/.test(lower)) return "wallet";
   if (/agent|bot|assistant|configure|setup/.test(lower)) return "agents";
@@ -95,6 +98,119 @@ function detectIntent(message: string): string {
   if (/overview|summary|dashboard|how.*doing|status|report/.test(lower)) return "overview";
   if (/hello|hi|hey|greet|start/.test(lower)) return "greeting";
   return "general";
+}
+
+function parseDraftIntent(message: string): { type: DraftType; tone: DraftTone; prompt: string } | null {
+  const lower = message.toLowerCase();
+
+  let type: DraftType = "call_script";
+  if (/email/i.test(lower)) type = "email_template";
+  else if (/sms|text\s*message/i.test(lower)) type = "sms_template";
+  else if (/faq|answer|question/i.test(lower)) type = "faq_answer";
+  else if (/script|greeting|call/i.test(lower)) type = "call_script";
+
+  let tone: DraftTone = "professional";
+  if (/friendly|warm|casual/i.test(lower)) tone = "friendly";
+  else if (/concise|short|brief/i.test(lower)) tone = "concise";
+  else if (/detailed|thorough|comprehensive/i.test(lower)) tone = "detailed";
+  else if (/empathetic|caring|understanding/i.test(lower)) tone = "empathetic";
+
+  const prompt = message
+    .replace(/\b(generate|create|write|draft|make|can you|please|could you|for me|a|an|the)\b/gi, "")
+    .trim() || `A ${tone} ${type.replace("_", " ")} for my business`;
+
+  return { type, tone, prompt };
+}
+
+async function handleDraftGeneration(
+  orgId: number,
+  userId: number,
+  userEmail: string,
+  message: string,
+  conversationHistory: Array<{ role: string; content: string }>
+): Promise<{ response: string; draft?: { id: number; type: string; title: string } }> {
+  const parsed = parseDraftIntent(message);
+  if (!parsed) {
+    return { response: "I could not understand what type of content you want me to draft. You can ask me to generate a call script, email template, SMS template, or FAQ answer." };
+  }
+
+  const agentList = await db
+    .select({ id: agents.id, name: agents.name, roles: agents.roles })
+    .from(agents)
+    .where(eq(agents.orgId, orgId))
+    .limit(5);
+
+  let targetAgentId: number | undefined;
+  if (agentList.length === 1) {
+    targetAgentId = agentList[0].id;
+  } else if (agentList.length > 1) {
+    const lower = message.toLowerCase();
+    const matchedAgent = agentList.find(a =>
+      lower.includes(a.name.toLowerCase()) ||
+      (a.roles && lower.includes(a.roles.toLowerCase()))
+    );
+    targetAgentId = matchedAgent?.id || agentList[0].id;
+  }
+
+  const lastDraft = conversationHistory
+    .filter(m => m.role === "assistant")
+    .reverse()
+    .find(m => m.content.includes("draft has been saved"));
+
+  let refineFeedback: string | undefined;
+  let previousContent: string | undefined;
+  if (/\b(more|make it|change|adjust|refine|update|tweak)\b/i.test(message) && lastDraft) {
+    refineFeedback = message;
+  }
+
+  try {
+    const result = await generateDraft(orgId, userId, userEmail, {
+      type: parsed.type,
+      prompt: parsed.prompt,
+      tone: parsed.tone,
+      agentId: targetAgentId,
+      refineFeedback,
+      previousContent,
+      source: "voice",
+    });
+
+    const [savedDraft] = await db.insert(drafts).values({
+      orgId,
+      userId,
+      type: result.type,
+      title: result.suggestedTitle,
+      content: result.content,
+      prompt: result.prompt,
+      tone: result.tone,
+      language: result.language,
+      qualityScore: result.qualityScore,
+      source: "voice",
+    }).returning();
+
+    const typeLabel = result.type === "call_script" ? "call script"
+      : result.type === "email_template" ? "email template"
+      : result.type === "sms_template" ? "SMS template"
+      : "FAQ answer";
+
+    const preview = result.content.slice(0, 80).replace(/\n/g, " ");
+    const qualityPct = Math.round(result.qualityScore * 100);
+
+    return {
+      response: `I have generated a ${parsed.tone} ${typeLabel} for you. It starts with: "${preview}..." The quality score is ${qualityPct}%. Your draft has been saved to your Drafts library where you can review, edit, and publish it to an agent.`,
+      draft: { id: savedDraft.id, type: result.type, title: result.suggestedTitle },
+    };
+  } catch (error) {
+    if (error instanceof DraftGenerationError) {
+      if (error.status === 402) {
+        return { response: "Your wallet balance is too low to generate content. Please top up your wallet first." };
+      }
+      if (error.status === 422) {
+        return { response: "I cannot generate that content because your knowledge base is empty. Please upload some business documents first, then try again." };
+      }
+      return { response: error.message };
+    }
+    throw error;
+  }
 }
 
 const freeGreetingTracker = new Map<number, number>();
@@ -289,6 +405,46 @@ export async function POST(request: NextRequest) {
     const { message, conversationHistory = [] } = rigoSchema.parse(body);
 
     intentCategory = detectIntent(message);
+
+    if (intentCategory === "draft") {
+      try {
+        const draftResult = await handleDraftGeneration(
+          auth.orgId,
+          auth.user.id,
+          auth.user.email,
+          message,
+          conversationHistory
+        );
+
+        logAudit({
+          actorId: auth.user.id,
+          actorEmail: auth.user.email,
+          action: "rigo.draft_generation",
+          entityType: "rigo",
+          entityId: auth.orgId,
+          details: {
+            intent: "draft",
+            success: true,
+            draftId: draftResult.draft?.id,
+            draftType: draftResult.draft?.type,
+            latencyMs: Date.now() - startTime,
+          },
+        }).catch(() => {});
+
+        return NextResponse.json({
+          response: draftResult.response,
+          draft: draftResult.draft,
+          intent: "draft",
+        });
+      } catch (error) {
+        console.error("[Rigo] Draft generation failed:", error);
+        return NextResponse.json({
+          response: "I am sorry, something went wrong while generating that draft. Please try again.",
+          spokenResponse: "I am sorry, something went wrong while generating that draft. Please try again.",
+        });
+      }
+    }
+
     isFreeGreeting = intentCategory === "greeting" && isFirstGreetingForOrg(auth.orgId);
 
     if (!isFreeGreeting) {

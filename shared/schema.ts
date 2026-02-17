@@ -1473,6 +1473,7 @@ export const drafts = pgTable("drafts", {
   version: integer("version").default(1).notNull(),
   parentDraftId: integer("parent_draft_id"),
   qualityScore: real("quality_score"),
+  source: text("source").default("web"),
   metadata: jsonb("metadata"),
   publishedToAgentId: integer("published_to_agent_id"),
   publishedAt: timestamp("published_at"),

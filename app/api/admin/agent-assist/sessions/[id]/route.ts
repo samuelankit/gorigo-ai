@@ -19,7 +19,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = await request.json();
     const [existing] = await db.select().from(agentAssistSessions).where(eq(agentAssistSessions.id, sessionId));
     if (!existing) return NextResponse.json({ error: "Session not found" }, { status: 404 });
-    const [updated] = await db.update(agentAssistSessions).set(body).where(eq(agentAssistSessions.id, sessionId)).returning();
+    const ALLOWED = ["endedAt", "suggestionsShown", "suggestionsUsed", "outcomeRating", "notes"];
+    const updateData: Record<string, any> = {};
+    for (const key of ALLOWED) {
+      if (body[key] !== undefined) {
+        updateData[key] = key === "endedAt" && body[key] ? new Date(body[key]) : body[key];
+      }
+    }
+    const [updated] = await db.update(agentAssistSessions).set(updateData).where(eq(agentAssistSessions.id, sessionId)).returning();
     if (body.endedAt && !existing.endedAt) {
       await db
         .update(humanAgents)

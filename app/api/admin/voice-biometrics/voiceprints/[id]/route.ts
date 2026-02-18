@@ -66,10 +66,15 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+    const ALLOWED_FIELDS = ["status", "passphraseText", "qualityScore", "enrollmentSamples", "providerReferenceId"];
+    const updateData: Record<string, any> = { lastUpdatedAt: new Date() };
+    for (const key of ALLOWED_FIELDS) {
+      if (body[key] !== undefined) updateData[key] = body[key];
+    }
 
     const [updated] = await db
       .update(voiceprints)
-      .set({ ...body, lastUpdatedAt: new Date() })
+      .set(updateData)
       .where(eq(voiceprints.id, parseInt(id)))
       .returning();
 

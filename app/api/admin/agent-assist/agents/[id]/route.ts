@@ -44,7 +44,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
     const agentId = parseInt(id, 10);
     const body = await request.json();
-    const [updated] = await db.update(humanAgents).set(body).where(eq(humanAgents.id, agentId)).returning();
+    const ALLOWED = ["displayName", "status", "skills", "maxConcurrentCalls", "shiftStart", "shiftEnd"];
+    const updateData: Record<string, any> = {};
+    for (const key of ALLOWED) {
+      if (body[key] !== undefined) {
+        updateData[key] = (key === "shiftStart" || key === "shiftEnd") && body[key] ? new Date(body[key]) : body[key];
+      }
+    }
+    const [updated] = await db.update(humanAgents).set(updateData).where(eq(humanAgents.id, agentId)).returning();
     if (!updated) return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     return NextResponse.json(updated);
   } catch (error: any) {

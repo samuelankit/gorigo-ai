@@ -44,7 +44,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const { id } = await params;
     const body = await request.json();
-    const [updated] = await db.update(unifiedContacts).set(body).where(eq(unifiedContacts.id, parseInt(id))).returning();
+    const ALLOWED = ["displayName", "primaryPhone", "primaryEmail", "tags", "lastChannel", "metadata"];
+    const updateData: Record<string, any> = {};
+    for (const key of ALLOWED) {
+      if (body[key] !== undefined) updateData[key] = body[key];
+    }
+    const [updated] = await db.update(unifiedContacts).set(updateData).where(eq(unifiedContacts.id, parseInt(id))).returning();
     if (!updated) return NextResponse.json({ error: "Contact not found" }, { status: 404 });
 
     return NextResponse.json(updated);

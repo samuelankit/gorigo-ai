@@ -17,7 +17,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
     const responseId = parseInt(id, 10);
     const body = await request.json();
-    const [updated] = await db.update(cannedResponses).set(body).where(eq(cannedResponses.id, responseId)).returning();
+    const ALLOWED = ["category", "title", "content", "shortcut", "isActive"];
+    const updateData: Record<string, any> = {};
+    for (const key of ALLOWED) {
+      if (body[key] !== undefined) updateData[key] = body[key];
+    }
+    const [updated] = await db.update(cannedResponses).set(updateData).where(eq(cannedResponses.id, responseId)).returning();
     if (!updated) return NextResponse.json({ error: "Canned response not found" }, { status: 404 });
     return NextResponse.json(updated);
   } catch (error: any) {

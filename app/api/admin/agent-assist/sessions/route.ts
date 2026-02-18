@@ -25,7 +25,9 @@ export async function GET(request: NextRequest) {
     if (from) conditions.push(gte(agentAssistSessions.startedAt, new Date(from)));
     if (to) conditions.push(lte(agentAssistSessions.startedAt, new Date(to)));
     const where = conditions.length > 0 ? and(...conditions) : undefined;
-    const result = await db.select().from(agentAssistSessions).where(where).orderBy(desc(agentAssistSessions.startedAt));
+    const limit = parseInt(searchParams.get("limit") || "100");
+    const offset = parseInt(searchParams.get("offset") || "0");
+    const result = await db.select().from(agentAssistSessions).where(where).orderBy(desc(agentAssistSessions.startedAt)).limit(limit).offset(offset);
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Error fetching assist sessions:", error);
@@ -41,6 +43,9 @@ export async function POST(request: NextRequest) {
     const access = requireSuperAdmin(auth);
     if (!access.allowed) return NextResponse.json({ error: access.error }, { status: 403 });
     const body = await request.json();
+    if (!body.callLogId || !body.humanAgentId || !body.orgId) {
+      return NextResponse.json({ error: "callLogId, humanAgentId, and orgId are required" }, { status: 400 });
+    }
     const [session] = await db.insert(agentAssistSessions).values({
       callLogId: body.callLogId,
       humanAgentId: body.humanAgentId,

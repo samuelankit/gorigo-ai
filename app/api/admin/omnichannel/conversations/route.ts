@@ -78,7 +78,23 @@ export async function POST(request: NextRequest) {
     if (!access.allowed) return NextResponse.json({ error: access.error }, { status: 403 });
 
     const body = await request.json();
-    const [conversation] = await db.insert(omnichannelConversations).values(body).returning();
+    if (!body.orgId || !body.contactId || !body.channelType) {
+      return NextResponse.json({ error: "orgId, contactId, and channelType are required" }, { status: 400 });
+    }
+    const VALID_CHANNELS = ["whatsapp", "sms", "email", "web_chat"];
+    if (!VALID_CHANNELS.includes(body.channelType)) {
+      return NextResponse.json({ error: `Invalid channelType. Must be: ${VALID_CHANNELS.join(", ")}` }, { status: 400 });
+    }
+    const [conversation] = await db.insert(omnichannelConversations).values({
+      orgId: body.orgId,
+      contactId: body.contactId,
+      channelType: body.channelType,
+      subject: body.subject,
+      status: body.status ?? "open",
+      priority: body.priority ?? 0,
+      assignedHumanAgentId: body.assignedHumanAgentId,
+      tags: body.tags,
+    }).returning();
     return NextResponse.json(conversation, { status: 201 });
   } catch (error) {
     console.error("Omnichannel conversation create error:", error);

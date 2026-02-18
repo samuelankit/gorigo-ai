@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { MessagesSquare, Search, RefreshCw, MessageCircle, Mail, Phone, Smartphone, CheckCircle, Plus, Trash2, Activity, Shield, Users, FileText, DollarSign, Merge, Heart } from "lucide-react";
+import { MessagesSquare, Search, RefreshCw, MessageCircle, Mail, Phone, Smartphone, CheckCircle, Plus, Trash2, Activity, Shield, Users, FileText, DollarSign, Merge, Heart, X } from "lucide-react";
 
 const fmtRel = (d: string | null) => {
   if (!d) return "-";
@@ -56,6 +56,8 @@ export default function OmnichannelPage() {
   const [rDlg, setRDlg] = useState<any>(null);
   const [rF, setRF] = useState({ channelType: "whatsapp", talkTimeEquivalent: "1", providerCost: "0.01", marginPercent: "30", effectiveFrom: new Date().toISOString().split("T")[0] });
   const [nC, setNC] = useState({ name: "", phone: "", email: "" });
+  const [saving, setSaving] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
 
   const fetchTab = useCallback(async (t: string) => {
     setLoading(true);
@@ -80,7 +82,7 @@ export default function OmnichannelPage() {
         const d = await (await fetch("/api/admin/omnichannel/billing-rules")).json();
         setRules(Array.isArray(d) ? d : d.rules ?? []);
       }
-    } catch (e) { console.error("Fetch failed:", e); }
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); }
     finally { setLoading(false); }
   }, []);
 
@@ -88,17 +90,17 @@ export default function OmnichannelPage() {
 
   const viewConvo = async (c: any) => {
     setSelConvo(c); setMLoad(true);
-    try { const d = await (await fetch(`/api/admin/omnichannel/conversations/${c.id}/messages`)).json(); setMsgs(Array.isArray(d) ? d : d.messages ?? []); } catch { setMsgs([]); }
+    try { const d = await (await fetch(`/api/admin/omnichannel/conversations/${c.id}/messages`)).json(); setMsgs(Array.isArray(d) ? d : d.messages ?? []); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); setMsgs([]); }
     finally { setMLoad(false); }
   };
-  const resolveConvo = async (id: number) => { try { await fetch(`/api/admin/omnichannel/conversations/${id}/resolve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orgId: 1 }) }); setSelConvo(null); fetchTab("inbox"); } catch {} };
-  const mergeContacts = async () => { if (!mA || !mB) return; try { await fetch("/api/admin/omnichannel/contacts/merge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ primaryId: parseInt(mA), secondaryId: parseInt(mB), orgId: 1 }) }); setMA(""); setMB(""); fetchTab("contacts"); } catch {} };
-  const addContact = async () => { try { await fetch("/api/admin/omnichannel/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...nC, orgId: 1 }) }); setCDlg(false); setNC({ name: "", phone: "", email: "" }); fetchTab("contacts"); } catch {} };
-  const toggleCh = async (ch: any) => { try { await fetch(`/api/admin/omnichannel/channels/${ch.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !ch.enabled }) }); fetchTab("channels"); } catch {} };
-  const runHC = async (id: number) => { try { await fetch(`/api/admin/omnichannel/channels/${id}/health-check`, { method: "POST" }); fetchTab("channels"); } catch {} };
-  const saveTpl = async () => { try { await fetch(tDlg?.id ? `/api/admin/omnichannel/templates/${tDlg.id}` : "/api/admin/omnichannel/templates", { method: tDlg?.id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...tF, orgId: 1 }) }); setTDlg(null); fetchTab("templates"); } catch {} };
-  const delTpl = async (id: number) => { try { await fetch(`/api/admin/omnichannel/templates/${id}`, { method: "DELETE" }); fetchTab("templates"); } catch {} };
-  const saveRule = async () => { try { await fetch("/api/admin/omnichannel/billing-rules", { method: rDlg?.id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...rF, id: rDlg?.id }) }); setRDlg(null); fetchTab("billing"); } catch {} };
+  const resolveConvo = async (id: number) => { if (!window.confirm("Resolve this conversation?")) return; setSaving(true); try { await fetch(`/api/admin/omnichannel/conversations/${id}/resolve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orgId: 1 }) }); setSelConvo(null); fetchTab("inbox"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); } };
+  const mergeContacts = async () => { if (!mA || !mB) return; if (!window.confirm("Merge these contacts? This cannot be undone.")) return; setSaving(true); try { await fetch("/api/admin/omnichannel/contacts/merge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ primaryId: parseInt(mA), secondaryId: parseInt(mB), orgId: 1 }) }); setMA(""); setMB(""); fetchTab("contacts"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); } };
+  const addContact = async () => { setSaving(true); try { await fetch("/api/admin/omnichannel/contacts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...nC, orgId: 1 }) }); setCDlg(false); setNC({ name: "", phone: "", email: "" }); fetchTab("contacts"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); } };
+  const toggleCh = async (ch: any) => { try { await fetch(`/api/admin/omnichannel/channels/${ch.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !ch.enabled }) }); fetchTab("channels"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } };
+  const runHC = async (id: number) => { try { await fetch(`/api/admin/omnichannel/channels/${id}/health-check`, { method: "POST" }); fetchTab("channels"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } };
+  const saveTpl = async () => { setSaving(true); try { await fetch(tDlg?.id ? `/api/admin/omnichannel/templates/${tDlg.id}` : "/api/admin/omnichannel/templates", { method: tDlg?.id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...tF, orgId: 1 }) }); setTDlg(null); fetchTab("templates"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); } };
+  const delTpl = async (id: number) => { if (!window.confirm("Delete this template?")) return; setSaving(true); try { await fetch(`/api/admin/omnichannel/templates/${id}`, { method: "DELETE" }); fetchTab("templates"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); } };
+  const saveRule = async () => { setSaving(true); try { await fetch("/api/admin/omnichannel/billing-rules", { method: rDlg?.id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...rF, id: rDlg?.id }) }); setRDlg(null); fetchTab("billing"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); } };
 
   const fConvos = convos.filter(c => (chF === "all" || c.channelType === chF) && (stF === "all" || c.status === stF) && (prF === "all" || c.priority === prF));
   const fContacts = contacts.filter(c => { if (!cSearch) return true; const s = cSearch.toLowerCase(); return (c.name || "").toLowerCase().includes(s) || (c.phone || "").includes(s) || (c.email || "").toLowerCase().includes(s); });
@@ -118,6 +120,13 @@ export default function OmnichannelPage() {
         </div>
         <Button variant="outline" onClick={() => fetchTab(tab)} disabled={loading} data-testid="button-refresh"><RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />Refresh</Button>
       </div>
+
+      {errMsg && (
+        <div className="mx-4 mb-2 p-3 bg-destructive/10 border border-destructive/30 rounded-md flex items-center justify-between gap-2" data-testid="error-banner">
+          <span className="text-sm text-destructive">{errMsg}</span>
+          <Button size="icon" variant="ghost" onClick={() => setErrMsg("")} data-testid="button-dismiss-error"><X className="h-4 w-4" /></Button>
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList data-testid="tabs-list">
@@ -183,7 +192,7 @@ export default function OmnichannelPage() {
               <CardContent><div className="flex items-center gap-3 flex-wrap">
                 <Input placeholder="Primary Contact ID" value={mA} onChange={e => setMA(e.target.value)} className="w-[180px]" data-testid="input-merge-primary" />
                 <Input placeholder="Secondary Contact ID" value={mB} onChange={e => setMB(e.target.value)} className="w-[180px]" data-testid="input-merge-secondary" />
-                <Button onClick={mergeContacts} disabled={!mA || !mB} data-testid="button-merge-contacts"><Merge className="h-4 w-4 mr-2" />Merge</Button>
+                <Button onClick={mergeContacts} disabled={!mA || !mB || saving} data-testid="button-merge-contacts"><Merge className="h-4 w-4 mr-2" />{saving ? "Saving..." : "Merge"}</Button>
               </div></CardContent></Card>
           </>}
         </TabsContent>
@@ -234,7 +243,7 @@ export default function OmnichannelPage() {
                   <TableCell><Badge variant={apVar(t.approvalStatus || "pending")} data-testid={`badge-tpl-approval-${t.id}`}>{t.approvalStatus || "pending"}</Badge></TableCell>
                   <TableCell className="text-sm" data-testid={`text-tpl-usage-${t.id}`}>{t.usageCount ?? 0}</TableCell>
                   <TableCell><Badge variant={t.active !== false ? "default" : "secondary"} data-testid={`badge-tpl-active-${t.id}`}>{t.active !== false ? "Yes" : "No"}</Badge></TableCell>
-                  <TableCell><Button size="icon" variant="ghost" onClick={() => delTpl(t.id)} data-testid={`button-delete-tpl-${t.id}`}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                  <TableCell><Button size="icon" variant="ghost" onClick={() => delTpl(t.id)} disabled={saving} data-testid={`button-delete-tpl-${t.id}`}><Trash2 className="h-4 w-4" /></Button></TableCell>
                 </TableRow>))}</TableBody></Table></div>}
           </CardContent></Card>}
         </TabsContent>
@@ -268,7 +277,7 @@ export default function OmnichannelPage() {
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant={stVar(selConvo?.status || "")}>{selConvo?.status}</Badge>
               <Badge variant={prVar(selConvo?.priority || "")}>{selConvo?.priority}</Badge>
-              {selConvo?.status !== "resolved" && <Button variant="outline" onClick={() => resolveConvo(selConvo?.id)} data-testid="button-resolve-convo"><CheckCircle className="h-4 w-4 mr-2" />Resolve</Button>}
+              {selConvo?.status !== "resolved" && <Button variant="outline" onClick={() => resolveConvo(selConvo?.id)} disabled={saving} data-testid="button-resolve-convo"><CheckCircle className="h-4 w-4 mr-2" />{saving ? "Saving..." : "Resolve"}</Button>}
             </div>
             {mLoad ? <Skeleton className="h-48" /> : msgs.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8" data-testid="text-no-messages">No messages.</p> :
             <div className="space-y-2 max-h-[50vh] overflow-y-auto">{msgs.map((m, i) => (
@@ -294,7 +303,7 @@ export default function OmnichannelPage() {
             <Input placeholder="Name" value={nC.name} onChange={e => setNC({ ...nC, name: e.target.value })} data-testid="input-new-contact-name" />
             <Input placeholder="Phone" value={nC.phone} onChange={e => setNC({ ...nC, phone: e.target.value })} data-testid="input-new-contact-phone" />
             <Input placeholder="Email" value={nC.email} onChange={e => setNC({ ...nC, email: e.target.value })} data-testid="input-new-contact-email" />
-            <Button onClick={addContact} className="w-full" data-testid="button-save-contact">Save Contact</Button>
+            <Button onClick={addContact} className="w-full" disabled={saving} data-testid="button-save-contact">{saving ? "Saving..." : "Save Contact"}</Button>
           </div></DialogContent></Dialog>
 
       <Dialog open={!!tDlg} onOpenChange={o => { if (!o) setTDlg(null); }}>
@@ -305,7 +314,7 @@ export default function OmnichannelPage() {
             <Textarea placeholder="Template content. Use {{variable}} for placeholders." value={tF.content} onChange={e => setTF({ ...tF, content: e.target.value })} rows={4} data-testid="input-tpl-content" />
             {tF.content && /\{\{.*?\}\}/.test(tF.content) && <div className="text-xs text-muted-foreground" data-testid="text-tpl-vars">Variables: {(tF.content.match(/\{\{.*?\}\}/g) || []).join(", ")}</div>}
             <div className="flex gap-3"><Input placeholder="Language (e.g. en)" value={tF.language} onChange={e => setTF({ ...tF, language: e.target.value })} data-testid="input-tpl-language" /><Input placeholder="Category" value={tF.category} onChange={e => setTF({ ...tF, category: e.target.value })} data-testid="input-tpl-category" /></div>
-            <Button onClick={saveTpl} className="w-full" data-testid="button-save-template">Save Template</Button>
+            <Button onClick={saveTpl} className="w-full" disabled={saving} data-testid="button-save-template">{saving ? "Saving..." : "Save Template"}</Button>
           </div></DialogContent></Dialog>
 
       <Dialog open={!!rDlg} onOpenChange={o => { if (!o) setRDlg(null); }}>
@@ -317,7 +326,7 @@ export default function OmnichannelPage() {
             <Input placeholder="Margin %" value={rF.marginPercent} onChange={e => setRF({ ...rF, marginPercent: e.target.value })} data-testid="input-rule-margin" />
             <Input type="date" value={rF.effectiveFrom} onChange={e => setRF({ ...rF, effectiveFrom: e.target.value })} data-testid="input-rule-from" />
             {rF.providerCost && rF.marginPercent && <div className="text-sm text-muted-foreground" data-testid="text-rule-calc">Effective Rate: ${(parseFloat(rF.providerCost || "0") * (1 + parseFloat(rF.marginPercent || "0") / 100)).toFixed(4)}</div>}
-            <Button onClick={saveRule} className="w-full" data-testid="button-save-rule">Save Rule</Button>
+            <Button onClick={saveRule} className="w-full" disabled={saving} data-testid="button-save-rule">{saving ? "Saving..." : "Save Rule"}</Button>
           </div></DialogContent></Dialog>
     </div>
   );

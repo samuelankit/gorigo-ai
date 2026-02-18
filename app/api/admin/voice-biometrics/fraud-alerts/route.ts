@@ -33,11 +33,15 @@ export async function GET(request: NextRequest) {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
+    const limit = parseInt(searchParams.get("limit") || "100");
+    const offset = parseInt(searchParams.get("offset") || "0");
     const alerts = await db
       .select()
       .from(biometricFraudAlerts)
       .where(whereClause)
-      .orderBy(desc(biometricFraudAlerts.createdAt));
+      .orderBy(desc(biometricFraudAlerts.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     return NextResponse.json(alerts);
   } catch (error) {

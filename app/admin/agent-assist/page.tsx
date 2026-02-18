@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import {
   Headset, RefreshCw, Plus, Pencil, Trash2, Phone, Users, BookOpen, ShieldAlert,
-  MessageSquareText, Activity, Clock, Star, CheckCircle, AlertTriangle,
+  MessageSquareText, Activity, Clock, Star, CheckCircle, AlertTriangle, X,
 } from "lucide-react";
 
 const BASE = "/api/admin/agent-assist";
@@ -49,9 +49,11 @@ export default function AgentAssistPage() {
   const [dlg, setDlg] = useState<{ type: string; data?: any } | null>(null);
   const [suggestions, setSuggestions] = useState<any[] | null>(null);
   const [selectedSession, setSelectedSession] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
 
   const fetchPerf = useCallback(async () => {
-    try { const r = await fetch(`${BASE}/performance?${ORG}`); const d = await r.json(); if (!d.error) setPerf(d); } catch {}
+    try { const r = await fetch(`${BASE}/performance?${ORG}`); const d = await r.json(); if (!d.error) setPerf(d); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); }
   }, []);
 
   const fetchTab = useCallback(async (t: string) => {
@@ -73,7 +75,7 @@ export default function AgentAssistPage() {
         const r = await fetch(`${BASE}/canned-responses?${ORG}`); const d = await r.json();
         setCanned(Array.isArray(d) ? d : d.responses ?? []);
       }
-    } catch (e) { console.error("Fetch failed:", e); }
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); }
     finally { setLoading(false); }
   }, [from, to]);
 
@@ -86,7 +88,7 @@ export default function AgentAssistPage() {
       const r = await fetch(`${BASE}/sessions/${session.id}/suggestions`);
       const d = await r.json();
       setSuggestions(Array.isArray(d) ? d : d.suggestions ?? []);
-    } catch { setSuggestions([]); }
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); setSuggestions([]); }
   };
 
   const toggleAgentStatus = async (id: number, status: string) => {
@@ -94,49 +96,54 @@ export default function AgentAssistPage() {
     try {
       await fetch(`${BASE}/agents/${id}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: next }) });
       fetchTab("agents");
-    } catch {}
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); }
   };
 
   const saveAgent = async (form: any) => {
+    setSaving(true);
     try {
       await fetch(`${BASE}/agents`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, orgId: 1 }) });
       setDlg(null); fetchTab("agents");
-    } catch {}
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const saveRule = async (form: any) => {
     const method = form.id ? "PUT" : "POST";
     const url = form.id ? `${BASE}/coaching-rules/${form.id}` : `${BASE}/coaching-rules`;
+    setSaving(true);
     try {
       await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, orgId: 1 }) });
       setDlg(null); fetchTab("rules");
-    } catch {}
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const deleteRule = async (id: number) => {
-    if (!confirm("Delete this coaching rule?")) return;
-    try { await fetch(`${BASE}/coaching-rules/${id}`, { method: "DELETE" }); fetchTab("rules"); } catch {}
+    if (!window.confirm("Delete this coaching rule?")) return;
+    setSaving(true);
+    try { await fetch(`${BASE}/coaching-rules/${id}`, { method: "DELETE" }); fetchTab("rules"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const toggleRuleActive = async (rule: any) => {
     try {
       await fetch(`${BASE}/coaching-rules/${rule.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...rule, isActive: !rule.isActive, orgId: 1 }) });
       fetchTab("rules");
-    } catch {}
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); }
   };
 
   const saveCanned = async (form: any) => {
     const method = form.id ? "PUT" : "POST";
     const url = form.id ? `${BASE}/canned-responses/${form.id}` : `${BASE}/canned-responses`;
+    setSaving(true);
     try {
       await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, orgId: 1 }) });
       setDlg(null); fetchTab("canned");
-    } catch {}
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const deleteCanned = async (id: number) => {
-    if (!confirm("Delete this canned response?")) return;
-    try { await fetch(`${BASE}/canned-responses/${id}`, { method: "DELETE" }); fetchTab("canned"); } catch {}
+    if (!window.confirm("Delete this canned response?")) return;
+    setSaving(true);
+    try { await fetch(`${BASE}/canned-responses/${id}`, { method: "DELETE" }); fetchTab("canned"); } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const filteredCanned = catFilter === "all" ? canned : canned.filter((c) => c.category === catFilter);
@@ -166,6 +173,13 @@ export default function AgentAssistPage() {
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />Refresh
         </Button>
       </div>
+
+      {errMsg && (
+        <div className="mx-4 mb-2 p-3 bg-destructive/10 border border-destructive/30 rounded-md flex items-center justify-between gap-2" data-testid="error-banner">
+          <span className="text-sm text-destructive">{errMsg}</span>
+          <Button size="icon" variant="ghost" onClick={() => setErrMsg("")} data-testid="button-dismiss-error"><X className="h-4 w-4" /></Button>
+        </div>
+      )}
 
       {perf && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -351,7 +365,7 @@ export default function AgentAssistPage() {
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <Button size="icon" variant="ghost" onClick={() => setDlg({ type: "rule", data: r })} data-testid={`button-edit-rule-${r.id}`}><Pencil className="h-4 w-4" /></Button>
-                              <Button size="icon" variant="ghost" onClick={() => deleteRule(r.id)} data-testid={`button-delete-rule-${r.id}`}><Trash2 className="h-4 w-4" /></Button>
+                              <Button size="icon" variant="ghost" onClick={() => deleteRule(r.id)} disabled={saving} data-testid={`button-delete-rule-${r.id}`}><Trash2 className="h-4 w-4" /></Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -397,7 +411,7 @@ export default function AgentAssistPage() {
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <Button size="icon" variant="ghost" onClick={() => setDlg({ type: "canned", data: c })} data-testid={`button-edit-canned-${c.id}`}><Pencil className="h-4 w-4" /></Button>
-                              <Button size="icon" variant="ghost" onClick={() => deleteCanned(c.id)} data-testid={`button-delete-canned-${c.id}`}><Trash2 className="h-4 w-4" /></Button>
+                              <Button size="icon" variant="ghost" onClick={() => deleteCanned(c.id)} disabled={saving} data-testid={`button-delete-canned-${c.id}`}><Trash2 className="h-4 w-4" /></Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -437,14 +451,14 @@ export default function AgentAssistPage() {
         </DialogContent>
       </Dialog>
 
-      <AgentDialog open={dlg?.type === "agent"} onClose={() => setDlg(null)} onSave={saveAgent} />
-      <RuleDialog open={dlg?.type === "rule"} data={dlg?.data} onClose={() => setDlg(null)} onSave={saveRule} />
-      <CannedDialog open={dlg?.type === "canned"} data={dlg?.data} onClose={() => setDlg(null)} onSave={saveCanned} />
+      <AgentDialog open={dlg?.type === "agent"} onClose={() => setDlg(null)} onSave={saveAgent} saving={saving} />
+      <RuleDialog open={dlg?.type === "rule"} data={dlg?.data} onClose={() => setDlg(null)} onSave={saveRule} saving={saving} />
+      <CannedDialog open={dlg?.type === "canned"} data={dlg?.data} onClose={() => setDlg(null)} onSave={saveCanned} saving={saving} />
     </div>
   );
 }
 
-function AgentDialog({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (f: any) => void }) {
+function AgentDialog({ open, onClose, onSave, saving }: { open: boolean; onClose: () => void; onSave: (f: any) => void; saving?: boolean }) {
   const [form, setForm] = useState({ displayName: "", skills: "", maxConcurrentCalls: "3" });
   useEffect(() => { if (open) setForm({ displayName: "", skills: "", maxConcurrentCalls: "3" }); }, [open]);
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
@@ -456,14 +470,14 @@ function AgentDialog({ open, onClose, onSave }: { open: boolean; onClose: () => 
           <div><label className="text-sm font-medium">Display Name</label><Input value={form.displayName} onChange={(e) => set("displayName", e.target.value)} data-testid="input-agent-name" /></div>
           <div><label className="text-sm font-medium">Skills (comma-separated)</label><Input value={form.skills} onChange={(e) => set("skills", e.target.value)} placeholder="billing, tech, sales" data-testid="input-agent-skills" /></div>
           <div><label className="text-sm font-medium">Max Concurrent Calls</label><Input type="number" value={form.maxConcurrentCalls} onChange={(e) => set("maxConcurrentCalls", e.target.value)} data-testid="input-agent-max-calls" /></div>
-          <Button className="w-full" onClick={() => onSave({ ...form, skills: form.skills.split(",").map((s) => s.trim()).filter(Boolean), maxConcurrentCalls: parseInt(form.maxConcurrentCalls) || 3 })} data-testid="button-save-agent">Save Agent</Button>
+          <Button className="w-full" disabled={saving} onClick={() => onSave({ ...form, skills: form.skills.split(",").map((s) => s.trim()).filter(Boolean), maxConcurrentCalls: parseInt(form.maxConcurrentCalls) || 3 })} data-testid="button-save-agent">{saving ? "Saving..." : "Save Agent"}</Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function RuleDialog({ open, data, onClose, onSave }: { open: boolean; data?: any; onClose: () => void; onSave: (f: any) => void }) {
+function RuleDialog({ open, data, onClose, onSave, saving }: { open: boolean; data?: any; onClose: () => void; onSave: (f: any) => void; saving?: boolean }) {
   const [form, setForm] = useState({ id: null as number | null, name: "", triggerType: "keyword", triggerCondition: "{}", coachingMessage: "", priority: "5", isActive: true });
   useEffect(() => {
     if (open) setForm(data ? { id: data.id, name: data.name ?? "", triggerType: data.triggerType ?? "keyword", triggerCondition: typeof data.triggerCondition === "string" ? data.triggerCondition : JSON.stringify(data.triggerCondition ?? {}), coachingMessage: data.coachingMessage ?? "", priority: String(data.priority ?? 5), isActive: data.isActive ?? true }
@@ -492,14 +506,14 @@ function RuleDialog({ open, data, onClose, onSave }: { open: boolean; data?: any
               <Button variant={form.isActive ? "default" : "outline"} size="sm" onClick={() => set("isActive", !form.isActive)} data-testid="button-rule-active">{form.isActive ? "Active" : "Inactive"}</Button>
             </div>
           </div>
-          <Button className="w-full" onClick={() => { let tc; try { tc = JSON.parse(form.triggerCondition); } catch { tc = form.triggerCondition; } onSave({ ...form, priority: parseInt(form.priority) || 5, triggerCondition: tc }); }} data-testid="button-save-rule">Save Rule</Button>
+          <Button className="w-full" disabled={saving} onClick={() => { let tc; try { tc = JSON.parse(form.triggerCondition); } catch { tc = form.triggerCondition; } onSave({ ...form, priority: parseInt(form.priority) || 5, triggerCondition: tc }); }} data-testid="button-save-rule">{saving ? "Saving..." : "Save Rule"}</Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function CannedDialog({ open, data, onClose, onSave }: { open: boolean; data?: any; onClose: () => void; onSave: (f: any) => void }) {
+function CannedDialog({ open, data, onClose, onSave, saving }: { open: boolean; data?: any; onClose: () => void; onSave: (f: any) => void; saving?: boolean }) {
   const [form, setForm] = useState({ id: null as number | null, category: "", title: "", shortcut: "", content: "", isActive: true });
   useEffect(() => {
     if (open) setForm(data ? { id: data.id, category: data.category ?? "", title: data.title ?? "", shortcut: data.shortcut ?? "", content: data.content ?? data.text ?? "", isActive: data.isActive ?? true }
@@ -518,7 +532,7 @@ function CannedDialog({ open, data, onClose, onSave }: { open: boolean; data?: a
           <div className="flex items-center gap-2">
             <Button variant={form.isActive ? "default" : "outline"} size="sm" onClick={() => set("isActive", !form.isActive)} data-testid="button-canned-active">{form.isActive ? "Active" : "Inactive"}</Button>
           </div>
-          <Button className="w-full" onClick={() => onSave(form)} data-testid="button-save-canned">Save Response</Button>
+          <Button className="w-full" disabled={saving} onClick={() => onSave(form)} data-testid="button-save-canned">{saving ? "Saving..." : "Save Response"}</Button>
         </div>
       </DialogContent>
     </Dialog>

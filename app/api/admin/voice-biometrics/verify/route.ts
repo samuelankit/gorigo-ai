@@ -37,6 +37,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "voiceprintId, orgId, and result are required" }, { status: 400 });
     }
 
+    const [vp] = await db
+      .select({ id: voiceprints.id, status: voiceprints.status })
+      .from(voiceprints)
+      .where(eq(voiceprints.id, parseInt(voiceprintId)))
+      .limit(1);
+    if (!vp) {
+      return NextResponse.json({ error: "Voiceprint not found" }, { status: 404 });
+    }
+    if (vp.status === "deleted") {
+      return NextResponse.json({ error: "Voiceprint has been deleted" }, { status: 410 });
+    }
+
     const [attempt] = await db
       .insert(voiceBiometricAttempts)
       .values({

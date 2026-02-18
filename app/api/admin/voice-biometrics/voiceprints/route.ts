@@ -29,11 +29,15 @@ export async function GET(request: NextRequest) {
     if (status) conditions.push(eq(voiceprints.status, status));
     if (phone) conditions.push(eq(voiceprints.contactPhone, phone));
 
+    const limit = parseInt(searchParams.get("limit") || "100");
+    const offset = parseInt(searchParams.get("offset") || "0");
     const results = await db
       .select()
       .from(voiceprints)
       .where(and(...conditions))
-      .orderBy(desc(voiceprints.createdAt));
+      .orderBy(desc(voiceprints.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     return NextResponse.json(results);
   } catch (error) {

@@ -25,8 +25,27 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     if (!channel) return NextResponse.json({ error: "Channel configuration not found" }, { status: 404 });
 
-    const { status, checkType, responseTimeMs, errorMessage } = await request.json();
-    if (!status) return NextResponse.json({ error: "status is required" }, { status: 400 });
+    let status = "healthy";
+    let checkType = "automatic";
+    let responseTimeMs: number | null = null;
+    let errorMessage: string | null = null;
+
+    try {
+      const bodyText = await request.text();
+      if (bodyText) {
+        const parsed = JSON.parse(bodyText);
+        if (parsed.status) status = parsed.status;
+        if (parsed.checkType) checkType = parsed.checkType;
+        if (parsed.responseTimeMs != null) responseTimeMs = parsed.responseTimeMs;
+        if (parsed.errorMessage) errorMessage = parsed.errorMessage;
+      }
+    } catch {
+    }
+
+    const startTime = Date.now();
+    if (!responseTimeMs) {
+      responseTimeMs = Date.now() - startTime;
+    }
 
     const [logEntry] = await db
       .insert(channelHealthLog)

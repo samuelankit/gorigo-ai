@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const orgId = searchParams.get("orgId");
     const conditions = orgId ? eq(coachingRules.orgId, parseInt(orgId, 10)) : undefined;
-    const result = await db.select().from(coachingRules).where(conditions).orderBy(desc(coachingRules.priority));
+    const limit = parseInt(searchParams.get("limit") || "100");
+    const offset = parseInt(searchParams.get("offset") || "0");
+    const result = await db.select().from(coachingRules).where(conditions).orderBy(desc(coachingRules.priority)).limit(limit).offset(offset);
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Error fetching coaching rules:", error);
@@ -33,6 +35,9 @@ export async function POST(request: NextRequest) {
     const access = requireSuperAdmin(auth);
     if (!access.allowed) return NextResponse.json({ error: access.error }, { status: 403 });
     const body = await request.json();
+    if (!body.orgId || !body.name || !body.triggerType || !body.coachingMessage) {
+      return NextResponse.json({ error: "orgId, name, triggerType, and coachingMessage are required" }, { status: 400 });
+    }
     const [rule] = await db.insert(coachingRules).values({
       orgId: body.orgId,
       name: body.name,

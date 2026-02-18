@@ -7,6 +7,10 @@ import { adminLimiter } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
+function escapeIlike(input: string): string {
+  return input.replace(/[%_\\]/g, (ch) => `\\${ch}`);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const rl = await adminLimiter(request);
@@ -17,6 +21,10 @@ export async function POST(request: NextRequest) {
     const { orgId, query } = await request.json();
     if (!orgId || !query) {
       return NextResponse.json({ error: "orgId and query are required" }, { status: 400 });
+    }
+    const sanitized = escapeIlike(String(query).trim());
+    if (sanitized.length < 2) {
+      return NextResponse.json({ error: "Query must be at least 2 characters" }, { status: 400 });
     }
     const results = await db
       .select({
@@ -32,10 +40,10 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(knowledgeChunks.orgId, parseInt(String(orgId), 10)),
-          ilike(knowledgeChunks.content, `%${query}%`)
+          ilike(knowledgeChunks.content, `%${sanitized}%`)
         )
       )
-      .limit(5);
+      .limit(10);
     return NextResponse.json(results);
   } catch (error: any) {
     console.error("Error searching knowledge base:", error);

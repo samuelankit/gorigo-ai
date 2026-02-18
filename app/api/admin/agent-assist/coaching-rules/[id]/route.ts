@@ -17,7 +17,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
     const ruleId = parseInt(id, 10);
     const body = await request.json();
-    const [updated] = await db.update(coachingRules).set(body).where(eq(coachingRules.id, ruleId)).returning();
+    const ALLOWED = ["name", "triggerType", "triggerCondition", "coachingMessage", "priority", "isActive"];
+    const updateData: Record<string, any> = {};
+    for (const key of ALLOWED) {
+      if (body[key] !== undefined) updateData[key] = body[key];
+    }
+    const [updated] = await db.update(coachingRules).set(updateData).where(eq(coachingRules.id, ruleId)).returning();
     if (!updated) return NextResponse.json({ error: "Rule not found" }, { status: 404 });
     return NextResponse.json(updated);
   } catch (error: any) {

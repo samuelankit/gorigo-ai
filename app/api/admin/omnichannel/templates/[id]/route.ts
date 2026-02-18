@@ -16,9 +16,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const { id } = await params;
     const body = await request.json();
+    const ALLOWED = ["name", "content", "channelType", "category", "language", "variables", "approvalStatus"];
+    const updateData: Record<string, any> = {};
+    for (const key of ALLOWED) {
+      if (body[key] !== undefined) updateData[key] = body[key];
+    }
     const [updated] = await db
       .update(messageTemplates)
-      .set(body)
+      .set(updateData)
       .where(eq(messageTemplates.id, parseInt(id)))
       .returning();
 

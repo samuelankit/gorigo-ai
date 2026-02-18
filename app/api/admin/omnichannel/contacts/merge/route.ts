@@ -18,36 +18,52 @@ export async function POST(request: NextRequest) {
     if (!primaryId || !secondaryId) {
       return NextResponse.json({ error: "primaryId and secondaryId are required" }, { status: 400 });
     }
-
-    const [primary] = await db.select().from(unifiedContacts).where(eq(unifiedContacts.id, primaryId)).limit(1);
-    const [secondary] = await db.select().from(unifiedContacts).where(eq(unifiedContacts.id, secondaryId)).limit(1);
-    if (!primary || !secondary) {
-      return NextResponse.json({ error: "One or both contacts not found" }, { status: 404 });
+    if (primaryId === secondaryId) {
+      return NextResponse.json({ error: "Cannot merge a contact with itself" }, { status: 400 });
     }
 
-    await db
-      .update(omnichannelConversations)
-      .set({ contactId: primaryId })
-      .where(eq(omnichannelConversations.contactId, secondaryId));
+    const result = await db.transaction(async (tx) => {
+      const [primary] = await tx.select().from(unifiedContacts).where(eq(unifiedContacts.id, primaryId)).limit(1);
+      const [secondary] = await tx.select().from(unifiedContacts).where(eq(unifiedContacts.id, secondaryId)).limit(1);
+      if (!primary || !secondary) {
+        throw new Error("NOT_FOUND");
+      }
 
-    const existingMerged = (primary.mergedFromIds as number[]) || [];
-    const secondaryMerged = (secondary.mergedFromIds as number[]) || [];
-    const allIds = [...existingMerged, ...secondaryMerged, secondaryId];
-    const mergedIds = allIds.filter((v, i, a) => a.indexOf(v) === i);
+      await tx
+        .update(omnichannelConversations)
+        .set({ contactId: primaryId })
+        .where(eq(omnichannelConversations.contactId, secondaryId));
 
-    const [updated] = await db
-      .update(unifiedContacts)
-      .set({
-        mergedFromIds: mergedIds,
-        totalInteractions: (primary.totalInteractions || 0) + (secondary.totalInteractions || 0),
-      })
-      .where(eq(unifiedContacts.id, primaryId))
-      .returning();
+      const existingMerged = (primary.mergedFromIds as number[]) || [];
+      const secondaryMerged = (secondary.mergedFromIds as number[]) || [];
+      const allIds = [...existingMerged, ...secondaryMerged, secondaryId];
+      const mergedIds = allIds.filter((v, i, a) => a.indexOf(v) === i);
 
-    await db.delete(unifiedContacts).where(eq(unifiedContacts.id, secondaryId));
+      const [updated] = await tx
+        .update(unifiedContacts)
+        .set({
+          mergedFromIds: mergedIds,
+          totalInteractions: (primary.totalInteractions || 0) + (secondary.totalInteractions || 0),
+        })
+        .where(eq(unifiedContacts.id, primaryId))
+        .returning();
 
-    return NextResponse.json({ merged: updated });
-  } catch (error) {
+      await tx
+        .update(unifiedContacts)
+        .set({
+          displayName: `[MERGED] ${secondary.displayName || ""}`,
+          mergedFromIds: [primaryId],
+        })
+        .where(eq(unifiedContacts.id, secondaryId));
+
+      return updated;
+    });
+
+    return NextResponse.json({ merged: result });
+  } catch (error: any) {
+    if (error?.message === "NOT_FOUND") {
+      return NextResponse.json({ error: "One or both contacts not found" }, { status: 404 });
+    }
     console.error("Omnichannel contact merge error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -12,6 +12,14 @@ const TOPIC_DICTIONARY = [
   "pricing", "cancellation", "upgrade", "delivery", "account",
   "password", "payment", "shipping", "return", "warranty",
   "quality", "service", "appointment", "schedule", "emergency",
+  "invoice", "subscription", "renewal", "discount", "promotion",
+  "outage", "downtime", "error", "bug", "issue",
+  "onboarding", "training", "demo", "trial", "integration",
+  "security", "privacy", "compliance", "fraud", "dispute",
+  "transfer", "escalation", "callback", "voicemail", "hold",
+  "satisfaction", "feedback", "survey", "rating", "review",
+  "contract", "agreement", "terms", "policy", "regulation",
+  "feature", "request", "suggestion", "improvement", "update",
 ];
 
 export async function POST(request: NextRequest) {
@@ -55,7 +63,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ extracted: 0, topics: [] });
     }
 
-    const insertValues = detectedTopics.map((t) => ({
+    const existingTopics = await db
+      .select({ topic: callTopics.topic })
+      .from(callTopics)
+      .where(and(eq(callTopics.callLogId, callLogId), eq(callTopics.orgId, orgId)));
+    const existingSet = new Set(existingTopics.map((t) => t.topic));
+    const newTopics = detectedTopics.filter((t) => !existingSet.has(t.topic));
+
+    if (newTopics.length === 0) {
+      return NextResponse.json({ extracted: 0, topics: [], message: "All topics already extracted" });
+    }
+
+    const insertValues = newTopics.map((t) => ({
       callLogId: callLogId as number,
       orgId: orgId as number,
       topic: t.topic,

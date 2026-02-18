@@ -83,6 +83,8 @@ export default function ConversationAnalyticsPage() {
   const [agentTrend, setAgentTrend] = useState<any[]>([]);
   const [sortCol, setSortCol] = useState("overallScore");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [saving, setSaving] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
 
   const params = `orgId=1&from=${from}&to=${to}`;
 
@@ -115,8 +117,8 @@ export default function ConversationAnalyticsPage() {
         if (!td.error) setTopics(td);
         if (!ad.error) setAlerts(Array.isArray(ad) ? ad : ad.alerts ?? []);
       }
-    } catch (e) {
-      console.error("Fetch failed:", e);
+    } catch (e: any) {
+      setErrMsg(e?.message || "Operation failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -131,14 +133,15 @@ export default function ConversationAnalyticsPage() {
       const r = await fetch(`/api/admin/conversation-analytics/agent-scorecards/${agentId}?${params}`);
       const d = await r.json();
       setAgentTrend(d.dailyTrend ?? d.trend ?? []);
-    } catch { setAgentTrend([]); }
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); setAgentTrend([]); }
   };
 
   const dismissAlert = async (id: number) => {
+    setSaving(true);
     try {
       await fetch(`/api/admin/conversation-analytics/alerts/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dismissed: true }) });
       setAlerts((prev) => prev.filter((a) => a.id !== id));
-    } catch {}
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const sortedAgents = (() => {
@@ -184,6 +187,13 @@ export default function ConversationAnalyticsPage() {
           </Button>
         </div>
       </div>
+
+      {errMsg && (
+        <div className="mx-4 mb-2 p-3 bg-destructive/10 border border-destructive/30 rounded-md flex items-center justify-between gap-2" data-testid="error-banner">
+          <span className="text-sm text-destructive">{errMsg}</span>
+          <Button size="icon" variant="ghost" onClick={() => setErrMsg("")} data-testid="button-dismiss-error"><X className="h-4 w-4" /></Button>
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList data-testid="tabs-list">
@@ -529,7 +539,7 @@ export default function ConversationAnalyticsPage() {
                             </div>
                             {a.description && <p className="text-xs text-muted-foreground mt-1">{a.description}</p>}
                           </div>
-                          <Button size="icon" variant="ghost" onClick={() => dismissAlert(a.id)} data-testid={`button-dismiss-alert-${a.id}`}>
+                          <Button size="icon" variant="ghost" onClick={() => dismissAlert(a.id)} disabled={saving} data-testid={`button-dismiss-alert-${a.id}`}>
                             <X className="h-4 w-4" />
                           </Button>
                         </div>

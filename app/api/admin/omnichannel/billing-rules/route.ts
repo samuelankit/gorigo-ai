@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     const rules = await db
       .select()
       .from(channelBillingRules)
-      .orderBy(desc(channelBillingRules.createdAt));
+      .orderBy(desc(channelBillingRules.createdAt))
+      .limit(50);
 
     return NextResponse.json({ rules });
   } catch (error) {
@@ -38,6 +39,18 @@ export async function PUT(request: NextRequest) {
     if (!body.channelType) {
       return NextResponse.json({ error: "channelType is required" }, { status: 400 });
     }
+    const VALID_CHANNELS = ["whatsapp", "sms", "email", "web_chat"];
+    if (!VALID_CHANNELS.includes(body.channelType)) {
+      return NextResponse.json({ error: `Invalid channelType. Must be: ${VALID_CHANNELS.join(", ")}` }, { status: 400 });
+    }
+
+    const ruleData = {
+      channelType: body.channelType,
+      talkTimeEquivalentSeconds: body.talkTimeEquivalentSeconds,
+      ratePerUnit: body.ratePerUnit,
+      unitDescription: body.unitDescription,
+      isActive: body.isActive ?? true,
+    };
 
     const [existing] = await db
       .select()
@@ -49,11 +62,11 @@ export async function PUT(request: NextRequest) {
     if (existing) {
       [rule] = await db
         .update(channelBillingRules)
-        .set(body)
+        .set(ruleData)
         .where(eq(channelBillingRules.id, existing.id))
         .returning();
     } else {
-      [rule] = await db.insert(channelBillingRules).values(body).returning();
+      [rule] = await db.insert(channelBillingRules).values(ruleData).returning();
     }
 
     return NextResponse.json(rule);

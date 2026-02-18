@@ -14,6 +14,9 @@ export async function POST(request: NextRequest) {
     const access = requireSuperAdmin(auth);
     if (!access.allowed) return NextResponse.json({ error: access.error }, { status: 403 });
     const body = await request.json();
+    if (!body.sessionId || !body.content) {
+      return NextResponse.json({ error: "sessionId and content are required" }, { status: 400 });
+    }
     const [suggestion] = await db.insert(assistSuggestions).values({
       sessionId: body.sessionId,
       sourceType: body.sourceType,

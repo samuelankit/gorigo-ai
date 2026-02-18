@@ -25,11 +25,12 @@ export async function GET(request: NextRequest) {
     if (orgId) conditions.push(eq(unifiedContacts.orgId, parseInt(orgId)));
     if (channel) conditions.push(eq(unifiedContacts.lastChannel, channel));
     if (search) {
+      const sanitized = search.replace(/[%_\\]/g, (ch) => `\\${ch}`);
       conditions.push(
         or(
-          ilike(unifiedContacts.displayName, `%${search}%`),
-          ilike(unifiedContacts.primaryPhone, `%${search}%`),
-          ilike(unifiedContacts.primaryEmail, `%${search}%`)
+          ilike(unifiedContacts.displayName, `%${sanitized}%`),
+          ilike(unifiedContacts.primaryPhone, `%${sanitized}%`),
+          ilike(unifiedContacts.primaryEmail, `%${sanitized}%`)
         )!
       );
     }
@@ -61,7 +62,19 @@ export async function POST(request: NextRequest) {
     if (!access.allowed) return NextResponse.json({ error: access.error }, { status: 403 });
 
     const body = await request.json();
-    const [contact] = await db.insert(unifiedContacts).values(body).returning();
+    if (!body.orgId) {
+      return NextResponse.json({ error: "orgId is required" }, { status: 400 });
+    }
+    const [contact] = await db.insert(unifiedContacts).values({
+      orgId: body.orgId,
+      externalId: body.externalId,
+      displayName: body.displayName || body.name,
+      primaryPhone: body.primaryPhone || body.phone,
+      primaryEmail: body.primaryEmail || body.email,
+      lastChannel: body.lastChannel,
+      tags: body.tags,
+      metadata: body.metadata,
+    }).returning();
     return NextResponse.json(contact, { status: 201 });
   } catch (error) {
     console.error("Omnichannel contact create error:", error);

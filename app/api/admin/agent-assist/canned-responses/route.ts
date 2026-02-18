@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
     if (orgId) conditions.push(eq(cannedResponses.orgId, parseInt(orgId, 10)));
     if (category) conditions.push(eq(cannedResponses.category, category));
     const where = conditions.length > 0 ? and(...conditions) : undefined;
-    const result = await db.select().from(cannedResponses).where(where).orderBy(desc(cannedResponses.usageCount));
+    const limit = parseInt(searchParams.get("limit") || "100");
+    const offset = parseInt(searchParams.get("offset") || "0");
+    const result = await db.select().from(cannedResponses).where(where).orderBy(desc(cannedResponses.usageCount)).limit(limit).offset(offset);
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Error fetching canned responses:", error);
@@ -37,6 +39,9 @@ export async function POST(request: NextRequest) {
     const access = requireSuperAdmin(auth);
     if (!access.allowed) return NextResponse.json({ error: access.error }, { status: 403 });
     const body = await request.json();
+    if (!body.orgId || !body.title || !body.content) {
+      return NextResponse.json({ error: "orgId, title, and content are required" }, { status: 400 });
+    }
     const [response] = await db.insert(cannedResponses).values({
       orgId: body.orgId,
       category: body.category,

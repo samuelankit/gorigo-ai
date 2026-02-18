@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
   Fingerprint, Search, RefreshCw, Plus, ShieldAlert, Settings, Mic,
-  AlertTriangle, CheckCircle, Clock, Activity, Eye, Trash2,
+  AlertTriangle, CheckCircle, Clock, Activity, Eye, Trash2, X,
 } from "lucide-react";
 
 function fmtDate(d: string | null) {
@@ -60,6 +60,7 @@ export default function VoiceBiometricsPage() {
     passphraseText: "", consentMethod: "verbal", consentText: "",
   });
   const [saving, setSaving] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
 
   const fetchTab = useCallback(async (t: string) => {
     setLoading(true);
@@ -84,7 +85,7 @@ export default function VoiceBiometricsPage() {
         const d = await r.json();
         if (!d.error) setConfig(d);
       }
-    } catch (e) { console.error("Fetch failed:", e); }
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); }
     finally { setLoading(false); }
   }, [vpSearch, vpStatus]);
 
@@ -102,27 +103,29 @@ export default function VoiceBiometricsPage() {
       setEnrollOpen(false);
       setEnrollForm({ contactPhone: "", enrollmentMethod: "text-independent", verificationMode: "active", passphraseText: "", consentMethod: "verbal", consentText: "" });
       fetchTab("voiceprints");
-    } catch {} finally { setSaving(false); }
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const handleGdprDelete = async () => {
     if (!deleteVp) return;
+    if (!window.confirm("This will permanently anonymize this voiceprint (GDPR). Continue?")) return;
     setSaving(true);
     try {
       await fetch(`/api/admin/voice-biometrics/voiceprints/${deleteVp.id}`, { method: "DELETE" });
       setDeleteVp(null);
       fetchTab("voiceprints");
-    } catch {} finally { setSaving(false); }
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const handleResolve = async (id: number) => {
+    setSaving(true);
     try {
       await fetch(`/api/admin/voice-biometrics/fraud-alerts/${id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resolved: true }),
       });
       setFraudAlerts((prev) => prev.map((a) => a.id === id ? { ...a, resolved: true, status: "resolved" } : a));
-    } catch {}
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const handleFraudCheck = async () => {
@@ -135,7 +138,7 @@ export default function VoiceBiometricsPage() {
       });
       const d = await r.json();
       setFraudResult(d);
-    } catch {} finally { setFraudChecking(false); }
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setFraudChecking(false); }
   };
 
   const handleSaveConfig = async () => {
@@ -146,7 +149,7 @@ export default function VoiceBiometricsPage() {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...config, orgId: 1 }),
       });
-    } catch {} finally { setSaving(false); }
+    } catch (e: any) { setErrMsg(e?.message || "Operation failed. Please try again."); } finally { setSaving(false); }
   };
 
   const filteredAlerts = fraudFilter === "all" ? fraudAlerts
@@ -170,6 +173,13 @@ export default function VoiceBiometricsPage() {
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />Refresh
         </Button>
       </div>
+
+      {errMsg && (
+        <div className="mx-4 mb-2 p-3 bg-destructive/10 border border-destructive/30 rounded-md flex items-center justify-between gap-2" data-testid="error-banner">
+          <span className="text-sm text-destructive">{errMsg}</span>
+          <Button size="icon" variant="ghost" onClick={() => setErrMsg("")} data-testid="button-dismiss-error"><X className="h-4 w-4" /></Button>
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList data-testid="tabs-list">
@@ -334,8 +344,8 @@ export default function VoiceBiometricsPage() {
                         </TableCell>
                         <TableCell>
                           {!(a.resolved || a.status === "resolved") && (
-                            <Button variant="outline" onClick={() => handleResolve(a.id)} data-testid={`button-resolve-${a.id}`}>
-                              Resolve
+                            <Button variant="outline" onClick={() => handleResolve(a.id)} disabled={saving} data-testid={`button-resolve-${a.id}`}>
+                              {saving ? "Saving..." : "Resolve"}
                             </Button>
                           )}
                         </TableCell>

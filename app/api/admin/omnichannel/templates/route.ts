@@ -26,11 +26,15 @@ export async function GET(request: NextRequest) {
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
+    const limit = parseInt(url.searchParams.get("limit") || "100");
+    const offset = parseInt(url.searchParams.get("offset") || "0");
     const templates = await db
       .select()
       .from(messageTemplates)
       .where(where)
-      .orderBy(desc(messageTemplates.createdAt));
+      .orderBy(desc(messageTemplates.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     return NextResponse.json({ templates });
   } catch (error) {
@@ -48,7 +52,23 @@ export async function POST(request: NextRequest) {
     if (!access.allowed) return NextResponse.json({ error: access.error }, { status: 403 });
 
     const body = await request.json();
-    const [template] = await db.insert(messageTemplates).values(body).returning();
+    if (!body.orgId || !body.name || !body.content || !body.channelType) {
+      return NextResponse.json({ error: "orgId, name, content, and channelType are required" }, { status: 400 });
+    }
+    const VALID_CHANNELS = ["whatsapp", "sms", "email", "web_chat"];
+    if (!VALID_CHANNELS.includes(body.channelType)) {
+      return NextResponse.json({ error: `Invalid channelType. Must be: ${VALID_CHANNELS.join(", ")}` }, { status: 400 });
+    }
+    const [template] = await db.insert(messageTemplates).values({
+      orgId: body.orgId,
+      name: body.name,
+      content: body.content,
+      channelType: body.channelType,
+      category: body.category,
+      language: body.language ?? "en",
+      variables: body.variables,
+      approvalStatus: "pending",
+    }).returning();
     return NextResponse.json(template, { status: 201 });
   } catch (error) {
     console.error("Message template create error:", error);

@@ -35,10 +35,15 @@ COPY --from=builder /app/drizzle.config.ts ./
 COPY --from=builder /app/shared ./shared
 COPY --from=builder /app/node_modules/drizzle-kit ./node_modules/drizzle-kit
 COPY --from=builder /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
+COPY --from=builder /app/node_modules/esbuild ./node_modules/esbuild
+COPY --from=builder /app/node_modules/@esbuild ./node_modules/@esbuild
+COPY --from=builder /app/node_modules/tsx ./node_modules/tsx
 COPY --from=builder /app/package.json ./
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 
 USER nextjs
 
 EXPOSE 8080
 
-CMD ["node", "server.js"]
+CMD ["./docker-entrypoint.sh"]

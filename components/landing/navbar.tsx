@@ -13,6 +13,7 @@ const navLinks = [
   { label: "Pricing", href: "/pricing" },
   { label: "ROI Calculator", href: "/roi-calculator" },
   { label: "Trust", href: "/trust" },
+  { label: "AI Transparency", href: "/ai-transparency" },
   { label: "Partners", href: "/partners" },
   { label: "Contact", href: "/contact" },
   { label: "Docs", href: "/docs" },

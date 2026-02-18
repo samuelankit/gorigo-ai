@@ -27,6 +27,7 @@ const resourceLinks = [
 const companyLinks = [
   { label: "About", href: "/about" },
   { label: "Trust Centre", href: "/trust" },
+  { label: "AI Transparency", href: "/ai-transparency" },
   { label: "Contact", href: "/contact" },
 ];
 

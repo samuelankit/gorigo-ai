@@ -1,13 +1,15 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { rateLimits } from "@/shared/schema";
-import { and, eq, gt, lt, sql } from "drizzle-orm";
+import { lt, sql } from "drizzle-orm";
 
 interface RateLimitResult {
   allowed: boolean;
   retryAfterMs?: number;
   remaining?: number;
 }
+
+const SENSITIVE_BUCKETS = new Set(["auth", "billing", "admin", "settings", "apikey"]);
 
 function getClientIp(request: NextRequest): string {
   const cfIp = request.headers.get("cf-connecting-ip");
@@ -16,48 +18,53 @@ function getClientIp(request: NextRequest): string {
 }
 
 function rateLimit({ windowMs, maxRequests, bucket }: { windowMs: number; maxRequests: number; bucket: string }) {
+  const failClosed = SENSITIVE_BUCKETS.has(bucket);
+
   return async function check(request: NextRequest): Promise<RateLimitResult> {
     const ip = getClientIp(request);
-    const key = `${ip}`;
     const now = new Date();
-    const windowEnd = new Date(now.getTime() + windowMs);
+    const windowEndMs = now.getTime() + windowMs;
 
     try {
-      const [existing] = await db
-        .select()
-        .from(rateLimits)
-        .where(
-          and(
-            eq(rateLimits.key, key),
-            eq(rateLimits.bucket, bucket),
-            gt(rateLimits.windowEnd, now)
-          )
-        )
-        .limit(1);
+      const result = await db.execute(sql`
+        INSERT INTO rate_limits (key, bucket, count, window_start, window_end)
+        VALUES (${ip}, ${bucket}, 1, NOW(), to_timestamp(${windowEndMs / 1000}))
+        ON CONFLICT (key, bucket) DO UPDATE SET
+          count = CASE
+            WHEN rate_limits.window_end <= NOW() THEN 1
+            ELSE rate_limits.count + 1
+          END,
+          window_start = CASE
+            WHEN rate_limits.window_end <= NOW() THEN NOW()
+            ELSE rate_limits.window_start
+          END,
+          window_end = CASE
+            WHEN rate_limits.window_end <= NOW() THEN to_timestamp(${windowEndMs / 1000})
+            ELSE rate_limits.window_end
+          END
+        RETURNING count, window_end
+      `);
 
-      if (!existing) {
-        await db.insert(rateLimits).values({
-          key,
-          bucket,
-          count: 1,
-          windowStart: now,
-          windowEnd,
-        });
-        return { allowed: true, remaining: maxRequests - 1 };
+      const row = result.rows?.[0] as { count: number; window_end: string | Date } | undefined;
+      if (!row) {
+        return failClosed
+          ? { allowed: false, retryAfterMs: windowMs, remaining: 0 }
+          : { allowed: true, remaining: maxRequests };
       }
 
-      if (existing.count < maxRequests) {
-        await db
-          .update(rateLimits)
-          .set({ count: sql`${rateLimits.count} + 1` })
-          .where(eq(rateLimits.id, existing.id));
-        return { allowed: true, remaining: maxRequests - existing.count - 1 };
+      const count = Number(row.count);
+      if (count <= maxRequests) {
+        return { allowed: true, remaining: maxRequests - count };
       }
 
-      const retryAfterMs = existing.windowEnd.getTime() - now.getTime();
+      const windowEndTime = new Date(row.window_end).getTime();
+      const retryAfterMs = Math.max(windowEndTime - Date.now(), 1000);
       return { allowed: false, retryAfterMs, remaining: 0 };
     } catch (error) {
       console.error(`Rate limit check failed for bucket ${bucket}:`, error);
+      if (failClosed) {
+        return { allowed: false, retryAfterMs: windowMs, remaining: 0 };
+      }
       return { allowed: true, remaining: maxRequests };
     }
   };

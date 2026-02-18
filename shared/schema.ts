@@ -2356,7 +2356,7 @@ export const rateLimits = pgTable("rate_limits", {
   windowStart: timestamp("window_start").defaultNow().notNull(),
   windowEnd: timestamp("window_end").notNull(),
 }, (table) => [
-  index("idx_rate_limits_key_bucket").on(table.key, table.bucket),
+  uniqueIndex("idx_rate_limits_key_bucket_unique").on(table.key, table.bucket),
   index("idx_rate_limits_window_end").on(table.windowEnd),
 ]);
 

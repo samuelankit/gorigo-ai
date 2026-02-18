@@ -1,0 +1,53 @@
+import { db } from "@/lib/db";
+import { cannedResponses } from "@/shared/schema";
+import { eq, and, desc } from "drizzle-orm";
+import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
+import { NextRequest, NextResponse } from "next/server";
+import { adminLimiter } from "@/lib/rate-limit";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(request: NextRequest) {
+  try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    const auth = await getAuthenticatedUser();
+    const access = requireSuperAdmin(auth);
+    if (!access.allowed) return NextResponse.json({ error: access.error }, { status: 403 });
+    const { searchParams } = new URL(request.url);
+    const orgId = searchParams.get("orgId");
+    const category = searchParams.get("category");
+    const conditions: any[] = [];
+    if (orgId) conditions.push(eq(cannedResponses.orgId, parseInt(orgId, 10)));
+    if (category) conditions.push(eq(cannedResponses.category, category));
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const result = await db.select().from(cannedResponses).where(where).orderBy(desc(cannedResponses.usageCount));
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error("Error fetching canned responses:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const rl = await adminLimiter(request);
+    if (!rl.allowed) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    const auth = await getAuthenticatedUser();
+    const access = requireSuperAdmin(auth);
+    if (!access.allowed) return NextResponse.json({ error: access.error }, { status: 403 });
+    const body = await request.json();
+    const [response] = await db.insert(cannedResponses).values({
+      orgId: body.orgId,
+      category: body.category,
+      title: body.title,
+      content: body.content,
+      shortcut: body.shortcut,
+      isActive: body.isActive ?? true,
+    }).returning();
+    return NextResponse.json(response, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating canned response:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

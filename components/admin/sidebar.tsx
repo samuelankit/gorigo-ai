@@ -49,6 +49,10 @@ import {
   Activity,
   MousePointerClick,
   Zap,
+  BrainCircuit,
+  Headset,
+  Fingerprint,
+  MessagesSquare,
 } from "lucide-react";
 
 const overviewItems = [
@@ -80,6 +84,13 @@ const managementItems = [
   { title: "Knowledge", url: "/admin/knowledge", icon: BookOpen },
   { title: "Compliance", url: "/admin/compliance", icon: ShieldCheck },
   { title: "API Keys", url: "/admin/api-keys", icon: KeyRound },
+];
+
+const enterpriseItems = [
+  { title: "Conversation Analytics", url: "/admin/conversation-analytics", icon: BrainCircuit },
+  { title: "Agent Assist", url: "/admin/agent-assist", icon: Headset },
+  { title: "Voice Biometrics", url: "/admin/voice-biometrics", icon: Fingerprint },
+  { title: "Omnichannel", url: "/admin/omnichannel", icon: MessagesSquare },
 ];
 
 const systemItems = [
@@ -174,6 +185,30 @@ export function AdminSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {managementItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url} data-testid={`link-admin-${item.title.toLowerCase().replace(/\s+/g, "-")}`}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="uppercase tracking-wider text-xs font-semibold text-sidebar-foreground/60 px-4 py-2">
+            Enterprise
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {enterpriseItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

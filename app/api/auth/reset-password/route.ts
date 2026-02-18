@@ -8,6 +8,9 @@ import { authLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("Auth");
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1),
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
       .delete(sessions)
       .where(eq(sessions.userId, resetRecord.userId));
 
-    logAuthEvent("password_reset.completed", resetRecord.userId, "").catch((error) => { console.error("Log password reset event failed:", error); });
+    logAuthEvent("password_reset.completed", resetRecord.userId, "").catch((err) => { logger.error("Log password reset event failed", err); });
 
     return NextResponse.json({ message: "Password has been reset successfully. Please log in." }, { status: 200 });
   } catch (error) {

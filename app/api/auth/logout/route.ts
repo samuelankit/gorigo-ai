@@ -6,6 +6,9 @@ import { getSessionCookie, clearSessionCookie, hashToken } from "@/lib/auth";
 import { logAuthEvent } from "@/lib/audit";
 import { authLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("Auth");
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +29,7 @@ export async function POST(request: NextRequest) {
     await clearSessionCookie();
 
     if (userId) {
-      logAuthEvent("logout", userId, "").catch((error) => { console.error("Log logout event failed:", error); });
+      logAuthEvent("logout", userId, "").catch((err) => { logger.error("Log logout event failed", err); });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });

@@ -17,9 +17,7 @@ const cleanupInterval = setInterval(() => {
     if (entry.resetAt <= now) leadRateStore.delete(key);
   });
 }, 60_000);
-if (typeof cleanupInterval === "object" && cleanupInterval && "unref" in cleanupInterval) {
-  (cleanupInterval as NodeJS.Timeout).unref();
-}
+(cleanupInterval as unknown as { unref?: () => void })?.unref?.();
 
 function checkLeadRateLimit(req: NextRequest): boolean {
   const cfIp = req.headers.get("cf-connecting-ip");

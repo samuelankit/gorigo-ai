@@ -15,23 +15,25 @@ const SESSION_COOKIE_NAME = "gorigo_session";
 
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
-setInterval(() => {
+const rlCleanup = setInterval(() => {
   const now = Date.now();
   rateLimitStore.forEach((entry, key) => {
     if (entry.resetAt <= now) rateLimitStore.delete(key);
   });
 }, 30_000);
+(rlCleanup as unknown as { unref?: () => void })?.unref?.();
 
 const batchIdStore = new Map<string, number>();
 const BATCH_TTL_MS = 60_000;
 const MAX_BATCH_IDS = 10_000;
 
-setInterval(() => {
+const batchCleanup = setInterval(() => {
   const now = Date.now();
   batchIdStore.forEach((expiresAt, key) => {
     if (expiresAt <= now) batchIdStore.delete(key);
   });
 }, 15_000);
+(batchCleanup as unknown as { unref?: () => void })?.unref?.();
 
 function stripHtml(raw: string, maxLen: number): string {
   return raw.replace(/<[^>]*>/g, "").trim().slice(0, maxLen);

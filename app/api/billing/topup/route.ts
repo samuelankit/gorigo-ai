@@ -4,6 +4,9 @@ import { billingLimiter } from "@/lib/rate-limit";
 import crypto from "crypto";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("BillingTopup");
 
 const topupSchema = z.object({
   amount: z.number().positive().min(5).max(10000),
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ url: session.url, sessionId: session.id });
     } catch (stripeErr: any) {
-      console.error("Stripe session creation failed:", stripeErr);
+      logger.error("Stripe session creation failed", stripeErr);
       return NextResponse.json({ error: "Payment service error. Please try again later." }, { status: 502 });
     }
   } catch (error) {

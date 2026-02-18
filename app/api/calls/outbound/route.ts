@@ -14,6 +14,9 @@ import { runFullComplianceCheck } from "@/lib/compliance-engine";
 import { runFraudCheck } from "@/lib/fraud-engine";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("OutboundCall");
 
 const outboundCallSchema = z.object({
   phoneNumber: z.string().min(1).max(20).regex(/^\+?[0-9\s\-()]*$/),
@@ -156,7 +159,7 @@ export async function POST(request: NextRequest) {
       const resolved = await resolveRate(auth.orgId, "voice_outbound");
       capturedRate = { deploymentModel: resolved.deploymentModel, ratePerMinute: resolved.ratePerMinute };
     } catch (rateErr) {
-      console.error("[Outbound] Rate capture failed, using default:", rateErr);
+      logger.error("Rate capture failed, using default", rateErr);
     }
 
     const [callLog] = await db
@@ -206,7 +209,7 @@ export async function POST(request: NextRequest) {
           details: { toNumber: sanitizedPhone },
         });
       } catch (auditErr) {
-        console.error("Audit log error:", auditErr);
+        logger.error("Audit log error", auditErr);
       }
 
       return NextResponse.json({
@@ -223,7 +226,7 @@ export async function POST(request: NextRequest) {
         .set({ status: "failed", finalOutcome: "dial_failed", endedAt: new Date() })
         .where(eq(callLogs.id, callLog.id));
 
-      console.error("Outbound call failed:", twilioErr);
+      logger.error("Outbound call failed", twilioErr);
       return NextResponse.json({ error: "Failed to initiate call. Please try again." }, { status: 500 });
     }
   } catch (error) {

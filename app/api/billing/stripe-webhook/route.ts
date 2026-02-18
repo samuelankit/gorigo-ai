@@ -6,6 +6,9 @@ import { db } from "@/lib/db";
 import { walletTransactions } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("StripeWebhook");
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +32,7 @@ export async function POST(request: NextRequest) {
     try {
       event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err: any) {
-      console.error("Stripe webhook signature verification failed:", err.message);
+      logger.error("Stripe webhook signature verification failed", err);
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 

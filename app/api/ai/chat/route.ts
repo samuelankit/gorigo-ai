@@ -14,7 +14,10 @@ import { redactPII } from "@/lib/pii-redaction";
 import { detectPromptInjection, detectHumanRequest, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
 import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
+
+const logger = createLogger("AIChat");
 import { validateLLMOutput, validateStreamChunk, KNOWLEDGE_ONLY_REFUSAL, RAG_GROUNDING_INSTRUCTION } from "@/lib/output-guard";
 
 const aiChatSchema = z.object({
@@ -223,7 +226,7 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (cacheErr) {
-        console.error("Cache check failed, proceeding with LLM:", cacheErr);
+        logger.error("Cache check failed, proceeding with LLM", cacheErr);
       }
 
       try {
@@ -233,7 +236,7 @@ export async function POST(request: NextRequest) {
           ragSource = "rag";
         }
       } catch (ragErr) {
-        console.error("RAG retrieval failed, proceeding without:", ragErr);
+        logger.error("RAG retrieval failed, proceeding without", ragErr);
       }
     }
 
@@ -309,7 +312,7 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
             );
             controller.close();
           } catch (error) {
-            console.error("AI chat stream error:", error);
+            logger.error("AI chat stream error", error);
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ error: "Stream failed" })}\n\n`)
             );
@@ -358,7 +361,7 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
         totalCost: llmCost.costGBP,
         revenueCharged: 0.003,
         metadata: { source: "ai_chat", agentId: body.agentId },
-      }).catch((error) => { console.error("Track AI chat usage cost failed:", error); });
+      }).catch((err) => { logger.error("Track AI chat usage cost failed", err); });
     }
 
     let assistantText = response.content;
@@ -378,7 +381,7 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
         toolCalls = Array.isArray(parsed.toolCalls) ? parsed.toolCalls : [];
       }
     } catch (error) {
-      console.error("AI chat JSON parse error:", error);
+      logger.error("AI chat JSON parse error", error);
     }
 
     const outputCheck = validateLLMOutput(assistantText, ragContext, {
@@ -394,7 +397,7 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
     const redactedMessage = piiResult.redactedText;
 
     if (ragEnabled && confidenceScore >= 0.7 && outputCheck.safe) {
-      cacheResponse(auth.orgId, redactedMessage, assistantText, confidenceScore).catch((error) => { console.error("Cache AI chat response failed:", error); });
+      cacheResponse(auth.orgId, redactedMessage, assistantText, confidenceScore).catch((err) => { logger.error("Cache AI chat response failed", err); });
     }
 
     const fsmContext = {
@@ -447,7 +450,7 @@ Respond in JSON format: {"assistantText": "...", "nextState": "...", "confidence
           );
         }
       } catch (walletErr) {
-        console.error("Wallet deduction failed for AI chat:", walletErr);
+        logger.error("Wallet deduction failed for AI chat", walletErr);
       }
     }
 

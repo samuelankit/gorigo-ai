@@ -9,6 +9,9 @@ import { hashToken } from "@/lib/auth";
 import { logAuthEvent } from "@/lib/audit";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("Auth");
 
 const forgotPasswordSchema = z.object({
   email: z.string().email().max(255),
@@ -50,7 +53,7 @@ export async function POST(request: NextRequest) {
       expiresAt,
     });
 
-    logAuthEvent("password_reset.requested", user.id, user.email).catch((error) => { console.error("Log password reset request event failed:", error); });
+    logAuthEvent("password_reset.requested", user.id, user.email).catch((err) => { logger.error("Log password reset request event failed", err); });
 
     return NextResponse.json({
       message: "If an account with that email exists, a reset link has been generated.",

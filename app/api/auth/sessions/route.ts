@@ -7,6 +7,9 @@ import { getSessionCookie, hashToken, clearSessionCookie } from "@/lib/auth";
 import { logSessionEvent } from "@/lib/audit";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("Sessions");
 
 export async function GET(request: NextRequest) {
   try {
@@ -82,7 +85,7 @@ export async function DELETE(request: NextRequest) {
         await clearSessionCookie();
       }
 
-      logSessionEvent("sessions.invalidate_all", auth.user.id).catch((error) => { console.error("Log invalidate all sessions event failed:", error); });
+      logSessionEvent("sessions.invalidate_all", auth.user.id).catch((err) => { logger.error("Log invalidate all sessions event failed", err); });
 
       return NextResponse.json({ message: "All other sessions have been invalidated" });
     }
@@ -112,7 +115,7 @@ export async function DELETE(request: NextRequest) {
 
       await db.delete(sessions).where(eq(sessions.id, id));
 
-      logSessionEvent("session.revoked", auth.user.id, { sessionId: id }).catch((error) => { console.error("Log session revoked event failed:", error); });
+      logSessionEvent("session.revoked", auth.user.id, { sessionId: id }).catch((err) => { logger.error("Log session revoked event failed", err); });
 
       return NextResponse.json({ message: "Session revoked" });
     }

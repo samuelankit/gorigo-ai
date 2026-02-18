@@ -8,6 +8,9 @@ import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import crypto from "crypto";
 import { logAuthEvent } from "@/lib/audit";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("Auth");
 
 export async function POST(request: NextRequest) {
   try {
@@ -152,7 +155,7 @@ export async function POST(request: NextRequest) {
 
     await setSessionCookie(result.token);
 
-    logAuthEvent("register.success", result.newUser.id, result.newUser.email, { businessName }).catch((error) => { console.error("Log register event failed:", error); });
+    logAuthEvent("register.success", result.newUser.id, result.newUser.email, { businessName }).catch((err) => { logger.error("Log register event failed", err); });
 
     const { password: _, emailVerificationToken: __, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, ...userWithoutSensitive } = result.newUser;
     return NextResponse.json({

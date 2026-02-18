@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { headers } from "next/headers";
+import { createLogger } from "@/lib/logger";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const logger = createLogger("API");
 
 interface ApiErrorOptions {
   status?: number;
@@ -32,12 +34,8 @@ export function handleRouteError(error: unknown, context?: string): NextResponse
     });
   }
 
-  const label = context ? `[${context}]` : "[API]";
-  if (error instanceof Error) {
-    console.error(`${label} ${error.message}`, IS_PRODUCTION ? "" : error.stack);
-  } else {
-    console.error(`${label} Unknown error:`, error);
-  }
+  const label = context || "Route";
+  logger.error(`${label}: ${error instanceof Error ? error.message : "Unknown error"}`, error);
 
   return apiError("Internal server error", { status: 500 });
 }
@@ -46,7 +44,7 @@ export async function getRequestId(): Promise<string> {
   try {
     const h = await headers();
     return h.get("x-request-id") || "unknown";
-  } catch (error) {
+  } catch {
     return "unknown";
   }
 }

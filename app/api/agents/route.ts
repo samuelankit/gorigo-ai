@@ -8,6 +8,9 @@ import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("Agents");
 
 const agentUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -131,7 +134,7 @@ export async function PUT(request: NextRequest) {
         details: { name: body.name },
       });
     } catch (auditErr) {
-      console.error("Audit log error:", auditErr);
+      logger.error("Audit log error", auditErr);
     }
 
     return NextResponse.json({ agent: updatedAgent }, { status: 200 });

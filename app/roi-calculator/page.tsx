@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { PublicLayout } from "@/components/public-layout";
@@ -861,12 +861,20 @@ function PersonaPartner({
 export default function RoiCalculatorPage() {
   const [persona, setPersona] = useState<Persona>("explorer");
   const [scenario, setScenario] = useState<ScenarioKey | null>(null);
+  const [byokEnabled, setByokEnabled] = useState(false);
 
   const [callsPerMonth, setCallsPerMonth] = useState(5000);
   const [avgDuration, setAvgDuration] = useState(4);
   const [agentCount, setAgentCount] = useState(8);
   const [agentSalary, setAgentSalary] = useState(26000);
   const [automationRate, setAutomationRate] = useState(65);
+
+  useEffect(() => {
+    fetch("/api/public/deployment-packages")
+      .then((res) => res.json())
+      .then((data) => setByokEnabled(!!data.byok))
+      .catch(() => {});
+  }, []);
 
   const applyScenario = (key: ScenarioKey) => {
     const s = PRESET_SCENARIOS[key];
@@ -904,8 +912,8 @@ export default function RoiCalculatorPage() {
 
         <section className="pb-6" data-testid="section-persona-selector">
           <div className="max-w-4xl mx-auto px-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {PERSONAS.map((p) => {
+            <div className={`grid grid-cols-1 gap-3 ${byokEnabled ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+              {PERSONAS.filter((p) => p.key !== "technical" || byokEnabled).map((p) => {
                 const Icon = p.icon;
                 const isActive = persona === p.key;
                 return (

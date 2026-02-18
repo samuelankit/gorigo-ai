@@ -108,7 +108,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   business_hours_start: "09:00",
   business_hours_end: "18:00",
   deployment_package_managed_enabled: "true",
-  deployment_package_byok_enabled: "true",
+  deployment_package_byok_enabled: "false",
   deployment_package_self_hosted_enabled: "false",
 };
 

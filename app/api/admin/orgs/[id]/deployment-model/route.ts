@@ -8,6 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { getOrgByokStatus, validateOpenAIKey, validateTwilioCredentials } from "@/lib/byok";
 import { adminLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
+import { isDeploymentPackageEnabled } from "@/lib/feature-flags";
 
 type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
 
@@ -199,6 +200,15 @@ export async function PUT(
         { error: `Organisation is already on ${deploymentModel} model` },
         { status: 400 }
       );
+    }
+
+    const packageEnabled = await isDeploymentPackageEnabled(deploymentModel);
+    if (!packageEnabled && !forceSwitch) {
+      return NextResponse.json({
+        error: `The ${deploymentModel.toUpperCase()} deployment package is currently disabled in platform settings.`,
+        message: `Enable it in Settings > Deployment Packages first, or set forceSwitch=true to override.`,
+        requiresForce: true,
+      }, { status: 400 });
     }
 
     const activeCalls = await getActiveCalls(orgId);

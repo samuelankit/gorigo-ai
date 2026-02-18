@@ -117,6 +117,12 @@ const PACKAGES: {
   },
 ];
 
+interface PackageVisibility {
+  managed: boolean;
+  byok: boolean;
+  selfHosted: boolean;
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -141,6 +147,7 @@ export default function OnboardingPage() {
 
   const [selectedCountries, setSelectedCountries] = useState<string[]>(["GB"]);
   const [availableCountries, setAvailableCountries] = useState<{ code: string; name: string }[]>([]);
+  const [packageVisibility, setPackageVisibility] = useState<PackageVisibility>({ managed: true, byok: false, selfHosted: false });
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -175,6 +182,11 @@ export default function OnboardingPage() {
         }
       })
       .catch((error) => { console.error("Fetch available countries failed:", error); });
+
+    fetch("/api/public/deployment-packages")
+      .then((res) => res.json())
+      .then((data) => setPackageVisibility(data))
+      .catch(() => {});
   }, [router]);
 
   const addFaqEntry = () => {
@@ -317,7 +329,11 @@ export default function OnboardingPage() {
         {step === 1 && (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {PACKAGES.map((pkg) => {
+              {PACKAGES.filter((pkg) => {
+                if (pkg.id === "byok") return packageVisibility.byok;
+                if (pkg.id === "self_hosted") return packageVisibility.selfHosted;
+                return true;
+              }).map((pkg) => {
                 const Icon = pkg.icon;
                 const isSelected = selectedPackage === pkg.id;
                 return (

@@ -10,6 +10,7 @@ import { getOrgByokStatus, validateOpenAIKey, validateTwilioCredentials, getOrgK
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { checkEntryBarrier, TIER_ENTRY_BARRIERS, type DeploymentTier } from "@/lib/entry-barriers";
+import { isDeploymentPackageEnabled } from "@/lib/feature-flags";
 
 const deploymentModelSchema = z.object({
   deploymentModel: z.enum(["managed", "byok", "self_hosted", "custom"]),
@@ -43,6 +44,11 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const { deploymentModel } = deploymentModelSchema.parse(body);
+
+    const packageEnabled = await isDeploymentPackageEnabled(deploymentModel);
+    if (!packageEnabled) {
+      return NextResponse.json({ error: `The ${deploymentModel.toUpperCase()} deployment package is currently unavailable. Please contact support or choose a different package.` }, { status: 400 });
+    }
 
     const [currentOrg] = await db
       .select({ deploymentModel: orgs.deploymentModel })

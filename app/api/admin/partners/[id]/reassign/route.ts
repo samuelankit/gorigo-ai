@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { partners, partnerClients, orgs, partnerLifecycleEvents } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
-import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
+import { getAuthenticatedUser, requireSuperAdmin, requireEmailVerified } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
@@ -27,6 +27,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const access = requireSuperAdmin(auth);
     if (!access.allowed) {
       return NextResponse.json({ error: access.error }, { status: 403 });
+    }
+
+    const emailCheck = requireEmailVerified(auth);
+    if (!emailCheck.allowed) {
+      return NextResponse.json({ error: emailCheck.error }, { status: emailCheck.status || 403 });
     }
 
     const { id } = await params;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { agents } from "@/shared/schema";
 import { eq } from "drizzle-orm";
-import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
+import { getAuthenticatedUser, requireWriteAccess, requireEmailVerified } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
@@ -91,6 +91,11 @@ export async function PUT(request: NextRequest) {
     const writeCheck = requireWriteAccess(auth);
     if (!writeCheck.allowed) {
       return NextResponse.json({ error: writeCheck.error }, { status: 403 });
+    }
+
+    const emailCheck = requireEmailVerified(auth);
+    if (!emailCheck.allowed) {
+      return NextResponse.json({ error: emailCheck.error }, { status: emailCheck.status || 403 });
     }
 
     const body = await request.json();

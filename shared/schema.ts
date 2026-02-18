@@ -28,6 +28,7 @@ export const sessions = pgTable("sessions", {
   lastSeenAt: timestamp("last_seen_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   activeOrgId: integer("active_org_id"),
+  rotatedAt: timestamp("rotated_at").defaultNow(),
 }, (table) => [
   index("idx_sessions_user_id").on(table.userId),
   index("idx_sessions_token").on(table.token),
@@ -2346,5 +2347,17 @@ export type DepartmentMember = typeof departmentMembers.$inferSelect;
 export const insertInvitationSchema = createInsertSchema(invitations).omit({ id: true, createdAt: true, acceptedAt: true });
 export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
 export type Invitation = typeof invitations.$inferSelect;
+
+export const rateLimits = pgTable("rate_limits", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 255 }).notNull(),
+  bucket: varchar("bucket", { length: 64 }).notNull(),
+  count: integer("count").default(1).notNull(),
+  windowStart: timestamp("window_start").defaultNow().notNull(),
+  windowEnd: timestamp("window_end").notNull(),
+}, (table) => [
+  index("idx_rate_limits_key_bucket").on(table.key, table.bucket),
+  index("idx_rate_limits_window_end").on(table.windowEnd),
+]);
 
 export * from "./models/chat";

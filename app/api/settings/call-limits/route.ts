@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { orgs } from "@/shared/schema";
 import { eq } from "drizzle-orm";
-import { getAuthenticatedUser } from "@/lib/get-user";
+import { getAuthenticatedUser, requireEmailVerified } from "@/lib/get-user";
 import { getActiveCalls } from "@/lib/call-limits";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
@@ -52,6 +52,11 @@ export async function PUT(request: NextRequest) {
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const emailCheck = requireEmailVerified(auth);
+    if (!emailCheck.allowed) {
+      return NextResponse.json({ error: emailCheck.error }, { status: emailCheck.status || 403 });
     }
 
     const body = await request.json();

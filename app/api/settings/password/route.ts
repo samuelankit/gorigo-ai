@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { users, sessions } from "@/shared/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { verifyPassword, hashPassword, getSessionCookie, createSession, setSessionCookie, hashToken } from "@/lib/auth";
-import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
+import { getAuthenticatedUser, requireWriteAccess, requireEmailVerified } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
@@ -33,6 +33,11 @@ export async function PUT(request: NextRequest) {
     const writeCheck = requireWriteAccess(auth);
     if (!writeCheck.allowed) {
       return NextResponse.json({ error: writeCheck.error }, { status: 403 });
+    }
+
+    const emailCheck = requireEmailVerified(auth);
+    if (!emailCheck.allowed) {
+      return NextResponse.json({ error: emailCheck.error }, { status: emailCheck.status || 403 });
     }
 
     const body = await request.json();

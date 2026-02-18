@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/get-user";
+import { getAuthenticatedUser, requireEmailVerified } from "@/lib/get-user";
 import { billingLimiter } from "@/lib/rate-limit";
 import crypto from "crypto";
 import { z } from "zod";
@@ -23,6 +23,11 @@ export async function POST(request: NextRequest) {
 
     if (auth.isDemo) {
       return NextResponse.json({ error: "Demo accounts cannot top up wallet" }, { status: 403 });
+    }
+
+    const emailCheck = requireEmailVerified(auth);
+    if (!emailCheck.allowed) {
+      return NextResponse.json({ error: emailCheck.error }, { status: emailCheck.status || 403 });
     }
 
     const body = await request.json();

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateCallSummary } from "@/lib/ai";
-import { getAuthenticatedUser } from "@/lib/get-user";
+import { getAuthenticatedUser, requireEmailVerified } from "@/lib/get-user";
 import { aiLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance, deductFromWallet } from "@/lib/wallet";
@@ -23,6 +23,11 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthenticatedUser();
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const emailCheck = requireEmailVerified(auth);
+    if (!emailCheck.allowed) {
+      return NextResponse.json({ error: emailCheck.error }, { status: emailCheck.status || 403 });
     }
 
     if (!auth.orgId) {

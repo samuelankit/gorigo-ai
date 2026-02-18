@@ -8,6 +8,7 @@ import { hasScope } from "@/lib/api-key-auth";
 
 const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const ABSOLUTE_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000;
+const ROTATION_INTERVAL_MS = 15 * 60 * 1000;
 
 export interface AuthResult {
   user: typeof users.$inferSelect;
@@ -119,11 +120,30 @@ export async function getAuthenticatedUser(): Promise<AuthResult | null> {
   const [user] = await db.select().from(users).where(eq(users.id, session.userId)).limit(1);
   if (!user || user.deletedAt) return null;
 
-  db.update(sessions)
-    .set({ lastSeenAt: now })
-    .where(eq(sessions.id, session.id))
-    .execute()
-    .catch((error) => { console.error("Update session lastSeenAt failed:", error); });
+  const updates: Record<string, unknown> = { lastSeenAt: now };
+
+  const rotatedAt = session.rotatedAt || session.createdAt;
+  if (rotatedAt && now.getTime() - rotatedAt.getTime() > ROTATION_INTERVAL_MS) {
+    const newToken = crypto.randomBytes(32).toString("hex");
+    const newTokenHash = hashToken(newToken);
+    updates.token = newTokenHash;
+    updates.rotatedAt = now;
+
+    try {
+      await db.update(sessions).set(updates).where(eq(sessions.id, session.id)).execute();
+      const { setSessionCookie } = await import("@/lib/auth");
+      await setSessionCookie(newToken);
+    } catch (error) {
+      console.error("Session token rotation failed:", error);
+      db.update(sessions).set({ lastSeenAt: now }).where(eq(sessions.id, session.id)).execute().catch(() => {});
+    }
+  } else {
+    db.update(sessions)
+      .set(updates)
+      .where(eq(sessions.id, session.id))
+      .execute()
+      .catch((error) => { console.error("Update session lastSeenAt failed:", error); });
+  }
 
   let orgId: number | null = null;
   let role: string | null = null;
@@ -191,4 +211,29 @@ export function requireApiKeyScope(auth: AuthResult | null, scope: string): { al
     return { allowed: false, error: `Insufficient API key scope. Required: ${scope}`, status: 403 };
   }
   return { allowed: true, error: null };
+}
+
+export async function getVerifiedUser(): Promise<AuthResult | null> {
+  const auth = await getAuthenticatedUser();
+  if (!auth) return null;
+  if (auth.user.emailVerified === false) return null;
+  return auth;
+}
+
+export async function requireVerifiedAuth(): Promise<{ auth: AuthResult | null; error: Response | null }> {
+  const { NextResponse } = await import("next/server");
+  const auth = await getAuthenticatedUser();
+  if (!auth) {
+    return { auth: null, error: NextResponse.json({ error: "Authentication required" }, { status: 401 }) };
+  }
+  if (auth.user.emailVerified === false) {
+    return {
+      auth: null,
+      error: NextResponse.json(
+        { error: "Email verification required. Please verify your email address.", code: "EMAIL_NOT_VERIFIED" },
+        { status: 403 }
+      ),
+    };
+  }
+  return { auth, error: null };
 }

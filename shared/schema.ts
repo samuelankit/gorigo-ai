@@ -1745,4 +1745,546 @@ export const insertAnalyticsDailyRollupSchema = createInsertSchema(analyticsDail
 export type InsertAnalyticsDailyRollup = z.infer<typeof insertAnalyticsDailyRollupSchema>;
 export type AnalyticsDailyRollup = typeof analyticsDailyRollups.$inferSelect;
 
+// ═══════════════════════════════════════════════════
+// SECTION 1: OMNICHANNEL
+// ═══════════════════════════════════════════════════
+
+export const unifiedContacts = pgTable("unified_contacts", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  primaryPhone: text("primary_phone"),
+  primaryEmail: text("primary_email"),
+  displayName: text("display_name"),
+  mergedFromIds: jsonb("merged_from_ids").default([]),
+  channels: jsonb("channels").default({}),
+  totalInteractions: integer("total_interactions").default(0),
+  lastInteractionAt: timestamp("last_interaction_at"),
+  lastChannel: text("last_channel"),
+  tags: text("tags").array(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_unified_contacts_org_id").on(table.orgId),
+  index("idx_unified_contacts_phone").on(table.primaryPhone),
+  index("idx_unified_contacts_email").on(table.primaryEmail),
+  index("idx_unified_contacts_org_channel").on(table.orgId, table.lastChannel),
+]);
+
+export const channelConfigurations = pgTable("channel_configurations", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  channelType: text("channel_type").notNull(),
+  isEnabled: boolean("is_enabled").default(false),
+  credentials: jsonb("credentials"),
+  webhookUrl: text("webhook_url"),
+  webhookSecret: text("webhook_secret"),
+  providerAccountId: text("provider_account_id"),
+  settings: jsonb("settings"),
+  rateLimit: integer("rate_limit"),
+  slaResponseSeconds: integer("sla_response_seconds"),
+  status: text("status").default("inactive"),
+  lastHealthCheck: timestamp("last_health_check"),
+  healthStatus: text("health_status"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_channel_config_org_id").on(table.orgId),
+  index("idx_channel_config_org_type").on(table.orgId, table.channelType),
+  index("idx_channel_config_status").on(table.status),
+]);
+
+export const omnichannelConversations = pgTable("omnichannel_conversations", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  contactId: integer("contact_id").notNull().references(() => unifiedContacts.id),
+  channelType: text("channel_type").notNull(),
+  externalConversationId: text("external_conversation_id"),
+  status: text("status").default("active"),
+  assignedHumanAgentId: integer("assigned_human_agent_id"),
+  assignedAiAgentId: integer("assigned_ai_agent_id").references(() => agents.id),
+  priority: integer("priority").default(0),
+  subject: text("subject"),
+  lastMessageAt: timestamp("last_message_at"),
+  lastCustomerMessageAt: timestamp("last_customer_message_at"),
+  messageCount: integer("message_count").default(0),
+  isUnread: boolean("is_unread").default(true),
+  slaDeadline: timestamp("sla_deadline"),
+  slaBreach: boolean("sla_breach").default(false),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_omni_conv_org_id").on(table.orgId),
+  index("idx_omni_conv_contact_id").on(table.contactId),
+  index("idx_omni_conv_status").on(table.orgId, table.status),
+  index("idx_omni_conv_channel").on(table.orgId, table.channelType),
+  index("idx_omni_conv_assigned_human").on(table.assignedHumanAgentId),
+  index("idx_omni_conv_last_message").on(table.lastMessageAt),
+]);
+
+export const omnichannelMessages = pgTable("omnichannel_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => omnichannelConversations.id),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  direction: text("direction").notNull(),
+  senderType: text("sender_type").notNull(),
+  senderId: integer("sender_id"),
+  content: text("content"),
+  mediaType: text("media_type").default("text"),
+  mediaUrl: text("media_url"),
+  mediaMimeType: text("media_mime_type"),
+  mediaSize: integer("media_size"),
+  channelMessageId: text("channel_message_id"),
+  status: text("status").default("pending"),
+  failureReason: text("failure_reason"),
+  templateId: integer("template_id"),
+  isInteractive: boolean("is_interactive").default(false),
+  interactiveData: jsonb("interactive_data"),
+  deliveredAt: timestamp("delivered_at"),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_omni_msg_conversation_id").on(table.conversationId),
+  index("idx_omni_msg_org_id").on(table.orgId),
+  index("idx_omni_msg_status").on(table.status),
+  index("idx_omni_msg_created_at").on(table.createdAt),
+]);
+
+export const messageTemplates = pgTable("message_templates", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  channelType: text("channel_type").notNull(),
+  name: text("name").notNull(),
+  content: text("content").notNull(),
+  variables: jsonb("variables").default([]),
+  language: text("language").default("en"),
+  category: text("category"),
+  approvalStatus: text("approval_status").default("pending"),
+  approvalSubmittedAt: timestamp("approval_submitted_at"),
+  approvedAt: timestamp("approved_at"),
+  rejectedReason: text("rejected_reason"),
+  isActive: boolean("is_active").default(true),
+  usageCount: integer("usage_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_msg_templates_org_id").on(table.orgId),
+  index("idx_msg_templates_org_channel").on(table.orgId, table.channelType),
+  index("idx_msg_templates_approval").on(table.approvalStatus),
+]);
+
+export const channelBillingRules = pgTable("channel_billing_rules", {
+  id: serial("id").primaryKey(),
+  channelType: text("channel_type").notNull(),
+  talkTimeEquivalentMinutes: numeric("talk_time_equivalent_minutes", { precision: 10, scale: 4 }).notNull(),
+  providerCostPerUnit: numeric("provider_cost_per_unit", { precision: 10, scale: 4 }),
+  marginPercent: numeric("margin_percent", { precision: 5, scale: 2 }),
+  effectiveFrom: timestamp("effective_from").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_channel_billing_type").on(table.channelType),
+  index("idx_channel_billing_active").on(table.isActive),
+]);
+
+export const channelHealthLog = pgTable("channel_health_log", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  channelType: text("channel_type").notNull(),
+  status: text("status").notNull(),
+  checkType: text("check_type"),
+  responseTimeMs: integer("response_time_ms"),
+  errorMessage: text("error_message"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_channel_health_org_id").on(table.orgId),
+  index("idx_channel_health_org_type").on(table.orgId, table.channelType),
+  index("idx_channel_health_created").on(table.createdAt),
+]);
+
+export const insertUnifiedContactSchema = createInsertSchema(unifiedContacts).omit({ id: true, createdAt: true });
+export type InsertUnifiedContact = z.infer<typeof insertUnifiedContactSchema>;
+export type UnifiedContact = typeof unifiedContacts.$inferSelect;
+
+export const insertChannelConfigurationSchema = createInsertSchema(channelConfigurations).omit({ id: true, createdAt: true });
+export type InsertChannelConfiguration = z.infer<typeof insertChannelConfigurationSchema>;
+export type ChannelConfiguration = typeof channelConfigurations.$inferSelect;
+
+export const insertOmnichannelConversationSchema = createInsertSchema(omnichannelConversations).omit({ id: true, createdAt: true });
+export type InsertOmnichannelConversation = z.infer<typeof insertOmnichannelConversationSchema>;
+export type OmnichannelConversation = typeof omnichannelConversations.$inferSelect;
+
+export const insertOmnichannelMessageSchema = createInsertSchema(omnichannelMessages).omit({ id: true, createdAt: true });
+export type InsertOmnichannelMessage = z.infer<typeof insertOmnichannelMessageSchema>;
+export type OmnichannelMessage = typeof omnichannelMessages.$inferSelect;
+
+export const insertMessageTemplateSchema = createInsertSchema(messageTemplates).omit({ id: true, createdAt: true });
+export type InsertMessageTemplate = z.infer<typeof insertMessageTemplateSchema>;
+export type MessageTemplate = typeof messageTemplates.$inferSelect;
+
+export const insertChannelBillingRuleSchema = createInsertSchema(channelBillingRules).omit({ id: true, createdAt: true });
+export type InsertChannelBillingRule = z.infer<typeof insertChannelBillingRuleSchema>;
+export type ChannelBillingRule = typeof channelBillingRules.$inferSelect;
+
+export const insertChannelHealthLogSchema = createInsertSchema(channelHealthLog).omit({ id: true, createdAt: true });
+export type InsertChannelHealthLog = z.infer<typeof insertChannelHealthLogSchema>;
+export type ChannelHealthLog = typeof channelHealthLog.$inferSelect;
+
+// ═══════════════════════════════════════════════════
+// SECTION 2: AGENT ASSIST
+// ═══════════════════════════════════════════════════
+
+export const humanAgents = pgTable("human_agents", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  displayName: text("display_name").notNull(),
+  status: text("status").default("offline"),
+  skills: text("skills").array(),
+  maxConcurrentCalls: integer("max_concurrent_calls").default(3),
+  currentCallCount: integer("current_call_count").default(0),
+  lastActiveAt: timestamp("last_active_at"),
+  shiftStart: timestamp("shift_start"),
+  shiftEnd: timestamp("shift_end"),
+  totalCallsHandled: integer("total_calls_handled").default(0),
+  avgHandleTime: numeric("avg_handle_time", { precision: 10, scale: 2 }),
+  avgQuality: numeric("avg_quality", { precision: 5, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_human_agents_org_id").on(table.orgId),
+  index("idx_human_agents_user_id").on(table.userId),
+  index("idx_human_agents_status").on(table.orgId, table.status),
+  uniqueIndex("uq_human_agents_user_org").on(table.userId, table.orgId),
+]);
+
+export const agentAssistSessions = pgTable("agent_assist_sessions", {
+  id: serial("id").primaryKey(),
+  callLogId: integer("call_log_id").notNull().references(() => callLogs.id),
+  humanAgentId: integer("human_agent_id").notNull().references(() => humanAgents.id),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  startedAt: timestamp("started_at").defaultNow(),
+  endedAt: timestamp("ended_at"),
+  transferType: text("transfer_type"),
+  suggestionsShown: integer("suggestions_shown").default(0),
+  suggestionsUsed: integer("suggestions_used").default(0),
+  autoSummary: text("auto_summary"),
+  autoActionItems: jsonb("auto_action_items"),
+  autoTopics: jsonb("auto_topics"),
+  coachingAlertsTriggered: integer("coaching_alerts_triggered").default(0),
+  agentNotes: text("agent_notes"),
+  outcomeRating: integer("outcome_rating"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_assist_sessions_call_log").on(table.callLogId),
+  index("idx_assist_sessions_human_agent").on(table.humanAgentId),
+  index("idx_assist_sessions_org_id").on(table.orgId),
+  index("idx_assist_sessions_started").on(table.startedAt),
+]);
+
+export const assistSuggestions = pgTable("assist_suggestions", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => agentAssistSessions.id),
+  sourceType: text("source_type").notNull(),
+  sourceId: integer("source_id"),
+  content: text("content").notNull(),
+  confidence: numeric("confidence", { precision: 5, scale: 2 }),
+  status: text("status").default("shown"),
+  modifiedContent: text("modified_content"),
+  responseTimeMs: integer("response_time_ms"),
+  knowledgeDocId: integer("knowledge_doc_id").references(() => knowledgeDocuments.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_assist_suggestions_session").on(table.sessionId),
+  index("idx_assist_suggestions_source").on(table.sourceType),
+  index("idx_assist_suggestions_status").on(table.status),
+]);
+
+export const coachingRules = pgTable("coaching_rules", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  name: text("name").notNull(),
+  triggerType: text("trigger_type").notNull(),
+  triggerCondition: jsonb("trigger_condition").notNull(),
+  coachingMessage: text("coaching_message").notNull(),
+  priority: integer("priority").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_coaching_rules_org_id").on(table.orgId),
+  index("idx_coaching_rules_type").on(table.triggerType),
+  index("idx_coaching_rules_active").on(table.orgId, table.isActive),
+]);
+
+export const cannedResponses = pgTable("canned_responses", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  category: text("category"),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  shortcut: text("shortcut"),
+  usageCount: integer("usage_count").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_canned_responses_org_id").on(table.orgId),
+  index("idx_canned_responses_category").on(table.orgId, table.category),
+]);
+
+export const supervisorSessions = pgTable("supervisor_sessions", {
+  id: serial("id").primaryKey(),
+  supervisorUserId: integer("supervisor_user_id").notNull().references(() => users.id),
+  callLogId: integer("call_log_id").notNull().references(() => callLogs.id),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  mode: text("mode").notNull(),
+  startedAt: timestamp("started_at").defaultNow(),
+  endedAt: timestamp("ended_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_supervisor_sessions_org_id").on(table.orgId),
+  index("idx_supervisor_sessions_call").on(table.callLogId),
+  index("idx_supervisor_sessions_user").on(table.supervisorUserId),
+]);
+
+export const insertHumanAgentSchema = createInsertSchema(humanAgents).omit({ id: true, createdAt: true });
+export type InsertHumanAgent = z.infer<typeof insertHumanAgentSchema>;
+export type HumanAgent = typeof humanAgents.$inferSelect;
+
+export const insertAgentAssistSessionSchema = createInsertSchema(agentAssistSessions).omit({ id: true, createdAt: true });
+export type InsertAgentAssistSession = z.infer<typeof insertAgentAssistSessionSchema>;
+export type AgentAssistSession = typeof agentAssistSessions.$inferSelect;
+
+export const insertAssistSuggestionSchema = createInsertSchema(assistSuggestions).omit({ id: true, createdAt: true });
+export type InsertAssistSuggestion = z.infer<typeof insertAssistSuggestionSchema>;
+export type AssistSuggestion = typeof assistSuggestions.$inferSelect;
+
+export const insertCoachingRuleSchema = createInsertSchema(coachingRules).omit({ id: true, createdAt: true });
+export type InsertCoachingRule = z.infer<typeof insertCoachingRuleSchema>;
+export type CoachingRule = typeof coachingRules.$inferSelect;
+
+export const insertCannedResponseSchema = createInsertSchema(cannedResponses).omit({ id: true, createdAt: true });
+export type InsertCannedResponse = z.infer<typeof insertCannedResponseSchema>;
+export type CannedResponse = typeof cannedResponses.$inferSelect;
+
+export const insertSupervisorSessionSchema = createInsertSchema(supervisorSessions).omit({ id: true, createdAt: true });
+export type InsertSupervisorSession = z.infer<typeof insertSupervisorSessionSchema>;
+export type SupervisorSession = typeof supervisorSessions.$inferSelect;
+
+// ═══════════════════════════════════════════════════
+// SECTION 3: VOICE BIOMETRICS
+// ═══════════════════════════════════════════════════
+
+export const voiceprints = pgTable("voiceprints", {
+  id: serial("id").primaryKey(),
+  contactPhone: text("contact_phone").notNull(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  providerReferenceId: text("provider_reference_id"),
+  enrollmentMethod: text("enrollment_method").default("in_call"),
+  enrollmentQuality: numeric("enrollment_quality", { precision: 5, scale: 2 }),
+  enrollmentSamples: integer("enrollment_samples").default(0),
+  verificationMode: text("verification_mode").default("passive"),
+  passphraseText: text("passphrase_text"),
+  status: text("status").default("active"),
+  totalVerifications: integer("total_verifications").default(0),
+  lastVerifiedAt: timestamp("last_verified_at"),
+  lastUpdatedAt: timestamp("last_updated_at"),
+  adaptiveUpdates: integer("adaptive_updates").default(0),
+  consentTimestamp: timestamp("consent_timestamp"),
+  consentMethod: text("consent_method"),
+  consentText: text("consent_text"),
+  deletedAt: timestamp("deleted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_voiceprints_org_id").on(table.orgId),
+  index("idx_voiceprints_phone").on(table.contactPhone),
+  index("idx_voiceprints_org_phone").on(table.orgId, table.contactPhone),
+  index("idx_voiceprints_status").on(table.status),
+]);
+
+export const voiceBiometricAttempts = pgTable("voice_biometric_attempts", {
+  id: serial("id").primaryKey(),
+  callLogId: integer("call_log_id").references(() => callLogs.id),
+  voiceprintId: integer("voiceprint_id").notNull().references(() => voiceprints.id),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  result: text("result").notNull(),
+  confidenceScore: numeric("confidence_score", { precision: 5, scale: 2 }),
+  verificationMode: text("verification_mode"),
+  durationMs: integer("duration_ms"),
+  spoofingDetected: boolean("spoofing_detected").default(false),
+  spoofingType: text("spoofing_type").default("none"),
+  spoofingConfidence: numeric("spoofing_confidence", { precision: 5, scale: 2 }),
+  fallbackUsed: boolean("fallback_used").default(false),
+  fallbackMethod: text("fallback_method"),
+  providerResponseId: text("provider_response_id"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bio_attempts_call_log").on(table.callLogId),
+  index("idx_bio_attempts_voiceprint").on(table.voiceprintId),
+  index("idx_bio_attempts_org_id").on(table.orgId),
+  index("idx_bio_attempts_result").on(table.result),
+  index("idx_bio_attempts_created").on(table.createdAt),
+]);
+
+export const biometricConfig = pgTable("biometric_config", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  isEnabled: boolean("is_enabled").default(false),
+  verificationThreshold: numeric("verification_threshold", { precision: 5, scale: 2 }).default("0.75"),
+  highSecurityThreshold: numeric("high_security_threshold", { precision: 5, scale: 2 }).default("0.90"),
+  antiSpoofingEnabled: boolean("anti_spoofing_enabled").default(true),
+  livenessDetection: boolean("liveness_detection").default(true),
+  replayDetection: boolean("replay_detection").default(true),
+  syntheticDetection: boolean("synthetic_detection").default(true),
+  deepfakeDetection: boolean("deepfake_detection").default(true),
+  spoofingAction: text("spoofing_action").default("reject_alert"),
+  continuousAuthEnabled: boolean("continuous_auth_enabled").default(false),
+  continuousAuthIntervalSeconds: integer("continuous_auth_interval_seconds").default(300),
+  fallbackMethod: text("fallback_method").default("security_questions"),
+  maxEnrollmentSamples: integer("max_enrollment_samples").default(5),
+  reEnrollmentPromptDays: integer("re_enrollment_prompt_days").default(180),
+  crossAccountCheckEnabled: boolean("cross_account_check_enabled").default(false),
+  voiceAgeMismatchAlert: boolean("voice_age_mismatch_alert").default(false),
+  providerName: text("provider_name"),
+  providerConfig: jsonb("provider_config"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uq_biometric_config_org").on(table.orgId),
+]);
+
+export const biometricFraudAlerts = pgTable("biometric_fraud_alerts", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  voiceprintId: integer("voiceprint_id").references(() => voiceprints.id),
+  alertType: text("alert_type").notNull(),
+  severity: text("severity").notNull(),
+  description: text("description"),
+  matchedVoiceprintIds: jsonb("matched_voiceprint_ids").default([]),
+  callLogId: integer("call_log_id").references(() => callLogs.id),
+  isResolved: boolean("is_resolved").default(false),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bio_fraud_org_id").on(table.orgId),
+  index("idx_bio_fraud_voiceprint").on(table.voiceprintId),
+  index("idx_bio_fraud_alert_type").on(table.alertType),
+  index("idx_bio_fraud_resolved").on(table.isResolved),
+  index("idx_bio_fraud_severity").on(table.severity),
+]);
+
+export const insertVoiceprintSchema = createInsertSchema(voiceprints).omit({ id: true, createdAt: true });
+export type InsertVoiceprint = z.infer<typeof insertVoiceprintSchema>;
+export type Voiceprint = typeof voiceprints.$inferSelect;
+
+export const insertVoiceBiometricAttemptSchema = createInsertSchema(voiceBiometricAttempts).omit({ id: true, createdAt: true });
+export type InsertVoiceBiometricAttempt = z.infer<typeof insertVoiceBiometricAttemptSchema>;
+export type VoiceBiometricAttempt = typeof voiceBiometricAttempts.$inferSelect;
+
+export const insertBiometricConfigSchema = createInsertSchema(biometricConfig).omit({ id: true, createdAt: true });
+export type InsertBiometricConfig = z.infer<typeof insertBiometricConfigSchema>;
+export type BiometricConfig = typeof biometricConfig.$inferSelect;
+
+export const insertBiometricFraudAlertSchema = createInsertSchema(biometricFraudAlerts).omit({ id: true, createdAt: true });
+export type InsertBiometricFraudAlert = z.infer<typeof insertBiometricFraudAlertSchema>;
+export type BiometricFraudAlert = typeof biometricFraudAlerts.$inferSelect;
+
+// ═══════════════════════════════════════════════════
+// SECTION 4: CONVERSATION ANALYTICS
+// ═══════════════════════════════════════════════════
+
+export const callAnalyticsRollups = pgTable("call_analytics_rollups", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  period: text("period").notNull(),
+  periodStart: timestamp("period_start").notNull(),
+  totalCalls: integer("total_calls").default(0),
+  completedCalls: integer("completed_calls").default(0),
+  handoffCalls: integer("handoff_calls").default(0),
+  avgDuration: numeric("avg_duration", { precision: 10, scale: 2 }),
+  avgSentiment: numeric("avg_sentiment", { precision: 5, scale: 2 }),
+  avgQuality: numeric("avg_quality", { precision: 5, scale: 2 }),
+  avgCsat: numeric("avg_csat", { precision: 5, scale: 2 }),
+  resolutionRate: numeric("resolution_rate", { precision: 5, scale: 2 }),
+  topTopics: jsonb("top_topics"),
+  topAgents: jsonb("top_agents"),
+  totalCost: numeric("total_cost", { precision: 12, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_call_rollups_org_id").on(table.orgId),
+  index("idx_call_rollups_period").on(table.orgId, table.period),
+  index("idx_call_rollups_period_start").on(table.orgId, table.periodStart),
+]);
+
+export const agentScorecards = pgTable("agent_scorecards", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").notNull().references(() => agents.id),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  period: text("period").notNull(),
+  periodStart: timestamp("period_start").notNull(),
+  totalCalls: integer("total_calls").default(0),
+  avgHandleTime: numeric("avg_handle_time", { precision: 10, scale: 2 }),
+  avgQuality: numeric("avg_quality", { precision: 5, scale: 2 }),
+  avgSentiment: numeric("avg_sentiment", { precision: 5, scale: 2 }),
+  avgCsat: numeric("avg_csat", { precision: 5, scale: 2 }),
+  firstCallResolution: numeric("first_call_resolution", { precision: 5, scale: 2 }),
+  handoffRate: numeric("handoff_rate", { precision: 5, scale: 2 }),
+  topicsCovered: jsonb("topics_covered").default([]),
+  improvementAreas: jsonb("improvement_areas"),
+  overallScore: numeric("overall_score", { precision: 5, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_scorecards_agent_id").on(table.agentId),
+  index("idx_scorecards_org_id").on(table.orgId),
+  index("idx_scorecards_period").on(table.orgId, table.period),
+  index("idx_scorecards_period_start").on(table.agentId, table.periodStart),
+]);
+
+export const callTopics = pgTable("call_topics", {
+  id: serial("id").primaryKey(),
+  callLogId: integer("call_log_id").notNull().references(() => callLogs.id),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  topic: text("topic").notNull(),
+  confidence: numeric("confidence", { precision: 5, scale: 2 }),
+  sentiment: text("sentiment"),
+  isResolved: boolean("is_resolved").default(false),
+  mentions: integer("mentions").default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_call_topics_call_log").on(table.callLogId),
+  index("idx_call_topics_org_id").on(table.orgId),
+  index("idx_call_topics_topic").on(table.orgId, table.topic),
+]);
+
+export const analyticsAlerts = pgTable("analytics_alerts", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  alertType: text("alert_type").notNull(),
+  severity: text("severity").notNull(),
+  message: text("message").notNull(),
+  data: jsonb("data"),
+  isRead: boolean("is_read").default(false),
+  dismissedAt: timestamp("dismissed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_analytics_alerts_org_id").on(table.orgId),
+  index("idx_analytics_alerts_type").on(table.alertType),
+  index("idx_analytics_alerts_read").on(table.orgId, table.isRead),
+  index("idx_analytics_alerts_created").on(table.createdAt),
+]);
+
+export const insertCallAnalyticsRollupSchema = createInsertSchema(callAnalyticsRollups).omit({ id: true, createdAt: true });
+export type InsertCallAnalyticsRollup = z.infer<typeof insertCallAnalyticsRollupSchema>;
+export type CallAnalyticsRollup = typeof callAnalyticsRollups.$inferSelect;
+
+export const insertAgentScorecardSchema = createInsertSchema(agentScorecards).omit({ id: true, createdAt: true });
+export type InsertAgentScorecard = z.infer<typeof insertAgentScorecardSchema>;
+export type AgentScorecard = typeof agentScorecards.$inferSelect;
+
+export const insertCallTopicSchema = createInsertSchema(callTopics).omit({ id: true, createdAt: true });
+export type InsertCallTopic = z.infer<typeof insertCallTopicSchema>;
+export type CallTopic = typeof callTopics.$inferSelect;
+
+export const insertAnalyticsAlertSchema = createInsertSchema(analyticsAlerts).omit({ id: true, createdAt: true });
+export type InsertAnalyticsAlert = z.infer<typeof insertAnalyticsAlertSchema>;
+export type AnalyticsAlert = typeof analyticsAlerts.$inferSelect;
+
 export * from "./models/chat";

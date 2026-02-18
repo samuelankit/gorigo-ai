@@ -498,16 +498,16 @@ export default function HomePage() {
       <section className="pt-8 pb-20" data-testid="section-download-app">
         <div className="max-w-6xl mx-auto px-6">
           <div className="relative rounded-md border border-border/50 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-cyan-500/5" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#E8604C]/5 via-[#F09040]/5 to-[#F5A623]/5" />
             <div className="relative flex flex-col md:flex-row items-center gap-12 md:gap-16 p-8 md:p-12">
               <div className="flex-1 text-center md:text-left">
-                <Badge variant="outline" className="mb-4 px-3 py-1 text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                <Badge variant="outline" className="mb-4 px-3 py-1 text-xs border-[#E8604C]/30 text-[#E8604C] dark:text-[#F5A623]">
                   Mobile App
                 </Badge>
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" data-testid="text-download-title">
                   Your call centre
                   <br />
-                  <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">in your pocket</span>
+                  <span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">in your pocket</span>
                 </h2>
                 <p className="text-muted-foreground mb-8 max-w-md">
                   Manage agents, monitor live calls, check revenue, and control everything by voice or tap. 
@@ -516,19 +516,19 @@ export default function HomePage() {
 
                 <div className="flex flex-col gap-4 mb-8">
                   <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-[#E8604C] shrink-0" />
                     <span className="text-sm">Voice commands to manage your call centre hands-free</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-[#E8604C] shrink-0" />
                     <span className="text-sm">Face ID and fingerprint security with auto-lock</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-[#E8604C] shrink-0" />
                     <span className="text-sm">Real-time push alerts for low balance, fraud, and agent issues</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-[#E8604C] shrink-0" />
                     <span className="text-sm">Works offline — commands queue and sync when back online</span>
                   </div>
                 </div>
@@ -565,23 +565,23 @@ export default function HomePage() {
               </div>
 
               <div className="relative shrink-0 hidden md:block" data-testid="phone-mockup">
-                <div className="absolute -inset-4 bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-cyan-500/20 rounded-[3.5rem] blur-xl" />
+                <div className="absolute -inset-4 bg-gradient-to-br from-[#E8604C]/20 via-[#F09040]/10 to-[#F5A623]/20 rounded-[3.5rem] blur-xl" />
                 <div className="relative w-[260px] h-[520px] rounded-[3rem] border-[6px] border-foreground/90 bg-background shadow-2xl overflow-hidden">
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-foreground/90 rounded-b-2xl" />
                   <div className="flex flex-col items-center justify-center h-full px-6">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg mb-4">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#E8604C] to-[#F5A623] flex items-center justify-center shadow-lg mb-4">
                       <Phone className="h-8 w-8 text-white" />
                     </div>
-                    <p className="text-lg font-semibold tracking-tight">GoRigo<span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">.ai</span></p>
+                    <p className="text-lg font-semibold tracking-tight">GoRigo<span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">.ai</span></p>
                     <p className="text-xs text-muted-foreground mt-1 text-center">AI Call Centre Engine</p>
                     <div className="mt-6 w-full space-y-2">
-                      <div className="h-2 rounded-full bg-gradient-to-r from-emerald-500/30 to-teal-500/20 w-full" />
+                      <div className="h-2 rounded-full bg-gradient-to-r from-[#E8604C]/30 to-[#F5A623]/20 w-full" />
                       <div className="h-2 rounded-full bg-gradient-to-r from-blue-500/20 to-violet-500/15 w-4/5" />
                       <div className="h-2 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/15 w-3/5" />
                     </div>
                     <div className="mt-6 flex gap-2 w-full">
-                      <div className="flex-1 h-9 rounded-md bg-emerald-500/10 flex items-center justify-center">
-                        <div className="w-3 h-3 rounded-full bg-emerald-500/40" />
+                      <div className="flex-1 h-9 rounded-md bg-[#E8604C]/10 flex items-center justify-center">
+                        <div className="w-3 h-3 rounded-full bg-[#E8604C]/40" />
                       </div>
                       <div className="flex-1 h-9 rounded-md bg-blue-500/10 flex items-center justify-center">
                         <div className="w-3 h-3 rounded-full bg-blue-500/40" />
@@ -601,15 +601,15 @@ export default function HomePage() {
       <DeploymentPackages />
 
       <section className="py-20 relative" data-testid="section-cta">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-violet-500/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#E8604C]/5 via-transparent to-[#F5A623]/5" />
         <div className="relative max-w-3xl mx-auto px-6 text-center">
-          <Badge variant="outline" className="mb-4 px-3 py-1 text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+          <Badge variant="outline" className="mb-4 px-3 py-1 text-xs border-[#E8604C]/30 text-[#E8604C] dark:text-[#F5A623]">
             Get Started Today
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" data-testid="text-cta-title">
             Ready to transform your
             <br />
-            <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent">customer experience?</span>
+            <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">customer experience?</span>
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
             Join businesses across 20 countries using GoRigo to deliver exceptional

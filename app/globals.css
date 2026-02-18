@@ -20,17 +20,17 @@
   --sidebar: 140 14% 95%;
   --sidebar-foreground: 150 18% 18%;
   --sidebar-border: 140 12% 86%;
-  --sidebar-primary: 148 72% 34%;
+  --sidebar-primary: 10 78% 60%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 148 72% 34%;
+  --sidebar-accent: 10 78% 60%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 148 72% 34%;
+  --sidebar-ring: 10 78% 60%;
 
   --popover: 0 0% 100%;
   --popover-foreground: 150 20% 13%;
   --popover-border: 140 12% 88%;
 
-  --primary: 148 72% 34%;
+  --primary: 10 78% 60%;
   --primary-foreground: 0 0% 100%;
 
   --secondary: 140 14% 93%;
@@ -39,16 +39,16 @@
   --muted: 140 12% 94%;
   --muted-foreground: 150 8% 44%;
 
-  --accent: 168 60% 36%;
+  --accent: 37 90% 55%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
   --input: 140 12% 82%;
-  --ring: 148 72% 34%;
-  --chart-1: 148 72% 34%;
-  --chart-2: 168 60% 36%;
+  --ring: 10 78% 60%;
+  --chart-1: 10 78% 60%;
+  --chart-2: 37 90% 55%;
   --chart-3: 38 92% 50%;
   --chart-4: 262 78% 60%;
   --chart-5: 195 85% 45%;
@@ -103,17 +103,17 @@
   --sidebar: 150 18% 5%;
   --sidebar-foreground: 140 12% 84%;
   --sidebar-border: 150 8% 13%;
-  --sidebar-primary: 148 65% 42%;
+  --sidebar-primary: 12 80% 62%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 148 65% 42%;
+  --sidebar-accent: 12 80% 62%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 148 65% 42%;
+  --sidebar-ring: 12 80% 62%;
 
   --popover: 150 16% 10%;
   --popover-foreground: 120 14% 92%;
   --popover-border: 150 8% 16%;
 
-  --primary: 148 65% 42%;
+  --primary: 12 80% 62%;
   --primary-foreground: 0 0% 100%;
 
   --secondary: 150 8% 14%;
@@ -122,16 +122,16 @@
   --muted: 150 8% 12%;
   --muted-foreground: 148 8% 46%;
 
-  --accent: 168 55% 40%;
+  --accent: 37 88% 58%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
   --input: 150 8% 18%;
-  --ring: 148 65% 42%;
-  --chart-1: 148 72% 42%;
-  --chart-2: 168 60% 40%;
+  --ring: 12 80% 62%;
+  --chart-1: 12 80% 62%;
+  --chart-2: 37 88% 58%;
   --chart-3: 38 92% 55%;
   --chart-4: 262 78% 58%;
   --chart-5: 195 85% 50%;

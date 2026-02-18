@@ -114,7 +114,7 @@ const steps = [
     description:
       "Set up your AI agent's persona, tone, knowledge base, and call handling rules through our intuitive dashboard. Upload documents, define FAQs, and customise responses. No coding required — just describe how you want your agent to behave.",
     customIcon: "ai-voice-setting",
-    gradient: "from-emerald-500 to-teal-500",
+    gradient: "from-[#E8604C] to-[#F5A623]",
   },
   {
     number: "02",
@@ -229,16 +229,16 @@ export default function HomePage() {
       <Navbar />
 
       <section className="relative overflow-hidden" data-testid="section-hero">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/8 via-transparent to-violet-500/8 dark:from-emerald-500/5 dark:to-violet-500/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#E8604C]/8 via-transparent to-[#F5A623]/8 dark:from-[#E8604C]/5 dark:to-[#F5A623]/5" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12),transparent_65%)]" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.06),transparent_70%)]" />
 
         <div className="relative max-w-6xl mx-auto px-6 pt-28 pb-20">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-            <Badge variant="outline" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide border-emerald-500/30 text-emerald-600 dark:text-emerald-400" data-testid="badge-hero-ai">
+            <Badge variant="outline" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide border-[#E8604C]/30 text-[#E8604C] dark:text-[#F5A623]" data-testid="badge-hero-ai">
               <span className="relative flex h-2 w-2 mr-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8604C] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#E8604C]" />
               </span>
               AI-Powered Call Centre Engine
             </Badge>
@@ -249,7 +249,7 @@ export default function HomePage() {
             >
               Run Your AI Call Center
               <br />
-              <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent">From Your Phone</span>
+              <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">From Your Phone</span>
             </h1>
 
             <p
@@ -267,8 +267,8 @@ export default function HomePage() {
                 data-testid="link-hero-call-ai"
                 className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-2.5 shadow-sm hover-elevate dark:bg-white sm:hidden"
               >
-                <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/40" />
+                <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#E8604C] to-[#F5A623]">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8604C]/40" />
                   <CustomIcon name="phone-call" size={22} className="relative text-white" />
                 </span>
                 <span className="flex flex-col items-start">
@@ -277,10 +277,10 @@ export default function HomePage() {
                 </span>
               </a>
               <WebCallButton />
-              <span className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400" data-testid="text-hero-availability">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-[#E8604C] dark:text-[#F5A623]" data-testid="text-hero-availability">
                 <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8604C] opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#E8604C]" />
                 </span>
                 Available 24/7
               </span>
@@ -352,7 +352,7 @@ export default function HomePage() {
           <div className="mt-10 text-center">
             <p className="text-sm text-muted-foreground">
               GoRigo eliminates these problems.{" "}
-              <Link href="/roi-calculator" className="text-emerald-600 dark:text-emerald-400 font-medium underline" data-testid="link-problem-roi">
+              <Link href="/roi-calculator" className="text-[#E8604C] dark:text-[#F5A623] font-medium underline" data-testid="link-problem-roi">
                 See how much you could save
                 <ArrowRight className="inline h-3.5 w-3.5 ml-1" />
               </Link>
@@ -365,13 +365,13 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-muted/40 via-transparent to-muted/40" />
         <div className="relative max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
-            <Badge variant="outline" className="mb-4 px-3 py-1 text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+            <Badge variant="outline" className="mb-4 px-3 py-1 text-xs border-[#E8604C]/30 text-[#E8604C] dark:text-[#F5A623]">
               Capabilities
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" data-testid="text-features-title">
               Everything you need to run
               <br />
-              <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">an AI call centre</span>
+              <span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">an AI call centre</span>
             </h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
               From intelligent voice agents to enterprise-grade compliance, GoRigo gives you a complete

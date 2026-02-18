@@ -39,9 +39,9 @@ export function Navbar() {
             data-testid="link-logo"
           >
             <span className="text-xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">Go</span>
+              <span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">Go</span>
               <span className="text-foreground">Rigo</span>
-              <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">.ai</span>
+              <span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">.ai</span>
             </span>
           </Link>
 

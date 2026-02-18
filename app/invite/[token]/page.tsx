@@ -59,7 +59,7 @@ export default function AcceptInvitePage() {
         <CardContent className="p-6 space-y-6">
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <Shield className="w-8 h-8 text-emerald-600" />
+              <Shield className="w-8 h-8 text-[#E8604C]" />
               <span className="text-2xl font-bold text-foreground">GoRigo</span>
             </div>
 
@@ -157,7 +157,7 @@ export default function AcceptInvitePage() {
               </div>
               <Button
                 className="w-full"
-                style={{ backgroundColor: "#189553" }}
+                style={{ backgroundColor: "#E8604C" }}
                 onClick={handleAccept}
                 disabled={submitting || !formValid}
                 data-testid="button-accept-invite"

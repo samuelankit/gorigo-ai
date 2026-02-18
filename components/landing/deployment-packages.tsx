@@ -29,8 +29,8 @@ const allPackages = [
     href: "/contact",
     featured: true,
     mobileApp: true,
-    gradient: "from-emerald-500/10 to-teal-500/10",
-    borderColor: "border-emerald-500/30",
+    gradient: "from-[#E8604C]/10 to-[#F5A623]/10",
+    borderColor: "border-[#E8604C]/30",
   },
   {
     key: "byok" as const,
@@ -134,8 +134,8 @@ export function DeploymentPackages() {
               <CardContent className="relative p-7">
                 {pkg.featured && (
                   <div className="flex items-center gap-1.5 mb-4">
-                    <Crown className="h-3.5 w-3.5 text-emerald-500" />
-                    <span className="text-xs font-semibold tracking-widest uppercase text-emerald-600 dark:text-emerald-400">
+                    <Crown className="h-3.5 w-3.5 text-[#E8604C]" />
+                    <span className="text-xs font-semibold tracking-widest uppercase text-[#E8604C] dark:text-[#F5A623]">
                       Most Popular
                     </span>
                   </div>
@@ -151,11 +151,11 @@ export function DeploymentPackages() {
                       className="flex items-start gap-2 text-sm"
                     >
                       {h === "Mobile app included" ? (
-                        <Smartphone className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                        <Smartphone className="h-4 w-4 text-[#E8604C] shrink-0 mt-0.5" />
                       ) : (
                         <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                       )}
-                      <span className={h === "Mobile app included" ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-muted-foreground"}>{h}</span>
+                      <span className={h === "Mobile app included" ? "text-[#E8604C] dark:text-[#F5A623] font-medium" : "text-muted-foreground"}>{h}</span>
                     </li>
                   ))}
                 </ul>

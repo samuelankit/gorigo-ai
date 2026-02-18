@@ -264,10 +264,21 @@ export default function HomePage() {
             >
               Deploy intelligent AI voice agents that answer every call naturally, 24/7.
               Manage your entire call centre from anywhere — by voice, tap, or text.
-              No subscriptions. Pay only for talk time<TalkTimeInfo />.
             </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 flex-wrap" data-testid="hero-talk-to-ai">
+            <div
+              className="mt-6 inline-flex items-center gap-3 flex-wrap rounded-md border border-teal-500/30 bg-teal-500/5 dark:bg-teal-500/10 px-5 py-3"
+              data-testid="callout-no-subscriptions"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-500/15 shrink-0">
+                <CircleDollarSign className="h-4 w-4 text-teal-500" />
+              </div>
+              <p className="text-sm sm:text-base font-semibold text-teal-700 dark:text-teal-300 leading-snug" data-testid="text-hero-no-subscriptions">
+                No subscriptions. No seat fees. Pay only for talk time<TalkTimeInfo />.
+              </p>
+            </div>
+
+            <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 flex-wrap" data-testid="hero-talk-to-ai">
               <a
                 href="tel:+440000000000"
                 data-testid="link-hero-call-ai"

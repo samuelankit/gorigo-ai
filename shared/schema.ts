@@ -269,7 +269,10 @@ export const jobs = pgTable("jobs", {
   status: text("status").default("pending"),
   result: jsonb("result"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_jobs_status_created").on(table.status, table.createdAt),
+  index("idx_jobs_type_status").on(table.type, table.status),
+]);
 
 export const partners = pgTable("partners", {
   id: serial("id").primaryKey(),
@@ -886,6 +889,7 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_pwd_reset_user_id").on(table.userId),
+  index("idx_pwd_reset_expires_at").on(table.expiresAt),
 ]);
 
 export const insertDoNotCallSchema = createInsertSchema(doNotCallList).omit({ id: true, createdAt: true });
@@ -2334,6 +2338,7 @@ export const invitations = pgTable("invitations", {
   index("idx_invitations_org_id").on(table.orgId),
   index("idx_invitations_email").on(table.email),
   index("idx_invitations_token").on(table.token),
+  index("idx_invitations_status_expires").on(table.status, table.expiresAt),
 ]);
 
 export const insertDepartmentSchema = createInsertSchema(departments).omit({ id: true, createdAt: true, updatedAt: true });

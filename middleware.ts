@@ -156,6 +156,7 @@ export function middleware(request: NextRequest) {
         { status: 429 }
       );
       errorResponse.headers.set("Retry-After", String(retryAfter));
+      errorResponse.headers.set("x-request-id", requestId);
       addSecurityHeaders(errorResponse);
       return errorResponse;
     }
@@ -170,6 +171,7 @@ export function middleware(request: NextRequest) {
           { error: "Request body too large" },
           { status: 413 }
         );
+        errorResponse.headers.set("x-request-id", requestId);
         addSecurityHeaders(errorResponse);
         return errorResponse;
       }
@@ -190,6 +192,7 @@ export function middleware(request: NextRequest) {
           { error: "Forbidden: missing origin" },
           { status: 403 }
         );
+        errorResponse.headers.set("x-request-id", requestId);
         addSecurityHeaders(errorResponse);
         return errorResponse;
       }
@@ -201,6 +204,7 @@ export function middleware(request: NextRequest) {
             { error: "Forbidden: cross-origin request" },
             { status: 403 }
           );
+          errorResponse.headers.set("x-request-id", requestId);
           addSecurityHeaders(errorResponse);
           return errorResponse;
         }
@@ -209,6 +213,7 @@ export function middleware(request: NextRequest) {
           { error: "Forbidden: invalid origin" },
           { status: 403 }
         );
+        errorResponse.headers.set("x-request-id", requestId);
         addSecurityHeaders(errorResponse);
         return errorResponse;
       }

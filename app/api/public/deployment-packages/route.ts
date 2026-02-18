@@ -3,6 +3,7 @@ import { platformSettings } from "@/shared/schema";
 import { NextRequest, NextResponse } from "next/server";
 import { inArray } from "drizzle-orm";
 import { publicLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const PACKAGE_KEYS = [
   "deployment_package_managed_enabled",
@@ -41,10 +42,6 @@ export async function GET(request: NextRequest) {
       headers: { "Cache-Control": "public, max-age=300, s-maxage=300" },
     });
   } catch (error) {
-    return NextResponse.json({
-      managed: true,
-      byok: true,
-      selfHosted: false,
-    });
+    return handleRouteError(error, "GET /api/public/deployment-packages");
   }
 }

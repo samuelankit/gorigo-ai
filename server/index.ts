@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import compression from "compression";
+import { pool } from "./db";
 
 const app = express();
 const httpServer = createServer(app);
@@ -12,15 +14,22 @@ declare module "http" {
   }
 }
 
+httpServer.requestTimeout = 120_000;
+httpServer.headersTimeout = 65_000;
+httpServer.keepAliveTimeout = 61_000;
+
+app.use(compression({ threshold: 1024 }));
+
 app.use(
   express.json({
+    limit: "2mb",
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
   }),
 );
 
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -58,6 +67,46 @@ app.use((req, res, next) => {
 
   next();
 });
+
+process.on("uncaughtException", (err) => {
+  console.error("[process] Uncaught exception:", err.message, err.stack);
+  shutdown("uncaughtException", 1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[process] Unhandled rejection:", reason);
+});
+
+let isShuttingDown = false;
+
+function shutdown(signal: string, exitCode = 0) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  log(`${signal} received, starting graceful shutdown...`, "shutdown");
+
+  httpServer.close(async () => {
+    log("HTTP server closed", "shutdown");
+    try {
+      await pool.end();
+      log("Database pool closed", "shutdown");
+    } catch (err: any) {
+      console.error("[shutdown] Error closing pool:", err.message);
+    }
+    process.exit(exitCode);
+  });
+
+  const forceTimer = setTimeout(() => {
+    console.error("[shutdown] Forced shutdown after timeout");
+    process.exit(1);
+  }, 15_000);
+  if (typeof forceTimer === "object" && "unref" in forceTimer) {
+    (forceTimer as NodeJS.Timeout).unref();
+  }
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 (async () => {
   await registerRoutes(httpServer, app);

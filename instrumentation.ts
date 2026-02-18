@@ -17,6 +17,14 @@ export async function register() {
     ]);
     console.log("[GoRigo] Graceful shutdown handler registered");
 
+    process.on("unhandledRejection", (reason) => {
+      console.error("[process] Unhandled rejection:", reason);
+    });
+
+    process.on("uncaughtException", (err) => {
+      console.error("[process] Uncaught exception:", err.message, err.stack);
+    });
+
     const { seedPlatformKnowledge } = await import("@/lib/platform-knowledge");
     seedPlatformKnowledge()
       .then((result) => {

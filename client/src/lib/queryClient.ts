@@ -41,14 +41,27 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+function shouldRetry(failureCount: number, error: unknown): boolean {
+  if (failureCount >= 2) return false;
+  if (error instanceof Error) {
+    const status = parseInt(error.message);
+    if (status === 401 || status === 403 || status === 404 || status === 400) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: shouldRetry,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10_000),
     },
     mutations: {
       retry: false,

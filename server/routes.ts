@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
+import { pool } from "./db";
+import { handleRouteError } from "./error-handler";
 import {
   insertCountrySchema,
   insertCountryComplianceProfileSchema,
@@ -15,12 +17,35 @@ export async function registerRoutes(
   app: Express,
 ): Promise<Server> {
 
+  app.get("/api/health", async (_req, res) => {
+    res.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      version: "1.0.0",
+    });
+  });
+
+  app.get("/api/health/ready", async (_req, res) => {
+    try {
+      const client = await pool.connect();
+      await client.query("SELECT 1");
+      client.release();
+      res.json({ status: "ready", database: "connected" });
+    } catch {
+      res.status(503).json({ status: "not_ready", database: "disconnected" });
+    }
+  });
+
+  app.get("/api/health/live", (_req, res) => {
+    res.json({ status: "alive" });
+  });
+
   app.get("/api/countries", async (_req, res) => {
     try {
       const result = await storage.getCountries();
       res.json(result);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "GET /api/countries");
     }
   });
 
@@ -33,8 +58,8 @@ export async function registerRoutes(
       const rateCards = await storage.getRateCards(id);
       const holidays = await storage.getHolidays(id);
       res.json({ ...country, compliance, rateCards, holidays });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "GET /api/countries/:id");
     }
   });
 
@@ -43,8 +68,8 @@ export async function registerRoutes(
       const parsed = insertCountrySchema.parse(req.body);
       const country = await storage.createCountry(parsed);
       res.status(201).json(country);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "POST /api/countries");
     }
   });
 
@@ -54,8 +79,8 @@ export async function registerRoutes(
       const updated = await storage.updateCountry(id, req.body);
       if (!updated) return res.status(404).json({ error: "Country not found" });
       res.json(updated);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "PATCH /api/countries/:id");
     }
   });
 
@@ -65,8 +90,8 @@ export async function registerRoutes(
       const profile = await storage.getComplianceProfile(countryId);
       if (!profile) return res.status(404).json({ error: "Compliance profile not found" });
       res.json(profile);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "GET /api/countries/:id/compliance");
     }
   });
 
@@ -76,8 +101,8 @@ export async function registerRoutes(
       const data = { ...req.body, countryId };
       const profile = await storage.upsertComplianceProfile(data);
       res.json(profile);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "PUT /api/countries/:id/compliance");
     }
   });
 
@@ -86,8 +111,8 @@ export async function registerRoutes(
       const countryId = parseInt(req.params.id);
       const cards = await storage.getRateCards(countryId);
       res.json(cards);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "GET /api/countries/:id/rate-cards");
     }
   });
 
@@ -97,8 +122,8 @@ export async function registerRoutes(
       const data = { ...req.body, countryId };
       const card = await storage.upsertRateCard(data);
       res.json(card);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "PUT /api/countries/:id/rate-cards");
     }
   });
 
@@ -106,8 +131,8 @@ export async function registerRoutes(
     try {
       await storage.deleteRateCard(parseInt(req.params.id));
       res.status(204).send();
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "DELETE /api/rate-cards/:id");
     }
   });
 
@@ -117,8 +142,8 @@ export async function registerRoutes(
       const year = req.query.year ? parseInt(req.query.year as string) : undefined;
       const holidays = await storage.getHolidays(countryId, year);
       res.json(holidays);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "GET /api/countries/:id/holidays");
     }
   });
 
@@ -129,8 +154,8 @@ export async function registerRoutes(
       const parsed = insertCountryHolidaySchema.parse(data);
       const holiday = await storage.createHoliday(parsed);
       res.status(201).json(holiday);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "POST /api/countries/:id/holidays");
     }
   });
 
@@ -138,8 +163,8 @@ export async function registerRoutes(
     try {
       await storage.deleteHoliday(parseInt(req.params.id));
       res.status(204).send();
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "DELETE /api/holidays/:id");
     }
   });
 
@@ -148,8 +173,8 @@ export async function registerRoutes(
       const orgId = parseInt(req.query.orgId as string) || 1;
       const result = await storage.getCampaigns(orgId);
       res.json(result);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "GET /api/campaigns");
     }
   });
 
@@ -158,8 +183,8 @@ export async function registerRoutes(
       const campaign = await storage.getCampaign(parseInt(req.params.id));
       if (!campaign) return res.status(404).json({ error: "Campaign not found" });
       res.json(campaign);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "GET /api/campaigns/:id");
     }
   });
 
@@ -168,8 +193,8 @@ export async function registerRoutes(
       const parsed = insertCampaignSchema.parse(req.body);
       const campaign = await storage.createCampaign(parsed);
       res.status(201).json(campaign);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "POST /api/campaigns");
     }
   });
 
@@ -179,8 +204,8 @@ export async function registerRoutes(
       const updated = await storage.updateCampaign(id, req.body);
       if (!updated) return res.status(404).json({ error: "Campaign not found" });
       res.json(updated);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "PATCH /api/campaigns/:id");
     }
   });
 
@@ -189,8 +214,8 @@ export async function registerRoutes(
       const campaignId = parseInt(req.params.id);
       const contacts = await storage.getCampaignContacts(campaignId);
       res.json(contacts);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "GET /api/campaigns/:id/contacts");
     }
   });
 
@@ -206,8 +231,8 @@ export async function registerRoutes(
         const contact = await storage.createCampaignContact(data);
         res.status(201).json(contact);
       }
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "POST /api/campaigns/:id/contacts");
     }
   });
 
@@ -217,8 +242,8 @@ export async function registerRoutes(
       const updated = await storage.updateCampaignContact(id, req.body);
       if (!updated) return res.status(404).json({ error: "Contact not found" });
       res.json(updated);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "PATCH /api/campaign-contacts/:id");
     }
   });
 
@@ -245,8 +270,8 @@ export async function registerRoutes(
         currency: country.currency,
         ...card,
       });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      handleRouteError(err, res, "GET /api/rate-resolver");
     }
   });
 

@@ -15,7 +15,17 @@ GoRigo is an AI-powered call center platform designed to automate call center op
 The platform uses Next.js 14 (App Router) with Tailwind CSS and Shadcn/ui for components, and Recharts for data visualization. Dark mode is the default, inspired by Azure Portal/Fluent Design. The dashboard features a collapsible left sidebar, a sticky top command bar, and a content workspace, emphasizing flat design, compact spacing, and table-first data views. The primary model is a React Native/Expo mobile app with AI voice control, complemented by a Web SaaS platform.
 
 ### Mobile App (React Native / Expo)
-Located in `/mobile/` directory, using Expo Router for navigation with 5 main tabs: Dashboard, Voice, Calls, Agents, and Settings. The theme uses Green #189553 as primary and a white background.
+Located in `/mobile/` directory, using Expo Router for file-based navigation with 3 main tabs: Rigo (AI assistant home with dashboard cards + dual-input chat + quick action chips), Activity (unified feed of calls, alerts, wallet transactions with filter chips), and Settings (profile, wallet, business switcher, biometric lock toggle, push notification toggle). The theme uses Green #189553 as primary and a white background.
+
+Key mobile features:
+- **Dual-Input Design**: Voice (speech-to-text via Web Speech API / device STT) + text chat + touch UI, all feeding into the same Rigo command handler
+- **TTS Toggle**: Mute/unmute Rigo's spoken responses (expo-speech)
+- **Biometric Lock**: Face ID / fingerprint via expo-local-authentication, auto-lock after 5 min inactivity, re-auth required for sensitive actions (wallet access)
+- **Offline Support**: Command queue (AsyncStorage), cached dashboard stats, connection status indicator ("Offline" badge), sync on reconnect
+- **Push Notifications**: expo-notifications setup with token registration to server, channels for low wallet/fraud/agent offline/quality drops
+- **Haptic Feedback**: expo-haptics wrapper for mic tap (medium), stat card tap (selection), chip tap (selection)
+- **Detail Screens**: Call Detail (transcript, sentiment, quality, duration, cost), Wallet (balance card, transactions), Business Switcher
+- **White-label Branding**: Dynamic brand name/color via BrandingProvider
 
 ### Technical Implementations
 GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentication is session-based. AI functionalities leverage OpenAI via Replit AI Integrations, enhanced by a RAG system. A prepaid wallet system with atomic operations and row-level locks manages billing and commissions. Multi-tenancy is enforced via `orgId`, and Role-Based Access Control (`globalRole`) manages permissions. A 7-state Call State Machine handles call flows, integrated with Twilio Programmable Voice. Background jobs process document chunking, embedding, and audio transcription. Security features include prompt injection detection and input validation. A distribution engine manages commissions and revenue sharing. A multi-agent system supports various AI agent types and visual flow diagram building. Compliance features include TCPA/FCC DNC management, PII auto-redaction, sentiment analysis, and call quality scoring. The system supports AI model fallback, multilingual capabilities, concurrent call limits, business hours, and outgoing webhooks.

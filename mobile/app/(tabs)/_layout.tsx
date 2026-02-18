@@ -37,36 +37,19 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
+          title: "Rigo",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid-outline" size={size} color={color} />
+            <Ionicons name="sparkles" size={size} color={color} />
           ),
+          headerShown: false,
         }}
       />
       <Tabs.Screen
-        name="voice"
+        name="activity"
         options={{
-          title: "Voice",
+          title: "Activity",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="mic-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="calls"
-        options={{
-          title: "Calls",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="call-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="agents"
-        options={{
-          title: "Agents",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+            <Ionicons name="pulse-outline" size={size} color={color} />
           ),
         }}
       />

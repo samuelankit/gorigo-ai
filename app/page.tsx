@@ -24,6 +24,12 @@ import {
   BarChart3,
   Phone,
   Headphones,
+  XCircle,
+  CircleDollarSign,
+  Mic,
+  Bot,
+  BookOpen,
+  MessageSquare,
 } from "lucide-react";
 
 const features = [
@@ -452,6 +458,141 @@ export default function HomePage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 relative overflow-hidden" data-testid="section-no-subscriptions">
+        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 via-transparent to-emerald-500/5 dark:from-teal-500/3 dark:to-emerald-500/3" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.06),transparent_70%)]" />
+
+        <div className="relative max-w-6xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <Badge variant="outline" className="mb-4 px-3 py-1 text-xs border-teal-500/30 text-teal-600 dark:text-teal-400" data-testid="badge-no-subscriptions">
+              Pricing That Makes Sense
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" data-testid="text-no-subscriptions-title">
+              Zero subscriptions. Zero seat licences.
+              <br />
+              <span className="bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent">Just talk time.</span>
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto leading-relaxed" data-testid="text-no-subscriptions-subtitle">
+              Every other platform charges monthly subscriptions, per-seat fees, and hidden overage costs.
+              GoRigo charges for one thing only: the minutes your AI actually works. Everything else is included.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <Card className="border-rose-500/20 relative" data-testid="card-traditional-pricing">
+              <CardContent className="p-7">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-md bg-rose-500/10">
+                    <XCircle className="h-5 w-5 text-rose-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold" data-testid="text-traditional-title">Traditional Call Centre Software</h3>
+                    <p className="text-xs text-muted-foreground">What everyone else charges</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { text: "Monthly subscription per agent seat", cost: "from $150/seat/mo" },
+                    { text: "Platform access fee", cost: "$500-2,000/mo" },
+                    { text: "Overage charges on top", cost: "variable" },
+                    { text: "Annual contract lock-in", cost: "12-24 months" },
+                    { text: "Setup and onboarding fees", cost: "$1,000-5,000" },
+                    { text: "Premium support add-on", cost: "$200-500/mo" },
+                  ].map((item) => (
+                    <div key={item.text} className="flex items-center justify-between gap-3 py-2 border-b border-border/40 last:border-0" data-testid={`row-traditional-${item.text.toLowerCase().replace(/\s+/g, "-").substring(0, 25)}`}>
+                      <div className="flex items-center gap-2">
+                        <XCircle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                        <span className="text-sm">{item.text}</span>
+                      </div>
+                      <span className="text-xs text-rose-500 font-medium whitespace-nowrap">{item.cost}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-teal-500/30 relative" data-testid="card-gorigo-pricing">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white border-0 px-4 py-1 text-xs shadow-sm" data-testid="badge-gorigo-approach">
+                  The GoRigo Way
+                </Badge>
+              </div>
+              <CardContent className="p-7 pt-8">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-md bg-teal-500/10">
+                    <CircleDollarSign className="h-5 w-5 text-teal-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold" data-testid="text-gorigo-title">GoRigo Talk-Time Billing</h3>
+                    <p className="text-xs text-muted-foreground">One metric. Total transparency.</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { text: "No monthly subscription", detail: "ever" },
+                    { text: "No per-seat or per-agent fees", detail: "unlimited agents" },
+                    { text: "No setup or onboarding costs", detail: "go live free" },
+                    { text: "No annual contracts", detail: "cancel anytime" },
+                    { text: "No hidden overage charges", detail: "transparent rates" },
+                    { text: "Support included at every tier", detail: "always" },
+                  ].map((item) => (
+                    <div key={item.text} className="flex items-center justify-between gap-3 py-2 border-b border-border/40 last:border-0" data-testid={`row-gorigo-${item.text.toLowerCase().replace(/\s+/g, "-").substring(0, 25)}`}>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-teal-500 shrink-0" />
+                        <span className="text-sm">{item.text}</span>
+                      </div>
+                      <span className="text-xs text-teal-500 font-medium whitespace-nowrap">{item.detail}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="border-border/50" data-testid="card-talk-time-includes">
+            <CardContent className="p-7">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold mb-1" data-testid="text-talk-time-includes-title">What does &ldquo;talk time&rdquo; cover?</h3>
+                <p className="text-sm text-muted-foreground">One simple metric powers your entire platform. No separate charges.</p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {[
+                  { icon: Phone, label: "Inbound & outbound calls", sublabel: "AI voice conversations" },
+                  { icon: Bot, label: "AI content generation", sublabel: "Scripts, emails, SMS drafts" },
+                  { icon: MessageSquare, label: "Assistant queries", sublabel: "Rigo AI commands" },
+                  { icon: BookOpen, label: "Knowledge processing", sublabel: "Document chunking & search" },
+                  { icon: Mic, label: "Voice transcription", sublabel: "Call recordings to text" },
+                ].map((item) => (
+                  <div key={item.label} className="flex flex-col items-center text-center p-4 rounded-md bg-muted/40" data-testid={`item-talk-time-${item.label.toLowerCase().replace(/\s+/g, "-").substring(0, 20)}`}>
+                    <item.icon className="h-5 w-5 text-teal-500 mb-2" />
+                    <span className="text-sm font-medium leading-tight">{item.label}</span>
+                    <span className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{item.sublabel}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-xs text-muted-foreground mt-5" data-testid="text-talk-time-note">
+                Server infrastructure, storage, analytics dashboards, and compliance tools are GoRigo&apos;s cost — not yours.
+                Your prepaid wallet is only deducted when the AI is actively working for you.
+              </p>
+            </CardContent>
+          </Card>
+
+          <div className="text-center mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
+            <Link href="/register">
+              <Button size="lg" data-testid="button-no-sub-start">
+                Start Free — No Card Required
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/roi-calculator">
+              <Button variant="outline" size="lg" data-testid="button-no-sub-roi">
+                Calculate Your Savings
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

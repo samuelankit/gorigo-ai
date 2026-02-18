@@ -52,6 +52,18 @@ Key features include:
 - **Omnichannel Messaging (Enterprise)**: Unified messaging across WhatsApp, SMS, email, and web chat with 5-tab dashboard: unified inbox (filterable conversations with SLA tracking), contacts (unified identity, merge capability), channel management (health monitoring, enable/disable), message templates (approval workflow), and billing rules (per-channel talk-time equivalents). Features include conversation resolution workflow, channel health checks, and per-channel billing metering. 16 API endpoints. Located at `/admin/omnichannel/`. Schema: unifiedContacts, channelConfigurations, omnichannelConversations, omnichannelMessages, messageTemplates, channelBillingRules, channelHealthLog.
 - **Department & Team Management**: Organizational hierarchy with departments, role-based permissions (OWNER > ADMIN > MANAGER > AGENT > VIEWER), and employee invitation system. Department management at `/admin/departments/` with create/edit/archive departments, assign managers, add/remove members. Team management at `/admin/team/` with org member listing, role changes, and invitation management. Employee invitation flow with token-based email invites, auto-assignment to departments/roles on registration, 7-day expiry. Accept-invite landing page at `/invite/[token]`. Permission middleware (`lib/permissions.ts`) enforces org-level and department-level access controls. Schema: departments, departmentMembers, invitations.
 
+## CI/CD & Deployment
+- **Development**: Replit (gorigo.replit.app)
+- **Production**: Azure Container Apps (UK South) at gorigo.ai
+- **Domain**: gorigo.ai (Namecheap DNS, SSL via Azure Managed Certificate)
+- **Container Registry**: gorigoacr.azurecr.io (Azure Container Registry, Basic SKU)
+- **Production Database**: Azure PostgreSQL Flexible Server (gorigo-pgserver.postgres.database.azure.com)
+- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/deploy.yml`) — auto-builds Docker image and deploys to Azure Container Apps on push to `main`
+- **GitHub Secrets Required**:
+  - `AZURE_CREDENTIALS` — Service principal JSON (`az ad sp create-for-rbac --sdk-auth`)
+  - `ACR_USERNAME` — Azure Container Registry username
+  - `ACR_PASSWORD` — Azure Container Registry password
+
 ## External Dependencies
 - **AI Services**: OpenAI, Anthropic, OpenRouter (via Replit AI Integrations).
 - **Database**: PostgreSQL.

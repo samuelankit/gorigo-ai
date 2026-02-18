@@ -43,3 +43,34 @@ jobs:
           containerAppName: ${{ env.CONTAINER_APP_NAME }}
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           imageToDeploy: ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Configure health probes
+        run: |
+          cat > /tmp/container-patch.yaml <<'EOF'
+          properties:
+            template:
+              containers:
+                - name: gorigo-app
+                  image: ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+                  probes:
+                    - type: Liveness
+                      httpGet:
+                        path: /api/health
+                        port: 8080
+                      initialDelaySeconds: 30
+                      periodSeconds: 30
+                      failureThreshold: 3
+                      timeoutSeconds: 10
+                    - type: Startup
+                      httpGet:
+                        path: /api/health
+                        port: 8080
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                      failureThreshold: 10
+                      timeoutSeconds: 5
+          EOF
+          az containerapp update \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --yaml /tmp/container-patch.yaml

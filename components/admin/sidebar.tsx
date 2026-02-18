@@ -98,6 +98,7 @@ const enterpriseItems = [
 ];
 
 const systemItems = [
+  { title: "Monitoring", url: "/admin/monitoring", icon: Activity },
   { title: "Infrastructure", url: "/admin/infrastructure", icon: Server },
   { title: "Notifications", url: "/admin/notifications", icon: Bell },
   { title: "Platform Settings", url: "/admin/settings", icon: Settings },

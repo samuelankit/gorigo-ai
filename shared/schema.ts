@@ -2287,4 +2287,64 @@ export const insertAnalyticsAlertSchema = createInsertSchema(analyticsAlerts).om
 export type InsertAnalyticsAlert = z.infer<typeof insertAnalyticsAlertSchema>;
 export type AnalyticsAlert = typeof analyticsAlerts.$inferSelect;
 
+// ==================== DEPARTMENTS & TEAM MANAGEMENT ====================
+
+export const departments = pgTable("departments", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  managerId: integer("manager_id").references(() => users.id),
+  status: text("status").notNull().default("active"),
+  color: text("color").default("#6366f1"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_departments_org_id").on(table.orgId),
+  index("idx_departments_manager_id").on(table.managerId),
+]);
+
+export const departmentMembers = pgTable("department_members", {
+  id: serial("id").primaryKey(),
+  departmentId: integer("department_id").notNull().references(() => departments.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  departmentRole: text("department_role").notNull().default("AGENT"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+}, (table) => [
+  index("idx_dept_members_dept_id").on(table.departmentId),
+  index("idx_dept_members_user_id").on(table.userId),
+  uniqueIndex("uq_dept_members_dept_user").on(table.departmentId, table.userId),
+]);
+
+export const invitations = pgTable("invitations", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  departmentId: integer("department_id").references(() => departments.id),
+  orgRole: text("org_role").notNull().default("AGENT"),
+  departmentRole: text("department_role").default("AGENT"),
+  invitedById: integer("invited_by_id").notNull().references(() => users.id),
+  status: text("status").notNull().default("pending"),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_invitations_org_id").on(table.orgId),
+  index("idx_invitations_email").on(table.email),
+  index("idx_invitations_token").on(table.token),
+]);
+
+export const insertDepartmentSchema = createInsertSchema(departments).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
+export type Department = typeof departments.$inferSelect;
+
+export const insertDepartmentMemberSchema = createInsertSchema(departmentMembers).omit({ id: true, joinedAt: true });
+export type InsertDepartmentMember = z.infer<typeof insertDepartmentMemberSchema>;
+export type DepartmentMember = typeof departmentMembers.$inferSelect;
+
+export const insertInvitationSchema = createInsertSchema(invitations).omit({ id: true, createdAt: true, acceptedAt: true });
+export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
+export type Invitation = typeof invitations.$inferSelect;
+
 export * from "./models/chat";

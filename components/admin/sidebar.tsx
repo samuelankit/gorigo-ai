@@ -53,6 +53,8 @@ import {
   Headset,
   Fingerprint,
   MessagesSquare,
+  FolderKanban,
+  UserCog,
 } from "lucide-react";
 
 const overviewItems = [
@@ -69,6 +71,8 @@ const overviewItems = [
 ];
 
 const managementItems = [
+  { title: "Departments", url: "/admin/departments", icon: FolderKanban },
+  { title: "Team", url: "/admin/team", icon: UserCog },
   { title: "Partners", url: "/admin/partners", icon: Building2 },
   { title: "Clients", url: "/admin/clients", icon: Users },
   { title: "Agents", url: "/admin/agents", icon: Bot },

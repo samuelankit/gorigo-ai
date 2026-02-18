@@ -9,6 +9,7 @@ import crypto from "crypto";
 import { logAuthEvent } from "@/lib/audit";
 import { handleRouteError } from "@/lib/api-error";
 import { createLogger } from "@/lib/logger";
+import { sendWelcomeEmail } from "@/lib/email";
 
 const logger = createLogger("Auth");
 
@@ -30,6 +31,11 @@ export async function POST(request: NextRequest) {
 
     const { email, password, businessName } = parsed.data;
     const affiliateCode = body.affiliateCode || null;
+    const termsAccepted = body.termsAccepted === true;
+
+    if (!termsAccepted) {
+      return NextResponse.json({ error: "You must accept the Terms & Conditions and SLA to create an account." }, { status: 400 });
+    }
 
     if (password.length < 8) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
@@ -60,6 +66,8 @@ export async function POST(request: NextRequest) {
         emailVerified: false,
         emailVerificationToken: verificationTokenHash,
         emailVerificationExpiresAt: verificationExpiresAt,
+        termsAcceptedAt: new Date(),
+        termsVersion: "1.0",
       }).returning();
 
       let referredByAffiliateId: number | null = null;
@@ -156,6 +164,8 @@ export async function POST(request: NextRequest) {
     await setSessionCookie(result.token);
 
     logAuthEvent("register.success", result.newUser.id, result.newUser.email, { businessName }).catch((err) => { logger.error("Log register event failed", err); });
+
+    sendWelcomeEmail(result.newUser.email, result.newUser.businessName).catch((err) => { logger.error("Welcome email failed", err); });
 
     const { password: _, emailVerificationToken: __, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, ...userWithoutSensitive } = result.newUser;
     return NextResponse.json({

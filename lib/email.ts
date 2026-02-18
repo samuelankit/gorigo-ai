@@ -91,3 +91,62 @@ export async function sendInvitationEmail(
 
   return sendEmail(email, `You're invited to join ${orgName} on GoRigo`, html);
 }
+
+export async function sendWelcomeEmail(
+  email: string,
+  businessName: string
+): Promise<boolean> {
+  let baseUrl = "https://gorigo.ai";
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+  } else if (process.env.REPLIT_DEV_DOMAIN) {
+    baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  }
+
+  const termsUrl = `${baseUrl}/terms`;
+  const slaUrl = `${baseUrl}/sla`;
+  const dashboardUrl = `${baseUrl}/dashboard`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8faf9;">
+  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8e5;">
+    <div style="background:#189553;padding:32px 24px;text-align:center;">
+      <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">GoRigo</h1>
+      <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">AI Call Centre Platform</p>
+    </div>
+    <div style="padding:32px 24px;">
+      <h2 style="margin:0 0 8px;color:#1a2e22;font-size:20px;">Welcome to GoRigo, ${businessName}!</h2>
+      <p style="margin:0 0 16px;color:#5c7268;">Thank you for creating your account. By signing up, you have agreed to the following documents. Please keep this email for your records.</p>
+
+      <div style="background:#f0f7f3;border-radius:8px;padding:16px 20px;margin:0 0 20px;">
+        <h3 style="margin:0 0 12px;color:#1a2e22;font-size:15px;font-weight:600;">Your Agreements</h3>
+        <p style="margin:0 0 8px;color:#5c7268;font-size:14px;">
+          <a href="${termsUrl}" style="color:#189553;font-weight:500;text-decoration:none;">Terms &amp; Conditions</a>
+          <span style="color:#8fa49a;"> — Platform usage rules, data handling, and your rights</span>
+        </p>
+        <p style="margin:0 0 8px;color:#5c7268;font-size:14px;">
+          <a href="${slaUrl}" style="color:#189553;font-weight:500;text-decoration:none;">Service Level Agreement (SLA)</a>
+          <span style="color:#8fa49a;"> — Uptime guarantees, support response times, and compensation</span>
+        </p>
+      </div>
+
+      <p style="margin:0 0 16px;color:#5c7268;font-size:14px;">These agreements are effective from the date of your registration and apply to all services provided through the GoRigo platform.</p>
+
+      <div style="margin:24px 0;text-align:center;">
+        <a href="${dashboardUrl}" style="display:inline-block;background:#189553;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:600;font-size:16px;">Go to Dashboard</a>
+      </div>
+
+      <p style="margin:16px 0 0;color:#8fa49a;font-size:13px;">If you did not create this account, please contact us immediately at support@gorigo.ai.</p>
+    </div>
+    <div style="padding:16px 24px;background:#f8faf9;border-top:1px solid #e2e8e5;text-align:center;">
+      <p style="margin:0;color:#8fa49a;font-size:12px;">GoRigo.ai - Powered by AI</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail(email, "Welcome to GoRigo — Your Agreement & SLA Confirmation", html);
+}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -33,6 +34,7 @@ function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -54,6 +56,11 @@ function RegisterForm() {
     e.preventDefault();
     setError("");
 
+    if (!termsAccepted) {
+      setError("You must accept the Terms & Conditions and SLA to create an account.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -70,7 +77,7 @@ function RegisterForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessName, email, password, affiliateCode: affiliateCode || undefined }),
+        body: JSON.stringify({ businessName, email, password, termsAccepted: true, affiliateCode: affiliateCode || undefined }),
       });
 
       if (!res.ok) {
@@ -191,12 +198,32 @@ function RegisterForm() {
                 data-testid="input-register-confirm-password"
               />
             </div>
+
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="terms"
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                data-testid="checkbox-terms-accept"
+                className="mt-0.5"
+              />
+              <Label htmlFor="terms" className="text-sm text-muted-foreground leading-snug cursor-pointer" data-testid="label-terms-accept">
+                I agree to the{" "}
+                <Link href="/terms" target="_blank" className="text-primary font-medium hover:underline" data-testid="link-terms">
+                  Terms &amp; Conditions
+                </Link>
+                {" "}and{" "}
+                <Link href="/sla" target="_blank" className="text-primary font-medium hover:underline" data-testid="link-sla">
+                  Service Level Agreement
+                </Link>
+              </Label>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button
               type="submit"
               className="w-full"
-              disabled={loading}
+              disabled={loading || !termsAccepted}
               data-testid="button-register-submit"
             >
               {loading ? "Creating account..." : "Create Account"}

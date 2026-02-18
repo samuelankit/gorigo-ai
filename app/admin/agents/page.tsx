@@ -28,6 +28,7 @@ import {
   Activity,
   Globe,
 } from "lucide-react";
+import { DepartmentFilter } from "@/components/admin/department-filter";
 
 interface AgentEntry {
   id: number;
@@ -83,6 +84,7 @@ export default function AdminAgentsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [type, setType] = useState("all");
+  const [departmentId, setDepartmentId] = useState("all");
   const [page, setPage] = useState(0);
 
   const PAGE_SIZE = 25;
@@ -94,6 +96,7 @@ export default function AdminAgentsPage() {
       if (search) params.set("search", search);
       if (status !== "all") params.set("status", status);
       if (type !== "all") params.set("type", type);
+      if (departmentId !== "all") params.set("departmentId", departmentId);
       const res = await fetch(`/api/admin/agents?${params}`);
       const data = await res.json();
       if (data && !data.error) {
@@ -106,10 +109,10 @@ export default function AdminAgentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, type, page]);
+  }, [search, status, type, departmentId, page]);
 
   useEffect(() => { fetchAgents(); }, [fetchAgents]);
-  useEffect(() => { setPage(0); }, [search, status, type]);
+  useEffect(() => { setPage(0); }, [search, status, type, departmentId]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -135,10 +138,13 @@ export default function AdminAgentsPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Monitor AI agents across all organisations</p>
         </div>
-        <Button variant="outline" onClick={fetchAgents} disabled={loading} data-testid="button-refresh-agents">
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <DepartmentFilter value={departmentId} onChange={setDepartmentId} />
+          <Button variant="outline" onClick={fetchAgents} disabled={loading} data-testid="button-refresh-agents">
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

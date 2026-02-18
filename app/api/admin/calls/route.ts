@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { callLogs, agents, orgs } from "@/shared/schema";
-import { eq, sql, ilike, and, or, desc, gte, lte } from "drizzle-orm";
+import { callLogs, agents, orgs, departmentMembers } from "@/shared/schema";
+import { eq, sql, ilike, and, or, desc, gte, lte, inArray } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
@@ -25,10 +25,27 @@ export async function GET(request: NextRequest) {
     const directionFilter = searchParams.get("direction");
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
+    const departmentId = searchParams.get("departmentId");
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "50", 10) || 50, 200);
     const offset = Math.max(parseInt(searchParams.get("offset") ?? "0", 10) || 0, 0);
 
     const conditions: any[] = [];
+
+    if (departmentId && departmentId !== "all") {
+      const deptId = parseInt(departmentId, 10);
+      if (!isNaN(deptId)) {
+        const deptUserIds = await db
+          .select({ userId: departmentMembers.userId })
+          .from(departmentMembers)
+          .where(eq(departmentMembers.departmentId, deptId));
+        const userIds = deptUserIds.map(d => d.userId);
+        if (userIds.length > 0) {
+          conditions.push(inArray(agents.userId, userIds));
+        } else {
+          return NextResponse.json({ calls: [], total: 0, stats: {} });
+        }
+      }
+    }
 
     if (search) {
       conditions.push(

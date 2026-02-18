@@ -46,6 +46,7 @@ import {
   TrendingUp,
   CircleDot,
 } from "lucide-react";
+import { DepartmentFilter } from "@/components/admin/department-filter";
 
 interface CallRecord {
   id: number;
@@ -165,6 +166,7 @@ export default function AdminCallsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [direction, setDirection] = useState("all");
+  const [departmentId, setDepartmentId] = useState("all");
   const [page, setPage] = useState(0);
   const [detailCall, setDetailCall] = useState<CallRecord | null>(null);
 
@@ -177,6 +179,7 @@ export default function AdminCallsPage() {
       if (search) params.set("search", search);
       if (status !== "all") params.set("status", status);
       if (direction !== "all") params.set("direction", direction);
+      if (departmentId !== "all") params.set("departmentId", departmentId);
       const res = await fetch(`/api/admin/calls?${params}`);
       const data = await res.json();
       if (data && !data.error) {
@@ -189,10 +192,10 @@ export default function AdminCallsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, direction, page]);
+  }, [search, status, direction, departmentId, page]);
 
   useEffect(() => { fetchCalls(); }, [fetchCalls]);
-  useEffect(() => { setPage(0); }, [search, status, direction]);
+  useEffect(() => { setPage(0); }, [search, status, direction, departmentId]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -218,10 +221,13 @@ export default function AdminCallsPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Monitor all calls across organisations in real time</p>
         </div>
-        <Button variant="outline" onClick={fetchCalls} disabled={loading} data-testid="button-refresh-calls">
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <DepartmentFilter value={departmentId} onChange={setDepartmentId} />
+          <Button variant="outline" onClick={fetchCalls} disabled={loading} data-testid="button-refresh-calls">
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

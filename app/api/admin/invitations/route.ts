@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { invitations, users, departments, orgMembers, departmentMembers } from "@/shared/schema";
+import { invitations, users, departments, orgMembers, departmentMembers, orgs } from "@/shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { requireOrgRole } from "@/lib/permissions";
 import { generalLimiter } from "@/lib/rate-limit";
+import { sendInvitationEmail } from "@/lib/email";
 import { z } from "zod";
 import crypto from "crypto";
 
@@ -112,6 +113,29 @@ export async function POST(request: NextRequest) {
       status: "pending",
       expiresAt,
     }).returning();
+
+    let orgName = "your organization";
+    try {
+      const [org] = await db.select({ name: orgs.name }).from(orgs).where(eq(orgs.id, auth!.orgId!)).limit(1);
+      if (org?.name) orgName = org.name;
+    } catch {}
+
+    let deptName: string | undefined;
+    if (parsed.departmentId) {
+      try {
+        const [dept] = await db.select({ name: departments.name }).from(departments).where(eq(departments.id, parsed.departmentId)).limit(1);
+        deptName = dept?.name || undefined;
+      } catch {}
+    }
+
+    sendInvitationEmail(
+      parsed.email,
+      token,
+      orgName,
+      parsed.orgRole,
+      deptName,
+      auth!.user.businessName || auth!.user.email
+    ).catch((err) => console.error("[Invitation] Email send failed:", err));
 
     return NextResponse.json({
       invitation: inv,

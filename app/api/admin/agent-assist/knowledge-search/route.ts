@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 function escapeIlike(input: string): string {
@@ -45,8 +47,7 @@ export async function POST(request: NextRequest) {
       )
       .limit(10);
     return NextResponse.json(results);
-  } catch (error: any) {
-    console.error("Error searching knowledge base:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "KnowledgeSearch");
   }
 }

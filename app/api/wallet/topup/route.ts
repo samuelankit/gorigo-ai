@@ -5,6 +5,7 @@ import { knowledgeLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const topupSchema = z.object({
   amount: z.number().positive("Amount must be positive").finite().max(10000, "Maximum top-up amount is 10,000"),
@@ -58,7 +59,6 @@ export async function POST(request: NextRequest) {
       transaction: result.transaction,
     });
   } catch (error) {
-    console.error("Top-up wallet error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "WalletTopup");
   }
 }

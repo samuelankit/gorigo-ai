@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const createPartnerSchema = z.object({
   name: z.string().min(1).max(200),
@@ -76,8 +77,7 @@ export async function GET(request: NextRequest) {
       pagination: { total: Number(totalResult.total), limit, offset },
     });
   } catch (error) {
-    console.error("Admin list partners error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminPartners");
   }
 }
 
@@ -146,7 +146,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ partner }, { status: 201 });
   } catch (error) {
-    console.error("Admin create partner error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminPartners");
   }
 }

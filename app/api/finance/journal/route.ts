@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api-error";
 import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { finJournalEntries, finJournalLines, finWorkspaces, finAuditLog } from "@/shared/schema";
@@ -73,8 +74,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    console.error("List journal entries error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceJournal");
   }
 }
 
@@ -154,7 +154,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    console.error("Create journal entry error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceJournal");
   }
 }

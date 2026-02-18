@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api-error";
 import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { finCustomers, finWorkspaces, finAuditLog } from "@/shared/schema";
@@ -43,8 +44,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(customer);
   } catch (error) {
-    console.error("Get customer error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceCustomer");
   }
 }
 
@@ -96,8 +96,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Update customer error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceCustomer");
   }
 }
 
@@ -140,7 +139,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete customer error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceCustomer");
   }
 }

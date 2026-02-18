@@ -4,6 +4,7 @@ import { countries, countryComplianceProfiles, countryHolidays, doNotCallList, c
 import { eq, and, count, gte } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -197,7 +198,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Compliance overview error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ComplianceOverview");
   }
 }

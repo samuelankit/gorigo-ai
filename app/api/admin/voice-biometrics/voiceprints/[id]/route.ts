@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(
@@ -44,8 +46,7 @@ export async function GET(
 
     return NextResponse.json({ ...voiceprint, recentAttempts: attempts });
   } catch (error) {
-    console.error("Voiceprint GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Voiceprint");
   }
 }
 
@@ -84,8 +85,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Voiceprint PATCH error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Voiceprint");
   }
 }
 
@@ -124,7 +124,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: "Voiceprint soft deleted (GDPR)" });
   } catch (error) {
-    console.error("Voiceprint DELETE error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Voiceprint");
   }
 }

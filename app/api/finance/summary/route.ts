@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api-error";
 import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { finInvoices, finBills, finWorkspaces, finJournalLines, finJournalEntries, finAccounts } from "@/shared/schema";
@@ -124,7 +125,6 @@ export async function GET(request: NextRequest) {
       overdueBillsCount: Number(overdueBills.count),
     });
   } catch (error) {
-    console.error("Finance summary error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceSummary");
   }
 }

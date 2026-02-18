@@ -5,6 +5,7 @@ import { orgs, orgMembers, agents, usageRecords, wallets, sessions } from "@/sha
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const createBusinessSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters").max(100),
@@ -46,8 +47,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ businesses });
   } catch (error) {
-    console.error("List businesses error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Businesses");
   }
 }
 
@@ -126,7 +126,6 @@ export async function POST(request: NextRequest) {
       },
     }, { status: 201 });
   } catch (error) {
-    console.error("Create business error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Businesses");
   }
 }

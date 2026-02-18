@@ -4,6 +4,8 @@ import { eq, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -40,8 +42,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ conversation, contact, messages });
   } catch (error) {
-    console.error("Omnichannel conversation get error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OmnichannelConversation");
   }
 }
 
@@ -69,7 +70,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!updated) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Omnichannel conversation update error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OmnichannelConversation");
   }
 }

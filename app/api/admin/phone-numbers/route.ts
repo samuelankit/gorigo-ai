@@ -6,6 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,8 +35,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ phoneNumbers: results });
   } catch (error) {
-    console.error("Admin list phone numbers error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminPhoneNumbers");
   }
 }
 
@@ -91,8 +91,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message?.includes("unique")) {
       return NextResponse.json({ error: "This phone number already exists" }, { status: 409 });
     }
-    console.error("Admin create phone number error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminPhoneNumbers");
   }
 }
 
@@ -145,8 +144,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ phoneNumber: updated });
   } catch (error) {
-    console.error("Admin update phone number error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminPhoneNumbers");
   }
 }
 
@@ -191,7 +189,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Admin deactivate phone number error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminPhoneNumbers");
   }
 }

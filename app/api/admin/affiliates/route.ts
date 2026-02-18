@@ -5,6 +5,7 @@ import { eq, desc, sql, and, ilike, or } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 function generateAffiliateCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -88,8 +89,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Admin affiliates GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminAffiliates");
   }
 }
 
@@ -140,8 +140,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ affiliate }, { status: 201 });
   } catch (error) {
-    console.error("Admin affiliates POST error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminAffiliates");
   }
 }
 
@@ -192,8 +191,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ affiliate: updated });
   } catch (error) {
-    console.error("Admin affiliates PUT error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminAffiliates");
   }
 }
 
@@ -228,7 +226,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Admin affiliates DELETE error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminAffiliates");
   }
 }

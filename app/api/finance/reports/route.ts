@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api-error";
 import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { finWorkspaces, finAccounts, finJournalEntries, finJournalLines, finInvoices, finCustomers, finPayments } from "@/shared/schema";
@@ -43,8 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: "Invalid report type. Use: pnl, aging, cashflow" }, { status: 400 });
   } catch (error) {
-    console.error("Finance reports error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceReports");
   }
 }
 

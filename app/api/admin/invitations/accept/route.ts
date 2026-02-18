@@ -4,6 +4,7 @@ import { invitations, users, orgMembers, departmentMembers } from "@/shared/sche
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { handleRouteError } from "@/lib/api-error";
 
 const acceptSchema = z.object({
   token: z.string().min(1),
@@ -77,7 +78,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (err: any) {
     if (err.name === "ZodError") return NextResponse.json({ error: "Invalid input", details: err.errors }, { status: 400 });
-    console.error("[Invitations] Accept error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return handleRouteError(err, "AcceptInvitation");
   }
 }

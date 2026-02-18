@@ -4,6 +4,7 @@ import { campaigns, insertCampaignSchema } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { getAuthenticatedUser, requireEmailVerified } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,8 +26,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Campaign list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Campaigns");
   }
 }
 
@@ -56,11 +56,7 @@ export async function POST(request: NextRequest) {
 
     const [campaign] = await db.insert(campaigns).values(data).returning();
     return NextResponse.json(campaign, { status: 201 });
-  } catch (error: any) {
-    if (error.name === "ZodError") {
-      return NextResponse.json({ error: "Invalid data", details: error.errors }, { status: 400 });
-    }
-    console.error("Campaign create error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "Campaigns");
   }
 }

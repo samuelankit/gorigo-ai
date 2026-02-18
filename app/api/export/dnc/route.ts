@@ -5,6 +5,7 @@ import { eq, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireApiKeyScope } from "@/lib/get-user";
 import { logAudit } from "@/lib/audit";
 import { exportLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,7 +81,6 @@ export async function GET(request: NextRequest) {
 
     return new NextResponse(csvContent, { status: 200, headers: responseHeaders });
   } catch (error) {
-    console.error("Export DNC error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ExportDnc");
   }
 }

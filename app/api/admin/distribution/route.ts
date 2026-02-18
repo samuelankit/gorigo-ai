@@ -7,6 +7,7 @@ import {
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -123,7 +124,6 @@ export async function GET(request: NextRequest) {
       waterfall,
     });
   } catch (error) {
-    console.error("Distribution overview error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Distribution");
   }
 }

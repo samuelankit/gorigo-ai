@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { logAudit } from "@/lib/audit";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const VALID_DEPLOYMENT_MODELS = ["managed", "byok", "self_hosted", "custom"] as const;
 const VALID_CATEGORIES = ["voice_inbound", "voice_outbound", "ai_chat"] as const;
@@ -52,8 +53,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ rateCards: allRateCards, grouped, summary });
   } catch (error) {
-    console.error("Get rate cards error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminRateCards");
   }
 }
 
@@ -150,8 +150,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ card }, { status: 201 });
   } catch (error) {
-    console.error("Create rate card error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminRateCards");
   }
 }
 
@@ -226,7 +225,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ card: updated });
   } catch (error) {
-    console.error("Update rate card error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminRateCards");
   }
 }

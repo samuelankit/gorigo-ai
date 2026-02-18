@@ -4,6 +4,7 @@ import { redactPII, hasPII } from "@/lib/pii-redaction";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const bodySchema = z.object({
   text: z.string().min(1),
@@ -35,7 +36,6 @@ export async function POST(request: NextRequest) {
       piiTypes: result.piiFound.map(p => p.type),
     });
   } catch (error) {
-    console.error("PII scan error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PiiScan");
   }
 }

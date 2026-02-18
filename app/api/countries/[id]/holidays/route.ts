@@ -4,6 +4,7 @@ import { countryHolidays, insertCountryHolidaySchema } from "@/shared/schema";
 import { eq, and, like } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(
   request: NextRequest,
@@ -45,8 +46,7 @@ export async function GET(
     const holidays = await query;
     return NextResponse.json(holidays);
   } catch (error) {
-    console.error("Holidays fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CountryHolidays");
   }
 }
 
@@ -86,11 +86,7 @@ export async function POST(
       .returning();
 
     return NextResponse.json(holiday, { status: 201 });
-  } catch (error: any) {
-    if (error.name === "ZodError") {
-      return NextResponse.json({ error: "Invalid data", details: error.errors }, { status: 400 });
-    }
-    console.error("Holiday create error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "CountryHolidays");
   }
 }

@@ -4,6 +4,7 @@ import { publicConversations, chatMessages, chatLeads } from "@/shared/schema";
 import { eq, asc } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(
   req: NextRequest,
@@ -59,7 +60,6 @@ export async function GET(
 
     return NextResponse.json({ conversation, messages });
   } catch (err) {
-    console.error("Admin conversation detail error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminConversation");
   }
 }

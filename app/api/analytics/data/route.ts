@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { sql } from "drizzle-orm";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 function periodToInterval(period: string): string {
   switch (period) {
@@ -335,7 +336,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data, period, metric });
   } catch (error) {
-    console.error("Analytics data error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AnalyticsData");
   }
 }

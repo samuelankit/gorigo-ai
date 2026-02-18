@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -25,9 +27,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const [updated] = await db.update(coachingRules).set(updateData).where(eq(coachingRules.id, ruleId)).returning();
     if (!updated) return NextResponse.json({ error: "Rule not found" }, { status: 404 });
     return NextResponse.json(updated);
-  } catch (error: any) {
-    console.error("Error updating coaching rule:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "CoachingRule");
   }
 }
 
@@ -43,8 +44,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const [deleted] = await db.delete(coachingRules).where(eq(coachingRules.id, ruleId)).returning();
     if (!deleted) return NextResponse.json({ error: "Rule not found" }, { status: 404 });
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error("Error deleting coaching rule:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "CoachingRule");
   }
 }

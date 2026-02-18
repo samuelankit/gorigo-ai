@@ -6,6 +6,7 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const settlementSchema = z.object({
   action: z.enum(["preview", "execute"]),
@@ -164,7 +165,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       message: `Settlement complete. ${pendingCommissions.length} pending commissions cancelled ($${pendingTotal.toFixed(2)}). ${clawbackCommissions.length} commissions clawed back ($${clawbackTotal.toFixed(2)}).`,
     });
   } catch (error) {
-    console.error("Partner settlement error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PartnerSettlement");
   }
 }

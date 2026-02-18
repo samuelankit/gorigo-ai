@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -35,8 +37,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!updated) return NextResponse.json({ error: "Alert not found" }, { status: 404 });
 
     return NextResponse.json({ alert: updated });
-  } catch (error: any) {
-    console.error("Update analytics alert error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AnalyticsAlert");
   }
 }

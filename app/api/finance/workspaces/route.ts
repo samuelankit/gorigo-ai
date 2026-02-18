@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api-error";
 import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { finWorkspaces, finAccounts, finTaxCodes, finAuditLog } from "@/shared/schema";
@@ -77,8 +78,7 @@ export async function GET(request: NextRequest) {
     const workspaces = await db.select().from(finWorkspaces).where(eq(finWorkspaces.orgId, auth.orgId));
     return NextResponse.json({ workspaces });
   } catch (error) {
-    console.error("List workspaces error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceWorkspaces");
   }
 }
 
@@ -150,7 +150,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(workspace, { status: 201 });
   } catch (error) {
-    console.error("Create workspace error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceWorkspaces");
   }
 }

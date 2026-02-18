@@ -4,6 +4,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
@@ -24,8 +26,7 @@ export async function POST(request: NextRequest) {
       mode: body.mode,
     }).returning();
     return NextResponse.json(session, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating supervisor session:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "SupervisorSessions");
   }
 }

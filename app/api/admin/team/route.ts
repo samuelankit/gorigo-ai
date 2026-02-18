@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { requireOrgRole } from "@/lib/permissions";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ members: enriched });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return handleRouteError(err, "AdminTeam");
   }
 }
 
@@ -76,6 +77,6 @@ export async function PATCH(request: NextRequest) {
     if (!updated) return NextResponse.json({ error: "Member not found" }, { status: 404 });
     return NextResponse.json({ member: updated });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return handleRouteError(err, "AdminTeam");
   }
 }

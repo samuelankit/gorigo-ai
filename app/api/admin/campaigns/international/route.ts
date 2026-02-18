@@ -6,6 +6,7 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { logAudit } from "@/lib/audit";
 import { adminLimiter } from "@/lib/rate-limit";
 import { isOnDNCList } from "@/lib/dnc";
+import { handleRouteError } from "@/lib/api-error";
 
 const E164_REGEX = /^\+[1-9]\d{6,14}$/;
 
@@ -82,8 +83,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ campaigns: campaignList });
   } catch (error) {
-    console.error("International campaigns error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "InternationalCampaigns");
   }
 }
 
@@ -184,7 +184,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(results, { status: 201 });
   } catch (error) {
-    console.error("Campaign contacts import error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "InternationalCampaigns");
   }
 }

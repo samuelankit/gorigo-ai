@@ -4,6 +4,7 @@ import { callLogs, countries, twilioSubAccounts, campaigns, countryRateCards } f
 import { sql, count, avg, desc, gte } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -97,7 +98,6 @@ export async function GET(request: NextRequest) {
       compliance: complianceMetrics[0] || { totalCalls: 0, dncBlocked: 0, disclosurePlayed: 0, consentObtained: 0, optOuts: 0 },
     });
   } catch (error) {
-    console.error("International analytics error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminInternational");
   }
 }

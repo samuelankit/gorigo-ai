@@ -4,6 +4,7 @@ import { countries, countryComplianceProfiles, countryRateCards, countryHolidays
 import { eq } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(
   request: NextRequest,
@@ -53,8 +54,7 @@ export async function GET(
       holidays,
     });
   } catch (error) {
-    console.error("Country detail error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Country");
   }
 }
 
@@ -97,7 +97,6 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Country update error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Country");
   }
 }

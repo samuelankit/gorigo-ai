@@ -5,6 +5,7 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -88,7 +89,6 @@ export async function POST(request: NextRequest) {
       usersReached: orgUsers.length,
     });
   } catch (error) {
-    console.error("[Admin Notifications] Broadcast error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "NotificationBroadcast");
   }
 }

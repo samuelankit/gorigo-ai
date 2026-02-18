@@ -4,6 +4,8 @@ import { eq } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -24,7 +26,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (!updated) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Omnichannel conversation resolve error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ConversationResolve");
   }
 }

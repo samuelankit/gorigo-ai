@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { z } from "zod";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const publishSchema = z.object({
   draftId: z.number().int().positive(),
@@ -113,7 +114,6 @@ export async function POST(request: NextRequest) {
       publishTarget,
     });
   } catch (error) {
-    console.error("[Drafts] Publish error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "DraftsPublish");
   }
 }

@@ -7,6 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import twilio from "twilio";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,8 +39,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ subAccounts: results });
   } catch (error) {
-    console.error("Admin list Twilio sub-accounts error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "TwilioSubAccounts");
   }
 }
 
@@ -118,8 +118,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message?.includes("unique")) {
       return NextResponse.json({ error: "A sub-account already exists for this org" }, { status: 409 });
     }
-    console.error("Admin create Twilio sub-account error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "TwilioSubAccounts");
   }
 }
 
@@ -173,8 +172,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ subAccount: updated });
   } catch (error) {
-    console.error("Admin update Twilio sub-account error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "TwilioSubAccounts");
   }
 }
 
@@ -219,7 +217,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Admin suspend Twilio sub-account error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "TwilioSubAccounts");
   }
 }

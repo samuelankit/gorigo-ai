@@ -5,6 +5,7 @@ import { eq, and, desc, like } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { addToDNCList, removeFromDNCList, normalizePhoneNumber } from "@/lib/dnc";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(req: NextRequest) {
   try {
@@ -36,8 +37,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("DNC list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Dnc");
   }
 }
 
@@ -73,8 +73,7 @@ export async function POST(req: NextRequest) {
     if (error.message?.includes("already")) {
       return NextResponse.json({ error: "Phone number already on DNC list" }, { status: 409 });
     }
-    console.error("DNC add error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Dnc");
   }
 }
 
@@ -96,7 +95,6 @@ export async function DELETE(req: NextRequest) {
     await removeFromDNCList(auth.orgId, phoneNumber);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("DNC delete error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Dnc");
   }
 }

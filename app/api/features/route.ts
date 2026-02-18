@@ -4,6 +4,7 @@ import { partners, partnerClients, affiliates } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const FEATURE_MATRIX: Record<string, string[]> = {
   SUPERADMIN: [
@@ -93,7 +94,6 @@ export async function GET(request: NextRequest) {
       affiliateInfo,
     });
   } catch (error) {
-    console.error("Features GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Features");
   }
 }

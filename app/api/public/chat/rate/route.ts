@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { chatMessages } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { publicLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,7 +27,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[PublicChatRate] Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PublicChatRate");
   }
 }

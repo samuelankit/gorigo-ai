@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const COUNTRY_NAMES: Record<string, string> = {
   GB: "United Kingdom", US: "United States", FR: "France", DE: "Germany",
@@ -195,7 +196,6 @@ export async function GET(request: NextRequest) {
       campaignPerformance,
     });
   } catch (error) {
-    console.error("International analytics error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AnalyticsIntl");
   }
 }

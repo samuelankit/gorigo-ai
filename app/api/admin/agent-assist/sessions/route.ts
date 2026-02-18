@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -29,9 +31,8 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
     const result = await db.select().from(agentAssistSessions).where(where).orderBy(desc(agentAssistSessions.startedAt)).limit(limit).offset(offset);
     return NextResponse.json(result);
-  } catch (error: any) {
-    console.error("Error fetching assist sessions:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AssistSessions");
   }
 }
 
@@ -57,8 +58,7 @@ export async function POST(request: NextRequest) {
       .set({ currentCallCount: sql`${humanAgents.currentCallCount} + 1`, lastActiveAt: new Date() })
       .where(eq(humanAgents.id, body.humanAgentId));
     return NextResponse.json(session, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating assist session:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AssistSessions");
   }
 }

@@ -5,6 +5,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { isOnDNCList, normalizePhoneNumber } from "@/lib/dnc";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const COUNTRY_PREFIXES: [string, string][] = [
   ["+971", "AE"], ["+353", "IE"],
@@ -207,7 +208,6 @@ export async function POST(
       contacts: insertedContacts,
     });
   } catch (error) {
-    console.error("Campaign contacts import error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CampaignContactImport");
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api-error";
 import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { finAccounts, finWorkspaces, finAuditLog } from "@/shared/schema";
@@ -33,8 +34,7 @@ export async function GET(request: NextRequest) {
       .where(eq(finAccounts.workspaceId, Number(workspaceId)));
     return NextResponse.json(accounts);
   } catch (error) {
-    console.error("List accounts error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceAccounts");
   }
 }
 
@@ -86,7 +86,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(account, { status: 201 });
   } catch (error) {
-    console.error("Create account error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceAccounts");
   }
 }

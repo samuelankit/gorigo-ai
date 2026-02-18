@@ -4,6 +4,7 @@ import { eq, sql, and, gte } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -156,7 +157,6 @@ export async function GET(
       memberCount: Number(memberCountRow.count),
     });
   } catch (error) {
-    console.error("Admin get client detail error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminClient");
   }
 }

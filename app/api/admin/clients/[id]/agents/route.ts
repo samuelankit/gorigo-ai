@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,6 @@ export async function GET(
 
     return NextResponse.json({ agents: agentsList });
   } catch (error) {
-    console.error("Admin client agents error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ClientAgents");
   }
 }

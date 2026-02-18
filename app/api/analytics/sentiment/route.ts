@@ -4,6 +4,7 @@ import { callLogs } from "@/shared/schema";
 import { eq, and, sql, gte } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -73,7 +74,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Sentiment analytics error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AnalyticsSentiment");
   }
 }

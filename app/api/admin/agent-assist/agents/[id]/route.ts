@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -28,9 +30,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .from(agentAssistSessions)
       .where(eq(agentAssistSessions.humanAgentId, agentId));
     return NextResponse.json({ ...agent, stats });
-  } catch (error: any) {
-    console.error("Error fetching human agent:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AgentAssistAgent");
   }
 }
 
@@ -54,8 +55,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const [updated] = await db.update(humanAgents).set(updateData).where(eq(humanAgents.id, agentId)).returning();
     if (!updated) return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     return NextResponse.json(updated);
-  } catch (error: any) {
-    console.error("Error updating human agent:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AgentAssistAgent");
   }
 }

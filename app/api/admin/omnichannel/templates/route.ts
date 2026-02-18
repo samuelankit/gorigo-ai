@@ -4,6 +4,8 @@ import { eq, and, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -38,8 +40,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ templates });
   } catch (error) {
-    console.error("Message templates list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "MessageTemplates");
   }
 }
 
@@ -71,7 +72,6 @@ export async function POST(request: NextRequest) {
     }).returning();
     return NextResponse.json(template, { status: 201 });
   } catch (error) {
-    console.error("Message template create error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "MessageTemplates");
   }
 }

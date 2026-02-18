@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
+import { handleRouteError } from "@/lib/api-error";
 
 async function requireSuperAdmin() {
   const auth = await getAuthenticatedUser();
@@ -177,8 +178,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: "Invalid tab parameter" }, { status: 400 });
   } catch (error) {
-    console.error("Admin compliance error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminCompliance");
   }
 }
 
@@ -231,7 +231,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (error) {
-    console.error("Admin compliance delete error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminCompliance");
   }
 }

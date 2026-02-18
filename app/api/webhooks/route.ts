@@ -7,6 +7,7 @@ import crypto from "crypto";
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import { webhookLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const ALLOWED_WEBHOOK_EVENTS = new Set([
   "call.completed", "call.started", "call.handoff", "call.voicemail",
@@ -78,8 +79,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(sanitized);
   } catch (error) {
-    console.error("Webhook list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Webhooks");
   }
 }
 
@@ -142,8 +142,7 @@ export async function POST(request: NextRequest) {
     if (error.name === "ZodError") {
       return NextResponse.json({ error: "Invalid data", details: error.errors }, { status: 400 });
     }
-    console.error("Webhook create error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Webhooks");
   }
 }
 
@@ -200,8 +199,7 @@ export async function PATCH(request: NextRequest) {
     const { secret: _, ...updatedWithoutSecret } = updated;
     return NextResponse.json({ ...updatedWithoutSecret, hasSecret: !!updated.secret });
   } catch (error) {
-    console.error("Webhook update error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Webhooks");
   }
 }
 
@@ -237,7 +235,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Webhook delete error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Webhooks");
   }
 }

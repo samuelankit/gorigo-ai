@@ -4,6 +4,7 @@ import { countryComplianceProfiles, insertCountryComplianceProfileSchema } from 
 import { eq } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(
   request: NextRequest,
@@ -33,8 +34,7 @@ export async function GET(
 
     return NextResponse.json(profile);
   } catch (error) {
-    console.error("Compliance profile fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CountryCompliance");
   }
 }
 
@@ -91,11 +91,7 @@ export async function PUT(
     }
 
     return NextResponse.json(result);
-  } catch (error: any) {
-    if (error.name === "ZodError") {
-      return NextResponse.json({ error: "Invalid data", details: error.errors }, { status: 400 });
-    }
-    console.error("Compliance profile upsert error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "CountryCompliance");
   }
 }

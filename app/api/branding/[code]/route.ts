@@ -3,6 +3,7 @@ import { partners } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { publicLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(
   _request: NextRequest,
@@ -54,10 +55,6 @@ export async function GET(
       brandColor: partner.brandColor || "#189553",
     });
   } catch (error) {
-    console.error("Branding lookup error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleRouteError(error, "Branding");
   }
 }

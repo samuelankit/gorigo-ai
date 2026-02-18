@@ -5,6 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import { getAuthenticatedUser, requireApiKeyScope } from "@/lib/get-user";
 import { apiKeyLimiter } from "@/lib/rate-limit";
 import { withCors, corsOptionsResponse } from "@/lib/v1-cors";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function OPTIONS(request: NextRequest) {
   return corsOptionsResponse(request);
@@ -63,7 +64,6 @@ export async function GET(request: NextRequest) {
       period: "all_time",
     }, { status: 200 }), request);
   } catch (error) {
-    console.error("V1 analytics error:", error);
-    return withCors(NextResponse.json({ error: "Internal server error" }, { status: 500 }), request);
+    return handleRouteError(error, "V1Analytics");
   }
 }

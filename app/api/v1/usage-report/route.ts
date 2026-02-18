@@ -8,6 +8,7 @@ import { roundMoney } from "@/lib/money";
 import { getAuthenticatedUser, requireApiKeyScope } from "@/lib/get-user";
 import { apiKeyLimiter } from "@/lib/rate-limit";
 import { withCors, corsOptionsResponse } from "@/lib/v1-cors";
+import { handleRouteError } from "@/lib/api-error";
 
 const VALID_CATEGORIES = ["voice_inbound", "voice_outbound", "ai_chat"] as const;
 
@@ -146,7 +147,6 @@ export async function POST(request: NextRequest) {
       results,
     }), request);
   } catch (error) {
-    console.error("Usage report error:", error);
-    return withCors(NextResponse.json({ error: "Failed to process usage report" }, { status: 500 }), request);
+    return handleRouteError(error, "V1UsageReport");
   }
 }

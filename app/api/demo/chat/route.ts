@@ -5,6 +5,7 @@ import { agents, knowledgeChunks, knowledgeDocuments } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const GORIGO_ORG_ID = 2;
 
@@ -177,7 +178,6 @@ export async function POST(request: NextRequest) {
       department: targetAgent.departmentName || "General",
     });
   } catch (error) {
-    console.error("Demo chat error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "DemoChat");
   }
 }

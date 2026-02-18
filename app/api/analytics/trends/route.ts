@@ -4,6 +4,7 @@ import { callLogs } from "@/shared/schema";
 import { eq, and, sql, gte, isNotNull } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -119,7 +120,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Trends analytics error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AnalyticsTrends");
   }
 }

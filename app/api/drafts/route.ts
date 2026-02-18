@@ -5,6 +5,7 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { aiLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 function escapeSearchPattern(input: string): string {
   return input.replace(/%/g, "\\%").replace(/_/g, "\\_");
@@ -106,8 +107,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[Drafts] List error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Drafts");
   }
 }
 
@@ -141,8 +141,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ draft }, { status: 201 });
   } catch (error) {
-    console.error("[Drafts] Create error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Drafts");
   }
 }
 
@@ -219,8 +218,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ draft: updated });
   } catch (error) {
-    console.error("[Drafts] Update error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Drafts");
   }
 }
 
@@ -257,7 +255,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[Drafts] Delete error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Drafts");
   }
 }

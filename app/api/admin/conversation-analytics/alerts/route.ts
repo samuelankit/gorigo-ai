@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -32,9 +34,8 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(analyticsAlerts.createdAt));
 
     return NextResponse.json({ alerts });
-  } catch (error: any) {
-    console.error("Analytics alerts error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AnalyticsAlerts");
   }
 }
 
@@ -65,8 +66,7 @@ export async function POST(request: NextRequest) {
       .returning();
 
     return NextResponse.json({ alert }, { status: 201 });
-  } catch (error: any) {
-    console.error("Create analytics alert error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AnalyticsAlerts");
   }
 }

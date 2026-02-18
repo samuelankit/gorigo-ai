@@ -4,6 +4,7 @@ import { chatLeads, chatMessages } from "@/shared/schema";
 import { eq, desc, sql, like, or, and, count } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(req: NextRequest) {
   try {
@@ -87,8 +88,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("Admin chats error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminChats");
   }
 }
 
@@ -114,7 +114,6 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[AdminChatsUpdate] Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminChats");
   }
 }

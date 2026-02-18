@@ -4,6 +4,7 @@ import { callLogs, twilioSubAccounts } from "@/shared/schema";
 import { gte, sql, count, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,7 +75,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ alerts, generatedAt: new Date().toISOString() });
   } catch (error) {
-    console.error("Fraud alerts error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "IntlFraudAlerts");
   }
 }

@@ -4,6 +4,7 @@ import { eq, sql, ilike, and, or, desc, inArray } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -127,7 +128,6 @@ export async function GET(request: NextRequest) {
       stats: statsResult[0] ?? { total: 0, active: 0, inactive: 0, inbound: 0, outbound: 0, uniqueOrgs: 0, withDisclosure: 0 },
     });
   } catch (error: any) {
-    console.error("Admin agents error:", error);
-    return NextResponse.json({ error: "Failed to fetch agents" }, { status: 500 });
+    return handleRouteError(error, "AdminAgents");
   }
 }

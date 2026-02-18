@@ -2,6 +2,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { getRAGStats } from "@/lib/rag";
 import { NextRequest, NextResponse } from "next/server";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,7 +18,6 @@ export async function GET(request: NextRequest) {
     const stats = await getRAGStats(auth.orgId);
     return NextResponse.json(stats);
   } catch (error) {
-    console.error("Knowledge stats error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "KnowledgeStats");
   }
 }

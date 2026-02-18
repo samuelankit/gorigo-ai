@@ -5,6 +5,7 @@ import { knowledgeLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance } from "@/lib/wallet";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const urlEntrySchema = z.union([
   z.string().url(),
@@ -74,8 +75,7 @@ export async function POST(request: NextRequest) {
       summary: { total: parsed.urls.length, success: successCount, errors: errorCount },
     });
   } catch (error) {
-    console.error("Import audio URL error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "KnowledgeImportUrl");
   }
 }
 

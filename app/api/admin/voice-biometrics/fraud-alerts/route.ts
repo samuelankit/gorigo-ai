@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -45,7 +47,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(alerts);
   } catch (error) {
-    console.error("Fraud alerts list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "BiometricFraudAlerts");
   }
 }

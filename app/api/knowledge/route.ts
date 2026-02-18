@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { knowledgeLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const knowledgeCreateSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long (max 200 characters)").transform(v => v.trim()),
@@ -30,8 +31,7 @@ export async function GET() {
 
     return NextResponse.json({ documents });
   } catch (error) {
-    console.error("Get knowledge documents error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Knowledge");
   }
 }
 
@@ -87,8 +87,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ document }, { status: 201 });
   } catch (error) {
-    console.error("Create knowledge document error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Knowledge");
   }
 }
 
@@ -131,7 +130,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete knowledge document error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Knowledge");
   }
 }

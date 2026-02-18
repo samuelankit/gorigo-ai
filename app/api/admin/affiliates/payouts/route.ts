@@ -5,6 +5,7 @@ import { eq, desc, sql, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,8 +34,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ payouts: result });
   } catch (error) {
-    console.error("Admin payouts GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AffiliatePayouts");
   }
 }
 
@@ -89,8 +89,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ payout }, { status: 201 });
   } catch (error) {
-    console.error("Admin payouts POST error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AffiliatePayouts");
   }
 }
 
@@ -158,7 +157,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ payout: updated });
   } catch (error) {
-    console.error("Admin payouts PUT error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AffiliatePayouts");
   }
 }

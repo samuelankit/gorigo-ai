@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 interface MetricDataPoint {
   timestamp: string;
@@ -81,10 +82,6 @@ export async function GET(request: NextRequest) {
       processAge: Math.round(process.uptime()),
     });
   } catch (error) {
-    console.error("Metrics endpoint error:", error);
-    return NextResponse.json(
-      { error: "Failed to collect metrics" },
-      { status: 500 }
-    );
+    return handleRouteError(error, "HealthMetrics");
   }
 }

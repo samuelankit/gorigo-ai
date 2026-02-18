@@ -3,6 +3,7 @@ import { getLastAutomationResult, runAutomationCycle, isAutomationRunning } from
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const bodySchema = z.object({
   trigger: z.string().optional(),
@@ -29,8 +30,7 @@ export async function GET(request: NextRequest) {
       currentlyProcessing: isAutomationRunning(),
     });
   } catch (error) {
-    console.error("Admin automation status error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminAutomation");
   }
 }
 
@@ -52,7 +52,6 @@ export async function POST(request: NextRequest) {
     const result = await runAutomationCycle();
     return NextResponse.json({ result });
   } catch (error) {
-    console.error("Admin automation trigger error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminAutomation");
   }
 }

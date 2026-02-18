@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api-error";
 import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { finCreditNotes, finCreditNoteLines, finCustomers, finWorkspaces, finInvoices, finAccounts, finJournalEntries, finJournalLines, finAuditLog } from "@/shared/schema";
@@ -60,8 +61,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ ...creditNote, lines });
   } catch (error) {
-    console.error("Get credit note error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CreditNote");
   }
 }
 
@@ -176,8 +176,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Update credit note error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CreditNote");
   }
 }
 
@@ -275,7 +274,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Void credit note error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CreditNote");
   }
 }

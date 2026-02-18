@@ -4,6 +4,7 @@ import { countryRateCards, insertCountryRateCardSchema } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(
   request: NextRequest,
@@ -28,8 +29,7 @@ export async function GET(
 
     return NextResponse.json(rateCards);
   } catch (error) {
-    console.error("Rate cards fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CountryRateCards");
   }
 }
 
@@ -93,11 +93,7 @@ export async function PUT(
     }
 
     return NextResponse.json(result);
-  } catch (error: any) {
-    if (error.name === "ZodError") {
-      return NextResponse.json({ error: "Invalid data", details: error.errors }, { status: 400 });
-    }
-    console.error("Rate card upsert error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "CountryRateCards");
   }
 }

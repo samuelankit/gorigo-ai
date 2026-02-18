@@ -4,6 +4,7 @@ import { notifications } from "@/shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { notificationLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,7 +53,6 @@ export async function GET(request: NextRequest) {
       unreadCount: countResult?.count ?? 0,
     });
   } catch (error) {
-    console.error("Notifications list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Notifications");
   }
 }

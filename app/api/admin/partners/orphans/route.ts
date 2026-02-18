@@ -4,6 +4,7 @@ import { partners, partnerClients, affiliates, orgs } from "@/shared/schema";
 import { eq, and, sql, isNull, count } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -143,7 +144,6 @@ export async function GET(request: NextRequest) {
         orgsWithoutPartner.length,
     });
   } catch (error) {
-    console.error("Orphan detection error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PartnerOrphans");
   }
 }

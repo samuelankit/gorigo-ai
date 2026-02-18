@@ -4,6 +4,7 @@ import { campaigns, campaignContacts } from "@/shared/schema";
 import { eq, and, count, desc } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(
   request: NextRequest,
@@ -79,7 +80,6 @@ export async function GET(
       totalPages: Math.ceil(totalCount / limit),
     });
   } catch (error) {
-    console.error("Campaign contacts GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CampaignContacts");
   }
 }

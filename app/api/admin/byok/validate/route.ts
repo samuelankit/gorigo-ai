@@ -5,6 +5,7 @@ import { eq, and, isNotNull, sql } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
+import { handleRouteError } from "@/lib/api-error";
 
 interface ByokValidationResult {
   orgId: number;
@@ -192,7 +193,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("BYOK validation error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ByokValidate");
   }
 }

@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ agentId: string }> }) {
@@ -110,8 +112,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       })),
       recentCalls,
     });
-  } catch (error: any) {
-    console.error("Agent scorecard detail error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AgentScorecard");
   }
 }

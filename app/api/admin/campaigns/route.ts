@@ -4,6 +4,7 @@ import { eq, sql, ilike, and, or, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -98,7 +99,6 @@ export async function GET(request: NextRequest) {
       stats: statsResult,
     });
   } catch (error: any) {
-    console.error("Admin campaigns error:", error);
-    return NextResponse.json({ error: "Failed to fetch campaigns" }, { status: 500 });
+    return handleRouteError(error, "AdminCampaigns");
   }
 }

@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const RETENTION_DAYS = 90;
 
@@ -91,7 +92,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    console.error("Analytics maintenance error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AnalyticsMaintenance");
   }
 }

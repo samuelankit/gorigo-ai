@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { logAudit } from "@/lib/audit";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 async function requireSuperAdmin() {
   const auth = await getAuthenticatedUser();
@@ -52,8 +53,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ configs, categories, marginAnalysis });
   } catch (error) {
-    console.error("Get pricing config error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminPricing");
   }
 }
 
@@ -114,8 +114,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ config }, { status: 201 });
   } catch (error) {
-    console.error("Create pricing config error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminPricing");
   }
 }
 
@@ -174,7 +173,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ config: updated });
   } catch (error) {
-    console.error("Update pricing config error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminPricing");
   }
 }

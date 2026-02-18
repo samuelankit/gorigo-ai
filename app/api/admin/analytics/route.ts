@@ -4,6 +4,7 @@ import { sql, count, sum, eq, desc, and, gte } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -160,7 +161,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Admin analytics error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminAnalytics");
   }
 }

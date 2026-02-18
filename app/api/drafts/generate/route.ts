@@ -4,6 +4,7 @@ import { aiLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
 import { generateDraft, DraftGenerationError, type DraftType, type DraftTone } from "@/lib/draft-generator";
+import { handleRouteError } from "@/lib/api-error";
 
 const generateSchema = z.object({
   type: z.enum(["call_script", "email_template", "sms_template", "faq_answer"]),
@@ -52,7 +53,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof DraftGenerationError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    console.error("[Drafts] Generation error:", error);
-    return NextResponse.json({ error: "Failed to generate draft. Please try again." }, { status: 500 });
+    return handleRouteError(error, "DraftsGenerate");
   }
 }

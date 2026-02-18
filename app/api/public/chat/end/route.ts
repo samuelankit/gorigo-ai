@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { publicConversations } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { publicLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const endRateStore = new Map<string, { count: number; resetAt: number }>();
 const END_WINDOW_MS = 60_000;
@@ -14,7 +15,7 @@ const cleanupInterval = setInterval(() => {
     if (entry.resetAt <= now) endRateStore.delete(key);
   });
 }, 60_000);
-if (cleanupInterval.unref) cleanupInterval.unref();
+if (typeof cleanupInterval === "object" && cleanupInterval.unref) cleanupInterval.unref();
 
 function checkEndRateLimit(req: NextRequest): boolean {
   const cfIp = req.headers.get("cf-connecting-ip");
@@ -89,7 +90,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[Chat End] Error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(err, "PublicChatEnd");
   }
 }

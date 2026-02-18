@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { knowledgeLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const bodySchema = z.object({
   documentId: z.union([z.number(), z.string().min(1)]),
@@ -39,7 +40,6 @@ export async function POST(request: NextRequest) {
       documentId: parsed.documentId,
     });
   } catch (error) {
-    console.error("Process document error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "KnowledgeProcess");
   }
 }

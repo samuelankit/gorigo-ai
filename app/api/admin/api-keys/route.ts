@@ -4,6 +4,7 @@ import { eq, sql, ilike, and, or, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -100,8 +101,7 @@ export async function GET(request: NextRequest) {
       stats: statsResult[0] ?? { total: 0, active: 0, revoked: 0, expired: 0, recentlyUsed: 0, uniqueOrgs: 0 },
     });
   } catch (error: any) {
-    console.error("Admin API keys error:", error);
-    return NextResponse.json({ error: "Failed to fetch API keys" }, { status: 500 });
+    return handleRouteError(error, "AdminApiKeys");
   }
 }
 
@@ -136,7 +136,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Admin API key revoke error:", error);
-    return NextResponse.json({ error: "Failed to revoke API key" }, { status: 500 });
+    return handleRouteError(error, "AdminApiKeys");
   }
 }

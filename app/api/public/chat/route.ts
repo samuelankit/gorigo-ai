@@ -8,6 +8,7 @@ import { detectPromptInjection, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 import { searchPlatformKnowledge, buildPlatformRAGContext, getPlatformKnowledgeFallback } from "@/lib/platform-knowledge";
 import { validateStreamChunk, RAG_GROUNDING_INSTRUCTION } from "@/lib/output-guard";
 import { publicLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const publicChatStore = new Map<string, { count: number; resetAt: number }>();
 const PUBLIC_CHAT_WINDOW_MS = 60_000;
@@ -367,7 +368,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[PublicChat] Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PublicChat");
   }
 }

@@ -3,6 +3,7 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { cleanupExpiredSessions, cleanupExpiredCache, retryFailedDocuments } from "@/lib/cleanup";
 import { adminLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const bodySchema = z.object({
   type: z.string().min(1).optional(),
@@ -39,7 +40,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Cleanup error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminCleanup");
   }
 }

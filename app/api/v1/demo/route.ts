@@ -4,6 +4,7 @@ import { demoLeads } from "@/shared/schema";
 import { z } from "zod";
 import { authLimiter } from "@/lib/rate-limit";
 import { withCors, corsOptionsResponse } from "@/lib/v1-cors";
+import { handleRouteError } from "@/lib/api-error";
 
 const demoRequestSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -41,7 +42,6 @@ export async function POST(request: NextRequest) {
 
     return withCors(NextResponse.json({ success: true, message: "Demo request received. We'll contact you shortly." }, { status: 200 }), request);
   } catch (error) {
-    console.error("V1 demo error:", error);
-    return withCors(NextResponse.json({ error: "Internal server error" }, { status: 500 }), request);
+    return handleRouteError(error, "V1Demo");
   }
 }

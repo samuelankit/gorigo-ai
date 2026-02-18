@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 const VALID_SPOOFING_ACTIONS = ["flag", "block", "step-up"];
@@ -61,8 +63,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(config);
   } catch (error) {
-    console.error("Voice biometrics config GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "BiometricConfig");
   }
 }
 
@@ -120,7 +121,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(created, { status: 201 });
     }
   } catch (error) {
-    console.error("Voice biometrics config PUT error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "BiometricConfig");
   }
 }

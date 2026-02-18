@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { aiLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const duplicateSchema = z.object({
   id: z.number().int().positive(),
@@ -59,7 +60,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ draft: duplicate }, { status: 201 });
   } catch (error) {
-    console.error("[Drafts] Duplicate error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "DraftsDuplicate");
   }
 }

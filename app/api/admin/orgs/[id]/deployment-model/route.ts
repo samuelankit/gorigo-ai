@@ -7,6 +7,7 @@ import { getAllRatesForModel } from "@/lib/rate-resolver";
 import { logAudit } from "@/lib/audit";
 import { getOrgByokStatus, validateOpenAIKey, validateTwilioCredentials } from "@/lib/byok";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
 
@@ -139,8 +140,7 @@ export async function GET(
       changeHistory,
     });
   } catch (error) {
-    console.error("Get org deployment model error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OrgDeploymentModel");
   }
 }
 
@@ -297,7 +297,6 @@ export async function PUT(
         : `Deployment model switched from ${oldModel} to ${deploymentModel}. All new calls will use the new rate.`,
     });
   } catch (error) {
-    console.error("Update org deployment model error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OrgDeploymentModel");
   }
 }

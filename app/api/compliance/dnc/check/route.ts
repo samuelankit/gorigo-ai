@@ -4,6 +4,7 @@ import { isOnDNCList } from "@/lib/dnc";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const bodySchema = z.object({
   phoneNumber: z.string().min(1),
@@ -31,7 +32,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ phoneNumber: parsed.phoneNumber, blocked });
   } catch (error) {
-    console.error("DNC check error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "DncCheck");
   }
 }

@@ -4,6 +4,7 @@ import { eq, desc, sql, and, gte, ilike, or } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -126,8 +127,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[Admin Notifications] List error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminNotifications");
   }
 }
 
@@ -162,7 +162,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, marked: validIds.length });
   } catch (error) {
-    console.error("[Admin Notifications] Bulk mark read error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AdminNotifications");
   }
 }

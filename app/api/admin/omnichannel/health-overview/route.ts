@@ -4,6 +4,8 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -52,7 +54,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ channels: overview });
   } catch (error) {
-    console.error("Health overview error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OmnichannelHealthOverview");
   }
 }

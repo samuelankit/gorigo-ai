@@ -4,6 +4,8 @@ import { eq, and, desc, sql, ilike, or, count } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -48,8 +50,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ contacts, total: Number(totalResult.total), limit, offset });
   } catch (error) {
-    console.error("Omnichannel contacts list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OmnichannelContacts");
   }
 }
 
@@ -77,7 +78,6 @@ export async function POST(request: NextRequest) {
     }).returning();
     return NextResponse.json(contact, { status: 201 });
   } catch (error) {
-    console.error("Omnichannel contact create error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OmnichannelContacts");
   }
 }

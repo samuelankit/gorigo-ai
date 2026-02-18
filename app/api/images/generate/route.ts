@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const bodySchema = z.object({
   prompt: z.string().min(1),
@@ -44,7 +45,6 @@ export async function POST(req: NextRequest) {
       revised_prompt: (imageData as any)?.revised_prompt,
     });
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ message: errMsg }, { status: 500 });
+    return handleRouteError(err, "ImageGenerate");
   }
 }

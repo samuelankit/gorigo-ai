@@ -5,6 +5,7 @@ import { eq, desc, sql, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 function generateAffiliateCode(prefix: string = "GR"): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -101,8 +102,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ affiliates: [], canCreate: false, isAffiliate: false });
   } catch (error) {
-    console.error("Affiliates GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Affiliates");
   }
 }
 
@@ -164,7 +164,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ affiliate }, { status: 201 });
   } catch (error) {
-    console.error("Partner affiliates POST error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Affiliates");
   }
 }

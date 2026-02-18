@@ -5,6 +5,7 @@ import { sql, eq, countDistinct } from "drizzle-orm";
 import { hashToken } from "@/lib/auth";
 import { z } from "zod";
 import { publicLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const WINDOW_MS = 1000;
 const MAX_REQUESTS = 10;
@@ -362,7 +363,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Analytics track error:", error);
-    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AnalyticsTrack");
   }
 }

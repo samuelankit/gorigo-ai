@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { walletTransactions } from "@/shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,7 +46,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Get wallet error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Wallet");
   }
 }

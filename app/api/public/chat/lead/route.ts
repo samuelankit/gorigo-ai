@@ -5,6 +5,7 @@ import { checkBodySize } from "@/lib/body-limit";
 import { eq, sql } from "drizzle-orm";
 import { publicLimiter } from "@/lib/rate-limit";
 import { enrichLead } from "@/lib/enrichment-engine";
+import { handleRouteError } from "@/lib/api-error";
 
 const leadRateStore = new Map<string, { count: number; resetAt: number }>();
 const LEAD_WINDOW_MS = 300_000;
@@ -145,7 +146,6 @@ export async function POST(req: NextRequest) {
       greeting,
     });
   } catch (error) {
-    console.error("[Lead] Lead capture failed:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PublicChatLead");
   }
 }

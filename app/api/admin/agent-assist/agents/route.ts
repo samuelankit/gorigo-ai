@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -21,9 +23,8 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
     const result = await db.select().from(humanAgents).where(conditions).orderBy(desc(humanAgents.createdAt)).limit(limit).offset(offset);
     return NextResponse.json(result);
-  } catch (error: any) {
-    console.error("Error fetching human agents:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AgentAssistAgents");
   }
 }
 
@@ -50,8 +51,7 @@ export async function POST(request: NextRequest) {
       shiftEnd: body.shiftEnd ? new Date(body.shiftEnd) : undefined,
     }).returning();
     return NextResponse.json(agent, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating human agent:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "AgentAssistAgents");
   }
 }

@@ -5,6 +5,7 @@ import { orgMembers, sessions, orgs } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 const switchBusinessSchema = z.object({
   businessId: z.number().int().positive(),
@@ -58,7 +59,6 @@ export async function POST(request: NextRequest) {
       role: membership.role,
     });
   } catch (error) {
-    console.error("Switch business error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "BusinessSwitch");
   }
 }

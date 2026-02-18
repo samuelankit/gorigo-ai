@@ -7,6 +7,8 @@ import { canManageDepartment } from "@/lib/permissions";
 import { generalLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
 
+import { handleRouteError } from "@/lib/api-error";
+
 const addMemberSchema = z.object({
   userId: z.number().int().positive(),
   departmentRole: z.enum(["MANAGER", "AGENT", "VIEWER"]).default("AGENT"),

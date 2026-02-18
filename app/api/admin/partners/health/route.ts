@@ -4,6 +4,7 @@ import { partners, partnerClients, wallets, orgs, affiliates } from "@/shared/sc
 import { eq, and, sql, count, lt, isNull } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 interface PartnerHealthReport {
   partnerId: number;
@@ -181,7 +182,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ summary, reports });
   } catch (error) {
-    console.error("Partner health check error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PartnerHealth");
   }
 }

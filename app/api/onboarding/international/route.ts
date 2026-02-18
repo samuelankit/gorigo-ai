@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { logAudit } from "@/lib/audit";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,8 +68,7 @@ export async function GET(request: NextRequest) {
       readiness,
     });
   } catch (error) {
-    console.error("International onboarding error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OnboardingIntl");
   }
 }
 
@@ -148,7 +148,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    console.error("International onboarding action error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OnboardingIntl");
   }
 }

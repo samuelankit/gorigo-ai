@@ -7,6 +7,8 @@ import { requireOrgRole } from "@/lib/permissions";
 import { generalLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
 
+import { handleRouteError } from "@/lib/api-error";
+
 const createDeptSchema = z.object({
   name: z.string().min(1).max(100).trim(),
   description: z.string().max(500).optional(),
@@ -57,9 +59,8 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({ departments: deptsWithManager });
-  } catch (err: any) {
-    console.error("[Departments] GET error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    return handleRouteError(err, "Departments");
   }
 }
 
@@ -106,11 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ department: dept }, { status: 201 });
-  } catch (err: any) {
-    if (err.name === "ZodError") {
-      return NextResponse.json({ error: "Invalid input", details: err.errors }, { status: 400 });
-    }
-    console.error("[Departments] POST error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    return handleRouteError(err, "Departments");
   }
 }

@@ -4,6 +4,7 @@ import { countries, callLogs } from "@/shared/schema";
 import { eq, sql, count, avg, desc, gte, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -90,7 +91,6 @@ export async function GET(request: NextRequest) {
       hasCallHistory: countriesUsedByOrg.length > 0,
     });
   } catch (error) {
-    console.error("International summary error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "IntlSummary");
   }
 }

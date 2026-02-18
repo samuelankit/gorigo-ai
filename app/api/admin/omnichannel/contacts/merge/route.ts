@@ -4,6 +4,8 @@ import { eq, sql } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
@@ -64,7 +66,6 @@ export async function POST(request: NextRequest) {
     if (error?.message === "NOT_FOUND") {
       return NextResponse.json({ error: "One or both contacts not found" }, { status: 404 });
     }
-    console.error("Omnichannel contact merge error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ContactMerge");
   }
 }

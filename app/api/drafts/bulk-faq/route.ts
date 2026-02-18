@@ -8,6 +8,7 @@ import { callLLM } from "@/lib/llm-router";
 import { AGENT_ANTI_INJECTION_PREAMBLE } from "@/lib/prompt-guard";
 import { RAG_GROUNDING_INSTRUCTION, validateLLMOutput } from "@/lib/output-guard";
 import { aiLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance, deductFromWallet } from "@/lib/wallet";
 import { logAudit } from "@/lib/audit";
@@ -213,7 +214,6 @@ Output ONLY the JSON array. No commentary.`;
       cost,
     });
   } catch (error) {
-    console.error("[Drafts] Bulk FAQ error:", error);
-    return NextResponse.json({ error: "Failed to generate FAQ drafts. Please try again." }, { status: 500 });
+    return handleRouteError(error, "DraftsBulkFaq");
   }
 }

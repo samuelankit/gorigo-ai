@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { handleRouteError } from "@/lib/api-error";
 import { db } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { finAuditLog, finWorkspaces } from "@/shared/schema";
@@ -34,7 +35,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(logs);
   } catch (error) {
-    console.error("List audit log error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "FinanceAudit");
   }
 }

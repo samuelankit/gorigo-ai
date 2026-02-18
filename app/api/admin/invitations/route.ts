@@ -8,6 +8,7 @@ import { generalLimiter } from "@/lib/rate-limit";
 import { sendInvitationEmail } from "@/lib/email";
 import { z } from "zod";
 import crypto from "crypto";
+import { handleRouteError } from "@/lib/api-error";
 
 const createInviteSchema = z.object({
   email: z.string().email().max(255).trim().toLowerCase(),
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ invitations: enriched });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return handleRouteError(err, "Invitations");
   }
 }
 
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (err: any) {
     if (err.name === "ZodError") return NextResponse.json({ error: "Invalid input", details: err.errors }, { status: 400 });
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return handleRouteError(err, "Invitations");
   }
 }
 
@@ -164,6 +165,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return handleRouteError(err, "Invitations");
   }
 }

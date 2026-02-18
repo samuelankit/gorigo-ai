@@ -5,6 +5,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET() {
   try {
@@ -35,8 +36,7 @@ export async function GET() {
       agents: orgAgents.filter((a) => a.status !== "deleted"),
     });
   } catch (error) {
-    console.error("Get flows error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Flows");
   }
 }
 
@@ -94,8 +94,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ flow }, { status: 201 });
   } catch (error) {
-    console.error("Create flow error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Flows");
   }
 }
 
@@ -160,8 +159,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ flow: updatedFlow });
   } catch (error) {
-    console.error("Update flow error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Flows");
   }
 }
 
@@ -205,7 +203,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete flow error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Flows");
   }
 }

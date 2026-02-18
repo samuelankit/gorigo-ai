@@ -4,6 +4,8 @@ import { eq, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -22,8 +24,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ rules });
   } catch (error) {
-    console.error("Channel billing rules list error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OmnichannelBilling");
   }
 }
 
@@ -71,7 +72,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(rule);
   } catch (error) {
-    console.error("Channel billing rule upsert error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "OmnichannelBilling");
   }
 }

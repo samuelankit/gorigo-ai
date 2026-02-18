@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { agents, knowledgeDocuments, callLogs, wallets } from "@/shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -82,7 +83,6 @@ export async function GET(request: NextRequest) {
       allComplete: completedCount === steps.length,
     });
   } catch (error) {
-    console.error("Onboarding check error:", error);
-    return NextResponse.json({ error: "Failed to check onboarding status" }, { status: 500 });
+    return handleRouteError(error, "Onboarding");
   }
 }

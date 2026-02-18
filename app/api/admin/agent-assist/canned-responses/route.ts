@@ -5,6 +5,8 @@ import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 
+import { handleRouteError } from "@/lib/api-error";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -25,9 +27,8 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
     const result = await db.select().from(cannedResponses).where(where).orderBy(desc(cannedResponses.usageCount)).limit(limit).offset(offset);
     return NextResponse.json(result);
-  } catch (error: any) {
-    console.error("Error fetching canned responses:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "CannedResponses");
   }
 }
 
@@ -51,8 +52,7 @@ export async function POST(request: NextRequest) {
       isActive: body.isActive ?? true,
     }).returning();
     return NextResponse.json(response, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating canned response:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "CannedResponses");
   }
 }

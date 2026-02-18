@@ -4,6 +4,12 @@ import { getLastHealthReport, getHealthHistory, getMetricsHistory, startAutopilo
 import { getLLMRouterStats, resetCircuitBreaker } from "@/lib/llm-router";
 import { getRecentErrors, clearErrorLog, handleApiError } from "@/lib/error-handler";
 import { adminLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const infraActionSchema = z.object({
+  action: z.enum(["reset-circuit-breaker", "clear-errors"]),
+  provider: z.string().min(1).max(100).optional(),
+});
 
 startAutopilotMonitor();
 
@@ -72,10 +78,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const action = body.action;
+    const parsed = infraActionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input", details: parsed.error.errors }, { status: 400 });
+    }
+    const { action, provider } = parsed.data;
 
     if (action === "reset-circuit-breaker") {
-      const provider = body.provider;
       if (!provider) {
         return NextResponse.json({ error: "Provider required" }, { status: 400 });
       }

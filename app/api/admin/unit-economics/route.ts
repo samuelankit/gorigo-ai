@@ -12,6 +12,20 @@ import {
 } from "@/lib/unit-economics";
 import { handleRouteError } from "@/lib/api-error";
 import { adminLimiter } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const simulateSchema = z.object({
+  action: z.literal("simulate"),
+  callsPerMonth: z.number().int().min(1).max(1_000_000).optional(),
+  avgCallDurationMinutes: z.number().min(0.1).max(120).optional(),
+  avgLLMTokensPerCall: z.number().int().min(1).max(100_000).optional(),
+  ratePerMinuteCharged: z.number().min(0.01).max(100).optional(),
+  llmModel: z.string().min(1).max(100).optional(),
+  countryCode: z.string().length(2).optional(),
+  partnerCommissionPercent: z.number().min(0).max(100).optional(),
+  affiliateCommissionPercent: z.number().min(0).max(100).optional(),
+  topUpAmountAvg: z.number().min(0).max(100_000).optional(),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,19 +94,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { action } = body;
+    const parsed = simulateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input", details: parsed.error.errors }, { status: 400 });
+    }
+    const { action, ...params } = parsed.data;
 
     if (action === "simulate") {
       const result = simulatePricing({
-        callsPerMonth: body.callsPerMonth || 1000,
-        avgCallDurationMinutes: body.avgCallDurationMinutes || 3,
-        avgLLMTokensPerCall: body.avgLLMTokensPerCall || 2000,
-        ratePerMinuteCharged: body.ratePerMinuteCharged || 0.15,
-        llmModel: body.llmModel || "gpt-4o-mini",
-        countryCode: body.countryCode || "GB",
-        partnerCommissionPercent: body.partnerCommissionPercent || 10,
-        affiliateCommissionPercent: body.affiliateCommissionPercent || 5,
-        topUpAmountAvg: body.topUpAmountAvg || 50,
+        callsPerMonth: params.callsPerMonth || 1000,
+        avgCallDurationMinutes: params.avgCallDurationMinutes || 3,
+        avgLLMTokensPerCall: params.avgLLMTokensPerCall || 2000,
+        ratePerMinuteCharged: params.ratePerMinuteCharged || 0.15,
+        llmModel: params.llmModel || "gpt-4o-mini",
+        countryCode: params.countryCode || "GB",
+        partnerCommissionPercent: params.partnerCommissionPercent || 10,
+        affiliateCommissionPercent: params.affiliateCommissionPercent || 5,
+        topUpAmountAvg: params.topUpAmountAvg || 50,
       });
       return NextResponse.json({ simulation: result });
     }

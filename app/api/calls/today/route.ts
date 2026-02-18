@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { callLogs } from "@/shared/schema";
 import { eq, and, gte, sql } from "drizzle-orm";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,7 +49,6 @@ export async function GET(request: NextRequest) {
       leadsToday: stats?.leadsToday ?? 0,
     });
   } catch (error) {
-    console.error("Today stats error:", error);
-    return NextResponse.json({ error: "Failed to load today's stats" }, { status: 500 });
+    return handleRouteError(error, "CallsToday");
   }
 }

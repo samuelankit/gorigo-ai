@@ -5,6 +5,7 @@ import { eq, and, sql, desc } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { calculateFlowComplexity, type FlowNode, type FlowEdge } from "@/lib/flow-engine";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -85,7 +86,6 @@ export async function GET(request: NextRequest) {
       hasActiveFlow: !!activeFlow,
     });
   } catch (error) {
-    console.error("Agent stats error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "AgentStats");
   }
 }

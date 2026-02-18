@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { callLogs, agents } from "@/shared/schema";
 import { eq, and, gte, isNull, sql, desc, not, inArray } from "drizzle-orm";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -146,7 +147,6 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Live calls error:", error);
-    return NextResponse.json({ error: "Failed to load live data" }, { status: 500 });
+    return handleRouteError(error, "LiveCalls");
   }
 }

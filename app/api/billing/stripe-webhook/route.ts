@@ -5,6 +5,7 @@ import { billingLimiter } from "@/lib/rate-limit";
 import { db } from "@/lib/db";
 import { walletTransactions } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,7 +86,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Stripe webhook error:", error);
-    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
+    return handleRouteError(error, "StripeWebhook");
   }
 }

@@ -7,6 +7,7 @@ import { settingsLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const profileUpdateSchema = z.object({
   businessName: z.string().min(1, "Business name is required").max(200, "Business name too long").transform(v => v.trim()),
@@ -64,7 +65,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("Update profile error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Profile");
   }
 }

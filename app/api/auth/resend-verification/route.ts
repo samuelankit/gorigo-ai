@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { authLimiter } from "@/lib/rate-limit";
 import crypto from "crypto";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,7 +39,6 @@ export async function POST(request: NextRequest) {
       message: "Verification email sent. Please check your inbox.",
     });
   } catch (error) {
-    console.error("Resend verification error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ResendVerification");
   }
 }

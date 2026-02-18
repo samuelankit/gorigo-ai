@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const createResellerSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
@@ -67,8 +68,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ resellers, parentPartner: { id: parent.id, name: parent.name, maxResellers: parent.maxResellers } });
   } catch (error) {
-    console.error("List resellers error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PartnerResellers");
   }
 }
 
@@ -161,7 +161,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json({ reseller }, { status: 201 });
   } catch (error) {
-    console.error("Create reseller error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PartnerResellers");
   }
 }

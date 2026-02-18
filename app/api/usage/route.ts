@@ -4,6 +4,7 @@ import { usageRecords, orgs, rateCards } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,7 +57,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ usage, deploymentModel, rates }, { status: 200 });
   } catch (error) {
-    console.error("Get usage error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Usage");
   }
 }

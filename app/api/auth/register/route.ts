@@ -7,6 +7,7 @@ import { authLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import crypto from "crypto";
 import { logAuthEvent } from "@/lib/audit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -159,7 +160,6 @@ export async function POST(request: NextRequest) {
       message: "Account created. Please check your email to verify your address.",
     }, { status: 201 });
   } catch (error) {
-    console.error("Register error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Register");
   }
 }

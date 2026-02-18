@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { getSessionCookie, hashToken, clearSessionCookie } from "@/lib/auth";
 import { logSessionEvent } from "@/lib/audit";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,8 +49,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("List sessions error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "ListSessions");
   }
 }
 
@@ -119,7 +119,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ error: "Specify action=all or id=<sessionId>" }, { status: 400 });
   } catch (error) {
-    console.error("Delete session error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "DeleteSession");
   }
 }

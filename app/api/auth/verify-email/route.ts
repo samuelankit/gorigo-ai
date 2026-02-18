@@ -4,6 +4,7 @@ import { users } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 import { authLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,7 +49,6 @@ export async function GET(request: NextRequest) {
     const baseUrl = request.nextUrl.origin;
     return NextResponse.redirect(`${baseUrl}/login?verified=true`);
   } catch (error) {
-    console.error("Email verification error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "VerifyEmail");
   }
 }

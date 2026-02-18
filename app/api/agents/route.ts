@@ -7,6 +7,7 @@ import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const agentUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -64,8 +65,7 @@ export async function GET() {
 
     return NextResponse.json({ agent }, { status: 200 });
   } catch (error) {
-    console.error("Get agent error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Agents");
   }
 }
 
@@ -136,7 +136,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ agent: updatedAgent }, { status: 200 });
   } catch (error) {
-    console.error("Update agent error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Agents");
   }
 }

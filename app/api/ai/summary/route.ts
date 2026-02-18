@@ -5,6 +5,7 @@ import { aiLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance, deductFromWallet } from "@/lib/wallet";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const bodySchema = z.object({
   transcript: z.string().min(1),
@@ -65,10 +66,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ summary });
   } catch (error) {
-    console.error("Summary generation error:", error);
-    return NextResponse.json(
-      { error: "Failed to generate summary" },
-      { status: 500 }
-    );
+    return handleRouteError(error, "AISummary");
   }
 }

@@ -4,6 +4,7 @@ import { callLogs } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function PUT(request: NextRequest) {
   try {
@@ -55,7 +56,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ call: updated });
   } catch (error) {
-    console.error("Update call notes error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "CallNotes");
   }
 }

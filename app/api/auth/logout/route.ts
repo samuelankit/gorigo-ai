@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { getSessionCookie, clearSessionCookie, hashToken } from "@/lib/auth";
 import { logAuthEvent } from "@/lib/audit";
 import { authLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +31,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("Logout error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Logout");
   }
 }

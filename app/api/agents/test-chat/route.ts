@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { generateAgentResponse } from "@/lib/ai";
 import { detectPromptInjection, SAFE_REFUSAL_TEXT } from "@/lib/prompt-guard";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,7 +70,6 @@ export async function POST(req: NextRequest) {
       model: response.model,
     });
   } catch (error) {
-    console.error("Test chat error:", error);
-    return NextResponse.json({ error: "Failed to generate response" }, { status: 500 });
+    return handleRouteError(error, "AgentTestChat");
   }
 }

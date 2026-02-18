@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { agents, callLogs } from "@/shared/schema";
 import { eq, and, not, isNull, sql, inArray, gte } from "drizzle-orm";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +104,6 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Live agents error:", error);
-    return NextResponse.json({ error: "Failed to load agent status" }, { status: 500 });
+    return handleRouteError(error, "AgentLive");
   }
 }

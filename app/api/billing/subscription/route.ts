@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET() {
   try {
@@ -29,8 +30,7 @@ export async function GET() {
 
     return NextResponse.json({ subscription }, { status: 200 });
   } catch (error) {
-    console.error("Get subscription error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Subscription");
   }
 }
 
@@ -122,7 +122,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ subscription: newSubscription }, { status: 201 });
   } catch (error) {
-    console.error("Create subscription error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Subscription");
   }
 }

@@ -4,6 +4,7 @@ import { getOrgByokStatus, saveOrgKeys, validateOpenAIKey, validateTwilioCredent
 import { logAudit } from "@/lib/audit";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const bodySchema = z.discriminatedUnion("action", [
   z.object({
@@ -46,8 +47,7 @@ export async function GET(request: NextRequest) {
     const status = await getOrgByokStatus(auth.orgId);
     return NextResponse.json(status);
   } catch (error) {
-    console.error("BYOK GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Integrations");
   }
 }
 
@@ -138,7 +138,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    console.error("BYOK POST error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "Integrations");
   }
 }

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { orgs, orgMembers } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { authLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,7 +47,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ user: userWithoutPassword, orgId: auth.orgId, role: auth.role, org, businesses }, { status: 200 });
   } catch (error) {
-    console.error("Auth me error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "GetUser");
   }
 }

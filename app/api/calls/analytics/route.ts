@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { callLogs, agents } from "@/shared/schema";
 import { eq, sql, and, gte, desc } from "drizzle-orm";
 import { generalLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -89,7 +90,6 @@ export async function GET(request: NextRequest) {
       sentimentDistribution,
     });
   } catch (error) {
-    console.error("Call analytics error:", error);
-    return NextResponse.json({ error: "Failed to load analytics" }, { status: 500 });
+    return handleRouteError(error, "CallAnalytics");
   }
 }

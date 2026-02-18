@@ -6,6 +6,7 @@ import { getAuthenticatedUser, requireSuperAdmin, requireEmailVerified } from "@
 import { adminLimiter } from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const reassignSchema = z.object({
   targetPartnerId: z.number().int().positive().nullable(),
@@ -186,7 +187,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       message: `Reassigned ${results.length} client(s) to ${targetPartner?.name || "D2C"}. ${errors.length} error(s).`,
     });
   } catch (error) {
-    console.error("Partner reassign error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PartnerReassign");
   }
 }

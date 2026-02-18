@@ -5,6 +5,7 @@ import { eq, desc, sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { getWalletBalance } from "@/lib/wallet";
 import { billingLimiter } from "@/lib/rate-limit";
+import { handleRouteError } from "@/lib/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,7 +41,6 @@ export async function GET(request: NextRequest) {
       transactions,
     });
   } catch (error) {
-    console.error("Billing history error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "BillingHistory");
   }
 }

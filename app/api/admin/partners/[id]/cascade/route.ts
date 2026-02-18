@@ -3,6 +3,7 @@ import { getAuthenticatedUser, requireSuperAdmin, requireEmailVerified } from "@
 import { adminLimiter } from "@/lib/rate-limit";
 import { executePartnerCascade, reversePartnerCascade } from "@/lib/partner-cascade";
 import { z } from "zod";
+import { handleRouteError } from "@/lib/api-error";
 
 const cascadeSchema = z.object({
   action: z.enum(["suspend", "terminate", "reactivate"]),
@@ -60,7 +61,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       message: `Cascade ${action} completed. ${result.clientsPaused} clients affected, ${result.resellersCascaded} resellers cascaded.`,
     });
   } catch (error) {
-    console.error("Partner cascade error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleRouteError(error, "PartnerCascade");
   }
 }

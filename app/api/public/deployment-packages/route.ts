@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
       managed: result.deployment_package_managed_enabled,
       byok: result.deployment_package_byok_enabled,
       selfHosted: result.deployment_package_self_hosted_enabled,
+    }, {
+      headers: { "Cache-Control": "public, max-age=300, s-maxage=300" },
     });
   } catch (error) {
     return NextResponse.json({

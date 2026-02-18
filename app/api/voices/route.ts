@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       voices: AVAILABLE_VOICES,
       languages: SUPPORTED_LANGUAGES,
+    }, {
+      headers: { "Cache-Control": "private, max-age=300" },
     });
   } catch (error) {
     return handleRouteError(error, "Voices");

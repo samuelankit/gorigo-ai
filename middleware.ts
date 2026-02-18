@@ -14,7 +14,7 @@ function createRateLimiter(windowMs: number, maxRequests: number) {
       if (entry.resetAt <= now) store.delete(key);
     });
   }, 60_000);
-  if (cleanup.unref) cleanup.unref();
+  (cleanup as unknown as { unref?: () => void })?.unref?.();
 
   return function check(ip: string): { allowed: boolean; retryAfterMs?: number } {
     const now = Date.now();
@@ -130,6 +130,7 @@ function addSecurityHeaders(response: NextResponse): void {
 
 export function middleware(request: NextRequest) {
   const requestId = request.headers.get("x-request-id") || globalThis.crypto.randomUUID();
+  const startMs = Date.now();
   const pathname = request.nextUrl.pathname;
   const method = request.method;
 
@@ -216,12 +217,14 @@ export function middleware(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-request-id", requestId);
+  requestHeaders.set("x-request-start", String(startMs));
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
 
   response.headers.set("x-request-id", requestId);
+  response.headers.set("Server-Timing", `mw;dur=${Date.now() - startMs}`);
   addSecurityHeaders(response);
 
   return response;

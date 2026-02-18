@@ -57,7 +57,9 @@ export async function GET(request: NextRequest) {
       response.node = process.version;
     }
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: { "Cache-Control": "public, max-age=10, s-maxage=10" },
+    });
   } catch (error) {
     return NextResponse.json(
       {

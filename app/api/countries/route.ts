@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
       .from(countries)
       .orderBy(asc(countries.name));
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: { "Cache-Control": "private, max-age=300" },
+    });
   } catch (error) {
     return handleRouteError(error, "Countries");
   }

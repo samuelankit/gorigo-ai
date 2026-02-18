@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
       totalCalls: callCount.total,
       totalRevenue: Number(revenueResult.total ?? 0),
       totalMinutes: Number(minutesResult.total ?? 0),
+    }, {
+      headers: { "Cache-Control": "private, max-age=30" },
     });
   } catch (error) {
     return handleRouteError(error, "AdminStats");

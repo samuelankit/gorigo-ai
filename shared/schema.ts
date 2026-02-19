@@ -2403,4 +2403,141 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({ id: tru
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
 
+// ═══════════════════════════════════════════════════
+// INDUSTRY TEMPLATES & VOICE PROFILES
+// ═══════════════════════════════════════════════════
+
+export const industries = pgTable("industries", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").unique().notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(),
+  complianceNotes: text("compliance_notes"),
+  regulatoryBody: text("regulatory_body"),
+  sicCode: text("sic_code"),
+  isActive: boolean("is_active").default(true),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_industries_slug").on(table.slug),
+  index("idx_industries_active").on(table.isActive),
+]);
+
+export const insertIndustrySchema = createInsertSchema(industries).omit({ id: true, createdAt: true });
+export type InsertIndustry = z.infer<typeof insertIndustrySchema>;
+export type Industry = typeof industries.$inferSelect;
+
+export const voiceProfiles = pgTable("voice_profiles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").unique().notNull(),
+  description: text("description").notNull(),
+  pitch: real("pitch").default(1.0),
+  speed: real("speed").default(1.0),
+  warmth: real("warmth").default(0.5),
+  emphasis: real("emphasis").default(0.5),
+  pauseLength: real("pause_length").default(0.3),
+  ttsProvider: text("tts_provider").default("aws_polly"),
+  ttsVoiceId: text("tts_voice_id").default("Polly.Amy"),
+  ttsModelId: text("tts_model_id"),
+  sampleAudioUrl: text("sample_audio_url"),
+  bestFor: text("best_for"),
+  isSystem: boolean("is_system").default(true),
+  orgId: integer("org_id").references(() => orgs.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_voice_profiles_slug").on(table.slug),
+  index("idx_voice_profiles_org").on(table.orgId),
+  index("idx_voice_profiles_active").on(table.isActive),
+]);
+
+export const insertVoiceProfileSchema = createInsertSchema(voiceProfiles).omit({ id: true, createdAt: true });
+export type InsertVoiceProfile = z.infer<typeof insertVoiceProfileSchema>;
+export type VoiceProfile = typeof voiceProfiles.$inferSelect;
+
+export const industryTemplates = pgTable("industry_templates", {
+  id: serial("id").primaryKey(),
+  industryId: integer("industry_id").notNull().references(() => industries.id),
+  templateType: text("template_type").notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  voiceProfileId: integer("voice_profile_id").references(() => voiceProfiles.id),
+  language: text("language").default("en-GB"),
+  tone: text("tone").default("professional"),
+  complianceDisclaimer: text("compliance_disclaimer"),
+  variables: jsonb("variables").default([]),
+  tags: text("tags"),
+  version: integer("version").default(1),
+  isSystem: boolean("is_system").default(true),
+  orgId: integer("org_id").references(() => orgs.id),
+  usageCount: integer("usage_count").default(0),
+  rating: real("rating"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_industry_templates_industry").on(table.industryId),
+  index("idx_industry_templates_type").on(table.templateType),
+  index("idx_industry_templates_voice").on(table.voiceProfileId),
+  index("idx_industry_templates_org").on(table.orgId),
+  index("idx_industry_templates_active").on(table.isActive),
+]);
+
+export const insertIndustryTemplateSchema = createInsertSchema(industryTemplates).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertIndustryTemplate = z.infer<typeof insertIndustryTemplateSchema>;
+export type IndustryTemplate = typeof industryTemplates.$inferSelect;
+
+export const templateVersions = pgTable("template_versions", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => industryTemplates.id),
+  version: integer("version").notNull(),
+  content: text("content").notNull(),
+  changedBy: integer("changed_by").references(() => users.id),
+  changeNote: text("change_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_template_versions_template").on(table.templateId),
+  uniqueIndex("idx_template_versions_unique").on(table.templateId, table.version),
+]);
+
+export const insertTemplateVersionSchema = createInsertSchema(templateVersions).omit({ id: true, createdAt: true });
+export type InsertTemplateVersion = z.infer<typeof insertTemplateVersionSchema>;
+export type TemplateVersion = typeof templateVersions.$inferSelect;
+
+export const caseStudies = pgTable("case_studies", {
+  id: serial("id").primaryKey(),
+  industryId: integer("industry_id").notNull().references(() => industries.id),
+  slug: text("slug").unique().notNull(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  heroImage: text("hero_image"),
+  challenge: text("challenge").notNull(),
+  solution: text("solution").notNull(),
+  results: text("results").notNull(),
+  testimonialQuote: text("testimonial_quote"),
+  testimonialAuthor: text("testimonial_author"),
+  testimonialRole: text("testimonial_role"),
+  roiPercentage: integer("roi_percentage"),
+  costReduction: integer("cost_reduction"),
+  callsHandled: integer("calls_handled"),
+  customerSatisfaction: real("customer_satisfaction"),
+  keyMetrics: jsonb("key_metrics").default([]),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  published: boolean("published").default(true),
+  featured: boolean("featured").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_case_studies_industry").on(table.industryId),
+  index("idx_case_studies_slug").on(table.slug),
+  index("idx_case_studies_published").on(table.published),
+]);
+
+export const insertCaseStudySchema = createInsertSchema(caseStudies).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCaseStudy = z.infer<typeof insertCaseStudySchema>;
+export type CaseStudy = typeof caseStudies.$inferSelect;
+
 export * from "./models/chat";

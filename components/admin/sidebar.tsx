@@ -56,6 +56,7 @@ import {
   FolderKanban,
   UserCog,
   Receipt,
+  Library,
 } from "lucide-react";
 
 const overviewItems = [
@@ -87,6 +88,7 @@ const managementItems = [
   { title: "International", url: "/admin/international", icon: Globe },
   { title: "Deployments", url: "/admin/deployments", icon: ArrowLeftRight },
   { title: "Campaigns", url: "/admin/campaigns", icon: Megaphone },
+  { title: "Content Studio", url: "/admin/content-studio", icon: Library },
   { title: "Knowledge", url: "/admin/knowledge", icon: BookOpen },
   { title: "Compliance", url: "/admin/compliance", icon: ShieldCheck },
   { title: "API Keys", url: "/admin/api-keys", icon: KeyRound },

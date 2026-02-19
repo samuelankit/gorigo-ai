@@ -3,10 +3,12 @@ import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
+import { ensureServicesStarted } from "@/lib/lazy-init";
 
 const startTime = Date.now();
 
 export async function GET(request: NextRequest) {
+  ensureServicesStarted().catch(() => {});
   const checkStart = Date.now();
   try {
     const rl = await generalLimiter(request);

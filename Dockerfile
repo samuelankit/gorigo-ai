@@ -11,11 +11,15 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ARG BUILD_DATE=unknown
+ARG COMMIT_SHA=unknown
+
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
-RUN npm run build
+RUN echo "Build: ${BUILD_DATE} Commit: ${COMMIT_SHA}" > /app/public/build-info.txt && \
+    npm run build
 
 FROM base AS runner
 WORKDIR /app

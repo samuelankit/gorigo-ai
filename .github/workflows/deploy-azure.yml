@@ -55,6 +55,9 @@ jobs:
           TAG="${{ steps.meta.outputs.tag }}"
 
           docker build \
+            --no-cache \
+            --build-arg BUILD_DATE=$(date -u +%Y%m%d%H%M%S) \
+            --build-arg COMMIT_SHA="${TAG}" \
             -t "${IMAGE}:${TAG}" \
             -t "${IMAGE}:latest" \
             .
@@ -98,10 +101,12 @@ jobs:
 
       - name: Deploy container to Container App
         run: |
+          SHORT_SHA=$(echo "${{ needs.build-and-push.outputs.image-tag }}" | cut -c1-10)
           az containerapp update \
             --name ${{ env.AZURE_CONTAINER_APP }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}"
+            --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}" \
+            --revision-suffix "deploy-${SHORT_SHA}"
 
   healthcheck:
     name: Post-Deploy Health Check

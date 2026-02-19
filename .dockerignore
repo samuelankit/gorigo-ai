@@ -2,15 +2,13 @@ node_modules
 .next
 .cache
 .git
-.github
 *.md
+!package.json
 .env*
 .replit
 replit.nix
 attached_assets
-client
 mobile
-migrations
 tsconfig.tsbuildinfo
 Dockerfile
 .dockerignore

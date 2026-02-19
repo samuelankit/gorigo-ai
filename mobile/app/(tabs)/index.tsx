@@ -83,13 +83,13 @@ export default function RigoScreen() {
         const updated = [...prev];
         if (dashData.status === "fulfilled") {
           const d = dashData.value;
-          updated[0] = { ...updated[0], value: String(d.totalCalls || 0) };
-          updated[2] = { ...updated[2], value: String(d.activeAgents || d.totalAgents || 0) };
+          updated[0] = { ...updated[0], value: String(d.calls?.today ?? d.totalCalls ?? 0) };
+          updated[2] = { ...updated[2], value: String(d.agents?.active ?? d.activeAgents ?? d.totalAgents ?? 0) };
           updated[3] = { ...updated[3], value: String(d.pendingAlerts || 0) };
         }
         if (walletData.status === "fulfilled") {
           const w = walletData.value?.wallet;
-          updated[1] = { ...updated[1], value: `$${Number(w?.balance || 0).toFixed(2)}` };
+          updated[1] = { ...updated[1], value: `\u00A3${Number(w?.balance || 0).toFixed(2)}` };
         }
         cacheData("dashboard-stats", updated);
         return updated;

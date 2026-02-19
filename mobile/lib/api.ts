@@ -1,11 +1,21 @@
 import { getToken, saveToken, removeToken, saveBrandingData, loadBrandingData, clearBrandingData } from "./secure-store";
 
 const API_BASE = __DEV__ ? "http://localhost:5000" : "https://gorigo.ai";
+const REQUEST_TIMEOUT_MS = 15000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1000;
 
 interface ApiOptions {
   method?: string;
   body?: any;
   headers?: Record<string, string>;
+  timeout?: number;
+  retries?: number;
+}
+
+let _onAuthExpired: (() => void) | null = null;
+export function setOnAuthExpired(callback: () => void) {
+  _onAuthExpired = callback;
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -20,8 +30,36 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   return headers;
 }
 
+function fetchWithTimeout(url: string, config: RequestInit, timeoutMs: number): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error("Request timed out. Please check your connection."));
+    }, timeoutMs);
+
+    fetch(url, { ...config, signal: controller.signal })
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        if (err.name === "AbortError") {
+          reject(new Error("Request timed out. Please check your connection."));
+        } else {
+          reject(err);
+        }
+      });
+  });
+}
+
+async function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function apiRequest(endpoint: string, options: ApiOptions = {}) {
-  const { method = "GET", body, headers: extraHeaders } = options;
+  const { method = "GET", body, headers: extraHeaders, timeout = REQUEST_TIMEOUT_MS, retries = method === "GET" ? MAX_RETRIES : 0 } = options;
   const headers = await getAuthHeaders();
 
   const config: RequestInit = {
@@ -33,21 +71,43 @@ export async function apiRequest(endpoint: string, options: ApiOptions = {}) {
     config.body = JSON.stringify(body);
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, config);
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      if (attempt > 0) {
+        await delay(RETRY_DELAY_MS * attempt);
+      }
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      await removeToken();
+      const response = await fetchWithTimeout(`${API_BASE}${endpoint}`, config, timeout);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          await removeToken();
+          _onAuthExpired?.();
+        }
+        const errorData = await response.json().catch(() => ({ error: "Request failed" }));
+        const apiError: any = new Error(errorData.error || errorData.message || `API error: ${response.status}`);
+        apiError.statusCode = response.status;
+        throw apiError;
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (contentType?.includes("application/json")) {
+        return response.json();
+      }
+      return { success: true };
+    } catch (err: any) {
+      lastError = err;
+      const isClientError = err.statusCode >= 400 && err.statusCode < 500;
+      if (isClientError) {
+        throw err;
+      }
+      if (attempt >= retries) {
+        throw err;
+      }
     }
-    const error = await response.json().catch(() => ({ error: "Request failed" }));
-    throw new Error(error.error || error.message || `API error: ${response.status}`);
   }
-
-  const contentType = response.headers.get("content-type");
-  if (contentType?.includes("application/json")) {
-    return response.json();
-  }
-  return { success: true };
+  throw lastError || new Error("Request failed");
 }
 
 export async function login(email: string, password: string) {
@@ -85,16 +145,16 @@ export async function isAuthenticated(): Promise<boolean> {
 }
 
 export async function getAdminStats() {
-  return apiRequest("/api/admin/stats");
+  return apiRequest("/api/mobile/stats");
 }
 
 export async function getAgents(params?: { limit?: number }) {
   const query = params?.limit ? `?limit=${params.limit}` : "";
-  return apiRequest(`/api/admin/agents${query}`);
+  return apiRequest(`/api/mobile/agents${query}`);
 }
 
 export async function updateAgentStatus(agentId: number, enabled: boolean) {
-  return apiRequest(`/api/admin/agents`, {
+  return apiRequest("/api/mobile/agents", {
     method: "PATCH",
     body: { id: agentId, enabled },
   });
@@ -106,7 +166,7 @@ export async function getCalls(params?: { limit?: number; offset?: number; searc
   if (params?.offset) parts.push(`offset=${params.offset}`);
   if (params?.search) parts.push(`search=${encodeURIComponent(params.search)}`);
   const query = parts.length ? `?${parts.join("&")}` : "";
-  return apiRequest(`/api/admin/calls${query}`);
+  return apiRequest(`/api/mobile/calls${query}`);
 }
 
 export async function getCallDetail(callId: number) {

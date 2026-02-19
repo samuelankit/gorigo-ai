@@ -1,11 +1,13 @@
 import { Stack, router, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, createContext, useContext, useCallback } from "react";
-import { AppState } from "react-native";
+import { View, AppState } from "react-native";
 import { Colors } from "../constants/theme";
-import { isAuthenticated, logout as apiLogout } from "../lib/api";
+import { isAuthenticated, logout as apiLogout, setOnAuthExpired } from "../lib/api";
 import { BrandingProvider } from "../lib/branding-context";
 import { BiometricProvider } from "../lib/biometric-lock";
+import { useNetworkState } from "../lib/use-network";
+import ConnectionBanner from "../components/ConnectionBanner";
 
 interface AuthContextType {
   loggedIn: boolean | null;
@@ -41,6 +43,7 @@ function useProtectedRoute(isLoggedIn: boolean | null) {
 
 export default function RootLayout() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  const { isOnline } = useNetworkState();
 
   const refreshAuth = useCallback(async () => {
     const result = await isAuthenticated();
@@ -54,6 +57,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     refreshAuth();
+    setOnAuthExpired(() => {
+      setLoggedIn(false);
+    });
   }, [refreshAuth]);
 
   useEffect(() => {
@@ -72,21 +78,24 @@ export default function RootLayout() {
       <BiometricProvider>
         <AuthContext.Provider value={{ loggedIn, signOut, refreshAuth }}>
           <StatusBar style="dark" />
-          <Stack
-            screenOptions={{
-              headerStyle: { backgroundColor: Colors.background },
-              headerTintColor: Colors.text,
-              headerTitleStyle: { fontWeight: "600" },
-              contentStyle: { backgroundColor: Colors.background },
-              headerShadowVisible: false,
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="call-detail" options={{ title: "Call Details" }} />
-            <Stack.Screen name="wallet" options={{ title: "Wallet" }} />
-            <Stack.Screen name="business-switcher" options={{ title: "Switch Business" }} />
-          </Stack>
+          <View style={{ flex: 1, backgroundColor: Colors.background }}>
+            <ConnectionBanner isOnline={isOnline} />
+            <Stack
+              screenOptions={{
+                headerStyle: { backgroundColor: Colors.background },
+                headerTintColor: Colors.text,
+                headerTitleStyle: { fontWeight: "600" },
+                contentStyle: { backgroundColor: Colors.background },
+                headerShadowVisible: false,
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="login" options={{ headerShown: false }} />
+              <Stack.Screen name="call-detail" options={{ title: "Call Details" }} />
+              <Stack.Screen name="wallet" options={{ title: "Wallet" }} />
+              <Stack.Screen name="business-switcher" options={{ title: "Switch Business" }} />
+            </Stack>
+          </View>
         </AuthContext.Provider>
       </BiometricProvider>
     </BrandingProvider>

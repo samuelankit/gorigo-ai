@@ -55,6 +55,7 @@ import {
   MessagesSquare,
   FolderKanban,
   UserCog,
+  Receipt,
 } from "lucide-react";
 
 const overviewItems = [
@@ -63,6 +64,7 @@ const overviewItems = [
   { title: "Web Traffic", url: "/admin/web-traffic", icon: MousePointerClick },
   { title: "Revenue", url: "/admin/revenue", icon: PoundSterling },
   { title: "Unit Economics", url: "/admin/unit-economics", icon: Calculator },
+  { title: "Cost Accounting", url: "/admin/cost-accounting", icon: Receipt },
   { title: "Calls", url: "/admin/calls", icon: PhoneCall },
   { title: "Operations", url: "/admin/operations", icon: Activity },
   { title: "Leads", url: "/admin/leads", icon: Zap },

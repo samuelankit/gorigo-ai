@@ -99,14 +99,30 @@ jobs:
             --username "${{ secrets.ACR_USERNAME }}" \
             --password "${{ secrets.ACR_PASSWORD }}"
 
-      - name: Deploy container to Container App
+      - name: Set single-revision mode
+        run: |
+          az containerapp revision set-mode \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --mode single
+
+      - name: Deploy new container revision
         run: |
           SHORT_SHA=$(echo "${{ needs.build-and-push.outputs.image-tag }}" | cut -c1-10)
           az containerapp update \
             --name ${{ env.AZURE_CONTAINER_APP }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}" \
-            --revision-suffix "deploy-${SHORT_SHA}"
+            --revision-suffix "d${SHORT_SHA}"
+
+      - name: Verify active revision
+        run: |
+          echo "Active revisions:"
+          az containerapp revision list \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query "[?properties.active==\`true\`].{name:name, image:properties.template.containers[0].image, created:properties.createdTime, traffic:properties.trafficWeight}" \
+            -o table
 
   healthcheck:
     name: Post-Deploy Health Check
@@ -138,6 +154,8 @@ jobs:
             if [ "$STATUS" = "200" ]; then
               echo "Health check passed on attempt $i"
               echo "App is live at: ${{ steps.get-url.outputs.app_url }}"
+              echo "Checking build info..."
+              curl -s "${{ steps.get-url.outputs.app_url }}/build-info.txt" || echo "build-info.txt not available"
               exit 0
             fi
             echo "Attempt $i/6: Status $STATUS, retrying in 15s..."

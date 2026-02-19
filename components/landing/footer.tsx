@@ -19,6 +19,7 @@ const resourceLinks = [
   { label: "Pricing", href: "/pricing" },
   { label: "ROI Calculator", href: "/roi-calculator" },
   { label: "Partners", href: "/partners" },
+  { label: "Blog", href: "/blog" },
   { label: "Documentation", href: "/docs" },
   { label: "Getting Started", href: "/guide" },
   { label: "Sitemap", href: "/sitemap" },

@@ -15,6 +15,7 @@ const navLinks = [
   { label: "Trust", href: "/trust" },
   { label: "AI Transparency", href: "/ai-transparency" },
   { label: "Partners", href: "/partners" },
+  { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
   { label: "Docs", href: "/docs" },
   { label: "Guide", href: "/guide" },

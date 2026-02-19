@@ -2367,4 +2367,40 @@ export const rateLimits = pgTable("rate_limits", {
   index("idx_rate_limits_window_end").on(table.windowEnd),
 ]);
 
+export const blogCategories = pgTable("blog_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").unique().notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").unique().notNull(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(),
+  coverImage: text("cover_image"),
+  categoryId: integer("category_id").references(() => blogCategories.id),
+  author: text("author").default("GoRigo Team"),
+  readingTime: integer("reading_time").default(5),
+  published: boolean("published").default(true),
+  featured: boolean("featured").default(false),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  faqs: text("faqs"),
+  tags: text("tags"),
+  publishedAt: timestamp("published_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBlogCategorySchema = createInsertSchema(blogCategories).omit({ id: true, createdAt: true });
+export type InsertBlogCategory = z.infer<typeof insertBlogCategorySchema>;
+export type BlogCategory = typeof blogCategories.$inferSelect;
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({ id: true, publishedAt: true, updatedAt: true });
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type BlogPost = typeof blogPosts.$inferSelect;
+
 export * from "./models/chat";

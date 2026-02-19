@@ -117,6 +117,92 @@ export function BreadcrumbJsonLd({
   );
 }
 
+export function BlogPostingJsonLd({
+  title,
+  description,
+  slug,
+  datePublished,
+  dateModified,
+  author,
+  image,
+}: {
+  title: string;
+  description: string;
+  slug: string;
+  datePublished: string;
+  dateModified: string;
+  author: string;
+  image?: string;
+}) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: title,
+    description,
+    url: `https://gorigo.ai/blog/${slug}`,
+    datePublished,
+    dateModified,
+    author: {
+      "@type": "Person",
+      name: author,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "GoRigo",
+      url: "https://gorigo.ai",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://gorigo.ai/logo.png",
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://gorigo.ai/blog/${slug}`,
+    },
+    ...(image ? { image: { "@type": "ImageObject", url: image } } : {}),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
+export function BlogListJsonLd({
+  posts,
+}: {
+  posts: { title: string; slug: string; datePublished: string; author: string }[];
+}) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "GoRigo Blog",
+    description: "Insights on AI voice technology, call centre automation, and the future of customer communication.",
+    url: "https://gorigo.ai/blog",
+    publisher: {
+      "@type": "Organization",
+      name: "GoRigo",
+      url: "https://gorigo.ai",
+    },
+    blogPost: posts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.title,
+      url: `https://gorigo.ai/blog/${p.slug}`,
+      datePublished: p.datePublished,
+      author: { "@type": "Person", name: p.author },
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
 export function SoftwareApplicationJsonLd() {
   const data = {
     "@context": "https://schema.org",

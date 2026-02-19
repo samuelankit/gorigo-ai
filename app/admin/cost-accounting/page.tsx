@@ -50,7 +50,7 @@ const fmt = (v: number) =>
     minimumFractionDigits: 2,
   }).format(v);
 
-const fmtNum = (v: number) => new Intl.NumberFormat("en-GB").format(v);
+const fmtNum = (v: number) => v === -1 ? "N/A" : new Intl.NumberFormat("en-GB").format(v);
 
 const fmtPct = (v: number) => `${v.toFixed(1)}%`;
 
@@ -620,7 +620,11 @@ export default function CostAccountingPage() {
               id="estimated-minutes"
               type="number"
               value={estimatedMinutes}
-              onChange={(e) => setEstimatedMinutes(parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setEstimatedMinutes(Number.isFinite(val) && val > 0 ? val : 1);
+              }}
+              min={1}
               className="w-36"
               data-testid="input-estimated-minutes"
             />
@@ -691,8 +695,19 @@ export default function CostAccountingPage() {
                       <TrendingUp className="h-4 w-4" />
                       Break-Even Analysis
                     </CardTitle>
+                    {pricingData.breakEven.isViable === false && (
+                      <Badge variant="destructive" data-testid="badge-not-viable">Not Viable</Badge>
+                    )}
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {pricingData.breakEven.notViableReason && (
+                      <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900" data-testid="alert-not-viable">
+                        <p className="text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 shrink-0" />
+                          {pricingData.breakEven.notViableReason}
+                        </p>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div data-testid="text-breakeven-minutes">
                         <p className="text-xs text-muted-foreground">Break-Even Minutes</p>
@@ -1035,6 +1050,37 @@ export default function CostAccountingPage() {
                 </Card>
               )}
 
+              <Card data-testid="card-rnd-tax-credits">
+                <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Calculator className="h-4 w-4" />
+                    R&D Tax Relief (RDEC)
+                  </CardTitle>
+                  <Badge variant="secondary">Potential Saving</Badge>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    As an AI software company, GoRigo may qualify for the UK merged R&D scheme (RDEC). From April 2024,
+                    qualifying companies can claim a 20% above-the-line credit on eligible R&D expenditure. Eligible costs
+                    include software development staff costs, cloud computing for R&D, and subcontracted R&D work.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">RDEC Credit Rate</p>
+                      <p className="text-lg font-semibold">20%</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">SME Enhanced Deduction</p>
+                      <p className="text-lg font-semibold">86% (loss-making)</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground italic">
+                    Consult an R&D tax specialist to confirm eligibility. GoRigo&apos;s AI agent development, RAG system,
+                    and voice biometrics work are strong candidates for qualifying expenditure.
+                  </p>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -1047,6 +1093,7 @@ export default function CostAccountingPage() {
                     <li>Prices are currently VAT-exclusive. When VAT registration is required, add 20% to customer-facing prices.</li>
                     <li>Corporation Tax is payable 9 months and 1 day after the end of your accounting period.</li>
                     <li>Keep all receipts and invoices. Digital records are acceptable under Making Tax Digital.</li>
+                    <li>Stripe UK fees: 1.5% + 20p for European cards, 2.9% + 20p for non-European cards.</li>
                     <li>These figures are estimates. Consult a chartered accountant for formal tax returns.</li>
                   </ul>
                 </CardContent>

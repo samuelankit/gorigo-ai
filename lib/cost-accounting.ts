@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
-import { costEvents, walletTransactions, distributionLedger, callLogs } from "@/shared/schema";
-import { eq, sql, and, gte, lte, count, sum, desc } from "drizzle-orm";
-import { PLATFORM_COSTS, LLM_PRICING, calculateLLMCost, calculateTelephonyCost, calculateStripeFee } from "@/lib/unit-economics";
+import { costEvents, walletTransactions, distributionLedger } from "@/shared/schema";
+import { eq, sql, and, gte, lte, count, desc } from "drizzle-orm";
+import { PLATFORM_COSTS } from "@/lib/unit-economics";
 import { CUSTOMER_TIERS, INTERNAL_COSTS, AFFILIATE_COMMISSION_RATE } from "@/lib/pricing-config";
 
 export const FIXED_MONTHLY_COSTS = {
@@ -50,6 +50,9 @@ export function getFixedCostsSummary() {
     byProvider,
     amortisedPerMinute: (minutesPerMonth: number) =>
       minutesPerMonth > 0 ? round(totalMonthly / minutesPerMonth, 4) : 0,
+    amortisedAt5000: round(totalMonthly / 5000, 4),
+    amortisedAt10000: round(totalMonthly / 10000, 4),
+    amortisedAt50000: round(totalMonthly / 50000, 4),
   };
 }
 
@@ -59,13 +62,18 @@ export const UK_TAX = {
   smallProfitsThreshold: 50_000,
   marginalReliefLower: 50_000,
   marginalReliefUpper: 250_000,
-  vatRegistrationThreshold: 90_000,
+  marginalReliefFraction: 3 / 200,
+  vatRegistrationThreshold: 85_000,
   vatStandardRate: 0.20,
   vatCurrentlyRegistered: false,
   nationalInsuranceEmployerRate: 0.138,
   nationalInsuranceThreshold: 9_100,
   pensionAutoEnrolRate: 0.03,
   financialYearEnd: "31 March",
+  stripeUkEuCardRate: 0.015,
+  stripeUkEuFixedFee: 0.20,
+  stripeNonEuCardRate: 0.029,
+  stripeNonEuFixedFee: 0.20,
   hmrcExpenseCategories: [
     "Cost of Sales (COGS)",
     "Staff Costs",
@@ -94,7 +102,7 @@ export function calculateCorporationTax(annualProfit: number): {
       taxDue: 0,
       effectiveRate: 0,
       bracket: "Loss (carry forward available)",
-      vatNote: "Not VAT registered. Required when taxable turnover exceeds £90,000 in any 12-month period.",
+      vatNote: `Not VAT registered. Required when taxable turnover exceeds £${UK_TAX.vatRegistrationThreshold.toLocaleString()} in any 12-month period.`,
     };
   }
 
@@ -112,7 +120,7 @@ export function calculateCorporationTax(annualProfit: number): {
     bracket = "Main Rate (25%)";
   } else {
     taxDue = annualProfit * UK_TAX.corporationTaxRate;
-    const marginalRelief = (UK_TAX.marginalReliefUpper - annualProfit) * (UK_TAX.corporationTaxRate - UK_TAX.smallProfitsRate) / (UK_TAX.marginalReliefUpper - UK_TAX.marginalReliefLower);
+    const marginalRelief = (UK_TAX.marginalReliefUpper - annualProfit) * UK_TAX.marginalReliefFraction;
     taxDue -= marginalRelief;
     taxRate = taxDue / annualProfit;
     bracket = "Marginal Relief Band (19-25%)";
@@ -124,7 +132,7 @@ export function calculateCorporationTax(annualProfit: number): {
     taxDue: round(taxDue),
     effectiveRate: round((taxDue / annualProfit) * 100, 1),
     bracket,
-    vatNote: "Not VAT registered. Required when taxable turnover exceeds £90,000 in any 12-month period.",
+    vatNote: `Not VAT registered. Required when taxable turnover exceeds £${UK_TAX.vatRegistrationThreshold.toLocaleString()} in any 12-month period.`,
   };
 }
 
@@ -191,15 +199,24 @@ export function generatePricingRecommendations(params: {
 }): PricingRecommendation[] {
   const { actualCostPerMinute, fixedCostsMonthly, estimatedMonthlyMinutes, partnerCommissionRate, affiliateCommissionRate } = params;
 
-  const fixedCostPerMin = estimatedMonthlyMinutes > 0 ? fixedCostsMonthly / estimatedMonthlyMinutes : 0;
+  const safeMinutes = Math.max(estimatedMonthlyMinutes, 1);
+  const fixedCostPerMin = fixedCostsMonthly / safeMinutes;
   const fullyLoadedCost = actualCostPerMinute + fixedCostPerMin;
+
+  const byokVariableCost = INTERNAL_COSTS.twilioTelephonyPerMin + INTERNAL_COSTS.azureHostingAmortisedPerMin;
+  const byokFullyLoadedCost = byokVariableCost + fixedCostPerMin;
 
   const targetGrossMargin = { direct: 0.75, whiteLabel: 0.60, byok: 0.50, affiliate: 0.70 };
 
-  function calcRecommendedRate(margin: number, commissionRate: number): number {
-    const costBase = fullyLoadedCost;
-    const rate = costBase / (1 - margin - commissionRate);
+  function calcRecommendedRate(margin: number, commissionRate: number, costBase: number): number {
+    const denominator = 1 - margin - commissionRate;
+    if (denominator <= 0.05) return round(costBase * 10, 2);
+    const rate = costBase / denominator;
     return Math.ceil(rate * 100) / 100;
+  }
+
+  function safeMargin(rate: number, cost: number): number {
+    return rate > 0 ? round(((rate - cost) / rate) * 100, 1) : 0;
   }
 
   return [
@@ -207,10 +224,10 @@ export function generatePricingRecommendations(params: {
       customerType: "Direct / D2C (Managed)",
       key: "direct",
       currentRatePerMin: CUSTOMER_TIERS.direct.ratePerMinute,
-      recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.direct, 0),
+      recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.direct, 0, fullyLoadedCost),
       costPerMin: round(fullyLoadedCost, 4),
-      grossMarginPercent: round(((CUSTOMER_TIERS.direct.ratePerMinute - fullyLoadedCost) / CUSTOMER_TIERS.direct.ratePerMinute) * 100, 1),
-      netMarginPercent: round(((CUSTOMER_TIERS.direct.ratePerMinute - fullyLoadedCost) / CUSTOMER_TIERS.direct.ratePerMinute) * 100, 1),
+      grossMarginPercent: safeMargin(CUSTOMER_TIERS.direct.ratePerMinute, fullyLoadedCost),
+      netMarginPercent: safeMargin(CUSTOMER_TIERS.direct.ratePerMinute, fullyLoadedCost),
       rationale: "Premium rate for fully managed service. Highest margin tier. Customer gets dedicated support, setup assistance, and all API costs included. Target 75% gross margin.",
       marketBenchmark: "UK AI call centre market: £0.15-£0.35/min. Traditional call centres: £3.50-£5.50/min.",
       minimumViableRate: round(fullyLoadedCost * 2, 2),
@@ -220,39 +237,39 @@ export function generatePricingRecommendations(params: {
       customerType: "White-Label / Reseller Partner",
       key: "whiteLabel",
       currentRatePerMin: CUSTOMER_TIERS.whiteLabel.ratePerMinute,
-      recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.whiteLabel, partnerCommissionRate),
+      recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.whiteLabel, partnerCommissionRate, fullyLoadedCost),
       costPerMin: round(fullyLoadedCost, 4),
-      grossMarginPercent: round(((CUSTOMER_TIERS.whiteLabel.ratePerMinute - fullyLoadedCost) / CUSTOMER_TIERS.whiteLabel.ratePerMinute) * 100, 1),
-      netMarginPercent: round(((CUSTOMER_TIERS.whiteLabel.ratePerMinute - fullyLoadedCost - CUSTOMER_TIERS.whiteLabel.ratePerMinute * partnerCommissionRate) / CUSTOMER_TIERS.whiteLabel.ratePerMinute) * 100, 1),
+      grossMarginPercent: safeMargin(CUSTOMER_TIERS.whiteLabel.ratePerMinute, fullyLoadedCost),
+      netMarginPercent: safeMargin(CUSTOMER_TIERS.whiteLabel.ratePerMinute, fullyLoadedCost + CUSTOMER_TIERS.whiteLabel.ratePerMinute * partnerCommissionRate),
       rationale: "Wholesale rate for partners. Partners add their own margin (typically 30-50%) when reselling. Your margin is lower but volume is higher. Factor in partner commission share.",
       marketBenchmark: "Wholesale AI voice: £0.08-£0.15/min. Partners typically resell at £0.18-£0.30/min.",
-      minimumViableRate: round(fullyLoadedCost / (1 - partnerCommissionRate) * 1.3, 2),
+      minimumViableRate: round(fullyLoadedCost / Math.max(1 - partnerCommissionRate, 0.1) * 1.3, 2),
       suggestedWalletDeposit: 149,
     },
     {
       customerType: "BYOK (Bring Your Own Key)",
       key: "byok",
       currentRatePerMin: CUSTOMER_TIERS.byok.ratePerMinute,
-      recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.byok, 0),
-      costPerMin: round(fullyLoadedCost * 0.4, 4),
-      grossMarginPercent: round(((CUSTOMER_TIERS.byok.ratePerMinute - fullyLoadedCost * 0.4) / CUSTOMER_TIERS.byok.ratePerMinute) * 100, 1),
-      netMarginPercent: round(((CUSTOMER_TIERS.byok.ratePerMinute - fullyLoadedCost * 0.4) / CUSTOMER_TIERS.byok.ratePerMinute) * 100, 1),
-      rationale: "Platform fee only. Customer pays their own LLM costs. Your costs are reduced to telephony + infrastructure share. Lower rate but zero LLM risk.",
+      recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.byok, 0, byokFullyLoadedCost),
+      costPerMin: round(byokFullyLoadedCost, 4),
+      grossMarginPercent: safeMargin(CUSTOMER_TIERS.byok.ratePerMinute, byokFullyLoadedCost),
+      netMarginPercent: safeMargin(CUSTOMER_TIERS.byok.ratePerMinute, byokFullyLoadedCost),
+      rationale: "Platform fee only. Customer pays their own LLM/STT/TTS costs directly. Your costs are telephony (Twilio) + infrastructure share only. Lower rate but zero AI cost risk.",
       marketBenchmark: "BYOK platforms: £0.05-£0.10/min platform fee. Customer bears API costs separately.",
-      minimumViableRate: round(fullyLoadedCost * 0.4 * 1.5, 2),
+      minimumViableRate: round(byokFullyLoadedCost * 1.5, 2),
       suggestedWalletDeposit: 49,
     },
     {
       customerType: "Affiliate-Referred D2C",
       key: "affiliate",
       currentRatePerMin: CUSTOMER_TIERS.direct.ratePerMinute,
-      recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.affiliate, affiliateCommissionRate),
+      recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.affiliate, affiliateCommissionRate, fullyLoadedCost),
       costPerMin: round(fullyLoadedCost, 4),
-      grossMarginPercent: round(((CUSTOMER_TIERS.direct.ratePerMinute - fullyLoadedCost) / CUSTOMER_TIERS.direct.ratePerMinute) * 100, 1),
-      netMarginPercent: round(((CUSTOMER_TIERS.direct.ratePerMinute - fullyLoadedCost - CUSTOMER_TIERS.direct.ratePerMinute * affiliateCommissionRate) / CUSTOMER_TIERS.direct.ratePerMinute) * 100, 1),
+      grossMarginPercent: safeMargin(CUSTOMER_TIERS.direct.ratePerMinute, fullyLoadedCost),
+      netMarginPercent: safeMargin(CUSTOMER_TIERS.direct.ratePerMinute, fullyLoadedCost + CUSTOMER_TIERS.direct.ratePerMinute * affiliateCommissionRate),
       rationale: `Same D2C rate but ${round(affiliateCommissionRate * 100)}% goes to referring affiliate. Net margin is lower. Affiliate brings the customer so acquisition cost is zero.`,
       marketBenchmark: "Affiliate commissions: 10-25% of customer spend. Industry standard is 20%.",
-      minimumViableRate: round(fullyLoadedCost / (1 - affiliateCommissionRate) * 1.4, 2),
+      minimumViableRate: round(fullyLoadedCost / Math.max(1 - affiliateCommissionRate, 0.1) * 1.4, 2),
       suggestedWalletDeposit: 49,
     },
   ];
@@ -267,15 +284,29 @@ export function generateBreakEvenAnalysis(params: {
   const { fixedCostsMonthly, variableCostPerMinute, ratePerMinute, partnerCommissionRate } = params;
 
   const contributionPerMinute = ratePerMinute - variableCostPerMinute - (ratePerMinute * partnerCommissionRate);
-  const breakEvenMinutes = contributionPerMinute > 0 ? Math.ceil(fixedCostsMonthly / contributionPerMinute) : Infinity;
-  const breakEvenCalls = Math.ceil(breakEvenMinutes / 4);
-  const breakEvenRevenue = breakEvenMinutes * ratePerMinute;
+  const isViable = contributionPerMinute > 0 && isFinite(fixedCostsMonthly / contributionPerMinute);
+
+  const safeBreakEven = (divisor: number): number => {
+    if (divisor <= 0 || !isFinite(fixedCostsMonthly / divisor)) return -1;
+    return Math.ceil(fixedCostsMonthly / divisor);
+  };
+
+  const breakEvenMinutes = safeBreakEven(contributionPerMinute);
+  const breakEvenCalls = breakEvenMinutes > 0 ? Math.ceil(breakEvenMinutes / 4) : -1;
+  const breakEvenRevenue = breakEvenMinutes > 0 ? breakEvenMinutes * ratePerMinute : 0;
 
   const scenarios = [
-    { label: "Conservative (3 min avg call)", avgCallMinutes: 3, breakEvenCalls: contributionPerMinute > 0 ? Math.ceil(fixedCostsMonthly / (contributionPerMinute * 3)) : Infinity },
-    { label: "Average (5 min avg call)", avgCallMinutes: 5, breakEvenCalls: contributionPerMinute > 0 ? Math.ceil(fixedCostsMonthly / (contributionPerMinute * 5)) : Infinity },
-    { label: "Optimistic (8 min avg call)", avgCallMinutes: 8, breakEvenCalls: contributionPerMinute > 0 ? Math.ceil(fixedCostsMonthly / (contributionPerMinute * 8)) : Infinity },
+    { label: "Conservative (3 min avg call)", avgCallMinutes: 3, breakEvenCalls: safeBreakEven(contributionPerMinute * 3) },
+    { label: "Average (5 min avg call)", avgCallMinutes: 5, breakEvenCalls: safeBreakEven(contributionPerMinute * 5) },
+    { label: "Optimistic (8 min avg call)", avgCallMinutes: 8, breakEvenCalls: safeBreakEven(contributionPerMinute * 8) },
   ];
+
+  const monthlyTargets = isViable && breakEvenMinutes > 0 ? [
+    { tier: "Survival", minutes: breakEvenMinutes, revenue: round(breakEvenMinutes * ratePerMinute), profit: 0 },
+    { tier: "Comfortable", minutes: Math.ceil(breakEvenMinutes * 1.5), revenue: round(breakEvenMinutes * 1.5 * ratePerMinute), profit: round(breakEvenMinutes * 0.5 * contributionPerMinute) },
+    { tier: "Growth", minutes: Math.ceil(breakEvenMinutes * 3), revenue: round(breakEvenMinutes * 3 * ratePerMinute), profit: round(breakEvenMinutes * 2 * contributionPerMinute) },
+    { tier: "Scale", minutes: Math.ceil(breakEvenMinutes * 10), revenue: round(breakEvenMinutes * 10 * ratePerMinute), profit: round(breakEvenMinutes * 9 * contributionPerMinute) },
+  ] : [];
 
   return {
     fixedCostsMonthly: round(fixedCostsMonthly),
@@ -285,13 +316,10 @@ export function generateBreakEvenAnalysis(params: {
     breakEvenMinutes,
     breakEvenCalls,
     breakEvenRevenue: round(breakEvenRevenue),
+    isViable,
+    notViableReason: !isViable ? "Rate does not cover variable costs plus commissions. Increase rate or reduce costs." : null,
     scenarios,
-    monthlyTargets: [
-      { tier: "Survival", minutes: breakEvenMinutes, revenue: round(breakEvenMinutes * ratePerMinute), profit: 0 },
-      { tier: "Comfortable", minutes: Math.ceil(breakEvenMinutes * 1.5), revenue: round(breakEvenMinutes * 1.5 * ratePerMinute), profit: round(breakEvenMinutes * 0.5 * contributionPerMinute) },
-      { tier: "Growth", minutes: Math.ceil(breakEvenMinutes * 3), revenue: round(breakEvenMinutes * 3 * ratePerMinute), profit: round(breakEvenMinutes * 2 * contributionPerMinute) },
-      { tier: "Scale", minutes: Math.ceil(breakEvenMinutes * 10), revenue: round(breakEvenMinutes * 10 * ratePerMinute), profit: round(breakEvenMinutes * 9 * contributionPerMinute) },
-    ],
+    monthlyTargets,
   };
 }
 

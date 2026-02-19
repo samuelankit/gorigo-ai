@@ -44,7 +44,7 @@ Key features include:
 - **System Monitoring**: Admin monitoring dashboard with real-time health metrics, Recharts, and Azure monitoring alerts.
 - **Blog Section**: Public blog at `/blog` with categories, articles, and SEO-friendly features.
 - **AI Transparency & Education**: Comprehensive public page at `/ai-transparency` covering benefits, limitations, architecture, safety, human-in-the-loop design, data privacy, and best practices.
-- **Cost Accounting Dashboard**: SuperAdmin 5-tab dashboard at `/admin/cost-accounting` with real-time P&L (revenue, COGS, gross/operating/net profit), COGS breakdown by provider with daily trends, pricing advisor with per-customer-type recommendations and break-even analysis, fixed costs tracker (Azure, Twilio, Namecheap, Replit), and UK tax compliance (Corporation Tax with marginal relief, HMRC expense categorisation, VAT threshold monitoring at £90,000). No VAT registration yet — prices are VAT-exclusive, future-proofed. Core engine: `lib/cost-accounting.ts`.
+- **Cost Accounting Dashboard**: SuperAdmin 5-tab dashboard at `/admin/cost-accounting` with real-time P&L (revenue, COGS, gross/operating/net profit), COGS breakdown by provider with daily trends, pricing advisor with per-customer-type recommendations and break-even analysis, fixed costs tracker (Azure, Twilio, Namecheap, Replit), and UK tax compliance (Corporation Tax with marginal relief, HMRC expense categorisation, VAT threshold monitoring at £85,000). No VAT registration yet — prices are VAT-exclusive, future-proofed. Core engine: `lib/cost-accounting.ts`.
 
 ## External Dependencies
 - **AI Services**: OpenAI, Anthropic, OpenRouter (via Replit AI Integrations).

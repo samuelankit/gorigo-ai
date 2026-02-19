@@ -44,11 +44,13 @@ export async function GET(request: NextRequest) {
 
     if (tab === "fixed") {
       const fixed = getFixedCostsSummary();
-      return NextResponse.json({ fixed });
+      const { amortisedPerMinute, ...serializableFixed } = fixed;
+      return NextResponse.json({ fixed: serializableFixed });
     }
 
     if (tab === "pricing") {
-      const estimatedMonthlyMinutes = parseInt(searchParams.get("minutes") || "5000");
+      const rawMinutes = parseInt(searchParams.get("minutes") || "5000");
+      const estimatedMonthlyMinutes = Number.isFinite(rawMinutes) && rawMinutes > 0 ? rawMinutes : 5000;
       const fixed = getFixedCostsSummary();
       const variableCostPerMinute = PRICING_COSTS.totalPerMin - PRICING_COSTS.azureHostingAmortisedPerMin;
 

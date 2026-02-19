@@ -1,6 +1,10 @@
 import { getToken, saveToken, removeToken, saveBrandingData, loadBrandingData, clearBrandingData } from "./secure-store";
+import Constants from "expo-constants";
 
-const API_BASE = __DEV__ ? "http://localhost:5000" : "https://gorigo.ai";
+const API_BASE =
+  process.env.EXPO_PUBLIC_API_BASE_URL ||
+  Constants.expoConfig?.extra?.apiBaseUrl ||
+  (__DEV__ ? "http://localhost:5000" : "https://gorigo.ai");
 const REQUEST_TIMEOUT_MS = 15000;
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;

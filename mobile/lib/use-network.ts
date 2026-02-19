@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AppState, AppStateStatus } from "react-native";
+import Constants from "expo-constants";
 
-const PING_URL = __DEV__ ? "http://localhost:5000/api/health" : "https://gorigo.ai/api/health";
+const API_HOST =
+  process.env.EXPO_PUBLIC_API_BASE_URL ||
+  Constants.expoConfig?.extra?.apiBaseUrl ||
+  (__DEV__ ? "http://localhost:5000" : "https://gorigo.ai");
+const PING_URL = `${API_HOST}/api/health`;
 const PING_INTERVAL_MS = 30000;
 const PING_TIMEOUT_MS = 5000;
 

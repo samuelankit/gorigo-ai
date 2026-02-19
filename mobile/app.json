@@ -5,34 +5,105 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "scheme": "gorigo",
+    "owner": "gorigo",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1A1A2E"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ai.gorigo.app"
+      "bundleIdentifier": "ai.gorigo.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "GoRigo needs microphone access for voice commands and AI assistant interactions.",
+        "NSFaceIDUsageDescription": "GoRigo uses Face ID to securely unlock the app.",
+        "NSSpeechRecognitionUsageDescription": "GoRigo uses speech recognition for voice commands.",
+        "CFBundleAllowMixedLocalizations": true
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "associatedDomains": [
+        "applinks:gorigo.ai",
+        "webcredentials:gorigo.ai"
+      ]
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1A1A2E"
       },
       "edgeToEdgeEnabled": true,
-      "package": "ai.gorigo.app"
+      "package": "ai.gorigo.app",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET",
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "gorigo.ai",
+              "pathPrefix": "/mobile"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#1A1A2E"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow GoRigo to use Face ID for secure app access."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#E8604C"
+        }
+      ],
+      "expo-secure-store"
     ],
     "extra": {
-      "apiBaseUrl": "https://gorigo.ai"
+      "apiBaseUrl": "https://gorigo.ai",
+      "eas": {
+        "projectId": "SET_AFTER_RUNNING_eas_init"
+      }
+    },
+    "updates": {
+      "url": "SET_AFTER_RUNNING_eas_update_configure",
+      "fallbackToCacheTimeout": 3000
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

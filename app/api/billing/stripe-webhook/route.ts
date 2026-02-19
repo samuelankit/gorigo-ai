@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       const type = session.metadata?.type;
       const paymentIntent = session.payment_intent;
 
-      if (type === "wallet_topup" && orgId > 0 && amount > 0) {
+      if (type === "wallet_topup" && orgId > 0 && amount > 0 && session.payment_status === "paid") {
         const idempotencyRef = `stripe_${paymentIntent}`;
         const [existing] = await db
           .select({ id: walletTransactions.id })

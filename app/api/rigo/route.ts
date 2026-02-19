@@ -208,7 +208,7 @@ async function handleDraftGeneration(
       if (error.status === 422) {
         return { response: "I cannot generate that content because your knowledge base is empty. Please upload some business documents first, then try again." };
       }
-      return { response: error.message };
+      return { response: "Sorry, I was unable to generate that content. Please try again or contact support if the issue persists." };
     }
     throw error;
   }

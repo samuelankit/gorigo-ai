@@ -51,7 +51,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof DraftGenerationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      const safeMessages: Record<number, string> = {
+        402: "Insufficient wallet balance. Please top up your wallet first.",
+        422: "Cannot generate content. Please ensure your knowledge base has documents uploaded.",
+        429: "Too many generation requests. Please wait a moment and try again.",
+      };
+      const message = safeMessages[error.status] || "Content generation failed. Please try again.";
+      return NextResponse.json({ error: message }, { status: error.status });
     }
     return handleRouteError(error, "DraftsGenerate");
   }

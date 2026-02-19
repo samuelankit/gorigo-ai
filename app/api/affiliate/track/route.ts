@@ -5,8 +5,12 @@ import { eq, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { publicLimiter } from "@/lib/rate-limit";
 
-function hashIp(ip: string): string {
-  const salt = process.env.SESSION_SECRET || "gorigo-ip-salt";
+function hashIp(ip: string): string | null {
+  const salt = process.env.SESSION_SECRET;
+  if (!salt) {
+    console.error("[AffiliateTrack] SESSION_SECRET not set — skipping IP hash");
+    return null;
+  }
   return crypto.createHash("sha256").update(ip + salt).digest("hex").substring(0, 16);
 }
 
@@ -42,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     await db.insert(affiliateClicks).values({
       affiliateId: affiliate.id,
-      ipAddress: hashedIp,
+      ipAddress: hashedIp ?? "unknown",
       userAgent: userAgent.substring(0, 500),
       referrerUrl: referrer.substring(0, 1000),
       landingPage: "/register",

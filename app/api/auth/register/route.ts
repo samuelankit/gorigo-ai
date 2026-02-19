@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
     if (password.length > 128) {
       return NextResponse.json({ error: "Password too long (max 128 characters)" }, { status: 400 });
     }
-    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
-      return NextResponse.json({ error: "Password must contain at least one uppercase letter, one lowercase letter, and one number" }, { status: 400 });
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
+      return NextResponse.json({ error: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character" }, { status: 400 });
     }
 
     const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);

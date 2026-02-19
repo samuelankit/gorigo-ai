@@ -148,7 +148,9 @@ export function middleware(request: NextRequest) {
   if (MUTATION_METHODS.has(method) && pathname.startsWith("/api/")) {
     const isExempt = CSRF_EXEMPT_PATHS.some((p) => pathname.startsWith(p));
     const hasApiKey = !!request.headers.get("x-api-key");
-    if (!isExempt && !hasApiKey) {
+    const hasBearerToken = !!request.headers.get("authorization")?.startsWith("Bearer ");
+    const isMobileClient = request.headers.get("x-client-type") === "mobile";
+    if (!isExempt && !hasApiKey && !(hasBearerToken && isMobileClient)) {
       const origin = request.headers.get("origin");
       const referer = request.headers.get("referer");
       const host = request.headers.get("host");

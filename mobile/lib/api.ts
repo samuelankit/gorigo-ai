@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getToken, saveToken, removeToken, saveBrandingData, loadBrandingData, clearBrandingData } from "./secure-store";
 
 const API_BASE = __DEV__ ? "http://localhost:5000" : "https://gorigo.ai";
 
@@ -9,7 +9,7 @@ interface ApiOptions {
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await AsyncStorage.getItem("gorigo-session-token");
+  const token = await getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "X-Client-Type": "mobile",
@@ -36,11 +36,18 @@ export async function apiRequest(endpoint: string, options: ApiOptions = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, config);
 
   if (!response.ok) {
+    if (response.status === 401) {
+      await removeToken();
+    }
     const error = await response.json().catch(() => ({ error: "Request failed" }));
     throw new Error(error.error || error.message || `API error: ${response.status}`);
   }
 
-  return response.json();
+  const contentType = response.headers.get("content-type");
+  if (contentType?.includes("application/json")) {
+    return response.json();
+  }
+  return { success: true };
 }
 
 export async function login(email: string, password: string) {
@@ -49,7 +56,7 @@ export async function login(email: string, password: string) {
     body: { email, password },
   });
   if (data.token) {
-    await AsyncStorage.setItem("gorigo-session-token", data.token);
+    await saveToken(data.token);
   }
   return data;
 }
@@ -58,11 +65,7 @@ export async function logout() {
   try {
     await apiRequest("/api/auth/logout", { method: "POST" });
   } catch {}
-  await AsyncStorage.removeItem("gorigo-session-token");
-}
-
-export async function setApiBase(url: string) {
-  await AsyncStorage.setItem("gorigo-api-base", url);
+  await removeToken();
 }
 
 export async function getUser() {
@@ -70,13 +73,13 @@ export async function getUser() {
 }
 
 export async function isAuthenticated(): Promise<boolean> {
-  const token = await AsyncStorage.getItem("gorigo-session-token");
+  const token = await getToken();
   if (!token) return false;
   try {
     await getUser();
     return true;
   } catch {
-    await AsyncStorage.removeItem("gorigo-session-token");
+    await removeToken();
     return false;
   }
 }
@@ -90,13 +93,57 @@ export async function getAgents(params?: { limit?: number }) {
   return apiRequest(`/api/admin/agents${query}`);
 }
 
-export async function getCalls(params?: { limit?: number }) {
-  const query = params?.limit ? `?limit=${params.limit}` : "";
+export async function updateAgentStatus(agentId: number, enabled: boolean) {
+  return apiRequest(`/api/admin/agents`, {
+    method: "PATCH",
+    body: { id: agentId, enabled },
+  });
+}
+
+export async function getCalls(params?: { limit?: number; offset?: number; search?: string }) {
+  const parts: string[] = [];
+  if (params?.limit) parts.push(`limit=${params.limit}`);
+  if (params?.offset) parts.push(`offset=${params.offset}`);
+  if (params?.search) parts.push(`search=${encodeURIComponent(params.search)}`);
+  const query = parts.length ? `?${parts.join("&")}` : "";
   return apiRequest(`/api/admin/calls${query}`);
+}
+
+export async function getCallDetail(callId: number) {
+  return apiRequest(`/api/calls?id=${callId}`);
+}
+
+export async function getTodayCalls() {
+  return apiRequest("/api/calls/today");
 }
 
 export async function getWallet() {
   return apiRequest("/api/wallet");
+}
+
+export async function getWalletTransactions(params?: { limit?: number; offset?: number }) {
+  const parts: string[] = [];
+  if (params?.limit) parts.push(`limit=${params.limit}`);
+  if (params?.offset) parts.push(`offset=${params.offset}`);
+  const query = parts.length ? `?${parts.join("&")}` : "";
+  return apiRequest(`/api/wallet/transactions${query}`);
+}
+
+export async function getNotifications() {
+  return apiRequest("/api/notifications");
+}
+
+export async function markNotificationRead(id: number) {
+  return apiRequest("/api/notifications/read", {
+    method: "POST",
+    body: { id },
+  });
+}
+
+export async function markAllNotificationsRead() {
+  return apiRequest("/api/notifications/read-all", {
+    method: "POST",
+  });
 }
 
 export async function sendVoiceCommand(command: string) {
@@ -106,37 +153,18 @@ export async function sendVoiceCommand(command: string) {
   });
 }
 
-export interface BrandingConfig {
-  brandName: string;
-  brandLogo: string | null;
-  brandColor: string;
+export async function updateProfile(data: { name?: string; phone?: string }) {
+  return apiRequest("/api/settings/profile", {
+    method: "PATCH",
+    body: data,
+  });
 }
 
-export async function fetchBranding(partnerCode: string): Promise<BrandingConfig> {
-  const response = await fetch(`${API_BASE}/api/branding/${encodeURIComponent(partnerCode)}`);
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Invalid partner code" }));
-    throw new Error(error.error || "Partner not found");
-  }
-  return response.json();
-}
-
-export async function saveBranding(branding: BrandingConfig & { partnerCode: string }) {
-  await AsyncStorage.setItem("gorigo-branding", JSON.stringify(branding));
-}
-
-export async function loadBranding(): Promise<(BrandingConfig & { partnerCode: string }) | null> {
-  const data = await AsyncStorage.getItem("gorigo-branding");
-  if (!data) return null;
-  try {
-    return JSON.parse(data);
-  } catch {
-    return null;
-  }
-}
-
-export async function clearBranding() {
-  await AsyncStorage.removeItem("gorigo-branding");
+export async function changePassword(currentPassword: string, newPassword: string) {
+  return apiRequest("/api/settings/password", {
+    method: "POST",
+    body: { currentPassword, newPassword },
+  });
 }
 
 export async function getBusinesses() {
@@ -156,4 +184,31 @@ export async function createBusiness(name: string, deploymentModel: string) {
     method: "POST",
     body: { name, deploymentModel },
   });
+}
+
+export interface BrandingConfig {
+  brandName: string;
+  brandLogo: string | null;
+  brandColor: string;
+}
+
+export async function fetchBranding(partnerCode: string): Promise<BrandingConfig> {
+  const response = await fetch(`${API_BASE}/api/branding/${encodeURIComponent(partnerCode)}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Invalid partner code" }));
+    throw new Error(error.error || "Partner not found");
+  }
+  return response.json();
+}
+
+export async function saveBranding(branding: BrandingConfig & { partnerCode: string }) {
+  await saveBrandingData(branding);
+}
+
+export async function loadBranding(): Promise<(BrandingConfig & { partnerCode: string }) | null> {
+  return loadBrandingData();
+}
+
+export async function clearBranding() {
+  await clearBrandingData();
 }

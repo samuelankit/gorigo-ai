@@ -16,7 +16,13 @@ export async function POST(request: NextRequest) {
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
-    const token = await getSessionCookie();
+    let token = await getSessionCookie();
+    if (!token) {
+      const authHeader = request.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        token = authHeader.slice(7);
+      }
+    }
     let userId: number | null = null;
     if (token) {
       const tokenHash = hashToken(token);

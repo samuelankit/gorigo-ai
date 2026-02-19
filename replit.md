@@ -15,7 +15,16 @@ GoRigo is an AI-powered call center platform designed to automate call center op
 The platform uses Next.js 14 (App Router) with Tailwind CSS and Shadcn/ui for components, and Recharts for data visualization. Dark mode is the default, inspired by Azure Portal/Fluent Design. The dashboard features a collapsible left sidebar, a sticky top command bar, and a content workspace, emphasizing flat design, compact spacing, and table-first data views. The primary model is a React Native/Expo mobile app with AI voice control, complemented by a Web SaaS platform.
 
 ### Mobile App (React Native / Expo)
-The mobile app, located in `/mobile/`, uses Expo Router and features a dual-input design (voice and text), TTS toggle, biometric lock, offline support, push notifications, and haptic feedback. It supports white-label branding and includes detail screens for calls, wallet, and business switching.
+The mobile app, located in `/mobile/`, uses Expo Router and features a dual-input design (voice and text), TTS toggle, biometric lock, offline support, push notifications, and haptic feedback. It supports white-label branding and includes detail screens for calls, wallet, and business switching. Authentication uses Bearer tokens stored via expo-secure-store (with AsyncStorage fallback). The mobile API client (`mobile/lib/api.ts`) shares the same backend as the web app. Backend middleware bypasses CSRF for Bearer token mobile requests.
+
+**Mobile Screens (5 visible tabs + 2 hidden):**
+- Dashboard: Metrics cards (calls, agents, balance, revenue), quick actions, recent activity
+- Calls: Search, paginated FlatList, call detail navigation, pull-to-refresh
+- Agents: Agent list with status toggles, expandable detail, avatar initials
+- Wallet: Balance hero card, monthly usage breakdown, transaction history
+- Settings (More): Profile, account, business switching, theme, sign out
+- Rigo (hidden): AI voice/text assistant
+- Activity (hidden): Activity feed
 
 ### Technical Implementations
 GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentication is session-based. AI functionalities leverage OpenAI via Replit AI Integrations, enhanced by a RAG system. A prepaid wallet system with atomic operations and row-level locks manages billing and commissions. Multi-tenancy is enforced via `orgId`, and Role-Based Access Control (`globalRole`) manages permissions. A 7-state Call State Machine handles call flows, integrated with Twilio Programmable Voice. Background jobs process document chunking, embedding, and audio transcription. Security features include prompt injection detection and input validation. A distribution engine manages commissions and revenue sharing. A multi-agent system supports various AI agent types and visual flow diagram building. Compliance features include TCPA/FCC DNC management, PII auto-redaction, sentiment analysis, and call quality scoring. The system supports AI model fallback, multilingual capabilities, concurrent call limits, business hours, and outgoing webhooks.

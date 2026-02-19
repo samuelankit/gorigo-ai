@@ -5,6 +5,9 @@ import { asc } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
+import { cache, CACHE_TTL } from "@/lib/cache";
+
+const CACHE_KEY = "public:countries";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,10 +16,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
+    const cached = cache.get<unknown[]>(CACHE_KEY);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: { "Cache-Control": "private, max-age=300" },
+      });
+    }
+
     const result = await db
       .select()
       .from(countries)
       .orderBy(asc(countries.name));
+
+    cache.set(CACHE_KEY, result, CACHE_TTL.PUBLIC_DATA);
 
     return NextResponse.json(result, {
       headers: { "Cache-Control": "private, max-age=300" },
@@ -46,6 +58,7 @@ export async function POST(request: NextRequest) {
     const data = insertCountrySchema.parse(body);
 
     const [country] = await db.insert(countries).values(data).returning();
+    cache.invalidate(CACHE_KEY);
     return NextResponse.json(country, { status: 201 });
   } catch (error) {
     return handleRouteError(error, "Countries");

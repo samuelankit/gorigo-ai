@@ -46,3 +46,6 @@ integrations = ["javascript_openrouter_ai_integrations:2.0.0", "javascript_opena
 
 [userenv.shared]
 BYOK_ENCRYPTION_KEY = "29b0961a49a3559da8cf425e0b8699884bf7e30d213a985ae09c2aa4f8981cb0"
+
+[userenv.production]
+NODE_OPTIONS = "--max-old-space-size=768"

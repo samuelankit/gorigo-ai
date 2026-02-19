@@ -8,6 +8,7 @@ import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { cache } from "@/lib/cache";
 
 const adminSettingsSchema = z.object({
   settings: z.record(z.string(), z.any()),
@@ -71,6 +72,8 @@ export async function PUT(request: NextRequest) {
         });
       }
     }
+
+    cache.invalidatePrefix("public:");
 
     await logAudit({
       actorId: auth!.user.id,

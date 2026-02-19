@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
+import { cache } from "@/lib/cache";
 
 export async function GET(
   request: NextRequest,
@@ -95,6 +96,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Country not found" }, { status: 404 });
     }
 
+    cache.invalidate("public:countries");
     return NextResponse.json(updated);
   } catch (error) {
     return handleRouteError(error, "Country");

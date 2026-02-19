@@ -109,16 +109,24 @@ function checkLLMHealth(): void {
   }
 }
 
+function getMaxHeapMB(): number {
+  const nodeOptions = process.env.NODE_OPTIONS || "";
+  const match = nodeOptions.match(/--max-old-space-size=(\d+)/);
+  if (match) return parseInt(match[1], 10);
+  return 512;
+}
+
 function checkMemory(): void {
   const mem = process.memoryUsage();
   const heapUsedMB = Math.round(mem.heapUsed / 1024 / 1024);
-  const heapTotalMB = Math.round(mem.heapTotal / 1024 / 1024);
-  const heapPercent = Math.round((mem.heapUsed / mem.heapTotal) * 100);
+  const maxHeapMB = getMaxHeapMB();
+  const rssMB = Math.round(mem.rss / 1024 / 1024);
+  const heapPercent = Math.round((heapUsedMB / maxHeapMB) * 100);
 
-  if (heapPercent > 90) {
-    addEvent("critical", "memory", `Heap usage at ${heapPercent}% (${heapUsedMB}/${heapTotalMB}MB). Memory pressure detected.`);
-  } else if (heapPercent > 75) {
-    addEvent("warning", "memory", `Heap usage at ${heapPercent}% (${heapUsedMB}/${heapTotalMB}MB)`);
+  if (heapPercent > 85) {
+    addEvent("critical", "memory", `Heap usage at ${heapPercent}% (${heapUsedMB}/${maxHeapMB}MB max, RSS: ${rssMB}MB). Memory pressure detected.`);
+  } else if (heapPercent > 70) {
+    addEvent("warning", "memory", `Heap usage at ${heapPercent}% (${heapUsedMB}/${maxHeapMB}MB max, RSS: ${rssMB}MB)`);
   }
 }
 
@@ -211,7 +219,7 @@ export function getLastHealthReport(): SystemHealthReport | null {
 
 const _global = globalThis as any;
 
-export function startAutopilotMonitor(intervalMs: number = 60_000): void {
+export function startAutopilotMonitor(intervalMs: number = 300_000): void {
   if (_global.__autopilotMonitorStarted) return;
   _global.__autopilotMonitorStarted = true;
 

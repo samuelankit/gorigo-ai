@@ -38,6 +38,12 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
         ],
       },
+      {
+        source: '/:path((?!_next|api|icons|features|guide).*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=0, s-maxage=60, stale-while-revalidate=30' },
+        ],
+      },
     ];
   },
 };

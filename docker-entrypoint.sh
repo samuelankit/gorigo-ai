@@ -2,6 +2,9 @@
 echo "Running database schema push..."
 npx drizzle-kit push --force 2>&1 || echo "Schema push failed, continuing with startup..."
 
+echo "Clearing Next.js cache for fresh deployment..."
+rm -rf .next/cache 2>/dev/null || true
+
 export NODE_OPTIONS="--max-old-space-size=1024"
 
 echo "Starting server with NODE_OPTIONS=$NODE_OPTIONS ..."

@@ -157,7 +157,7 @@ export default function AboutPage() {
             data-testid="text-company-description"
           >
             International Business Exchange Limited is registered in England and
-            Wales (Company No. 15985956). Headquartered in the United Kingdom,
+            Wales (Company No. 15985956). Based at Cotton Court Business Centre, Cotton Ct, Preston PR1 3BY, England,
             we build technology that meets the highest standards of UK and
             European compliance, including GDPR, DNC regulations, and data
             protection requirements.

@@ -525,7 +525,7 @@ export default function SlaPage() {
                 <CardContent className="p-6">
                   <h3 className="font-medium mb-2">Who is this agreement between?</h3>
                   <p className="text-sm text-muted-foreground">
-                    This SLA is between International Business Exchange Limited (trading as GoRigo, company number 15985956, registered in England and Wales) and you, the customer using GoRigo services. It forms part of your service agreement with us and applies from the moment you start using any paid GoRigo service.
+                    This SLA is between International Business Exchange Limited (trading as GoRigo, company number 15985956, registered in England and Wales, Cotton Court Business Centre, Cotton Ct, Preston PR1 3BY, England) and you, the customer using GoRigo services. It forms part of your service agreement with us and applies from the moment you start using any paid GoRigo service.
                   </p>
                 </CardContent>
               </Card>

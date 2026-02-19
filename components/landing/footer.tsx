@@ -69,6 +69,12 @@ export function Footer() {
                   International Business Exchange Limited
                 </p>
                 <p className="text-xs text-muted-foreground">
+                  Cotton Court Business Centre, Cotton Ct
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Preston PR1 3BY, England
+                </p>
+                <p className="text-xs text-muted-foreground">
                   UK Company No. 15985956
                 </p>
               </div>

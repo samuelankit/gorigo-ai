@@ -431,7 +431,7 @@ export default function TrustCenterPage() {
                   <h3 className="font-medium text-lg mb-2">Our Commitment</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                     GoRigo is operated by International Business Exchange Limited
-                    (UK Company No. 15985956). We are committed to protecting your
+                    (UK Company No. 15985956), Cotton Court Business Centre, Cotton Ct, Preston PR1 3BY, England. We are committed to protecting your
                     data with the same rigour we expect from our own service
                     providers. If you have security questions or need to report a
                     vulnerability, please contact us directly.

@@ -11,6 +11,10 @@ export function OrganizationJsonLd() {
     foundingDate: "2024",
     address: {
       "@type": "PostalAddress",
+      streetAddress: "Cotton Court Business Centre, Cotton Ct",
+      addressLocality: "Preston",
+      postalCode: "PR1 3BY",
+      addressRegion: "England",
       addressCountry: "GB",
     },
     contactPoint: {

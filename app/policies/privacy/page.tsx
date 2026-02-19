@@ -398,6 +398,7 @@ export default function PrivacyPolicyPage() {
                 </a>
               </p>
               <p>International Business Exchange Limited</p>
+              <p>Cotton Court Business Centre, Cotton Ct, Preston PR1 3BY, England</p>
               <p>UK Company No. 15985956</p>
             </div>
             <p className="text-muted-foreground leading-relaxed mt-3">
@@ -410,6 +411,7 @@ export default function PrivacyPolicyPage() {
 
         <div className="mt-12 pt-8 border-t text-xs text-muted-foreground space-y-1">
           <p>International Business Exchange Limited</p>
+          <p>Cotton Court Business Centre, Cotton Ct, Preston PR1 3BY, England</p>
           <p>UK Company No. 15985956</p>
           <p>Trading as GoRigo &mdash; gorigo.ai</p>
         </div>

@@ -208,7 +208,11 @@ export default function ContactPage() {
                 <MapPin className="h-5 w-5 text-[#2DD4A8] mb-4" />
                 <h3 className="font-medium text-base mb-2">Our Office</h3>
                 <p className="text-sm text-foreground" data-testid="text-address-country">
-                  United Kingdom
+                  Cotton Court Business Centre
+                  <br />
+                  Cotton Ct, Preston PR1 3BY
+                  <br />
+                  England, United Kingdom
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
                   International Business Exchange Limited

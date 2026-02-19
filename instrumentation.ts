@@ -3,13 +3,17 @@ export async function register() {
     const { validateEnvironment } = await import("@/lib/env-check");
     validateEnvironment();
 
-    const { startPeriodicCleanup } = await import("@/lib/cleanup");
-    startPeriodicCleanup(5 * 60 * 1000);
-    console.log("[GoRigo] Background cleanup started (5 min interval)");
+    const isProduction = process.env.NODE_ENV === "production";
 
+    const cleanupInterval = isProduction ? 30 * 60 * 1000 : 5 * 60 * 1000;
+    const { startPeriodicCleanup } = await import("@/lib/cleanup");
+    startPeriodicCleanup(cleanupInterval);
+    console.log(`[GoRigo] Background cleanup started (${cleanupInterval / 60000} min interval)`);
+
+    const automationInterval = isProduction ? 30 * 60 * 1000 : 10 * 60 * 1000;
     const { startAutomationEngine } = await import("@/lib/automation-engine");
-    startAutomationEngine(10 * 60 * 1000);
-    console.log("[GoRigo] Automation engine started (10 min interval)");
+    startAutomationEngine(automationInterval);
+    console.log(`[GoRigo] Automation engine started (${automationInterval / 60000} min interval)`);
 
     const { setupGracefulShutdown } = await import("@/lib/shutdown");
     setupGracefulShutdown([
@@ -25,17 +29,21 @@ export async function register() {
       console.error("[process] Uncaught exception:", err.message, err.stack);
     });
 
-    const { seedPlatformKnowledge } = await import("@/lib/platform-knowledge");
-    seedPlatformKnowledge()
-      .then((result) => {
-        if (result.skipped) {
-          console.log("[GoRigo] Platform knowledge base already seeded");
-        } else {
-          console.log(`[GoRigo] Platform knowledge base seeded: ${result.seeded} chunks`);
-        }
-      })
-      .catch((err) => {
-        console.error("[GoRigo] Platform knowledge seed failed:", err);
-      });
+    if (!isProduction) {
+      const { seedPlatformKnowledge } = await import("@/lib/platform-knowledge");
+      seedPlatformKnowledge()
+        .then((result) => {
+          if (result.skipped) {
+            console.log("[GoRigo] Platform knowledge base already seeded");
+          } else {
+            console.log(`[GoRigo] Platform knowledge base seeded: ${result.seeded} chunks`);
+          }
+        })
+        .catch((err) => {
+          console.error("[GoRigo] Platform knowledge seed failed:", err);
+        });
+    } else {
+      console.log("[GoRigo] Skipping knowledge seed in production (run manually if needed)");
+    }
   }
 }

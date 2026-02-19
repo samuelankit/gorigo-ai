@@ -5,58 +5,30 @@ interface RateLimitEntry {
   resetAt: number;
 }
 
-function createRateLimiter(windowMs: number, maxRequests: number) {
-  const store = new Map<string, RateLimitEntry>();
+const fallbackStore = new Map<string, RateLimitEntry>();
+const FALLBACK_WINDOW_MS = 60_000;
+const FALLBACK_MAX_REQUESTS = 120;
 
-  const cleanup = setInterval(() => {
-    const now = Date.now();
-    store.forEach((entry, key) => {
-      if (entry.resetAt <= now) store.delete(key);
-    });
-  }, 60_000);
-  (cleanup as unknown as { unref?: () => void })?.unref?.();
+const cleanupTimer = setInterval(() => {
+  const now = Date.now();
+  fallbackStore.forEach((entry, key) => {
+    if (entry.resetAt <= now) fallbackStore.delete(key);
+  });
+}, 60_000);
+(cleanupTimer as unknown as { unref?: () => void })?.unref?.();
 
-  return function check(ip: string): { allowed: boolean; retryAfterMs?: number } {
-    const now = Date.now();
-    const existing = store.get(ip);
-    if (!existing || existing.resetAt <= now) {
-      store.set(ip, { count: 1, resetAt: now + windowMs });
-      return { allowed: true };
-    }
-    if (existing.count < maxRequests) {
-      existing.count++;
-      return { allowed: true };
-    }
-    return { allowed: false, retryAfterMs: existing.resetAt - now };
-  };
-}
-
-const authMutateLimiter = createRateLimiter(60_000, 15);
-const authReadLimiter = createRateLimiter(60_000, 60);
-const aiLimiter = createRateLimiter(60_000, 20);
-const knowledgeLimiter = createRateLimiter(60_000, 10);
-const adminLimiter = createRateLimiter(60_000, 30);
-const exportLimiter = createRateLimiter(60_000, 5);
-const publicLimiter = createRateLimiter(60_000, 15);
-const billingLimiter = createRateLimiter(60_000, 10);
-const settingsLimiter = createRateLimiter(60_000, 20);
-const rigoMwLimiter = createRateLimiter(60_000, 12);
-const generalLimiter = createRateLimiter(60_000, 100);
-
-function getLimiterForPath(pathname: string) {
-  if (pathname === "/api/auth/me") return authReadLimiter;
-  if (pathname.startsWith("/api/auth/")) return authMutateLimiter;
-  if (pathname.startsWith("/api/ai/")) return aiLimiter;
-  if (pathname.startsWith("/api/rigo")) return rigoMwLimiter;
-  if (pathname.startsWith("/api/public/")) return publicLimiter;
-  if (pathname.startsWith("/api/knowledge")) return knowledgeLimiter;
-  if (pathname.startsWith("/api/admin/")) return adminLimiter;
-  if (pathname.startsWith("/api/export/")) return exportLimiter;
-  if (pathname === "/api/billing/stripe-webhook") return null;
-  if (pathname.startsWith("/api/billing/") || pathname.startsWith("/api/wallet/")) return billingLimiter;
-  if (pathname.startsWith("/api/settings/")) return settingsLimiter;
-  if (pathname.startsWith("/api/twilio/")) return null;
-  return generalLimiter;
+function fallbackRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const existing = fallbackStore.get(ip);
+  if (!existing || existing.resetAt <= now) {
+    fallbackStore.set(ip, { count: 1, resetAt: now + FALLBACK_WINDOW_MS });
+    return true;
+  }
+  if (existing.count < FALLBACK_MAX_REQUESTS) {
+    existing.count++;
+    return true;
+  }
+  return false;
 }
 
 const BODY_SIZE_LIMITS: Record<string, number> = {
@@ -146,20 +118,15 @@ export function middleware(request: NextRequest) {
   const forwarded = request.headers.get("x-forwarded-for");
   const ip = forwarded?.split(",")[0]?.trim() || "unknown";
 
-  const limiter = getLimiterForPath(pathname);
-  if (limiter) {
-    const result = limiter(ip);
-    if (!result.allowed) {
-      const retryAfter = Math.ceil((result.retryAfterMs || 60000) / 1000);
-      const errorResponse = NextResponse.json(
-        { error: "Too many requests. Please try again later." },
-        { status: 429 }
-      );
-      errorResponse.headers.set("Retry-After", String(retryAfter));
-      errorResponse.headers.set("x-request-id", requestId);
-      addSecurityHeaders(errorResponse);
-      return errorResponse;
-    }
+  if (!fallbackRateLimit(ip)) {
+    const errorResponse = NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
+    errorResponse.headers.set("Retry-After", "60");
+    errorResponse.headers.set("x-request-id", requestId);
+    addSecurityHeaders(errorResponse);
+    return errorResponse;
   }
 
   if (MUTATION_METHODS.has(method)) {

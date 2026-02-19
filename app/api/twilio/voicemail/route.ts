@@ -4,7 +4,7 @@ import { agents, callLogs } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { DEFAULT_VOICE, DEFAULT_LANGUAGE, validateTwilioSignature } from "@/lib/twilio";
 import twilio from "twilio";
-import { settingsLimiter } from "@/lib/rate-limit";
+import { callLimiter } from "@/lib/rate-limit";
 
 function twimlResponse(xml: string) {
   return new NextResponse(xml, {
@@ -22,7 +22,7 @@ function getWebhookUrl(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = await settingsLimiter(request);
+    const rl = await callLimiter(request);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }

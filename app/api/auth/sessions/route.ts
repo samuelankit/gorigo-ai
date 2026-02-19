@@ -38,12 +38,15 @@ export async function GET(request: NextRequest) {
     const currentToken = await getSessionCookie();
     const currentHash = currentToken ? hashToken(currentToken) : null;
 
-    const allSessions = await db
-      .select({ id: sessions.id, token: sessions.token })
-      .from(sessions)
-      .where(eq(sessions.userId, auth.user.id));
-
-    const currentSessionId = allSessions.find(s => s.token === currentHash)?.id;
+    let currentSessionId: number | null = null;
+    if (currentHash) {
+      const [currentSession] = await db
+        .select({ id: sessions.id })
+        .from(sessions)
+        .where(and(eq(sessions.userId, auth.user.id), eq(sessions.token, currentHash)))
+        .limit(1);
+      currentSessionId = currentSession?.id ?? null;
+    }
 
     const result = userSessions.map(s => ({
       ...s,
@@ -100,7 +103,7 @@ export async function DELETE(request: NextRequest) {
       const currentHash = currentToken ? hashToken(currentToken) : null;
 
       const [targetSession] = await db
-        .select({ id: sessions.id, token: sessions.token })
+        .select({ id: sessions.id })
         .from(sessions)
         .where(and(eq(sessions.id, id), eq(sessions.userId, auth.user.id)))
         .limit(1);
@@ -109,8 +112,15 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({ error: "Session not found" }, { status: 404 });
       }
 
-      if (targetSession.token === currentHash) {
-        return NextResponse.json({ error: "Cannot revoke current session. Use logout instead." }, { status: 400 });
+      if (currentHash) {
+        const [currentSess] = await db
+          .select({ id: sessions.id })
+          .from(sessions)
+          .where(and(eq(sessions.userId, auth.user.id), eq(sessions.token, currentHash)))
+          .limit(1);
+        if (currentSess && currentSess.id === id) {
+          return NextResponse.json({ error: "Cannot revoke current session. Use logout instead." }, { status: 400 });
+        }
       }
 
       await db.delete(sessions).where(eq(sessions.id, id));

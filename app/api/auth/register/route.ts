@@ -136,6 +136,7 @@ export async function POST(request: NextRequest) {
         userId: newUser.id,
         orgId: newOrg.id,
         month,
+        spendingCap: "500.00",
       });
 
       await tx.insert(wallets).values({

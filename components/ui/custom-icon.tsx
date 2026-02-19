@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, memo } from "react";
+import { SafeSVG } from "@/components/safe-html";
 
 interface CustomIconProps {
   name: string;
@@ -29,9 +30,10 @@ export const CustomIcon = memo(function CustomIcon({ name, size = 24, className 
       })
       .then((text) => {
         if (cancelled) return;
-        const cleaned = text
+        const stripped = text
           .replace(/<\?xml[^?]*\?>/g, "")
           .replace(/<!--[\s\S]*?-->/g, "");
+        const cleaned = SafeSVG({ svg: stripped });
         svgCache.set(name, cleaned);
         setSvgContent(cleaned);
       })

@@ -13,7 +13,7 @@ import twilio from "twilio";
 import { detectOptOut, handleOptOut } from "@/lib/compliance-engine";
 import { logCostEvent, calculateLLMCost } from "@/lib/unit-economics";
 import { validateLLMOutput, KNOWLEDGE_ONLY_REFUSAL_VOICE, RAG_GROUNDING_INSTRUCTION } from "@/lib/output-guard";
-import { settingsLimiter } from "@/lib/rate-limit";
+import { callLimiter } from "@/lib/rate-limit";
 
 const MAX_TURNS_BEFORE_CLOSE = 15;
 
@@ -37,7 +37,7 @@ function estimateTokens(text: string): number {
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = await settingsLimiter(request);
+    const rl = await callLimiter(request);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }

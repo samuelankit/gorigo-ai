@@ -12,7 +12,7 @@ import { dispatchWebhook } from "@/lib/webhook-dispatcher";
 import { createNotification } from "@/lib/notifications";
 import { redactForDisplay } from "@/lib/pii-redaction";
 import type { UsageCategory } from "@/lib/rate-resolver";
-import { settingsLimiter } from "@/lib/rate-limit";
+import { callLimiter } from "@/lib/rate-limit";
 
 function getWebhookUrl(request: NextRequest): string {
   const proto = request.headers.get("x-forwarded-proto") || "https";
@@ -22,7 +22,7 @@ function getWebhookUrl(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = await settingsLimiter(request);
+    const rl = await callLimiter(request);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }

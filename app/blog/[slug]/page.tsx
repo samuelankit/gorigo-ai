@@ -13,6 +13,7 @@ import { BlogPostingJsonLd, FAQJsonLd, BreadcrumbJsonLd } from "@/components/seo
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
+import { SafeHTML } from "@/components/safe-html";
 import { Badge } from "@/components/ui/badge";
 import { Clock, ArrowLeft, ArrowRight, User, Calendar, Tag, HelpCircle } from "lucide-react";
 
@@ -222,10 +223,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 </aside>
               )}
 
-              <article
+              <SafeHTML
+                html={post.content}
+                as="article"
                 className="flex-1 min-w-0 prose prose-lg dark:prose-invert max-w-none"
                 data-testid="section-post-content"
-                dangerouslySetInnerHTML={{ __html: post.content }}
               />
             </div>
           </div>

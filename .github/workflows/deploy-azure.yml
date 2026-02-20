@@ -106,11 +106,20 @@ jobs:
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --mode single
 
+      - name: Clean up broken env vars from previous deploys
+        run: |
+          az containerapp update \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --remove-env-vars COMMIT_SHA BUILD_DATE 2>/dev/null || echo "No env vars to remove"
+
       - name: Deploy new container revision
+        id: deploy-revision
         run: |
           DEPLOY_TS=$(date -u +%Y%m%d%H%M%S)
           SHORT_SHA=$(echo "${{ needs.build-and-push.outputs.image-tag }}" | cut -c1-7)
           SUFFIX="${SHORT_SHA}-${DEPLOY_TS}"
+          echo "revision_suffix=${SUFFIX}" >> "$GITHUB_OUTPUT"
           echo "Deploying with revision suffix: ${SUFFIX}"
           echo "Image: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}"
 
@@ -118,8 +127,53 @@ jobs:
             --name ${{ env.AZURE_CONTAINER_APP }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}" \
-            --revision-suffix "${SUFFIX}" \
-            --set-env-vars "COMMIT_SHA=${{ needs.build-and-push.outputs.image-tag }}" "BUILD_DATE=${DEPLOY_TS}"
+            --revision-suffix "${SUFFIX}"
+
+      - name: Wait for revision to provision
+        run: sleep 30
+
+      - name: Check revision readiness
+        run: |
+          REVISION="${{ env.AZURE_CONTAINER_APP }}--${{ steps.deploy-revision.outputs.revision_suffix }}"
+          echo "Checking revision: ${REVISION}"
+
+          READY_NAME=$(az containerapp show \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query "properties.latestReadyRevisionName" -o tsv)
+          LATEST_NAME=$(az containerapp show \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query "properties.latestRevisionName" -o tsv)
+
+          echo "Latest revision:       ${LATEST_NAME}"
+          echo "Latest READY revision:  ${READY_NAME}"
+
+          if [ "${LATEST_NAME}" != "${READY_NAME}" ]; then
+            echo ""
+            echo "ERROR: New revision is NOT ready! Container may have crashed."
+            echo "Fetching container logs for diagnosis..."
+            az containerapp logs show \
+              --name ${{ env.AZURE_CONTAINER_APP }} \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --revision "${LATEST_NAME}" \
+              --tail 100 2>/dev/null || echo "Could not fetch revision logs"
+
+            echo ""
+            echo "Fetching system logs..."
+            az containerapp logs show \
+              --name ${{ env.AZURE_CONTAINER_APP }} \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --revision "${LATEST_NAME}" \
+              --type system \
+              --tail 50 2>/dev/null || echo "Could not fetch system logs"
+
+            echo ""
+            echo "::error::Revision ${LATEST_NAME} failed to become ready. Old revision ${READY_NAME} is still serving traffic."
+            exit 1
+          else
+            echo "New revision is READY and serving traffic."
+          fi
 
       - name: Verify active revision
         run: |
@@ -128,14 +182,6 @@ jobs:
             --name ${{ env.AZURE_CONTAINER_APP }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --query "[?properties.active==\`true\`].{name:name, image:properties.template.containers[0].image, created:properties.createdTime, traffic:properties.trafficWeight}" \
-            -o table
-
-          echo ""
-          echo "=== All revisions (last 5) ==="
-          az containerapp revision list \
-            --name ${{ env.AZURE_CONTAINER_APP }} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --query "sort_by([].{name:name, active:properties.active, created:properties.createdTime, traffic:properties.trafficWeight}, &created) | [-5:]" \
             -o table
 
   healthcheck:

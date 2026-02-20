@@ -315,6 +315,11 @@ export const partners = pgTable("partners", {
   gracePeriodEndsAt: timestamp("grace_period_ends_at"),
   autoSuspendAfterDays: integer("auto_suspend_after_days").default(30),
   healthScore: integer("health_score").default(100),
+  stripeConnectAccountId: text("stripe_connect_account_id"),
+  stripeConnectOnboardingComplete: boolean("stripe_connect_onboarding_complete").default(false),
+  bankAccountName: text("bank_account_name"),
+  bankSortCode: text("bank_sort_code"),
+  bankAccountNumber: text("bank_account_number"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   suspendedAt: timestamp("suspended_at"),
@@ -2539,5 +2544,55 @@ export const caseStudies = pgTable("case_studies", {
 export const insertCaseStudySchema = createInsertSchema(caseStudies).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertCaseStudy = z.infer<typeof insertCaseStudySchema>;
 export type CaseStudy = typeof caseStudies.$inferSelect;
+
+export const withdrawalRequests = pgTable("withdrawal_requests", {
+  id: serial("id").primaryKey(),
+  partnerId: integer("partner_id").notNull().references(() => partners.id),
+  orgId: integer("org_id").references(() => orgs.id),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  currency: text("currency").default("GBP").notNull(),
+  status: text("status").default("pending").notNull(),
+  stripeTransferId: text("stripe_transfer_id"),
+  stripePayoutId: text("stripe_payout_id"),
+  adminNote: text("admin_note"),
+  rejectionReason: text("rejection_reason"),
+  requestedAt: timestamp("requested_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: integer("reviewed_by"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_withdrawal_partner").on(table.partnerId),
+  index("idx_withdrawal_status").on(table.status),
+  index("idx_withdrawal_requested_at").on(table.requestedAt),
+]);
+
+export const commissionLedger = pgTable("commission_ledger", {
+  id: serial("id").primaryKey(),
+  partnerId: integer("partner_id").notNull().references(() => partners.id),
+  orgId: integer("org_id").references(() => orgs.id),
+  sourceType: text("source_type").notNull(),
+  sourceId: integer("source_id"),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  currency: text("currency").default("GBP").notNull(),
+  status: text("status").default("holding").notNull(),
+  holdingUntil: timestamp("holding_until"),
+  availableAt: timestamp("available_at"),
+  withdrawalId: integer("withdrawal_id"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_commission_ledger_partner").on(table.partnerId),
+  index("idx_commission_ledger_status").on(table.status),
+  index("idx_commission_ledger_holding").on(table.holdingUntil),
+]);
+
+export const insertWithdrawalRequestSchema = createInsertSchema(withdrawalRequests).omit({ id: true, createdAt: true, requestedAt: true });
+export type InsertWithdrawalRequest = z.infer<typeof insertWithdrawalRequestSchema>;
+export type WithdrawalRequest = typeof withdrawalRequests.$inferSelect;
+
+export const insertCommissionLedgerSchema = createInsertSchema(commissionLedger).omit({ id: true, createdAt: true });
+export type InsertCommissionLedger = z.infer<typeof insertCommissionLedgerSchema>;
+export type CommissionLedger = typeof commissionLedger.$inferSelect;
 
 export * from "./models/chat";

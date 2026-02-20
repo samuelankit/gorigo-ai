@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Bot, PhoneCall, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Server } from "lucide-react";
+import { LayoutDashboard, Bot, PhoneCall, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Server, Banknote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CustomIcon } from "@/components/ui/custom-icon";
 import type { ReactNode } from "react";
@@ -45,6 +45,7 @@ const manageMenuItems: MenuItemDef[] = [
 
 const partnerMenuItems: MenuItemDef[] = [
   { title: "My Affiliates", url: "/dashboard/affiliates", icon: Link2 },
+  { title: "Payouts", url: "/dashboard/payouts", icon: Banknote },
 ];
 
 const financeMenuItems: MenuItemDef[] = [

@@ -83,6 +83,7 @@ const managementItems = [
   { title: "Affiliates", url: "/admin/affiliates", icon: Link2 },
   { title: "Distribution", url: "/admin/distribution", icon: Network },
   { title: "Wallets", url: "/admin/wallets", icon: Wallet },
+  { title: "Withdrawals", url: "/admin/withdrawals", icon: ArrowLeftRight },
   { title: "Pricing", url: "/admin/pricing", icon: Calculator },
   { title: "Phone Numbers", url: "/admin/phone-numbers", icon: Phone },
   { title: "Countries", url: "/admin/countries", icon: Globe },

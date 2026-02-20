@@ -190,7 +190,8 @@ export function requireWriteAccess(auth: { isDemo: boolean } | null) {
 
 export function requireEmailVerified(auth: AuthResult | null): { allowed: boolean; error: string | null; status?: number } {
   if (!auth) return { allowed: false, error: "Not authenticated", status: 401 };
-  if (auth.user.emailVerified === false) {
+  const smtpConfigured = !!(process.env.SMTP_HOST || process.env.SENDGRID_API_KEY || process.env.EMAIL_HOST);
+  if (smtpConfigured && auth.user.emailVerified === false) {
     return { allowed: false, error: "Email verification required. Please verify your email address before using this feature.", status: 403 };
   }
   return { allowed: true, error: null };
@@ -216,7 +217,8 @@ export function requireApiKeyScope(auth: AuthResult | null, scope: string): { al
 export async function getVerifiedUser(): Promise<AuthResult | null> {
   const auth = await getAuthenticatedUser();
   if (!auth) return null;
-  if (auth.user.emailVerified === false) return null;
+  const smtpConfigured = !!(process.env.SMTP_HOST || process.env.SENDGRID_API_KEY || process.env.EMAIL_HOST);
+  if (smtpConfigured && auth.user.emailVerified === false) return null;
   return auth;
 }
 
@@ -226,7 +228,8 @@ export async function requireVerifiedAuth(): Promise<{ auth: AuthResult | null; 
   if (!auth) {
     return { auth: null, error: NextResponse.json({ error: "Authentication required" }, { status: 401 }) };
   }
-  if (auth.user.emailVerified === false) {
+  const smtpConfigured = !!(process.env.SMTP_HOST || process.env.SENDGRID_API_KEY || process.env.EMAIL_HOST);
+  if (smtpConfigured && auth.user.emailVerified === false) {
     return {
       auth: null,
       error: NextResponse.json(

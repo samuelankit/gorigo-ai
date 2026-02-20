@@ -108,20 +108,34 @@ jobs:
 
       - name: Deploy new container revision
         run: |
-          SHORT_SHA=$(echo "${{ needs.build-and-push.outputs.image-tag }}" | cut -c1-10)
+          DEPLOY_TS=$(date -u +%Y%m%d%H%M%S)
+          SHORT_SHA=$(echo "${{ needs.build-and-push.outputs.image-tag }}" | cut -c1-7)
+          SUFFIX="${SHORT_SHA}-${DEPLOY_TS}"
+          echo "Deploying with revision suffix: ${SUFFIX}"
+          echo "Image: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}"
+
           az containerapp update \
             --name ${{ env.AZURE_CONTAINER_APP }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}" \
-            --revision-suffix "d${SHORT_SHA}"
+            --revision-suffix "${SUFFIX}" \
+            --set-env-vars "COMMIT_SHA=${{ needs.build-and-push.outputs.image-tag }}" "BUILD_DATE=${DEPLOY_TS}"
 
       - name: Verify active revision
         run: |
-          echo "Active revisions:"
+          echo "=== Active revisions ==="
           az containerapp revision list \
             --name ${{ env.AZURE_CONTAINER_APP }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --query "[?properties.active==\`true\`].{name:name, image:properties.template.containers[0].image, created:properties.createdTime, traffic:properties.trafficWeight}" \
+            -o table
+
+          echo ""
+          echo "=== All revisions (last 5) ==="
+          az containerapp revision list \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query "sort_by([].{name:name, active:properties.active, created:properties.createdTime, traffic:properties.trafficWeight}, &created) | [-5:]" \
             -o table
 
   healthcheck:
@@ -147,21 +161,30 @@ jobs:
 
       - name: Health check
         run: |
+          EXPECTED_SHA="${{ needs.build-and-push.outputs.image-tag }}"
           for i in 1 2 3 4 5 6; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              "${{ steps.get-url.outputs.app_url }}/api/health" \
-              --max-time 10 || echo "000")
-            if [ "$STATUS" = "200" ]; then
-              echo "Health check passed on attempt $i"
+            RESPONSE=$(curl -s "${{ steps.get-url.outputs.app_url }}/api/health" --max-time 10 || echo "{}")
+            STATUS=$(echo "$RESPONSE" | jq -r '.status // "unknown"' 2>/dev/null || echo "unknown")
+            COMMIT=$(echo "$RESPONSE" | jq -r '.commit // "unknown"' 2>/dev/null || echo "unknown")
+
+            echo "Attempt $i/6: status=$STATUS commit=$COMMIT"
+
+            if [ "$STATUS" = "healthy" ]; then
+              echo "Health check PASSED"
               echo "App is live at: ${{ steps.get-url.outputs.app_url }}"
-              echo "Checking build info..."
-              curl -s "${{ steps.get-url.outputs.app_url }}/build-info.txt" || echo "build-info.txt not available"
+              echo "Running commit: $COMMIT"
+              if [ "$COMMIT" = "$EXPECTED_SHA" ]; then
+                echo "Commit SHA MATCHES expected deployment"
+              else
+                echo "WARNING: Commit SHA mismatch! Expected: $EXPECTED_SHA Got: $COMMIT"
+                echo "The new revision may not be serving traffic yet."
+              fi
               exit 0
             fi
-            echo "Attempt $i/6: Status $STATUS, retrying in 15s..."
+            echo "Retrying in 15s..."
             sleep 15
           done
-          echo "Health check failed after 6 attempts"
+          echo "Health check FAILED after 6 attempts"
           exit 1
 
       - name: Notify on failure

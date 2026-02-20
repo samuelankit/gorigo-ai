@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
       status: dbOk ? "healthy" : "degraded",
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || "1.0.0",
+      commit: process.env.COMMIT_SHA || "dev",
+      buildDate: process.env.BUILD_DATE || "dev",
     };
 
     if (!dbOk) {

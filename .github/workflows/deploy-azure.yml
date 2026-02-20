@@ -123,6 +123,13 @@ jobs:
               "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" \
               "NODE_ENV=production"
 
+      - name: Ensure ingress target port is correct
+        run: |
+          az containerapp ingress update \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --target-port 8080
+
       - name: Deploy new container revision
         id: deploy-revision
         run: |
@@ -139,51 +146,50 @@ jobs:
             --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}" \
             --revision-suffix "${SUFFIX}"
 
-      - name: Wait for revision to provision
-        run: sleep 30
-
-      - name: Check revision readiness
+      - name: Wait for revision to become ready
         run: |
-          REVISION="${{ env.AZURE_CONTAINER_APP }}--${{ steps.deploy-revision.outputs.revision_suffix }}"
-          echo "Checking revision: ${REVISION}"
-
-          READY_NAME=$(az containerapp show \
-            --name ${{ env.AZURE_CONTAINER_APP }} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --query "properties.latestReadyRevisionName" -o tsv)
-          LATEST_NAME=$(az containerapp show \
-            --name ${{ env.AZURE_CONTAINER_APP }} \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --query "properties.latestRevisionName" -o tsv)
-
-          echo "Latest revision:       ${LATEST_NAME}"
-          echo "Latest READY revision:  ${READY_NAME}"
-
-          if [ "${LATEST_NAME}" != "${READY_NAME}" ]; then
-            echo ""
-            echo "ERROR: New revision is NOT ready! Container may have crashed."
-            echo "Fetching container logs for diagnosis..."
-            az containerapp logs show \
+          echo "Waiting for new revision to become ready (up to 3 minutes)..."
+          for i in $(seq 1 12); do
+            READY_NAME=$(az containerapp show \
               --name ${{ env.AZURE_CONTAINER_APP }} \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-              --revision "${LATEST_NAME}" \
-              --tail 100 2>/dev/null || echo "Could not fetch revision logs"
-
-            echo ""
-            echo "Fetching system logs..."
-            az containerapp logs show \
+              --query "properties.latestReadyRevisionName" -o tsv)
+            LATEST_NAME=$(az containerapp show \
               --name ${{ env.AZURE_CONTAINER_APP }} \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-              --revision "${LATEST_NAME}" \
-              --type system \
-              --tail 50 2>/dev/null || echo "Could not fetch system logs"
+              --query "properties.latestRevisionName" -o tsv)
 
-            echo ""
-            echo "::error::Revision ${LATEST_NAME} failed to become ready. Old revision ${READY_NAME} is still serving traffic."
-            exit 1
-          else
-            echo "New revision is READY and serving traffic."
-          fi
+            echo "Attempt $i/12: latest=${LATEST_NAME} ready=${READY_NAME}"
+
+            if [ "${LATEST_NAME}" = "${READY_NAME}" ]; then
+              echo "New revision is READY and serving traffic."
+              exit 0
+            fi
+            echo "Not ready yet, waiting 15s..."
+            sleep 15
+          done
+
+          echo ""
+          echo "ERROR: New revision failed to become ready after 3 minutes."
+          echo "Fetching container logs for diagnosis..."
+          az containerapp logs show \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --revision "${LATEST_NAME}" \
+            --tail 100 2>/dev/null || echo "Could not fetch revision logs"
+
+          echo ""
+          echo "Fetching system logs..."
+          az containerapp logs show \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --revision "${LATEST_NAME}" \
+            --type system \
+            --tail 50 2>/dev/null || echo "Could not fetch system logs"
+
+          echo ""
+          echo "::error::Revision ${LATEST_NAME} failed to become ready. Old revision ${READY_NAME} is still serving traffic."
+          exit 1
 
       - name: Verify active revision
         run: |

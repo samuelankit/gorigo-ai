@@ -13,6 +13,15 @@ import { eq, and, sql, count, desc } from "drizzle-orm";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { generateDraft, DraftGenerationError, type DraftType, type DraftTone } from "@/lib/draft-generator";
+import {
+  detectJarvisIntent, isUtilityIntent,
+  handleReminder, handleListReminders, handleCompleteReminder,
+  handleNote, handleListNotes,
+  handleFollowUp, handleListFollowUps, handleCompleteFollowUp,
+  generateBriefing,
+  saveConversationMessage, loadConversationHistory,
+  getDueReminders, markReminderFired,
+} from "@/lib/rigo-jarvis";
 
 const rigoSchema = z.object({
   message: z.string().min(1).max(2000),
@@ -83,6 +92,13 @@ You can help with:
 - Summarising recent activity
 - Onboarding new users step by step
 - Guiding wallet top-ups and billing queries
+- Setting reminders: "Remind me to call John at 3pm" (FREE — no wallet charge)
+- Taking notes: "Note that the customer wants a quote for 50 units" (FREE)
+- Scheduling follow-ups: "Follow up with Sarah tomorrow about the contract" (FREE)
+- Daily briefings: "Give me my briefing" for a summary of calls, follow-ups, and wallet (FREE)
+- Listing/completing reminders, notes, and follow-ups (FREE)
+
+IMPORTANT: Reminders, notes, follow-ups, and briefings are FREE utility features — they do not cost the user anything. Mention this when users first discover these features.
 
 When presenting numbers, round appropriately and use natural language (e.g. "You have had 12 calls today" not "count: 12").
 
@@ -409,6 +425,82 @@ export async function POST(request: NextRequest) {
 
     intentCategory = detectIntent(message);
 
+    const jarvisIntent = detectJarvisIntent(message);
+    if (jarvisIntent) {
+      intentCategory = jarvisIntent;
+    }
+
+    if (isUtilityIntent(intentCategory)) {
+      try {
+        let jarvisResponse = "";
+        switch (intentCategory) {
+          case "reminder":
+            jarvisResponse = await handleReminder(auth.user.id, auth.orgId, message);
+            break;
+          case "list_reminders":
+            jarvisResponse = await handleListReminders(auth.user.id, auth.orgId);
+            break;
+          case "complete_reminder":
+            jarvisResponse = await handleCompleteReminder(auth.user.id, auth.orgId, message);
+            break;
+          case "note":
+            jarvisResponse = await handleNote(auth.user.id, auth.orgId, message);
+            break;
+          case "list_notes":
+            jarvisResponse = await handleListNotes(auth.user.id, auth.orgId);
+            break;
+          case "follow_up":
+            jarvisResponse = await handleFollowUp(auth.user.id, auth.orgId, message);
+            break;
+          case "list_follow_ups":
+            jarvisResponse = await handleListFollowUps(auth.user.id, auth.orgId);
+            break;
+          case "complete_follow_up":
+            jarvisResponse = await handleCompleteFollowUp(auth.user.id, auth.orgId, message);
+            break;
+          case "briefing":
+            jarvisResponse = await generateBriefing(auth.user.id, auth.orgId);
+            break;
+          default:
+            jarvisResponse = "I am not sure how to handle that. Could you try rephrasing?";
+        }
+
+        saveConversationMessage(auth.user.id, auth.orgId, "user", message, intentCategory).catch(() => {});
+        saveConversationMessage(auth.user.id, auth.orgId, "assistant", jarvisResponse, intentCategory).catch(() => {});
+
+        const dueReminders = await getDueReminders(auth.orgId);
+        let reminderAlert = "";
+        if (dueReminders.length > 0) {
+          reminderAlert = ` By the way, you have ${dueReminders.length} reminder${dueReminders.length > 1 ? "s" : ""} due: ${dueReminders.map(r => `"${r.message}"`).join(", ")}.`;
+          for (const r of dueReminders) {
+            markReminderFired(r.id).catch(() => {});
+          }
+        }
+
+        logAudit({
+          actorId: auth.user.id,
+          actorEmail: auth.user.email,
+          action: "rigo.jarvis",
+          entityType: "rigo",
+          entityId: auth.orgId,
+          details: { intent: intentCategory, success: true, free: true, latencyMs: Date.now() - startTime },
+        }).catch(() => {});
+
+        return NextResponse.json({
+          response: jarvisResponse + reminderAlert,
+          intent: intentCategory,
+          cost: 0,
+          free: true,
+        });
+      } catch (error) {
+        console.error("[Rigo] Jarvis handler error:", error);
+        return NextResponse.json({
+          response: "I am sorry, I could not process that request. Please try again.",
+          spokenResponse: "I am sorry, I could not process that request. Please try again.",
+        });
+      }
+    }
+
     if (intentCategory === "draft") {
       try {
         const draftResult = await handleDraftGeneration(
@@ -487,6 +579,14 @@ export async function POST(request: NextRequest) {
 
     const context = await gatherContext(auth.orgId, message);
 
+    let effectiveHistory = conversationHistory;
+    if (effectiveHistory.length === 0) {
+      const persisted = await loadConversationHistory(auth.user.id, auth.orgId, 10);
+      if (persisted.length > 0) {
+        effectiveHistory = persisted;
+      }
+    }
+
     const messages: ConversationMessage[] = [
       { role: "system", content: RIGO_SYSTEM_PROMPT },
       { role: "system", content: `\n\nCURRENT PLATFORM DATA FOR THIS USER:\n${context}` },
@@ -499,7 +599,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    for (const msg of conversationHistory.slice(-10)) {
+    const dueReminders = await getDueReminders(auth.orgId);
+    if (dueReminders.length > 0) {
+      messages.push({
+        role: "system",
+        content: `ALERT: The user has ${dueReminders.length} reminder(s) that are now due: ${dueReminders.map(r => `"${r.message}"`).join(", ")}. Mention these to the user naturally.`,
+      });
+      for (const r of dueReminders) {
+        markReminderFired(r.id).catch(() => {});
+      }
+    }
+
+    for (const msg of effectiveHistory.slice(-10)) {
       messages.push({
         role: msg.role === "user" ? "user" : "assistant",
         content: msg.content,
@@ -592,6 +703,9 @@ export async function POST(request: NextRequest) {
         metadata: { source: "rigo", intent: intentCategory },
       }).catch((error) => { console.error("Track Rigo usage cost failed:", error); });
     }
+
+    saveConversationMessage(auth.user.id, auth.orgId, "user", message, intentCategory).catch(() => {});
+    saveConversationMessage(auth.user.id, auth.orgId, "assistant", llmResult.content, intentCategory).catch(() => {});
 
     return NextResponse.json({
       response: llmResult.content,

@@ -2595,4 +2595,87 @@ export const insertCommissionLedgerSchema = createInsertSchema(commissionLedger)
 export type InsertCommissionLedger = z.infer<typeof insertCommissionLedgerSchema>;
 export type CommissionLedger = typeof commissionLedger.$inferSelect;
 
+// Rigo Jarvis Features
+
+export const rigoReminders = pgTable("rigo_reminders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  orgId: integer("org_id").references(() => orgs.id),
+  message: text("message").notNull(),
+  triggerAt: timestamp("trigger_at").notNull(),
+  recurrence: text("recurrence"),
+  status: text("status").default("pending").notNull(),
+  deliveryMethod: text("delivery_method").default("in_app").notNull(),
+  linkedEntityType: text("linked_entity_type"),
+  linkedEntityId: integer("linked_entity_id"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_reminder_user").on(table.userId),
+  index("idx_reminder_trigger").on(table.triggerAt),
+  index("idx_reminder_status").on(table.status),
+]);
+
+export const rigoNotes = pgTable("rigo_notes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  orgId: integer("org_id").references(() => orgs.id),
+  content: text("content").notNull(),
+  tags: text("tags").array(),
+  linkedEntityType: text("linked_entity_type"),
+  linkedEntityId: integer("linked_entity_id"),
+  source: text("source").default("voice").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_rigo_note_user").on(table.userId),
+  index("idx_rigo_note_org").on(table.orgId),
+]);
+
+export const rigoFollowUps = pgTable("rigo_follow_ups", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  orgId: integer("org_id").references(() => orgs.id),
+  contactName: text("contact_name"),
+  contactPhone: text("contact_phone"),
+  reason: text("reason").notNull(),
+  dueAt: timestamp("due_at").notNull(),
+  status: text("status").default("pending").notNull(),
+  linkedCallId: integer("linked_call_id"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_follow_up_user").on(table.userId),
+  index("idx_follow_up_due").on(table.dueAt),
+  index("idx_follow_up_status").on(table.status),
+]);
+
+export const rigoConversations = pgTable("rigo_conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  orgId: integer("org_id").references(() => orgs.id),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  intent: text("intent"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_rigo_conv_user").on(table.userId),
+  index("idx_rigo_conv_created").on(table.createdAt),
+]);
+
+export const insertRigoReminderSchema = createInsertSchema(rigoReminders).omit({ id: true, createdAt: true });
+export type InsertRigoReminder = z.infer<typeof insertRigoReminderSchema>;
+export type RigoReminder = typeof rigoReminders.$inferSelect;
+
+export const insertRigoNoteSchema = createInsertSchema(rigoNotes).omit({ id: true, createdAt: true });
+export type InsertRigoNote = z.infer<typeof insertRigoNoteSchema>;
+export type RigoNote = typeof rigoNotes.$inferSelect;
+
+export const insertRigoFollowUpSchema = createInsertSchema(rigoFollowUps).omit({ id: true, createdAt: true });
+export type InsertRigoFollowUp = z.infer<typeof insertRigoFollowUpSchema>;
+export type RigoFollowUp = typeof rigoFollowUps.$inferSelect;
+
+export const insertRigoConversationSchema = createInsertSchema(rigoConversations).omit({ id: true, createdAt: true });
+export type InsertRigoConversation = z.infer<typeof insertRigoConversationSchema>;
+export type RigoConversation = typeof rigoConversations.$inferSelect;
+
 export * from "./models/chat";

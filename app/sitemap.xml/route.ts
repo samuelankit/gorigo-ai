@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 const BASE_URL = "https://gorigo.ai";
 
-const pages: { path: string; priority: number; changefreq: string }[] = [
+const staticPages: { path: string; priority: number; changefreq: string }[] = [
   { path: "/", priority: 1.0, changefreq: "daily" },
 
   { path: "/capabilities", priority: 0.9, changefreq: "weekly" },
@@ -13,10 +13,16 @@ const pages: { path: string; priority: number; changefreq: string }[] = [
   { path: "/features/multi-language", priority: 0.9, changefreq: "weekly" },
   { path: "/features/pay-per-talk-time", priority: 0.9, changefreq: "weekly" },
 
-  { path: "/pricing", priority: 0.8, changefreq: "weekly" },
+  { path: "/pricing", priority: 0.85, changefreq: "weekly" },
   { path: "/about", priority: 0.8, changefreq: "monthly" },
   { path: "/contact", priority: 0.8, changefreq: "monthly" },
   { path: "/docs", priority: 0.8, changefreq: "weekly" },
+  { path: "/blog", priority: 0.85, changefreq: "daily" },
+  { path: "/case-studies", priority: 0.85, changefreq: "weekly" },
+  { path: "/roi-calculator", priority: 0.8, changefreq: "monthly" },
+  { path: "/ai-transparency", priority: 0.7, changefreq: "monthly" },
+  { path: "/trust", priority: 0.7, changefreq: "monthly" },
+  { path: "/sla", priority: 0.6, changefreq: "monthly" },
 
   { path: "/partners", priority: 0.8, changefreq: "monthly" },
   { path: "/partners/whitelabel", priority: 0.7, changefreq: "monthly" },
@@ -37,15 +43,58 @@ const pages: { path: string; priority: number; changefreq: string }[] = [
   { path: "/policies/cookies", priority: 0.4, changefreq: "yearly" },
   { path: "/policies/acceptable-use", priority: 0.4, changefreq: "yearly" },
 
-  { path: "/login", priority: 0.3, changefreq: "yearly" },
-  { path: "/register", priority: 0.3, changefreq: "yearly" },
   { path: "/sitemap", priority: 0.2, changefreq: "monthly" },
+];
+
+const blogSlugs = [
+  "ai-call-centre-revolution",
+  "talk-time-billing-explained",
+  "gdpr-compliant-ai-calls",
+  "multi-language-ai-agents",
+  "roi-ai-call-centre",
+  "human-handoff-best-practices",
+  "ai-voice-agents-2026",
+  "compliance-automation",
+  "pay-per-talk-pricing",
+  "knowledge-base-management",
+];
+
+const caseStudySlugs = [
+  "healthcare-nhs-ai-receptionist",
+  "legal-firm-ai-intake",
+  "real-estate-lead-qualification",
+  "financial-services-compliance",
+  "ecommerce-customer-support",
+  "hospitality-booking-management",
+  "insurance-claims-processing",
+  "recruitment-candidate-screening",
+  "automotive-service-booking",
+  "education-admissions",
+  "telecommunications-support",
+  "property-management",
+  "dental-practice",
+  "accounting-firm",
+  "travel-agency",
 ];
 
 export async function GET() {
   const lastmod = new Date().toISOString().split("T")[0];
 
-  const urls = pages
+  const allPages = [
+    ...staticPages,
+    ...blogSlugs.map((slug) => ({
+      path: `/blog/${slug}`,
+      priority: 0.7,
+      changefreq: "weekly",
+    })),
+    ...caseStudySlugs.map((slug) => ({
+      path: `/case-studies/${slug}`,
+      priority: 0.7,
+      changefreq: "monthly",
+    })),
+  ];
+
+  const urls = allPages
     .map(
       (page) => `  <url>
     <loc>${BASE_URL}${page.path}</loc>
@@ -57,7 +106,10 @@ export async function GET() {
     .join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 ${urls}
 </urlset>`;
 
@@ -65,6 +117,7 @@ ${urls}
     status: 200,
     headers: {
       "Content-Type": "application/xml",
+      "Cache-Control": "public, max-age=3600, s-maxage=3600",
     },
   });
 }

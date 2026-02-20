@@ -7,6 +7,8 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { CookieConsent } from "@/components/cookie-consent";
 import { Suspense } from "react";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { StructuredData } from "@/components/seo/structured-data";
+import { VerificationMeta } from "@/components/seo/verification-meta";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -51,6 +53,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <StructuredData />
+        <Suspense fallback={null}>
+          <VerificationMeta />
+        </Suspense>
+        <link rel="canonical" href="https://gorigo.ai" />
+        <meta name="geo.region" content="GB-LAN" />
+        <meta name="geo.placename" content="Preston" />
+        <meta name="author" content="International Business Exchange Limited" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider>
           <ErrorBoundary>

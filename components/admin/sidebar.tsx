@@ -57,6 +57,7 @@ import {
   UserCog,
   Receipt,
   Library,
+  Search,
 } from "lucide-react";
 
 const overviewItems = [
@@ -102,6 +103,7 @@ const enterpriseItems = [
 ];
 
 const systemItems = [
+  { title: "SEO & Search", url: "/admin/seo", icon: Search },
   { title: "Monitoring", url: "/admin/monitoring", icon: Activity },
   { title: "Infrastructure", url: "/admin/infrastructure", icon: Server },
   { title: "Notifications", url: "/admin/notifications", icon: Bell },

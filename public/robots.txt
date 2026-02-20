@@ -4,6 +4,24 @@ Allow: /pricing
 Allow: /about
 Allow: /contact
 Allow: /docs
+Allow: /blog
+Allow: /blog/*
+Allow: /case-studies
+Allow: /case-studies/*
+Allow: /capabilities
+Allow: /features/ai-agents
+Allow: /features/call-handling
+Allow: /features/compliance
+Allow: /features/analytics
+Allow: /features/multi-language
+Allow: /features/pay-per-talk-time
+Allow: /roi-calculator
+Allow: /ai-transparency
+Allow: /trust
+Allow: /sla
+Allow: /partners
+Allow: /partners/whitelabel
+Allow: /partners/affiliate
 Allow: /guide
 Allow: /guide/overview
 Allow: /guide/agents
@@ -20,12 +38,31 @@ Allow: /policies/acceptable-use
 Allow: /sitemap
 
 Disallow: /admin
+Disallow: /admin/*
 Disallow: /dashboard
+Disallow: /dashboard/*
 Disallow: /api
+Disallow: /api/*
 Disallow: /login
 Disallow: /register
 Disallow: /onboarding
 Disallow: /forgot-password
 Disallow: /reset-password
+Disallow: /invite
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: YandexBot
+Allow: /
 
 Sitemap: https://gorigo.ai/sitemap.xml

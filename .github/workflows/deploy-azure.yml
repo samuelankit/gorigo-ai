@@ -106,12 +106,22 @@ jobs:
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --mode single
 
-      - name: Clean up broken env vars from previous deploys
+      - name: Clean up stale env vars
         run: |
           az containerapp update \
             --name ${{ env.AZURE_CONTAINER_APP }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --remove-env-vars COMMIT_SHA BUILD_DATE 2>/dev/null || echo "No env vars to remove"
+            --remove-env-vars COMMIT_SHA BUILD_DATE 2>/dev/null || echo "Nothing to remove"
+
+      - name: Ensure required env vars are set
+        run: |
+          az containerapp update \
+            --name ${{ env.AZURE_CONTAINER_APP }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --set-env-vars \
+              "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
+              "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" \
+              "NODE_ENV=production"
 
       - name: Deploy new container revision
         id: deploy-revision

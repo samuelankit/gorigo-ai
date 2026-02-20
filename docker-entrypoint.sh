@@ -1,6 +1,4 @@
 #!/bin/sh
-echo "Running database schema push..."
-npx drizzle-kit push --force 2>&1 || echo "Schema push failed, continuing with startup..."
 
 echo "Clearing Next.js cache for fresh deployment..."
 rm -rf .next/cache 2>/dev/null || true

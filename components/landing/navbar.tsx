@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 const navLinks = [
   { label: "Capabilities", href: "/capabilities" },
+  { label: "Rigo", href: "/rigo" },
   { label: "Pricing", href: "/pricing" },
   { label: "ROI Calculator", href: "/roi-calculator" },
   { label: "Trust", href: "/trust" },

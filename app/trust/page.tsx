@@ -32,6 +32,9 @@ import {
   MapPin,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Trust Centre - Security & Compliance | GoRigo",
   description:

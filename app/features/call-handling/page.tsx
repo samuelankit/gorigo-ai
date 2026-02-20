@@ -29,6 +29,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "24/7 Call Handling | GoRigo.ai",
   description:

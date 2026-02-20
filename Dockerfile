@@ -24,10 +24,13 @@ RUN echo "Build: ${BUILD_DATE} Commit: ${COMMIT_SHA}" > /app/public/build-info.t
 FROM base AS runner
 WORKDIR /app
 
+ARG COMMIT_SHA=unknown
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
+ENV COMMIT_SHA=${COMMIT_SHA}
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

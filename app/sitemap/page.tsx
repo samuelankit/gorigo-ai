@@ -6,6 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Sitemap | GoRigo",
   description: "Find your way around GoRigo. Browse all pages including platform features, getting started guides, legal policies, and account pages.",

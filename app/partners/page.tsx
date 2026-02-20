@@ -39,6 +39,9 @@ import {
   Eye,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Partner with GoRigo | Grow Your Business with AI",
   description:

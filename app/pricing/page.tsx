@@ -1,6 +1,9 @@
 import { Metadata } from "next";
 import { PricingContent } from "./pricing-content";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Pricing - Flexible AI Call Centre Packages | GoRigo",
   description:

@@ -19,6 +19,9 @@ import {
   Scale,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Service Level Agreement (SLA) | GoRigo",
   description:

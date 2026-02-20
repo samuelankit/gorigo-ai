@@ -10,6 +10,9 @@ import { TalkTimeInfo } from "@/components/talk-time-info";
 import { ArrowRight } from "lucide-react";
 import { Suspense, lazy } from "react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const HomeBelowFold = lazy(() => import("@/components/landing/home-sections").then((mod) => ({ default: mod.HomeBelowFold })));
 
 export default function HomePage() {

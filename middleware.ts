@@ -111,6 +111,8 @@ export function middleware(request: NextRequest) {
     requestHeaders.set("x-request-id", requestId);
     const response = NextResponse.next({ request: { headers: requestHeaders } });
     response.headers.set("x-request-id", requestId);
+    response.headers.set("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=30");
+    response.headers.set("CDN-Cache-Control", "max-age=60");
     addSecurityHeaders(response);
     return response;
   }

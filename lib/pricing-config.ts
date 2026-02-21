@@ -264,19 +264,27 @@ export function calculateRevenueImpact(
   };
 }
 
+function addThousandsSeparator(numStr: string): string {
+  const parts = numStr.split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return parts.join(".");
+}
+
 export function formatGBP(value: number, decimals?: number): string {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    minimumFractionDigits: decimals ?? 0,
-    maximumFractionDigits: decimals ?? 0,
-  }).format(value);
+  const d = decimals ?? 0;
+  const abs = Math.abs(value);
+  const fixed = abs.toFixed(d);
+  const formatted = addThousandsSeparator(fixed);
+  const sign = value < 0 ? "-" : "";
+  return `${sign}£${formatted}`;
 }
 
 export function formatPercent(value: number): string {
-  return new Intl.NumberFormat("en-GB", {
-    style: "percent",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 1,
-  }).format(value);
+  const pct = value * 100;
+  const formatted = pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1);
+  return `${formatted}%`;
+}
+
+export function formatNumber(value: number): string {
+  return addThousandsSeparator(Math.round(value).toString());
 }

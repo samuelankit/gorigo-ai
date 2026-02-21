@@ -53,6 +53,7 @@ import {
   calculateRevenueImpact,
   formatGBP,
   formatPercent,
+  formatNumber,
   type TierKey,
   type ScenarioKey,
 } from "@/lib/pricing-config";
@@ -107,7 +108,7 @@ function SliderWithInput({
   onChange: (v: number) => void;
   testId: string;
 }) {
-  const displayValue = unit === "£" ? formatGBP(value) : `${value.toLocaleString("en-GB")}`;
+  const displayValue = unit === "£" ? formatGBP(value) : formatNumber(value);
 
   return (
     <div className="space-y-2" data-testid={testId}>
@@ -145,10 +146,10 @@ function SliderWithInput({
       />
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground">
-          {unit === "£" ? formatGBP(min) : min.toLocaleString()}
+          {unit === "£" ? formatGBP(min) : formatNumber(min)}
         </span>
         <span className="text-xs text-muted-foreground">
-          {unit === "£" ? formatGBP(max) : max.toLocaleString()}
+          {unit === "£" ? formatGBP(max) : formatNumber(max)}
         </span>
       </div>
     </div>

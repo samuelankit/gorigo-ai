@@ -68,6 +68,7 @@ const overviewItems = [
   { title: "Unit Economics", url: "/admin/unit-economics", icon: Calculator },
   { title: "Cost Accounting", url: "/admin/cost-accounting", icon: Receipt },
   { title: "Calls", url: "/admin/calls", icon: PhoneCall },
+  { title: "Transcripts", url: "/admin/transcripts", icon: FileText },
   { title: "Operations", url: "/admin/operations", icon: Activity },
   { title: "Leads", url: "/admin/leads", icon: Zap },
   { title: "Chat Leads", url: "/admin/chats", icon: MessageCircle },

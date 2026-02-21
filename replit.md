@@ -67,7 +67,7 @@ Key features include:
 
 ## Integration Status (Updated Feb 2026)
 - **Stripe**: Fully connected via Replit connector + STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET env secrets as backup. Wallet top-ups, webhooks, and withdrawals operational. Code: `lib/stripe-client.ts`, `lib/stripe-connect.ts`.
-- **Email (SendGrid)**: `@sendgrid/mail` installed. Falls back to console logging when SENDGRID_API_KEY not configured. Code: `lib/email.ts`. Templates: verification, password reset, welcome, invitation.
+- **Email (SendGrid)**: Fully connected. SENDGRID_API_KEY stored as secret. Sender verified (hello@gorigo.ai) with domain authentication. Code: `lib/email.ts`. Templates: verification, password reset, welcome, invitation.
 - **Twilio**: Fully connected with TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_PHONE_NUMBER (+44 1772 211802) stored as secrets. Voice calls, TwiML responses, signature validation, and sub-account management operational. Code: `lib/twilio.ts`. Trial account — upgrade to paid for production use.
 - **AI Services**: OpenAI, Anthropic, OpenRouter connected via Replit AI Integrations. RAG grounding enforced — no raw LLM queries without knowledge base context.
 - **Hydration Fix**: ROI calculator page uses deterministic formatters (formatGBP, formatPercent, formatNumber) instead of locale-dependent Intl APIs to prevent SSR/client mismatch.

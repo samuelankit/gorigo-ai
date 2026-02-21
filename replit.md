@@ -1,5 +1,11 @@
 # GoRigo - AI Call Center Platform
 
+## Company Details
+- **Company Name**: International Business Exchange Limited
+- **Companies House Number**: 15985956
+- **Registered Address**: Cotton Court Business Centre, Preston, PR1 3BY, England
+- **Website**: https://gorigo.ai
+
 ## Overview
 GoRigo is an AI-powered call center platform designed to automate call center operations, provide comprehensive analytics, and manage a three-tier business hierarchy (Business Partners, Direct-to-Consumer, Affiliate Partners). The platform streamlines partner management via a SuperAdmin Console, automates commission processing, and offers capabilities like multi-agent management, visual automation flow building, knowledge management, and robust call management with real-time monitoring. Its ambition is to be a fully automated, scalable solution for AI-driven call centers, with a strategic mobile-first approach.
 

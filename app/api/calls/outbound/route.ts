@@ -4,7 +4,7 @@ import { agents, callLogs, twilioPhoneNumbers } from "@/shared/schema";
 import { resolveRate } from "@/lib/rate-resolver";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser, requireApiKeyScope, requireEmailVerified } from "@/lib/get-user";
-import { isTwilioConfigured, makeOutboundCall } from "@/lib/twilio";
+import { makeOutboundCall, isAnyProviderConfigured, getActiveProvider } from "@/lib/voice-provider";
 import { hasInsufficientBalance } from "@/lib/wallet";
 import { isOnDNCList, hasValidConsent } from "@/lib/dnc";
 import { canStartCall, getMinCallBalance } from "@/lib/call-limits";
@@ -46,10 +46,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: verifiedCheck.error }, { status: verifiedCheck.status || 403 });
     }
 
-    const { isTwilioConfiguredForOrg } = await import("@/lib/twilio");
-    const twilioReady = await isTwilioConfiguredForOrg(auth.orgId);
-    if (!isTwilioConfigured() && !twilioReady) {
-      return NextResponse.json({ error: "Telephony is not configured. Please set up Twilio credentials in Settings > Integrations." }, { status: 503 });
+    if (!isAnyProviderConfigured()) {
+      return NextResponse.json({ error: "Telephony is not configured. Please set up voice provider credentials in Settings > Integrations." }, { status: 503 });
     }
 
     const body = await request.json();
@@ -189,14 +187,19 @@ export async function POST(request: NextRequest) {
     const hasRecordingConsent = await hasValidConsent(auth.orgId, sanitizedPhone, "recording");
 
     try {
-      const twilioCall = await makeOutboundCall(sanitizedPhone, orgPhone.phoneNumber, webhookUrl, { record: hasRecordingConsent }, auth.orgId);
+      const callResult = await makeOutboundCall(sanitizedPhone, orgPhone.phoneNumber, webhookUrl, { record: hasRecordingConsent }, auth.orgId);
+
+      const callLogUpdate: Record<string, unknown> = {
+        providerCallId: callResult.callId,
+        status: "ringing",
+      };
+      if (callResult.provider === "twilio") {
+        callLogUpdate.twilioCallSid = callResult.callId;
+      }
 
       await db
         .update(callLogs)
-        .set({
-          twilioCallSid: twilioCall.sid,
-          status: "ringing",
-        })
+        .set(callLogUpdate)
         .where(eq(callLogs.id, callLog.id));
 
       try {
@@ -206,7 +209,7 @@ export async function POST(request: NextRequest) {
           action: "call_outbound_initiate",
           entityType: "call",
           entityId: callLog.id,
-          details: { toNumber: sanitizedPhone },
+          details: { toNumber: sanitizedPhone, provider: callResult.provider },
         });
       } catch (auditErr) {
         logger.error("Audit log error", auditErr);
@@ -214,19 +217,20 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         callId: callLog.id,
-        twilioSid: twilioCall.sid,
+        providerCallId: callResult.callId,
+        provider: callResult.provider,
         status: "ringing",
         to: sanitizedPhone,
         from: orgPhone.phoneNumber,
         agent: agent.name,
       }, { status: 201 });
-    } catch (twilioErr) {
+    } catch (callErr) {
       await db
         .update(callLogs)
         .set({ status: "failed", finalOutcome: "dial_failed", endedAt: new Date() })
         .where(eq(callLogs.id, callLog.id));
 
-      logger.error("Outbound call failed", twilioErr);
+      logger.error("Outbound call failed", callErr);
       return NextResponse.json({ error: "Failed to initiate call. Please try again." }, { status: 500 });
     }
   } catch (error) {

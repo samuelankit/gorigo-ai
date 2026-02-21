@@ -33,7 +33,7 @@ The mobile app, located in `/mobile/`, uses Expo Router and features a dual-inpu
 - Activity (hidden): Activity feed
 
 ### Technical Implementations
-GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentication is session-based. AI functionalities leverage OpenAI via Replit AI Integrations, enhanced by a RAG system. A prepaid wallet system with atomic operations and row-level locks manages billing and commissions. Multi-tenancy is enforced via `orgId`, and Role-Based Access Control (`globalRole`) manages permissions. A 7-state Call State Machine handles call flows, integrated with Twilio Programmable Voice. Background jobs process document chunking, embedding, and audio transcription. Security features include prompt injection detection and input validation. A distribution engine manages commissions and revenue sharing. A multi-agent system supports various AI agent types and visual flow diagram building. Compliance features include TCPA/FCC DNC management, PII auto-redaction, sentiment analysis, and call quality scoring. The system supports AI model fallback, multilingual capabilities, concurrent call limits, business hours, and outgoing webhooks.
+GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentication is session-based. AI functionalities leverage OpenAI via Replit AI Integrations, enhanced by a RAG system. A prepaid wallet system with atomic operations and row-level locks manages billing and commissions. Multi-tenancy is enforced via `orgId`, and Role-Based Access Control (`globalRole`) manages permissions. A 7-state Call State Machine handles call flows, integrated with Telnyx (primary) and Twilio (fallback) via `lib/voice-provider.ts`. Background jobs process document chunking, embedding, and audio transcription. Security features include prompt injection detection and input validation. A distribution engine manages commissions and revenue sharing. A multi-agent system supports various AI agent types and visual flow diagram building. Compliance features include TCPA/FCC DNC management, PII auto-redaction, sentiment analysis, and call quality scoring. The system supports AI model fallback, multilingual capabilities, concurrent call limits, business hours, and outgoing webhooks.
 
 The platform includes a Unit Economics System for real-time cost tracking and margin analysis, with a pricing simulator. An optional Rigo Voice Assistant provides AI voice control over the SaaS dashboard. Security hardening includes audit logging, robust session management, database-backed rate limiting, CSRF protection, email verification, account lockout, and comprehensive input validation using Zod schemas. Deployment utilizes Docker containers on Azure Container Apps with Azure PostgreSQL Flexible Server and Azure Key Vault. CI/CD is managed via GitHub Actions.
 
@@ -68,7 +68,9 @@ Key features include:
 ## Integration Status (Updated Feb 2026)
 - **Stripe**: Fully connected via Replit connector + STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET env secrets as backup. Wallet top-ups, webhooks, and withdrawals operational. Code: `lib/stripe-client.ts`, `lib/stripe-connect.ts`.
 - **Email (SendGrid)**: Fully connected. SENDGRID_API_KEY stored as secret. Sender verified (hello@gorigo.ai) with domain authentication. Code: `lib/email.ts`. Templates: verification, password reset, welcome, invitation.
-- **Twilio**: Fully connected with TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_PHONE_NUMBER (+44 1772 211802) stored as secrets. Voice calls, TwiML responses, signature validation, and sub-account management operational. Code: `lib/twilio.ts`. Trial account — upgrade to paid for production use.
+- **Telnyx (Primary Voice)**: Locked in as primary voice provider. SDK: `telnyx` npm package. Code: `lib/telnyx.ts`. Env vars: TELNYX_API_KEY, TELNYX_CONNECTION_ID, TELNYX_PHONE_NUMBER, TELNYX_PUBLIC_KEY. Features: outbound/inbound calls, call control (answer, hangup, speak, gather, transfer, bridge), number search/ordering, webhook validation. Cost: ~£0.007/min UK (58% cheaper than Twilio). Per-second billing. Own private IP network for lower latency. EU data centres for GDPR compliance. **Pending: API key from user.**
+- **Twilio (Fallback Voice)**: Fully connected with TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_PHONE_NUMBER (+44 1772 211802) stored as secrets. Voice calls, TwiML responses, signature validation, and sub-account management operational. Code: `lib/twilio.ts`. Cost: ~£0.017/min UK. Trial account — upgrade to paid for production use. Used as automatic fallback if Telnyx fails.
+- **Voice Provider Manager**: `lib/voice-provider.ts` manages provider selection. PRIMARY_VOICE_PROVIDER env var controls routing (default: telnyx). Automatic failover: if primary fails, routes to fallback. Outbound calls in `app/api/calls/outbound/route.ts` use provider-agnostic `makeOutboundCall()` from voice-provider.ts.
 - **AI Services**: OpenAI, Anthropic, OpenRouter connected via Replit AI Integrations. RAG grounding enforced — no raw LLM queries without knowledge base context.
 - **Hydration Fix**: ROI calculator page uses deterministic formatters (formatGBP, formatPercent, formatNumber) instead of locale-dependent Intl APIs to prevent SSR/client mismatch.
 
@@ -78,7 +80,7 @@ Key features include:
 - **ORM**: Drizzle ORM.
 - **UI Components**: Shadcn/ui.
 - **Charting Library**: Recharts.
-- **Telephony**: Twilio Programmable Voice.
+- **Telephony**: Telnyx (primary, `telnyx` npm) + Twilio Programmable Voice (fallback).
 - **Payments**: Stripe.
 - **Email**: SendGrid (@sendgrid/mail).
 - **Mobile**: Expo SDK 54, expo-router, expo-speech, expo-av, expo-haptics.

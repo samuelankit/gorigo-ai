@@ -1,0 +1,227 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { agents, callLogs, orgs, twilioPhoneNumbers } from "@/shared/schema";
+import { resolveRate, type UsageCategory } from "@/lib/rate-resolver";
+import { eq, and } from "drizzle-orm";
+import { validateTelnyxWebhook, speakText, gatherInput, hangupCall, answerCall } from "@/lib/telnyx";
+import { isWithinBusinessHours, getNextOpenTime, type BusinessHoursConfig } from "@/lib/business-hours";
+import { recordConsent } from "@/lib/dnc";
+import { getCountryVoiceConfig, getDisclosureText } from "@/lib/compliance-engine";
+import { callLimiter } from "@/lib/rate-limit";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("TelnyxVoice");
+
+export async function POST(request: NextRequest) {
+  try {
+    const rl = await callLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
+    const rawBody = await request.text();
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const signature = request.headers.get("telnyx-signature-ed25519") || "";
+    const timestamp = request.headers.get("telnyx-timestamp") || "";
+
+    if (process.env.TELNYX_PUBLIC_KEY) {
+      if (!signature || !timestamp) {
+        logger.warn("Missing Telnyx webhook signature headers");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+      const isValid = validateTelnyxWebhook(rawBody, signature, timestamp);
+      if (!isValid) {
+        logger.warn("Invalid Telnyx webhook signature");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+    } else if (process.env.NODE_ENV === "production") {
+      logger.warn("TELNYX_PUBLIC_KEY not set — rejecting webhook in production");
+      return NextResponse.json({ error: "Webhook validation not configured" }, { status: 503 });
+    }
+
+    const data = (body.data as Record<string, unknown>) || {};
+    const eventType = data.event_type as string || "";
+    const payload = (data.payload as Record<string, unknown>) || {};
+    const callControlId = payload.call_control_id as string || "";
+    const callerNumber = payload.from as string || "";
+    const calledNumber = payload.to as string || "";
+    const direction = payload.direction as string || "";
+
+    logger.info(`Telnyx webhook: ${eventType}`, { callControlId, direction });
+
+    if (eventType === "call.initiated" && direction === "incoming") {
+      return await handleIncomingCall(callControlId, callerNumber, calledNumber);
+    }
+
+    if (eventType === "call.answered") {
+      return await handleCallAnswered(callControlId, callerNumber, calledNumber);
+    }
+
+    if (eventType === "call.hangup") {
+      return await handleCallHangup(callControlId, payload);
+    }
+
+    if (eventType === "call.speak.ended" || eventType === "call.gather.ended") {
+      const digits = payload.digits as string || "";
+      const speech = (payload.speech as Record<string, unknown>)?.result as string || "";
+      logger.info(`Gather/speak ended`, { callControlId, digits, speech });
+    }
+
+    return NextResponse.json({ status: "ok" });
+  } catch (error) {
+    logger.error("Telnyx voice webhook error", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+async function handleIncomingCall(
+  callControlId: string,
+  callerNumber: string,
+  calledNumber: string
+): Promise<NextResponse> {
+  try {
+    await answerCall(callControlId);
+
+    const [phoneRecord] = await db
+      .select()
+      .from(twilioPhoneNumbers)
+      .where(and(eq(twilioPhoneNumbers.phoneNumber, calledNumber), eq(twilioPhoneNumbers.isActive, true)))
+      .limit(1);
+
+    if (!phoneRecord || !phoneRecord.orgId) {
+      await speakText(callControlId, "We're sorry, this number is not currently in service. Please try again later.");
+      await hangupCall(callControlId);
+      return NextResponse.json({ status: "ok" });
+    }
+
+    const orgId = phoneRecord.orgId;
+
+    const [orgRecord] = await db.select().from(orgs).where(eq(orgs.id, orgId)).limit(1);
+    if (orgRecord) {
+      const businessHours = orgRecord.businessHours as BusinessHoursConfig | null;
+      if (businessHours && businessHours.enabled && !isWithinBusinessHours(businessHours)) {
+        const closedMsg = `Thank you for calling. We are currently closed. ${getNextOpenTime(businessHours)} Goodbye.`;
+        await speakText(callControlId, closedMsg);
+        await hangupCall(callControlId);
+        return NextResponse.json({ status: "ok" });
+      }
+    }
+
+    const orgAgents = await db
+      .select()
+      .from(agents)
+      .where(and(eq(agents.orgId, orgId), eq(agents.status, "active")))
+      .limit(10);
+
+    const activeAgent = orgAgents.find(a => a.inboundEnabled && !a.isRouter) || orgAgents[0];
+
+    if (!activeAgent) {
+      await speakText(callControlId, "We're sorry, no agent is available to take your call right now. Please try again later.");
+      await hangupCall(callControlId);
+      return NextResponse.json({ status: "ok" });
+    }
+
+    let capturedRate: { deploymentModel: string; ratePerMinute: number } = { deploymentModel: "managed", ratePerMinute: 0.20 };
+    try {
+      const resolved = await resolveRate(orgId, "voice_inbound" as UsageCategory);
+      capturedRate = { deploymentModel: resolved.deploymentModel, ratePerMinute: resolved.ratePerMinute };
+    } catch (rateErr) {
+      logger.error("Rate capture failed, using default", rateErr instanceof Error ? rateErr : undefined);
+    }
+
+    await db
+      .insert(callLogs)
+      .values({
+        agentId: activeAgent.id,
+        userId: activeAgent.userId,
+        orgId,
+        direction: "inbound",
+        callerNumber,
+        status: "in-progress",
+        providerCallId: callControlId,
+        currentState: "GREETING",
+        turnCount: 0,
+        aiDisclosurePlayed: false,
+        startedAt: new Date(),
+        billedDeploymentModel: capturedRate.deploymentModel,
+        billedRatePerMinute: String(capturedRate.ratePerMinute),
+      });
+
+    const phoneCountryCode = phoneRecord.countryCode;
+    const agentLanguage = activeAgent.language || "en-GB";
+
+    let disclosureText: string;
+    if (phoneCountryCode) {
+      const countryDisclosure = await getDisclosureText(phoneCountryCode, agentLanguage);
+      disclosureText = countryDisclosure || `I'm ${activeAgent.name}, an AI assistant. This call may be recorded.`;
+    } else {
+      disclosureText = `This call is being recorded for quality and training purposes. By continuing, you consent to being recorded. I'm ${activeAgent.name}, an AI assistant.`;
+    }
+
+    const greeting = activeAgent.greeting || "Hello, thank you for calling. How can I help you today?";
+    const fullMessage = `${disclosureText} ${greeting}`;
+
+    await speakText(callControlId, fullMessage, {
+      voice: activeAgent.voiceName || "female",
+      language: agentLanguage,
+    });
+
+    await db
+      .update(callLogs)
+      .set({ aiDisclosurePlayed: true, aiDisclosureVersion: "v2-telnyx-consent" })
+      .where(eq(callLogs.providerCallId, callControlId));
+
+    await recordConsent(orgId, callerNumber, "ai_call", true, "verbal_ivr", disclosureText);
+    await recordConsent(orgId, callerNumber, "recording", true, "verbal_continuation", disclosureText);
+
+    return NextResponse.json({ status: "ok" });
+  } catch (err) {
+    logger.error("Failed to handle incoming Telnyx call", err instanceof Error ? err : undefined);
+    try {
+      await speakText(callControlId, "We're experiencing technical difficulties. Please try again later.");
+      await hangupCall(callControlId);
+    } catch {}
+    return NextResponse.json({ status: "error" }, { status: 500 });
+  }
+}
+
+async function handleCallAnswered(
+  callControlId: string,
+  _callerNumber: string,
+  _calledNumber: string
+): Promise<NextResponse> {
+  logger.info("Call answered", { callControlId });
+  return NextResponse.json({ status: "ok" });
+}
+
+async function handleCallHangup(
+  callControlId: string,
+  payload: Record<string, unknown>
+): Promise<NextResponse> {
+  const hangupCause = payload.hangup_cause as string || "unknown";
+  const durationSecs = payload.duration_secs as number || 0;
+
+  logger.info("Call hangup", { callControlId, hangupCause, durationSecs });
+
+  try {
+    await db
+      .update(callLogs)
+      .set({
+        status: "completed",
+        endedAt: new Date(),
+        duration: durationSecs,
+        finalOutcome: hangupCause === "normal_clearing" ? "completed" : hangupCause,
+      })
+      .where(eq(callLogs.providerCallId, callControlId));
+  } catch (err) {
+    logger.error("Failed to update call log on hangup", err instanceof Error ? err : undefined);
+  }
+
+  return NextResponse.json({ status: "ok" });
+}

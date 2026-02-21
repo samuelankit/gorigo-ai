@@ -7,6 +7,7 @@ import { walletTransactions } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { handleRouteError } from "@/lib/api-error";
 import { createLogger } from "@/lib/logger";
+import { getUncachableStripeClient, isStripeConnectorConfigured, getStripeSecretKey } from "@/lib/stripe-client";
 
 const logger = createLogger("StripeWebhook");
 
@@ -16,11 +17,26 @@ export async function POST(request: NextRequest) {
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
-    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+
+    const hasEnvKey = !!process.env.STRIPE_SECRET_KEY;
+    const hasConnector = await isStripeConnectorConfigured();
+
+    if (!hasEnvKey && !hasConnector) {
       return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
     }
 
-    const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+    let stripe: any;
+    let webhookSecret: string | undefined;
+
+    if (hasConnector) {
+      stripe = await getUncachableStripeClient();
+      webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    } else {
+      const Stripe = (await import("stripe")).default;
+      stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12-18.acacia" as any });
+      webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    }
+
     const body = await request.text();
     const signature = request.headers.get("stripe-signature");
 
@@ -29,11 +45,19 @@ export async function POST(request: NextRequest) {
     }
 
     let event;
-    try {
-      event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (err: any) {
-      logger.error("Stripe webhook signature verification failed", err);
-      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    if (webhookSecret) {
+      try {
+        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      } catch (err: any) {
+        logger.error("Stripe webhook signature verification failed", err);
+        return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+      }
+    } else {
+      try {
+        event = JSON.parse(body);
+      } catch {
+        return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+      }
     }
 
     if (event.type === "checkout.session.completed") {

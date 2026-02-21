@@ -1,23 +1,22 @@
-import Stripe from "stripe";
+import { getUncachableStripeClient, isStripeConnectorConfigured } from "@/lib/stripe-client";
 
-let stripeInstance: Stripe | null = null;
+export async function isStripeConfigured(): Promise<boolean> {
+  if (process.env.STRIPE_SECRET_KEY) return true;
+  return isStripeConnectorConfigured();
+}
 
-function getStripe(): Stripe | null {
-  if (!process.env.STRIPE_SECRET_KEY) return null;
-  if (!stripeInstance) {
-    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+async function getStripe() {
+  if (process.env.STRIPE_SECRET_KEY) {
+    const Stripe = (await import("stripe")).default;
+    return new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2024-12-18.acacia" as any,
     });
   }
-  return stripeInstance;
-}
-
-export function isStripeConfigured(): boolean {
-  return !!process.env.STRIPE_SECRET_KEY;
+  return getUncachableStripeClient();
 }
 
 export async function createConnectedAccount(partnerEmail: string, partnerName: string, country: string = "GB"): Promise<string | null> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (!stripe) return null;
 
   const account = await stripe.accounts.create({
@@ -38,7 +37,7 @@ export async function createConnectedAccount(partnerEmail: string, partnerName: 
 }
 
 export async function createOnboardingLink(accountId: string, returnUrl: string, refreshUrl: string): Promise<string | null> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (!stripe) return null;
 
   const accountLink = await stripe.accountLinks.create({
@@ -56,7 +55,7 @@ export async function checkAccountStatus(accountId: string): Promise<{
   payoutsEnabled: boolean;
   detailsSubmitted: boolean;
 } | null> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (!stripe) return null;
 
   const account = await stripe.accounts.retrieve(accountId);
@@ -73,7 +72,7 @@ export async function createTransfer(
   currency: string = "gbp",
   description: string = "Commission payout"
 ): Promise<{ transferId: string } | null> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (!stripe) return null;
 
   const transfer = await stripe.transfers.create({
@@ -87,7 +86,7 @@ export async function createTransfer(
 }
 
 export async function getAccountBalance(accountId: string): Promise<{ available: number; pending: number } | null> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (!stripe) return null;
 
   const balance = await stripe.balance.retrieve({
@@ -101,7 +100,7 @@ export async function getAccountBalance(accountId: string): Promise<{ available:
 }
 
 export async function createLoginLink(accountId: string): Promise<string | null> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   if (!stripe) return null;
 
   const loginLink = await stripe.accounts.createLoginLink(accountId);

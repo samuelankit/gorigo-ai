@@ -14,7 +14,7 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!isStripeConfigured()) {
+    if (!(await isStripeConfigured())) {
       return NextResponse.json({ error: "Stripe is not configured. Please contact support." }, { status: 503 });
     }
 

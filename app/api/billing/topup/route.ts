@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { createLogger } from "@/lib/logger";
+import { getUncachableStripeClient, isStripeConnectorConfigured } from "@/lib/stripe-client";
 
 const logger = createLogger("BillingTopup");
 
@@ -36,7 +37,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { amount } = topupSchema.parse(body);
 
-    if (!process.env.STRIPE_SECRET_KEY) {
+    const hasEnvKey = !!process.env.STRIPE_SECRET_KEY;
+    const hasConnector = await isStripeConnectorConfigured();
+
+    if (!hasEnvKey && !hasConnector) {
       return NextResponse.json({
         error: "Payment processing is not configured. Please contact support.",
         configured: false,
@@ -44,12 +48,20 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+      let stripe: any;
+      if (hasConnector) {
+        stripe = await getUncachableStripeClient();
+      } else {
+        const Stripe = (await import("stripe")).default;
+        stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-12-18.acacia" as any });
+      }
 
       const idempotencyKey = crypto
         .createHash("sha256")
         .update(`topup_${auth.orgId}_${auth.user.id}_${amount}_${Math.floor(Date.now() / 30000)}`)
         .digest("hex");
+
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "https://gorigo.ai");
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -65,8 +77,8 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         }],
         mode: "payment",
-        success_url: `${process.env.NEXT_PUBLIC_BASE_URL || "https://gorigo.replit.app"}/dashboard/billing?topup=success&amount=${amount}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || "https://gorigo.replit.app"}/dashboard/billing?topup=cancelled`,
+        success_url: `${baseUrl}/dashboard/billing?topup=success&amount=${amount}`,
+        cancel_url: `${baseUrl}/dashboard/billing?topup=cancelled`,
         metadata: {
           orgId: auth.orgId.toString(),
           userId: auth.user.id.toString(),

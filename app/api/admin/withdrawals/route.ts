@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
         totalPaidAmount: parseFloat(stats.totalPaidAmount),
         totalPendingAmount: parseFloat(stats.totalPendingAmount),
       },
-      stripeConfigured: isStripeConfigured(),
+      stripeConfigured: await isStripeConfigured(),
     });
   } catch (error) {
     return handleRouteError(error, "Admin Withdrawals");
@@ -157,7 +157,7 @@ export async function PUT(request: NextRequest) {
 
       const [partner] = await db.select().from(partners).where(eq(partners.id, withdrawal.partnerId));
 
-      if (partner?.stripeConnectAccountId && partner?.stripeConnectOnboardingComplete && isStripeConfigured()) {
+      if (partner?.stripeConnectAccountId && partner?.stripeConnectOnboardingComplete && await isStripeConfigured()) {
         try {
           const amountInPence = Math.round(parseFloat(withdrawal.amount) * 100);
           const result = await createTransfer(

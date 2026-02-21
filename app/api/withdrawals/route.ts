@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
       autoApproveThreshold: AUTO_APPROVE_THRESHOLD,
       holdingPeriodDays: HOLDING_PERIOD_DAYS,
       withdrawals,
-      stripeConfigured: isStripeConfigured(),
+      stripeConfigured: await isStripeConfigured(),
     });
   } catch (error) {
     return handleRouteError(error, "Withdrawals");

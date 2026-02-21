@@ -59,6 +59,13 @@ Key features include:
 - **Rigo Jarvis Features**: Voice assistant enhanced with personal productivity tools — all FREE (no wallet deduction). Tables: `rigo_reminders`, `rigo_notes`, `rigo_follow_ups`, `rigo_conversations`. Features: set/list/complete reminders, take/list notes with auto-tagging, schedule/list/complete follow-ups, daily briefings (calls, follow-ups, wallet, agents), conversation memory persistence across sessions, after-call AI summaries. Core library: `lib/rigo-jarvis.ts`. REST APIs: `/api/rigo/reminders`, `/api/rigo/notes`, `/api/rigo/follow-ups`, `/api/calls/summary`. Intents detected via regex in `detectJarvisIntent()` and handled before wallet deduction.
 - **Transcript Archive**: SuperAdmin searchable transcript archive at `/admin/transcripts`. PostgreSQL full-text search (tsvector/GIN index) on `call_logs.transcript` column. Features: keyword search with `ts_headline` highlighting, date range/agent/direction filters, paginated results, transcript detail modal with metadata (sentiment, quality score, duration, summary). API: `/api/admin/transcripts`. Server-side HTML sanitisation on highlighted snippets to prevent XSS. SuperAdmin-only access enforced.
 
+## Integration Status (Updated Feb 2026)
+- **Stripe**: Fully connected via Replit connector + STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET env secrets as backup. Wallet top-ups, webhooks, and withdrawals operational. Code: `lib/stripe-client.ts`, `lib/stripe-connect.ts`.
+- **Email (SendGrid)**: `@sendgrid/mail` installed. Falls back to console logging when SENDGRID_API_KEY not configured. Code: `lib/email.ts`. Templates: verification, password reset, welcome, invitation.
+- **Twilio**: Code handles gracefully with console warnings when credentials not configured. Ready for TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_PHONE_NUMBER when needed.
+- **AI Services**: OpenAI, Anthropic, OpenRouter connected via Replit AI Integrations. RAG grounding enforced — no raw LLM queries without knowledge base context.
+- **Hydration Fix**: ROI calculator page uses deterministic formatters (formatGBP, formatPercent, formatNumber) instead of locale-dependent Intl APIs to prevent SSR/client mismatch.
+
 ## External Dependencies
 - **AI Services**: OpenAI, Anthropic, OpenRouter (via Replit AI Integrations).
 - **Database**: PostgreSQL.
@@ -67,4 +74,5 @@ Key features include:
 - **Charting Library**: Recharts.
 - **Telephony**: Twilio Programmable Voice.
 - **Payments**: Stripe.
+- **Email**: SendGrid (@sendgrid/mail).
 - **Mobile**: Expo SDK 54, expo-router, expo-speech, expo-av, expo-haptics.

@@ -1,44 +1,118 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 
-const SMTP_HOST = process.env.SMTP_HOST || "";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
-const SMTP_USER = process.env.SMTP_USER || "";
-const SMTP_PASS = process.env.SMTP_PASS || "";
-const SMTP_FROM = process.env.SMTP_FROM || "noreply@gorigo.ai";
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || "";
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_FROM || "noreply@gorigo.ai";
 
-let transporter: nodemailer.Transporter | null = null;
+let initialized = false;
 
-function getTransporter(): nodemailer.Transporter | null {
-  if (transporter) return transporter;
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    console.warn("[Email] SMTP not configured - emails will be logged to console instead");
-    return null;
+function initSendGrid(): boolean {
+  if (initialized) return true;
+  if (!SENDGRID_API_KEY) {
+    console.warn("[Email] SendGrid API key not configured - emails will be logged to console instead");
+    return false;
   }
-  transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-  });
-  return transporter;
+  sgMail.setApiKey(SENDGRID_API_KEY);
+  initialized = true;
+  return true;
 }
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
-  const transport = getTransporter();
-  if (!transport) {
+  if (!initSendGrid()) {
     console.log(`[Email] Would send to: ${to}`);
     console.log(`[Email] Subject: ${subject}`);
-    console.log(`[Email] Body logged (SMTP not configured)`);
+    console.log(`[Email] Body logged (SendGrid not configured)`);
     return true;
   }
   try {
-    await transport.sendMail({ from: SMTP_FROM, to, subject, html });
+    await sgMail.send({
+      to,
+      from: { email: FROM_EMAIL, name: "GoRigo" },
+      subject,
+      html,
+    });
     console.log(`[Email] Sent to ${to}: ${subject}`);
     return true;
   } catch (err: any) {
-    console.error(`[Email] Failed to send to ${to}:`, err.message);
+    const details = err?.response?.body?.errors || err.message;
+    console.error(`[Email] Failed to send to ${to}:`, details);
     return false;
   }
+}
+
+export function isEmailConfigured(): boolean {
+  return !!SENDGRID_API_KEY;
+}
+
+export async function sendVerificationEmail(
+  email: string,
+  token: string
+): Promise<boolean> {
+  const baseUrl = getBaseUrl();
+  const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8faf9;">
+  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8e5;">
+    <div style="background:#189553;padding:32px 24px;text-align:center;">
+      <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">GoRigo</h1>
+      <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">AI Call Centre Platform</p>
+    </div>
+    <div style="padding:32px 24px;">
+      <h2 style="margin:0 0 8px;color:#1a2e22;font-size:20px;">Verify your email address</h2>
+      <p style="margin:0 0 16px;color:#5c7268;">Please click the button below to verify your email address and activate your account.</p>
+      <div style="margin:24px 0;text-align:center;">
+        <a href="${verifyUrl}" style="display:inline-block;background:#189553;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:600;font-size:16px;">Verify Email</a>
+      </div>
+      <p style="margin:16px 0 0;color:#8fa49a;font-size:13px;">This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.</p>
+      <p style="margin:8px 0 0;color:#8fa49a;font-size:12px;">Or copy this link: <a href="${verifyUrl}" style="color:#189553;">${verifyUrl}</a></p>
+    </div>
+    <div style="padding:16px 24px;background:#f8faf9;border-top:1px solid #e2e8e5;text-align:center;">
+      <p style="margin:0;color:#8fa49a;font-size:12px;">GoRigo.ai - Powered by AI</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail(email, "Verify your email - GoRigo", html);
+}
+
+export async function sendPasswordResetEmail(
+  email: string,
+  token: string
+): Promise<boolean> {
+  const baseUrl = getBaseUrl();
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8faf9;">
+  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e8e5;">
+    <div style="background:#189553;padding:32px 24px;text-align:center;">
+      <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">GoRigo</h1>
+      <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">AI Call Centre Platform</p>
+    </div>
+    <div style="padding:32px 24px;">
+      <h2 style="margin:0 0 8px;color:#1a2e22;font-size:20px;">Reset your password</h2>
+      <p style="margin:0 0 16px;color:#5c7268;">We received a request to reset your password. Click the button below to set a new password.</p>
+      <div style="margin:24px 0;text-align:center;">
+        <a href="${resetUrl}" style="display:inline-block;background:#189553;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-weight:600;font-size:16px;">Reset Password</a>
+      </div>
+      <p style="margin:16px 0 0;color:#8fa49a;font-size:13px;">This link expires in 1 hour. If you didn't request this, your account is secure — no changes have been made.</p>
+      <p style="margin:8px 0 0;color:#8fa49a;font-size:12px;">Or copy this link: <a href="${resetUrl}" style="color:#189553;">${resetUrl}</a></p>
+    </div>
+    <div style="padding:16px 24px;background:#f8faf9;border-top:1px solid #e2e8e5;text-align:center;">
+      <p style="margin:0;color:#8fa49a;font-size:12px;">GoRigo.ai - Powered by AI</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail(email, "Reset your password - GoRigo", html);
 }
 
 export async function sendInvitationEmail(
@@ -49,12 +123,7 @@ export async function sendInvitationEmail(
   departmentName?: string,
   invitedByName?: string
 ): Promise<boolean> {
-  let baseUrl = "https://gorigo.ai";
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-  } else if (process.env.REPLIT_DEV_DOMAIN) {
-    baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
-  }
+  const baseUrl = getBaseUrl();
   const inviteUrl = `${baseUrl}/invite/${token}`;
 
   const deptLine = departmentName ? `<p style="margin:0 0 4px;color:#5c7268;">Department: <strong>${departmentName}</strong></p>` : "";
@@ -96,12 +165,7 @@ export async function sendWelcomeEmail(
   email: string,
   businessName: string
 ): Promise<boolean> {
-  let baseUrl = "https://gorigo.ai";
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-  } else if (process.env.REPLIT_DEV_DOMAIN) {
-    baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
-  }
+  const baseUrl = getBaseUrl();
 
   const termsUrl = `${baseUrl}/terms`;
   const slaUrl = `${baseUrl}/sla`;
@@ -149,4 +213,14 @@ export async function sendWelcomeEmail(
 </html>`;
 
   return sendEmail(email, "Welcome to GoRigo — Your Agreement & SLA Confirmation", html);
+}
+
+function getBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  }
+  return "https://gorigo.ai";
 }

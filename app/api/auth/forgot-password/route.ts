@@ -7,6 +7,7 @@ import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import crypto from "crypto";
 import { hashToken } from "@/lib/auth";
 import { logAuthEvent } from "@/lib/audit";
+import { sendPasswordResetEmail } from "@/lib/email";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { createLogger } from "@/lib/logger";
@@ -55,8 +56,10 @@ export async function POST(request: NextRequest) {
 
     logAuthEvent("password_reset.requested", user.id, user.email).catch((err) => { logger.error("Log password reset request event failed", err); });
 
+    sendPasswordResetEmail(user.email, token).catch((err) => { logger.error("Password reset email failed", err); });
+
     return NextResponse.json({
-      message: "If an account with that email exists, a reset link has been generated.",
+      message: "If an account with that email exists, a reset link has been sent.",
     }, { status: 200 });
   } catch (error) {
     return handleRouteError(error, "ForgotPassword");

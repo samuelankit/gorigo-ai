@@ -61,7 +61,6 @@ export default function PhoneNumbersPage() {
 
   const [formPhone, setFormPhone] = useState("");
   const [formFriendlyName, setFormFriendlyName] = useState("");
-  const [formTwilioSid, setFormTwilioSid] = useState("");
 
   const fetchPhoneNumbers = () => {
     setLoading(true);
@@ -102,7 +101,6 @@ export default function PhoneNumbersPage() {
         body: JSON.stringify({
           phoneNumber: formPhone,
           friendlyName: formFriendlyName || undefined,
-          twilioSid: formTwilioSid || undefined,
         }),
       });
       if (res.ok) {
@@ -163,7 +161,6 @@ export default function PhoneNumbersPage() {
   const resetForm = () => {
     setFormPhone("");
     setFormFriendlyName("");
-    setFormTwilioSid("");
   };
 
   const activeCount = phoneNumbers.filter((p) => p.isActive).length;
@@ -180,7 +177,7 @@ export default function PhoneNumbersPage() {
             <h1 className="text-2xl font-bold text-foreground" data-testid="text-phone-numbers-title">
               Phone Number Management
             </h1>
-            <p className="text-sm text-muted-foreground">Manage Twilio phone numbers and org assignments.</p>
+            <p className="text-sm text-muted-foreground">Manage phone numbers and org assignments.</p>
           </div>
         </div>
         <Button onClick={() => setDialogOpen(true)} data-testid="button-add-phone-number">
@@ -225,16 +222,6 @@ export default function PhoneNumbersPage() {
                 onChange={(e) => setFormFriendlyName(e.target.value)}
                 placeholder="Main line"
                 data-testid="input-friendly-name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="twilio-sid">Twilio SID</Label>
-              <Input
-                id="twilio-sid"
-                value={formTwilioSid}
-                onChange={(e) => setFormTwilioSid(e.target.value)}
-                placeholder="PN..."
-                data-testid="input-twilio-sid"
               />
             </div>
             <div className="flex justify-end gap-2">

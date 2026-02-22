@@ -90,14 +90,9 @@ export default function SettingsPage() {
   const [loadingByok, setLoadingByok] = useState(false);
   const [openaiKey, setOpenaiKey] = useState("");
   const [openaiBaseUrl, setOpenaiBaseUrl] = useState("");
-  const [twilioSid, setTwilioSid] = useState("");
-  const [twilioToken, setTwilioToken] = useState("");
-  const [twilioPhone, setTwilioPhone] = useState("");
   const [validatingOpenai, setValidatingOpenai] = useState(false);
-  const [validatingTwilio, setValidatingTwilio] = useState(false);
   const [savingKeys, setSavingKeys] = useState(false);
   const [openaiValid, setOpenaiValid] = useState<boolean | null>(null);
-  const [twilioValid, setTwilioValid] = useState<boolean | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -263,25 +258,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleValidateTwilio = async () => {
-    if (!twilioSid.trim() || !twilioToken.trim()) return;
-    setValidatingTwilio(true);
-    try {
-      const res = await fetch("/api/settings/integrations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "validate_twilio", accountSid: twilioSid, authToken: twilioToken }),
-      });
-      const data = await res.json();
-      setTwilioValid(data.valid);
-      toast({ title: data.valid ? "Twilio credentials valid" : "Twilio credentials invalid", description: data.error || data.friendlyName, variant: data.valid ? "default" : "destructive" });
-    } catch (error) {
-      toast({ title: "Validation failed", variant: "destructive" });
-    } finally {
-      setValidatingTwilio(false);
-    }
-  };
-
   const handleSaveKeys = async () => {
     setSavingKeys(true);
     try {
@@ -293,18 +269,12 @@ export default function SettingsPage() {
           mode: "byok",
           openaiKey: openaiKey || undefined,
           openaiBaseUrl: openaiBaseUrl || undefined,
-          twilioSid: twilioSid || undefined,
-          twilioToken: twilioToken || undefined,
-          twilioPhone: twilioPhone || undefined,
         }),
       });
       if (!res.ok) throw new Error("Failed");
       toast({ title: "Keys saved", description: "Your API keys have been securely stored." });
       setOpenaiKey("");
       setOpenaiBaseUrl("");
-      setTwilioSid("");
-      setTwilioToken("");
-      setTwilioPhone("");
       fetchByokStatus();
     } catch (error) {
       toast({ title: "Error", description: "Failed to save keys.", variant: "destructive" });
@@ -658,19 +628,6 @@ export default function SettingsPage() {
                     {byokStatus.openai?.source === "org" ? "Your Key" : "Platform Default"}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between gap-3 p-3 rounded-md bg-muted/50 flex-wrap">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={cn("w-2 h-2 rounded-full shrink-0", byokStatus.twilio?.configured ? "bg-emerald-500" : "bg-red-500")} />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">Twilio</p>
-                      <p className="text-xs text-muted-foreground font-mono" data-testid="text-twilio-masked-sid">{byokStatus.twilio?.maskedSid}</p>
-                      <p className="text-xs text-muted-foreground" data-testid="text-twilio-masked-phone">{byokStatus.twilio?.maskedPhone}</p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="no-default-hover-elevate" data-testid="badge-twilio-source">
-                    {byokStatus.twilio?.source === "org" ? "Your Key" : "Platform Default"}
-                  </Badge>
-                </div>
               </div>
             )}
 
@@ -707,53 +664,6 @@ export default function SettingsPage() {
                   value={openaiBaseUrl}
                   onChange={(e) => setOpenaiBaseUrl(e.target.value)}
                   data-testid="input-openai-base-url"
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Twilio Configuration</Label>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    <Input
-                      placeholder="Account SID"
-                      value={twilioSid}
-                      onChange={(e) => { setTwilioSid(e.target.value); setTwilioValid(null); }}
-                      data-testid="input-twilio-sid"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    <Input
-                      type="password"
-                      placeholder="Auth Token"
-                      value={twilioToken}
-                      onChange={(e) => { setTwilioToken(e.target.value); setTwilioValid(null); }}
-                      data-testid="input-twilio-token"
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleValidateTwilio}
-                    disabled={!twilioSid.trim() || !twilioToken.trim() || validatingTwilio}
-                    data-testid="button-validate-twilio"
-                  >
-                    {validatingTwilio ? <Loader2 className="h-4 w-4 animate-spin" /> : "Validate"}
-                  </Button>
-                  {twilioValid !== null && (
-                    <div className={cn("w-2 h-2 rounded-full shrink-0", twilioValid ? "bg-emerald-500" : "bg-red-500")} data-testid="indicator-twilio-valid" />
-                  )}
-                </div>
-                <Input
-                  placeholder="Phone Number (e.g. +1234567890)"
-                  value={twilioPhone}
-                  onChange={(e) => setTwilioPhone(e.target.value)}
-                  data-testid="input-twilio-phone"
                 />
               </div>
             </div>

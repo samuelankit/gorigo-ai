@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { callLogs, twilioSubAccounts } from "@/shared/schema";
+import { callLogs } from "@/shared/schema";
 import { gte, sql, count, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
@@ -42,13 +42,6 @@ export async function GET(request: NextRequest) {
       .groupBy(callLogs.orgId)
       .having(sql`COUNT(CASE WHEN ${callLogs.status} = 'failed' THEN 1 END) > 10`);
 
-    const spendAlerts = await db
-      .select()
-      .from(twilioSubAccounts)
-      .where(
-        sql`CAST(${twilioSubAccounts.currentDailySpend} AS NUMERIC) >= CAST(${twilioSubAccounts.dailySpendLimit} AS NUMERIC) * 0.8`
-      );
-
     const alerts = [
       ...highVolumeOrgs.map(o => ({
         type: "high_volume",
@@ -62,13 +55,6 @@ export async function GET(request: NextRequest) {
         severity: "critical" as const,
         orgId: o.orgId,
         message: `Org ${o.orgId}: ${o.failedCalls}/${o.totalCalls} calls failed in last hour`,
-        timestamp: new Date().toISOString(),
-      })),
-      ...spendAlerts.map(s => ({
-        type: "spend_limit",
-        severity: "warning" as const,
-        orgId: s.orgId,
-        message: `Org ${s.orgId}: Daily spend $${s.currentDailySpend}/$${s.dailySpendLimit}`,
         timestamp: new Date().toISOString(),
       })),
     ];

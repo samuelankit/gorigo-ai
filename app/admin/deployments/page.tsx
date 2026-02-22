@@ -70,7 +70,7 @@ interface SwitchDetails {
   activeCalls: number;
   byokStatus: {
     openai: { configured: boolean; masked: string; source: string };
-    twilio: { configured: boolean; maskedSid: string; maskedPhone: string; source: string };
+    twilio?: { configured: boolean; maskedSid: string; maskedPhone: string; source: string };
   };
   availableModels: Record<string, {
     rates: Array<{ category: string; ratePerMinute: number; label: string }>;
@@ -429,14 +429,6 @@ export default function DeploymentsPage() {
                         <X className="h-3.5 w-3.5 text-red-500 shrink-0" />
                       )}
                       <span>OpenAI: {switchDetails.byokStatus.openai.masked}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      {switchDetails.byokStatus.twilio.configured ? (
-                        <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
-                      ) : (
-                        <X className="h-3.5 w-3.5 text-red-500 shrink-0" />
-                      )}
-                      <span>Twilio: {switchDetails.byokStatus.twilio.maskedSid}</span>
                     </div>
                   </div>
                 </div>

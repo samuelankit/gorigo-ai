@@ -16,7 +16,7 @@ Key capabilities:
 - Knowledge base management with RAG (Retrieval Augmented Generation)
 - Real-time call monitoring and detailed analytics
 - Prepaid wallet system with talk-time-only billing
-- BYOK (Bring Your Own Keys) architecture for OpenAI and Twilio
+- BYOK (Bring Your Own Keys) architecture for OpenAI
 - Multi-tier partner model for resellers and affiliates
 - TCPA/FCC compliant with AI disclosure, Do-Not-Call lists, and consent tracking
 - External API for LLM platform integration (ChatGPT, Claude, DeepSeek)
@@ -94,7 +94,7 @@ Analytics Dashboard:
 Comprehensive analytics including call volume trends, agent performance metrics, lead conversion rates, sentiment analysis, and revenue tracking. The SuperAdmin console provides full visibility across all organisations and partners.
 
 BYOK Architecture:
-Bring Your Own Keys (BYOK) lets you use your own OpenAI and Twilio credentials. This gives you full control over your AI and telephony costs, and enables self-hosted deployments for enterprise customers. Keys are encrypted with AES-256-GCM.
+Bring Your Own Keys (BYOK) lets you use your own OpenAI credentials. This gives you full control over your AI costs, and enables self-hosted deployments for enterprise customers. Keys are encrypted with AES-256-GCM.
 
 Partner & Affiliate Program:
 GoRigo supports a three-tier business model:
@@ -122,7 +122,7 @@ Step 4: Set Up Your Knowledge Base
 Upload documents, product information, or any reference material. GoRigo will process and index this content so your AI agent can reference it during calls.
 
 Step 5: Configure Your Phone Number
-Connect your Twilio phone number or use GoRigo's managed telephony. Configure inbound and outbound calling settings.
+Connect your phone number or use GoRigo's managed telephony. Configure inbound and outbound calling settings.
 
 Step 6: Fund Your Wallet
 Add credit to your prepaid wallet. GoRigo uses a talk-time-only billing model, so you only pay for actual call minutes.
@@ -145,7 +145,7 @@ Tips for success:
 - PostgreSQL database with Drizzle ORM
 - AI powered by OpenAI GPT-4o-mini for chat, summarisation, and transcription
 - Text embeddings via text-embedding-3-small (768 dimensions)
-- Twilio Programmable Voice for telephony
+- Telnyx/Vonage for telephony
 - Session-based authentication with bcrypt password hashing
 - AES-256-GCM encryption for BYOK credential storage
 
@@ -174,7 +174,7 @@ Performance:
 - Automatic model fallback for reliability
 
 Integrations:
-- Twilio Programmable Voice
+- Telnyx/Vonage Voice
 - OpenAI API (GPT-4o-mini, text-embedding-3-small)
 - Stripe for payment processing
 - Webhook support with HMAC-SHA256 signatures
@@ -193,7 +193,7 @@ Q: How do I reset my password?
 A: Go to the login page and click "Forgot Password". Enter your email address and we'll send you a reset link.
 
 Q: Why isn't my AI agent answering calls?
-A: Check the following: 1) Your wallet has sufficient balance. 2) Your agent is set to "active" status. 3) Your Twilio phone number is correctly configured. 4) Inbound calling is enabled in agent settings.
+A: Check the following: 1) Your wallet has sufficient balance. 2) Your agent is set to "active" status. 3) Your phone number is correctly configured. 4) Inbound calling is enabled in agent settings.
 
 Q: How do I add more minutes to my account?
 A: Go to Dashboard > Wallet and click "Add Funds". You can top up via Stripe using a credit or debit card.
@@ -247,7 +247,7 @@ Personality:
 Key selling points to emphasise:
 1. Talk-time only billing — you only pay for actual call minutes
 2. Multi-agent system — create specialised agents for different departments
-3. BYOK architecture — bring your own OpenAI and Twilio keys for full control
+3. BYOK architecture — bring your own OpenAI keys for full control
 4. Knowledge base with RAG — your agents become true experts on your business
 5. Partner program — earn revenue as a reseller or affiliate
 6. LLM integration — access your call centre from ChatGPT, Claude, etc.
@@ -275,7 +275,7 @@ Common support scenarios:
 2. Agent configuration — help set up greetings, FAQs, handoff rules
 3. Call quality issues — troubleshoot audio, latency, or transcription problems
 4. Account access — password resets, email changes, role management
-5. Integration help — Twilio setup, BYOK configuration, webhook debugging
+5. Integration help — telephony setup, BYOK configuration, webhook debugging
 6. Feature requests — log them and thank the customer for feedback
 
 Always disclose that you are an AI agent at the start of the call.`;
@@ -389,7 +389,7 @@ async function seedGoRigoCallCenter() {
       { question: "How do I reset my password?", answer: "Go to the login page and click 'Forgot Password'. Enter your email and we'll send you a reset link." },
       { question: "Why isn't my agent answering calls?", answer: "Check three things: your wallet balance, agent status (must be 'active'), and that inbound calling is enabled in agent settings." },
       { question: "How do I add funds to my wallet?", answer: "Go to Dashboard > Wallet and click 'Add Funds'. You can pay securely via Stripe with a credit or debit card." },
-      { question: "Can I use my own API keys?", answer: "Yes! Go to Dashboard > Settings > Integrations to configure your own OpenAI and Twilio credentials via our BYOK feature." },
+      { question: "Can I use my own API keys?", answer: "Yes! Go to Dashboard > Settings > Integrations to configure your own OpenAI credentials via our BYOK feature." },
     ],
     complianceDisclosure: true,
     inboundEnabled: true,

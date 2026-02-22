@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       actorId: auth!.user.id,
       actorEmail: auth!.user.email,
       action: "phone_number.create",
-      entityType: "twilio_phone_number",
+      entityType: "phone_number",
       entityId: phoneNumber.id,
       details: { phoneNumber: phoneNumber.phoneNumber, friendlyName: phoneNumber.friendlyName },
     });
@@ -137,7 +137,7 @@ export async function PUT(request: NextRequest) {
       actorId: auth!.user.id,
       actorEmail: auth!.user.email,
       action: body.orgId ? "phone_number.assign" : "phone_number.unassign",
-      entityType: "twilio_phone_number",
+      entityType: "phone_number",
       entityId: updated.id,
       details: { phoneNumber: updated.phoneNumber, orgId: body.orgId },
     });
@@ -182,7 +182,7 @@ export async function DELETE(request: NextRequest) {
       actorId: auth!.user.id,
       actorEmail: auth!.user.email,
       action: "phone_number.deactivate",
-      entityType: "twilio_phone_number",
+      entityType: "phone_number",
       entityId: deactivated.id,
       details: { phoneNumber: deactivated.phoneNumber },
     });

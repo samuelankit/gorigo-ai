@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { callLogs, twilioSubAccounts } from "@/shared/schema";
+import { callLogs } from "@/shared/schema";
 import { eq, and, gte, count } from "drizzle-orm";
 
 export interface FraudCheckResult {
@@ -135,23 +135,6 @@ export async function runFraudCheck(
   if (destRisk.riskLevel === "high") riskScore += 30;
   else if (destRisk.riskLevel === "medium") riskScore += 15;
   
-  // Check daily spend limit from sub-account
-  const [subAccount] = await db.select().from(twilioSubAccounts)
-    .where(eq(twilioSubAccounts.orgId, orgId)).limit(1);
-  
-  if (subAccount?.dailySpendLimit && subAccount?.currentDailySpend) {
-    const limit = parseFloat(subAccount.dailySpendLimit);
-    const current = parseFloat(subAccount.currentDailySpend);
-    if (current >= limit * 0.9) {
-      flags.push(`Daily spend at ${Math.round((current / limit) * 100)}% of limit`);
-      riskScore += 20;
-    }
-    if (current >= limit) {
-      flags.push("Daily spend limit exceeded");
-      riskScore += 40;
-    }
-  }
-  
   let action: "allow" | "warn" | "block" = "allow";
   if (riskScore >= 70) action = "block";
   else if (riskScore >= 40) action = "warn";
@@ -164,19 +147,6 @@ export async function runFraudCheck(
   };
 }
 
-// Check sub-account daily spend and reset if needed
-export async function checkAndResetDailySpend(orgId: number): Promise<void> {
-  const [subAccount] = await db.select().from(twilioSubAccounts)
-    .where(eq(twilioSubAccounts.orgId, orgId)).limit(1);
-  
-  if (!subAccount) return;
-  
-  const now = new Date();
-  const lastReset = subAccount.lastSpendResetAt;
-  
-  if (!lastReset || now.toDateString() !== lastReset.toDateString()) {
-    await db.update(twilioSubAccounts)
-      .set({ currentDailySpend: "0", lastSpendResetAt: now, updatedAt: now })
-      .where(eq(twilioSubAccounts.orgId, orgId));
-  }
+export async function checkAndResetDailySpend(_orgId: number): Promise<void> {
+  return;
 }

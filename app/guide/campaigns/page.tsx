@@ -56,11 +56,11 @@ export default function CampaignsGuidePage() {
       troubleshooting={[
         {
           problem: "My campaign is stuck at 0% progress",
-          solution: "Check that the assigned agent is active and your Twilio phone numbers are configured correctly. Also verify there's sufficient wallet balance.",
+          solution: "Check that the assigned agent is active and your phone numbers are configured correctly. Also verify there's sufficient wallet balance.",
         },
         {
           problem: "Most calls are showing as 'failed'",
-          solution: "Common causes: invalid phone numbers, insufficient wallet balance, or Twilio configuration issues. Check the call logs for specific error messages.",
+          solution: "Common causes: invalid phone numbers, insufficient wallet balance, or telephony configuration issues. Check the call logs for specific error messages.",
         },
         {
           problem: "I want to pause a running campaign",

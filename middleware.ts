@@ -39,7 +39,6 @@ const BODY_SIZE_LIMITS: Record<string, number> = {
   "/api/settings/": 50 * 1024,
   "/api/agents/test-chat": 100 * 1024,
   "/api/compliance/": 50 * 1024,
-  "/api/twilio/": 50 * 1024,
   "/api/billing/stripe-webhook": 1 * 1024 * 1024,
   "/api/public/": 50 * 1024,
   "/api/rigo": 50 * 1024,
@@ -58,7 +57,6 @@ function getBodyLimitForPath(pathname: string): number {
 const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 const CSRF_EXEMPT_PATHS = [
-  "/api/twilio/",
   "/api/billing/stripe-webhook",
   "/api/affiliate/track",
   "/api/auth/logout",

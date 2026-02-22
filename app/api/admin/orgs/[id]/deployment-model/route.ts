@@ -5,7 +5,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { getAllRatesForModel } from "@/lib/rate-resolver";
 import { logAudit } from "@/lib/audit";
-import { getOrgByokStatus, validateOpenAIKey, validateTwilioCredentials } from "@/lib/byok";
+import { getOrgByokStatus, validateOpenAIKey } from "@/lib/byok";
 import { adminLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
 import { isDeploymentPackageEnabled } from "@/lib/feature-flags";
@@ -49,21 +49,6 @@ async function checkByokPrerequisites(orgId: number): Promise<{
     }
   } else {
     details.openai = { ready: false, message: "OpenAI API key not configured. Client must provide their own API key before switching to BYOK." };
-  }
-
-  if (byokStatus.twilio.source === "org" && byokStatus.twilio.configured) {
-    try {
-      const validation = await validateTwilioCredentials(keys.twilio.accountSid, keys.twilio.authToken);
-      if (validation.valid) {
-        details.twilio = { ready: true, message: `Twilio credentials configured and validated${validation.friendlyName ? ` (${validation.friendlyName})` : ""}` };
-      } else {
-        details.twilio = { ready: false, message: `Twilio credentials configured but validation failed: ${validation.error}` };
-      }
-    } catch (error) {
-      details.twilio = { ready: false, message: "Twilio credentials configured but could not be validated (network error)" };
-    }
-  } else {
-    details.twilio = { ready: false, message: "Twilio credentials not configured. Client must provide their own Twilio Account SID, Auth Token, and Phone Number." };
   }
 
   const allMet = Object.values(details).every((d) => d.ready);
@@ -135,7 +120,6 @@ export async function GET(
       activeCalls,
       byokStatus: {
         openai: byokStatus.openai,
-        twilio: byokStatus.twilio,
       },
       availableModels,
       changeHistory,

@@ -124,7 +124,7 @@ async function makeCallWithProvider(
       throw new Error("Telnyx is not configured");
     }
 
-    const telnyxWebhookUrl = webhookUrl.replace("/api/vonage/voice", "/api/telnyx/voice").replace("/api/twilio/voice", "/api/telnyx/voice");
+    const telnyxWebhookUrl = webhookUrl.replace("/api/vonage/voice", "/api/telnyx/voice");
 
     const telnyxFrom = getTelnyxPhoneNumber() || from;
 
@@ -148,7 +148,7 @@ async function makeCallWithProvider(
       throw new Error("Vonage is not configured");
     }
 
-    const vonageWebhookUrl = webhookUrl.replace("/api/telnyx/voice", "/api/vonage/voice").replace("/api/twilio/voice", "/api/vonage/voice");
+    const vonageWebhookUrl = webhookUrl.replace("/api/telnyx/voice", "/api/vonage/voice");
 
     const vonageFrom = getVonagePhoneNumber() || from;
 

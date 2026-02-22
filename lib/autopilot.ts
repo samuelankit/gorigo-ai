@@ -10,7 +10,7 @@ export interface SystemHealthReport {
   database: { healthy: boolean; latencyMs: number; pool: { totalCount: number; idleCount: number; waitingCount: number }; error?: string };
   llm: Record<string, { status: string; latencyMs: number; successRate: number; totalRequests: number; totalFailures: number }>;
   errors: { recentCount: number; last5: Array<{ timestamp: string; code: string; error: string }> };
-  services: { twilio: ServiceStatus; stripe: ServiceStatus };
+  services: { stripe: ServiceStatus };
 }
 
 interface ServiceStatus {
@@ -140,7 +140,6 @@ export async function runHealthCheck(): Promise<SystemHealthReport> {
   const errors = getRecentErrors();
   const mem = process.memoryUsage();
 
-  const twilioConfigured = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
   const stripeConfigured = !!process.env.STRIPE_SECRET_KEY;
 
   let overall: "healthy" | "degraded" | "critical" = "healthy";
@@ -197,7 +196,6 @@ export async function runHealthCheck(): Promise<SystemHealthReport> {
       last5: errors.slice(-5).map(e => ({ timestamp: e.timestamp, code: e.code, error: e.error })),
     },
     services: {
-      twilio: { configured: twilioConfigured, status: twilioConfigured ? "healthy" : "unconfigured" },
       stripe: { configured: stripeConfigured, status: stripeConfigured ? "healthy" : "unconfigured" },
     },
   };

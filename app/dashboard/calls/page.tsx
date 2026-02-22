@@ -80,7 +80,6 @@ interface Call {
   handoffTriggered: boolean;
   handoffReason: string | null;
   finalOutcome: string | null;
-  twilioCallSid: string | null;
   connectedAt: string | null;
   startedAt: string | null;
   endedAt: string | null;
@@ -106,7 +105,6 @@ interface LiveActiveCall {
   turnCount: number;
   sentimentScore: number | null;
   sentimentLabel: string | null;
-  twilioCallSid: string | null;
   handoffTriggered: boolean;
   agentName: string | null;
   agentType: string | null;
@@ -1653,15 +1651,6 @@ export default function CallsPage() {
                 </>
               )}
 
-              {selectedCall.twilioCallSid && (
-                <>
-                  <Separator />
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>Twilio SID:</span>
-                    <code className="bg-muted px-1.5 py-0.5 rounded text-xs" data-testid="text-twilio-sid">{selectedCall.twilioCallSid}</code>
-                  </div>
-                </>
-              )}
             </div>
           )}
         </DialogContent>

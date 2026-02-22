@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import {
   partners, partnerClients, affiliates, affiliateCommissions,
-  wallets, orgs, partnerLifecycleEvents, twilioSubAccounts,
+  wallets, orgs, partnerLifecycleEvents,
 } from "@/shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { logAudit } from "@/lib/audit";
@@ -9,7 +9,6 @@ import { logAudit } from "@/lib/audit";
 interface CascadeResult {
   clientsPaused: number;
   walletsDeactivated: number;
-  twilioSuspended: number;
   campaignsPaused: number;
   affiliatesFrozen: number;
   commissionsFrozen: number;
@@ -30,7 +29,6 @@ export async function executePartnerCascade(
   const result: CascadeResult = {
     clientsPaused: 0,
     walletsDeactivated: 0,
-    twilioSuspended: 0,
     campaignsPaused: 0,
     affiliatesFrozen: 0,
     commissionsFrozen: 0,
@@ -87,20 +85,6 @@ export async function executePartnerCascade(
         } catch (error) {
           console.error("Wallet deactivation during partner cascade failed:", error);
         }
-
-        try {
-          await db
-            .update(twilioSubAccounts)
-            .set({
-              status: "suspended",
-              suspendedReason: `Partner cascade: ${reason}`,
-              updatedAt: new Date(),
-            })
-            .where(eq(twilioSubAccounts.orgId, client.orgId));
-          result.twilioSuspended++;
-        } catch (error) {
-          console.error("Twilio sub-account suspension during partner cascade failed:", error);
-        }
       } catch (err) {
         result.errors.push(`Failed to ${action} client org ${client.orgId}: ${String(err)}`);
       }
@@ -125,16 +109,6 @@ export async function executePartnerCascade(
         .set({ isActive: false })
         .where(eq(wallets.orgId, partner.orgId));
       result.walletsDeactivated++;
-
-      await db
-        .update(twilioSubAccounts)
-        .set({
-          status: "suspended",
-          suspendedReason: `Partner self-org cascade: ${reason}`,
-          updatedAt: new Date(),
-        })
-        .where(eq(twilioSubAccounts.orgId, partner.orgId));
-      result.twilioSuspended++;
     } catch (err) {
       result.errors.push(`Failed to suspend partner's own org: ${String(err)}`);
     }
@@ -213,7 +187,6 @@ export async function executePartnerCascade(
         result.resellersCascaded++;
         result.clientsPaused += subResult.clientsPaused;
         result.walletsDeactivated += subResult.walletsDeactivated;
-        result.twilioSuspended += subResult.twilioSuspended;
         result.affiliatesFrozen += subResult.affiliatesFrozen;
         result.commissionsFrozen += subResult.commissionsFrozen;
         result.campaignsPaused += subResult.campaignsPaused;
@@ -237,7 +210,6 @@ export async function executePartnerCascade(
       affectedAffiliates: result.affiliatesFrozen,
       cascadeActions: {
         walletsDeactivated: result.walletsDeactivated,
-        twilioSuspended: result.twilioSuspended,
         campaignsPaused: result.campaignsPaused,
         commissionsFrozen: result.commissionsFrozen,
         errors: result.errors,
@@ -257,7 +229,6 @@ export async function reversePartnerCascade(
   const result: CascadeResult = {
     clientsPaused: 0,
     walletsDeactivated: 0,
-    twilioSuspended: 0,
     campaignsPaused: 0,
     affiliatesFrozen: 0,
     commissionsFrozen: 0,

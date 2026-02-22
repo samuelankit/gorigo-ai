@@ -8,7 +8,6 @@ import {
   countryHolidays, type CountryHoliday, type InsertCountryHoliday,
   campaigns, type Campaign, type InsertCampaign,
   campaignContacts, type CampaignContact, type InsertCampaignContact,
-  twilioSubAccounts, type TwilioSubAccount, type InsertTwilioSubAccount,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -42,9 +41,6 @@ export interface IStorage {
   updateCampaignContact(id: number, data: Partial<InsertCampaignContact>): Promise<CampaignContact | undefined>;
   bulkCreateCampaignContacts(contacts: InsertCampaignContact[]): Promise<number>;
 
-  getTwilioSubAccounts(orgId: number): Promise<TwilioSubAccount[]>;
-  createTwilioSubAccount(data: InsertTwilioSubAccount): Promise<TwilioSubAccount>;
-  updateTwilioSubAccount(id: number, data: Partial<InsertTwilioSubAccount>): Promise<TwilioSubAccount | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -228,27 +224,6 @@ export class DatabaseStorage implements IStorage {
     return result.length;
   }
 
-  async getTwilioSubAccounts(orgId: number): Promise<TwilioSubAccount[]> {
-    return db
-      .select()
-      .from(twilioSubAccounts)
-      .where(eq(twilioSubAccounts.orgId, orgId))
-      .orderBy(desc(twilioSubAccounts.createdAt));
-  }
-
-  async createTwilioSubAccount(data: InsertTwilioSubAccount): Promise<TwilioSubAccount> {
-    const [created] = await db.insert(twilioSubAccounts).values(data).returning();
-    return created;
-  }
-
-  async updateTwilioSubAccount(id: number, data: Partial<InsertTwilioSubAccount>): Promise<TwilioSubAccount | undefined> {
-    const [updated] = await db
-      .update(twilioSubAccounts)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(twilioSubAccounts.id, id))
-      .returning();
-    return updated;
-  }
 }
 
 export const storage = new DatabaseStorage();

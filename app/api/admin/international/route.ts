@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { callLogs, countries, twilioSubAccounts, campaigns, countryRateCards } from "@/shared/schema";
+import { callLogs, countries, campaigns, countryRateCards } from "@/shared/schema";
 import { sql, count, avg, desc, gte } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
@@ -46,19 +46,6 @@ export async function GET(request: NextRequest) {
       .from(countries)
       .orderBy(countries.name);
 
-    const subAccounts = await db
-      .select({
-        id: twilioSubAccounts.id,
-        orgId: twilioSubAccounts.orgId,
-        friendlyName: twilioSubAccounts.friendlyName,
-        status: twilioSubAccounts.status,
-        concurrentCallLimit: twilioSubAccounts.concurrentCallLimit,
-        dailySpendLimit: twilioSubAccounts.dailySpendLimit,
-        currentDailySpend: twilioSubAccounts.currentDailySpend,
-      })
-      .from(twilioSubAccounts)
-      .orderBy(desc(twilioSubAccounts.createdAt));
-
     const campaignStats = await db
       .select({
         country: campaigns.countryCode,
@@ -92,7 +79,7 @@ export async function GET(request: NextRequest) {
       period: { days, since: since.toISOString() },
       countryStats,
       activeCountries,
-      subAccounts,
+      subAccounts: [],
       campaignStats,
       rateCardStats,
       compliance: complianceMetrics[0] || { totalCalls: 0, dncBlocked: 0, disclosurePlayed: 0, consentObtained: 0, optOuts: 0 },

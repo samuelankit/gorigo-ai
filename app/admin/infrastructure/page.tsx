@@ -48,7 +48,7 @@ interface HealthReport {
   database: { healthy: boolean; latencyMs: number; pool: { totalCount: number; idleCount: number; waitingCount: number }; error?: string };
   llm: Record<string, { status: string; latencyMs: number; successRate: number; totalRequests: number; totalFailures: number }>;
   errors: { recentCount: number; last5: Array<{ timestamp: string; code: string; error: string }> };
-  services: { twilio: { configured: boolean; status: string }; stripe: { configured: boolean; status: string } };
+  services: { twilio?: { configured: boolean; status: string }; stripe: { configured: boolean; status: string } };
 }
 
 interface HealthEvent {
@@ -456,9 +456,9 @@ export default function InfrastructurePage() {
                 <div className="flex items-center justify-between gap-2 p-3 rounded-md border">
                   <div className="flex items-center gap-2">
                     <Zap className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Twilio</span>
+                    <span className="text-sm font-medium">Voice Provider</span>
                   </div>
-                  <StatusBadge status={health.services.twilio.status} />
+                  <StatusBadge status={health.services.twilio?.status || "unknown"} />
                 </div>
                 <div className="flex items-center justify-between gap-2 p-3 rounded-md border">
                   <div className="flex items-center gap-2">

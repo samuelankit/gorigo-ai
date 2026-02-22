@@ -10,7 +10,7 @@ export interface InternalCostStructure {
   openaiWhisperSttPerMin: number;
   gpt4oMiniLlmPerMin: number;
   ttsPerMin: number;
-  twilioTelephonyPerMin: number;
+  telephonyPerMin: number;
   azureHostingAmortisedPerMin: number;
   totalPerMin: number;
 }
@@ -104,7 +104,7 @@ export const INTERNAL_COSTS: InternalCostStructure = {
   openaiWhisperSttPerMin: 0.006,
   gpt4oMiniLlmPerMin: 0.003,
   ttsPerMin: 0.015,
-  twilioTelephonyPerMin: 0.014,
+  telephonyPerMin: 0.014,
   azureHostingAmortisedPerMin: 0.002,
   totalPerMin: 0.04,
 } as const;

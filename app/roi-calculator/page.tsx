@@ -383,7 +383,7 @@ function PersonaTechnical({
 
   const buildVsBuyData = [
     { category: "AI/ML Engineering (2 FTEs)", buildCost: "£120,000/yr", gorigo: "Included" },
-    { category: "Twilio Integration & Maintenance", buildCost: "£15,000/yr", gorigo: "Included" },
+    { category: "Telephony Integration & Maintenance", buildCost: "£15,000/yr", gorigo: "Included" },
     { category: "Infrastructure (Azure/AWS)", buildCost: "£8,000/yr", gorigo: "Included" },
     { category: "Compliance (TCPA, GDPR, DNC)", buildCost: "£25,000/yr", gorigo: "Included" },
     { category: "QA, Monitoring, Analytics", buildCost: "£20,000/yr", gorigo: "Included" },

@@ -51,39 +51,6 @@ export default function AdminInternationalPage() {
     }
   }
 
-  async function createSubAccount() {
-    setCreating(true);
-    try {
-      const res = await fetch("/api/admin/twilio-sub-accounts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orgId: parseInt(newSubAccount.orgId), friendlyName: newSubAccount.friendlyName }),
-      });
-      if (res.ok) {
-        setCreateDialog(false);
-        setNewSubAccount({ orgId: "", friendlyName: "" });
-        fetchData();
-      }
-    } catch (error) {
-      console.error("Failed to create sub-account:", error);
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  async function updateSubAccountStatus(accountSid: string, status: string) {
-    try {
-      await fetch("/api/admin/twilio-sub-accounts", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountSid, status }),
-      });
-      fetchData();
-    } catch (error) {
-      console.error("Failed to update sub-account:", error);
-    }
-  }
-
   async function refreshFraudAlerts() {
     try {
       const res = await fetch("/api/admin/international/fraud-alerts");
@@ -277,7 +244,7 @@ export default function AdminInternationalPage() {
 
         <TabsContent value="sub-accounts" className="space-y-4 mt-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <h2 className="text-lg font-semibold" data-testid="text-sub-accounts-heading">Twilio Sub-Accounts</h2>
+            <h2 className="text-lg font-semibold" data-testid="text-sub-accounts-heading">Voice Provider Accounts</h2>
             <Dialog open={createDialog} onOpenChange={setCreateDialog}>
               <DialogTrigger asChild>
                 <Button data-testid="button-create-sub-account">

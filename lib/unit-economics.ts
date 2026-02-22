@@ -19,11 +19,11 @@ export const PLATFORM_COSTS = {
   stripeFixedFee: 0.20,
   stripeNonEuPercentFee: 0.029,
   stripeNonEuFixedFee: 0.20,
-  twilioPerMinuteUK: 0.015,
-  twilioPerMinuteUS: 0.014,
-  twilioPerMinuteEU: 0.025,
-  twilioPerMinuteDefault: 0.035,
-  twilioPhoneNumberMonthly: 1.15,
+  telnyxPerMinuteUK: 0.015,
+  telnyxPerMinuteUS: 0.014,
+  telnyxPerMinuteEU: 0.025,
+  telnyxPerMinuteDefault: 0.035,
+  phoneNumberMonthly: 1.15,
   rigoInteractionCost: 0.005,
   embeddingCostPer1kTokens: 0.00002,
 };
@@ -41,10 +41,10 @@ export function calculateLLMCost(
 
 export function calculateTelephonyCost(durationSeconds: number, countryCode?: string): number {
   const minutes = Math.ceil(durationSeconds / 60);
-  let ratePerMinute = PLATFORM_COSTS.twilioPerMinuteDefault;
-  if (countryCode === "GB" || countryCode === "UK") ratePerMinute = PLATFORM_COSTS.twilioPerMinuteUK;
-  else if (countryCode === "US" || countryCode === "CA") ratePerMinute = PLATFORM_COSTS.twilioPerMinuteUS;
-  else if (["DE", "FR", "ES", "IT", "NL", "SE", "CH", "PL", "IE"].includes(countryCode || "")) ratePerMinute = PLATFORM_COSTS.twilioPerMinuteEU;
+  let ratePerMinute = PLATFORM_COSTS.telnyxPerMinuteDefault;
+  if (countryCode === "GB" || countryCode === "UK") ratePerMinute = PLATFORM_COSTS.telnyxPerMinuteUK;
+  else if (countryCode === "US" || countryCode === "CA") ratePerMinute = PLATFORM_COSTS.telnyxPerMinuteUS;
+  else if (["DE", "FR", "ES", "IT", "NL", "SE", "CH", "PL", "IE"].includes(countryCode || "")) ratePerMinute = PLATFORM_COSTS.telnyxPerMinuteEU;
   return minutes * ratePerMinute;
 }
 

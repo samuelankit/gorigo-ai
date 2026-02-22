@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/get-user";
-import { getOrgByokStatus, saveOrgKeys, validateOpenAIKey, validateTwilioCredentials, type ByokMode } from "@/lib/byok";
+import { getOrgByokStatus, saveOrgKeys, validateOpenAIKey, type ByokMode } from "@/lib/byok";
 import { logAudit } from "@/lib/audit";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
@@ -13,22 +13,14 @@ const bodySchema = z.discriminatedUnion("action", [
     baseUrl: z.string().optional(),
   }).strict(),
   z.object({
-    action: z.literal("validate_twilio"),
-    accountSid: z.string().min(1),
-    authToken: z.string().min(1),
-  }).strict(),
-  z.object({
     action: z.literal("save"),
     mode: z.enum(["platform", "byok"]).optional(),
     openaiKey: z.string().optional(),
     openaiBaseUrl: z.string().optional(),
-    twilioSid: z.string().optional(),
-    twilioToken: z.string().optional(),
-    twilioPhone: z.string().optional(),
   }).strict(),
   z.object({
     action: z.literal("clear"),
-    provider: z.enum(["openai", "twilio", "all"]),
+    provider: z.enum(["openai", "all"]),
   }).strict(),
 ]);
 
@@ -71,21 +63,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(result);
     }
 
-    if (parsed.action === "validate_twilio") {
-      const result = await validateTwilioCredentials(parsed.accountSid.trim(), parsed.authToken.trim());
-      return NextResponse.json(result);
-    }
-
     if (parsed.action === "save") {
-      const { mode, openaiKey, openaiBaseUrl, twilioSid, twilioToken, twilioPhone } = parsed;
+      const { mode, openaiKey, openaiBaseUrl } = parsed;
 
       await saveOrgKeys(auth.orgId, {
         mode: mode as ByokMode | undefined,
         openaiKey: openaiKey?.trim(),
         openaiBaseUrl: openaiBaseUrl?.trim(),
-        twilioSid: twilioSid?.trim(),
-        twilioToken: twilioToken?.trim(),
-        twilioPhone: twilioPhone?.trim(),
       });
 
       await logAudit({
@@ -97,8 +81,6 @@ export async function POST(request: NextRequest) {
         details: {
           mode: mode || "unchanged",
           openaiKeySet: !!openaiKey,
-          twilioSidSet: !!twilioSid,
-          twilioPhoneSet: !!twilioPhone,
         },
       });
 
@@ -110,16 +92,11 @@ export async function POST(request: NextRequest) {
       const { provider } = parsed;
       if (provider === "openai") {
         await saveOrgKeys(auth.orgId, { openaiKey: "", openaiBaseUrl: "" });
-      } else if (provider === "twilio") {
-        await saveOrgKeys(auth.orgId, { twilioSid: "", twilioToken: "", twilioPhone: "" });
       } else {
         await saveOrgKeys(auth.orgId, {
           mode: "platform",
           openaiKey: "",
           openaiBaseUrl: "",
-          twilioSid: "",
-          twilioToken: "",
-          twilioPhone: "",
         });
       }
 

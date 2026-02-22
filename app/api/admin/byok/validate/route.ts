@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { orgs } from "@/shared/schema";
-import { eq, and, isNotNull, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { adminLimiter } from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
@@ -12,7 +12,6 @@ interface ByokValidationResult {
   orgName: string;
   byokMode: string;
   openai: { configured: boolean; valid: boolean | null; error: string | null };
-  twilio: { configured: boolean; valid: boolean | null; error: string | null };
 }
 
 async function validateOpenAIKey(apiKey: string, baseUrl?: string | null): Promise<{ valid: boolean; error: string | null }> {
@@ -26,21 +25,6 @@ async function validateOpenAIKey(apiKey: string, baseUrl?: string | null): Promi
     if (response.ok) return { valid: true, error: null };
     if (response.status === 401) return { valid: false, error: "Invalid API key (401 Unauthorized)" };
     if (response.status === 429) return { valid: true, error: "Key valid but rate-limited" };
-    return { valid: false, error: `HTTP ${response.status}: ${response.statusText}` };
-  } catch (err) {
-    return { valid: false, error: `Connection failed: ${String(err)}` };
-  }
-}
-
-async function validateTwilioCredentials(sid: string, token: string): Promise<{ valid: boolean; error: string | null }> {
-  try {
-    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}.json`, {
-      method: "GET",
-      headers: { Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}` },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (response.ok) return { valid: true, error: null };
-    if (response.status === 401) return { valid: false, error: "Invalid credentials (401 Unauthorized)" };
     return { valid: false, error: `HTTP ${response.status}: ${response.statusText}` };
   } catch (err) {
     return { valid: false, error: `Connection failed: ${String(err)}` };
@@ -79,9 +63,6 @@ export async function GET(request: NextRequest) {
         byokMode: orgs.byokMode,
         byokOpenaiKey: orgs.byokOpenaiKey,
         byokOpenaiBaseUrl: orgs.byokOpenaiBaseUrl,
-        byokTwilioSid: orgs.byokTwilioSid,
-        byokTwilioToken: orgs.byokTwilioToken,
-        byokTwilioPhone: orgs.byokTwilioPhone,
         status: orgs.status,
       })
       .from(orgs)
@@ -96,7 +77,6 @@ export async function GET(request: NextRequest) {
         orgName: org.name,
         byokMode: org.byokMode || "byok",
         openai: { configured: !!org.byokOpenaiKey, valid: null, error: null },
-        twilio: { configured: !!org.byokTwilioSid && !!org.byokTwilioToken, valid: null, error: null },
       };
 
       if (validateLive) {
@@ -108,22 +88,11 @@ export async function GET(request: NextRequest) {
             invalidKeys.push({ orgId: org.id, orgName: org.name, service: "OpenAI", error: openaiResult.error || "Unknown error" });
           }
         }
-
-        if (org.byokTwilioSid && org.byokTwilioToken) {
-          const twilioResult = await validateTwilioCredentials(org.byokTwilioSid, org.byokTwilioToken);
-          result.twilio.valid = twilioResult.valid;
-          result.twilio.error = twilioResult.error;
-          if (!twilioResult.valid) {
-            invalidKeys.push({ orgId: org.id, orgName: org.name, service: "Twilio", error: twilioResult.error || "Unknown error" });
-          }
-        }
       }
 
-      if (!org.byokOpenaiKey && !org.byokTwilioSid) {
+      if (!org.byokOpenaiKey) {
         result.openai.error = "BYOK mode enabled but no OpenAI key configured";
-        result.twilio.error = "BYOK mode enabled but no Twilio credentials configured";
         invalidKeys.push({ orgId: org.id, orgName: org.name, service: "OpenAI", error: "Not configured" });
-        invalidKeys.push({ orgId: org.id, orgName: org.name, service: "Twilio", error: "Not configured" });
       }
 
       results.push(result);
@@ -187,9 +156,6 @@ export async function GET(request: NextRequest) {
         openaiConfigured: results.filter(r => r.openai.configured).length,
         openaiValid: results.filter(r => r.openai.valid === true).length,
         openaiInvalid: results.filter(r => r.openai.valid === false).length,
-        twilioConfigured: results.filter(r => r.twilio.configured).length,
-        twilioValid: results.filter(r => r.twilio.valid === true).length,
-        twilioInvalid: results.filter(r => r.twilio.valid === false).length,
       },
     });
   } catch (error) {

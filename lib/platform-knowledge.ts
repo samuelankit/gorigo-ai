@@ -53,15 +53,15 @@ const GORIGO_KNOWLEDGE: Array<{ category: string; content: string }> = [
   },
   {
     category: "getting_started",
-    content: "To get started with GoRigo: 1) Register an account at /register on the website, 2) Configure your first AI agent with a greeting, business description, and FAQ entries, 3) Upload knowledge base documents to train the agent, 4) Connect your phone number via Twilio integration, 5) Top up your wallet to start receiving calls. For demos or sales enquiries, visit /contact or call the AI line.",
+    content: "To get started with GoRigo: 1) Register an account at /register on the website, 2) Configure your first AI agent with a greeting, business description, and FAQ entries, 3) Upload knowledge base documents to train the agent, 4) Connect your phone number via Telnyx integration, 5) Top up your wallet to start receiving calls. For demos or sales enquiries, visit /contact or call the AI line.",
   },
   {
     category: "technical",
-    content: "GoRigo uses PostgreSQL with vector embeddings for its RAG (Retrieval-Augmented Generation) system. AI agents are powered by multiple LLM providers with automatic failover. The platform supports Twilio Programmable Voice for telephony. A 7-state call state machine manages conversation flow: GREETING, INTENT_CAPTURE, CONFIRM, EXECUTE, CLOSE, HANDOFF, and FAILSAFE.",
+    content: "GoRigo uses PostgreSQL with vector embeddings for its RAG (Retrieval-Augmented Generation) system. AI agents are powered by multiple LLM providers with automatic failover. The platform uses Telnyx primary + Vonage fallback for telephony. A 7-state call state machine manages conversation flow: GREETING, INTENT_CAPTURE, CONFIRM, EXECUTE, CLOSE, HANDOFF, and FAILSAFE.",
   },
   {
     category: "international",
-    content: "GoRigo supports international calling with country-specific compliance profiles and rate cards. The platform includes Twilio sub-account isolation for clients, a compliance engine for DNC checks and calling hours, fraud detection for suspicious patterns, and currency conversion. Campaign management supports contact import with E.164 phone number validation and DNC pre-screening.",
+    content: "GoRigo supports international calling with country-specific compliance profiles and rate cards. The platform includes per-org telephony isolation for clients, a compliance engine for DNC checks and calling hours, fraud detection for suspicious patterns, and currency conversion. Campaign management supports contact import with E.164 phone number validation and DNC pre-screening.",
   },
 ];
 

@@ -617,7 +617,7 @@ export default function AdminCountriesPage() {
                         <TableHead>Direction</TableHead>
                         <TableHead>Number Type</TableHead>
                         <TableHead>Surcharge/min</TableHead>
-                        <TableHead>Twilio Est. Cost</TableHead>
+                        <TableHead>Provider Est. Cost</TableHead>
                         <TableHead>Margin %</TableHead>
                         <TableHead>Active</TableHead>
                         <TableHead className="w-[50px]">Actions</TableHead>
@@ -757,7 +757,7 @@ export default function AdminCountriesPage() {
                   <Input value={rateForm.surchargePerMinute || ""} onChange={(e) => setRateForm({ ...rateForm, surchargePerMinute: e.target.value })} data-testid="input-edit-surcharge" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Twilio Est. Cost</Label>
+                  <Label>Provider Est. Cost</Label>
                   <Input value={rateForm.twilioEstimatedCost || ""} onChange={(e) => setRateForm({ ...rateForm, twilioEstimatedCost: e.target.value })} data-testid="input-edit-twilio-cost" />
                 </div>
               </div>

@@ -71,7 +71,7 @@ const PACKAGES: {
     borderColor: "border-amber-500/30",
     features: [
       "Platform fee only",
-      "Your OpenAI + Twilio keys",
+      "Your OpenAI keys",
       "Full cost control",
       "Custom model selection",
     ],
@@ -416,7 +416,7 @@ export default function OnboardingPage() {
                   <div className="text-sm">
                     <p className="font-medium text-foreground">API Keys Required</p>
                     <p className="text-muted-foreground mt-0.5">
-                      After setup, you will need to configure your OpenAI API key and Twilio credentials in Settings &gt; Integrations.
+                      After setup, you will need to configure your OpenAI API key in Settings &gt; Integrations.
                     </p>
                   </div>
                 </CardContent>

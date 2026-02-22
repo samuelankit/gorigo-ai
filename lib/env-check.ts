@@ -6,9 +6,9 @@ const REQUIRED_VARS = [
 const OPTIONAL_VARS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
-  "TWILIO_ACCOUNT_SID",
-  "TWILIO_AUTH_TOKEN",
   "OPENAI_API_KEY",
+  "TELNYX_API_KEY",
+  "VONAGE_API_KEY",
 ] as const;
 
 export function validateEnvironment(): void {

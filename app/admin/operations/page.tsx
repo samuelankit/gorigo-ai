@@ -349,26 +349,26 @@ export default function AdminOperationsPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card data-testid="card-twilio-health">
+            <Card data-testid="card-voice-provider-health">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Twilio Connection</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Voice Provider</p>
                     <div className="flex items-center gap-2 mt-2">
                       {infraData?.twilio?.healthy === true ? (
                         <>
                           <CheckCircle className="h-5 w-5 text-green-500" />
-                          <span className="font-semibold text-green-600 dark:text-green-400" data-testid="text-twilio-status">Connected</span>
+                          <span className="font-semibold text-green-600 dark:text-green-400" data-testid="text-voice-provider-status">Connected</span>
                         </>
                       ) : infraData?.twilio?.healthy === false ? (
                         <>
                           <XCircle className="h-5 w-5 text-red-500" />
-                          <span className="font-semibold text-red-600 dark:text-red-400" data-testid="text-twilio-status">Disconnected</span>
+                          <span className="font-semibold text-red-600 dark:text-red-400" data-testid="text-voice-provider-status">Disconnected</span>
                         </>
                       ) : (
                         <>
                           <Wifi className="h-5 w-5 text-yellow-500" />
-                          <span className="font-semibold text-yellow-600 dark:text-yellow-400" data-testid="text-twilio-status">Checking</span>
+                          <span className="font-semibold text-yellow-600 dark:text-yellow-400" data-testid="text-voice-provider-status">Checking</span>
                         </>
                       )}
                     </div>

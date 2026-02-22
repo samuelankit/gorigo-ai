@@ -224,7 +224,7 @@ export default function DemoPage() {
               <div>
                 <p className="text-sm font-medium text-foreground">Prefer a phone call?</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Connect your Twilio phone number in{" "}
+                  Connect your phone number in{" "}
                   <Link href="/dashboard/settings" className="text-blue-500 hover:underline">Settings</Link>
                   {" "}to experience GoRigo's full voice AI capabilities with real phone calls.
                 </p>

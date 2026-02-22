@@ -6,7 +6,7 @@ import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
-import { getOrgByokStatus, validateOpenAIKey, validateTwilioCredentials, getOrgKeys } from "@/lib/byok";
+import { getOrgByokStatus, validateOpenAIKey, getOrgKeys } from "@/lib/byok";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { checkEntryBarrier, TIER_ENTRY_BARRIERS, type DeploymentTier } from "@/lib/entry-barriers";
@@ -109,19 +109,6 @@ export async function PUT(request: NextRequest) {
         }
       } else {
         prerequisites.openai = { ready: false, message: "You must configure your own OpenAI API key before switching to BYOK. Go to Settings > Integrations." };
-      }
-
-      if (byokStatus.twilio.source === "org" && byokStatus.twilio.configured) {
-        try {
-          const validation = await validateTwilioCredentials(keys.twilio.accountSid, keys.twilio.authToken);
-          prerequisites.twilio = validation.valid
-            ? { ready: true, message: "Twilio credentials validated" }
-            : { ready: false, message: `Twilio validation failed: ${validation.error}` };
-        } catch (error) {
-          prerequisites.twilio = { ready: false, message: "Twilio credentials could not be validated (network error)" };
-        }
-      } else {
-        prerequisites.twilio = { ready: false, message: "You must configure your own Twilio credentials before switching to BYOK. Go to Settings > Integrations." };
       }
 
       const allMet = Object.values(prerequisites).every((p) => p.ready);

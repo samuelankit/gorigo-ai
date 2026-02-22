@@ -17,7 +17,7 @@ export const FIXED_MONTHLY_COSTS = {
     domain: { name: "gorigo.ai Domain (Namecheap)", monthlyCost: 2.50, category: "operations", provider: "Namecheap" },
     githubActions: { name: "GitHub Actions CI/CD", monthlyCost: 0, category: "operations", provider: "GitHub" },
     replitDev: { name: "Replit Development Environment", monthlyCost: 25.00, category: "operations", provider: "Replit" },
-    twilioPhoneNumbers: { name: "Twilio Phone Numbers (est. 5)", monthlyCost: 5.75, category: "telephony", provider: "Twilio" },
+    phoneNumbers: { name: "Phone Numbers (Telnyx/Vonage) (est. 5)", monthlyCost: 5.75, category: "telephony", provider: "Telnyx/Vonage" },
   },
 } as const;
 
@@ -150,7 +150,7 @@ export function categoriseExpensesForTax(data: {
       description: "Direct costs of delivering the service",
       items: [
         { name: "AI/LLM API Costs (OpenAI, Anthropic)", amount: round(data.llmCosts), taxDeductible: true },
-        { name: "Telephony Costs (Twilio)", amount: round(data.telephonyCosts), taxDeductible: true },
+        { name: "Telephony Costs (Telnyx/Vonage)", amount: round(data.telephonyCosts), taxDeductible: true },
         { name: "Payment Processing Fees (Stripe)", amount: round(data.stripeFees), taxDeductible: true },
       ],
       subtotal: round(data.llmCosts + data.telephonyCosts + data.stripeFees),
@@ -203,7 +203,7 @@ export function generatePricingRecommendations(params: {
   const fixedCostPerMin = fixedCostsMonthly / safeMinutes;
   const fullyLoadedCost = actualCostPerMinute + fixedCostPerMin;
 
-  const byokVariableCost = INTERNAL_COSTS.twilioTelephonyPerMin + INTERNAL_COSTS.azureHostingAmortisedPerMin;
+  const byokVariableCost = INTERNAL_COSTS.telephonyPerMin + INTERNAL_COSTS.azureHostingAmortisedPerMin;
   const byokFullyLoadedCost = byokVariableCost + fixedCostPerMin;
 
   const targetGrossMargin = { direct: 0.75, whiteLabel: 0.60, byok: 0.50, affiliate: 0.70 };
@@ -254,7 +254,7 @@ export function generatePricingRecommendations(params: {
       costPerMin: round(byokFullyLoadedCost, 4),
       grossMarginPercent: safeMargin(CUSTOMER_TIERS.byok.ratePerMinute, byokFullyLoadedCost),
       netMarginPercent: safeMargin(CUSTOMER_TIERS.byok.ratePerMinute, byokFullyLoadedCost),
-      rationale: "Platform fee only. Customer pays their own LLM/STT/TTS costs directly. Your costs are telephony (Twilio) + infrastructure share only. Lower rate but zero AI cost risk.",
+      rationale: "Platform fee only. Customer pays their own LLM/STT/TTS costs directly. Your costs are telephony (Telnyx/Vonage) + infrastructure share only. Lower rate but zero AI cost risk.",
       marketBenchmark: "BYOK platforms: £0.05-£0.10/min platform fee. Customer bears API costs separately.",
       minimumViableRate: round(byokFullyLoadedCost * 1.5, 2),
       suggestedWalletDeposit: 49,

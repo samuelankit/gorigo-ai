@@ -741,17 +741,6 @@ export default function PlatformSettingsPage() {
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between gap-2 p-3 rounded-md border">
                 <div>
-                  <p className="text-sm font-medium">Twilio (Telephony)</p>
-                  <p className="text-xs text-muted-foreground">Programmable Voice for AI agents</p>
-                </div>
-                {process.env.NEXT_PUBLIC_TWILIO_CONFIGURED === "true" ? (
-                  <Badge variant="secondary" className="no-default-hover-elevate bg-green-500/10 text-green-600 dark:text-green-400">Connected</Badge>
-                ) : (
-                  <Badge variant="secondary" className="no-default-hover-elevate">Not Configured</Badge>
-                )}
-              </div>
-              <div className="flex items-center justify-between gap-2 p-3 rounded-md border">
-                <div>
                   <p className="text-sm font-medium">Stripe (Payments)</p>
                   <p className="text-xs text-muted-foreground">Wallet top-ups and payment processing</p>
                 </div>

@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -151,6 +153,14 @@ interface LiveData {
   todayStats: LiveTodayStats;
   agentStatus: LiveAgentStatus[];
   timestamp: string;
+}
+
+interface CallAnalytics {
+  dailyTrends: { date: string; callCount: number; avgDuration: number; totalMinutes: number }[];
+  outcomeBreakdown: { outcome: string; count: number }[];
+  directionBreakdown: { direction: string; count: number }[];
+  agentPerformance: { agentId: number; agentName: string; callCount: number; avgDuration: number; avgQuality: number; avgSentiment: number; leadsCapt: number }[];
+  sentimentDistribution: { label: string; count: number }[];
 }
 
 const PAGE_SIZE = 10;
@@ -471,92 +481,87 @@ const QUALITY_BREAKDOWN_LABELS: Record<string, string> = {
 };
 
 export default function CallsPage() {
-  const [calls, setCalls] = useState<Call[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [direction, setDirection] = useState("all");
   const [page, setPage] = useState(0);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [liveData, setLiveData] = useState<LiveData | null>(null);
-  const [liveLoading, setLiveLoading] = useState(true);
-  const [liveError, setLiveError] = useState(false);
-
   const { toast } = useToast();
   const [outboundOpen, setOutboundOpen] = useState(false);
   const [outboundPhone, setOutboundPhone] = useState("");
-  const [outboundLoading, setOutboundLoading] = useState(false);
   const [outboundResult, setOutboundResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   const [editNotes, setEditNotes] = useState("");
   const [editTags, setEditTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
-  const [savingNotes, setSavingNotes] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [analytics, setAnalytics] = useState<{
-    dailyTrends: { date: string; callCount: number; avgDuration: number; totalMinutes: number }[];
-    outcomeBreakdown: { outcome: string; count: number }[];
-    directionBreakdown: { direction: string; count: number }[];
-    agentPerformance: { agentId: number; agentName: string; callCount: number; avgDuration: number; avgQuality: number; avgSentiment: number; leadsCapt: number }[];
-    sentimentDistribution: { label: string; count: number }[];
-  } | null>(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
-  const fetchCalls = (dir: string, offset: number) => {
-    setLoading(true);
-    const params = new URLSearchParams({
-      limit: String(PAGE_SIZE),
-      offset: String(offset),
-    });
-    if (dir !== "all") {
-      params.set("direction", dir);
-    }
-    fetch(`/api/calls?${params.toString()}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.calls) setCalls(d.calls);
-      })
-      .catch((error) => { console.error("Fetch calls failed:", error); })
-      .finally(() => setLoading(false));
-  };
+  const callsQueryParams = new URLSearchParams({
+    limit: String(PAGE_SIZE),
+    offset: String(page * PAGE_SIZE),
+  });
+  if (direction !== "all") {
+    callsQueryParams.set("direction", direction);
+  }
 
-  const fetchLiveData = useCallback(() => {
-    fetch("/api/calls/live")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d && !d.error) {
-          setLiveData(d);
-          setLiveError(false);
-        }
-      })
-      .catch(() => setLiveError(true))
-      .finally(() => setLiveLoading(false));
-  }, []);
+  const { data: callsData, isLoading: loading } = useQuery<{ calls: Call[] }>({
+    queryKey: ["/api/calls", { direction, page }],
+    queryFn: () => apiRequest(`/api/calls?${callsQueryParams.toString()}`),
+  });
 
-  useEffect(() => {
-    fetchCalls(direction, page * PAGE_SIZE);
-  }, [direction, page]);
+  const calls = callsData?.calls ?? [];
 
-  useEffect(() => {
-    fetchLiveData();
-    const interval = setInterval(fetchLiveData, 5000);
-    return () => clearInterval(interval);
-  }, [fetchLiveData]);
+  const { data: liveData, isLoading: liveLoading, refetch: refetchLive } = useQuery<LiveData>({
+    queryKey: ["/api/calls/live"],
+    queryFn: () => apiRequest("/api/calls/live"),
+    refetchInterval: 5000,
+  });
 
-  useEffect(() => {
-    if (showAnalytics && !analytics && !analyticsLoading) {
-      setAnalyticsLoading(true);
-      fetch("/api/calls/analytics")
-        .then((r) => r.json())
-        .then((d) => {
-          if (d && !d.error) setAnalytics(d);
-        })
-        .catch((error) => { console.error("Fetch call analytics failed:", error); })
-        .finally(() => setAnalyticsLoading(false));
-    }
-  }, [showAnalytics]);
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<CallAnalytics>({
+    queryKey: ["/api/calls/analytics"],
+    queryFn: () => apiRequest("/api/calls/analytics"),
+    enabled: showAnalytics,
+  });
+
+  const outboundCallMutation = useMutation({
+    mutationFn: (phoneNumber: string) =>
+      apiRequest("/api/calls/outbound", {
+        method: "POST",
+        body: JSON.stringify({ phoneNumber }),
+      }),
+    onSuccess: () => {
+      setOutboundResult({ ok: true, message: "Call initiated successfully." });
+      setOutboundPhone("");
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/calls"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/calls/live"] });
+      }, 2000);
+    },
+    onError: (error: any) => {
+      setOutboundResult({ ok: false, message: error.message || "Failed to initiate call." });
+    },
+  });
+
+  const saveNotesMutation = useMutation({
+    mutationFn: (payload: { callId: number; notes: string; tags: string[] }) =>
+      apiRequest("/api/calls/notes", {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      toast({ title: "Saved", description: "Notes and tags updated." });
+      if (selectedCall) {
+        setSelectedCall({ ...selectedCall, notes: editNotes, tags: editTags });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/calls"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save notes.", variant: "destructive" });
+    },
+  });
 
   const handleDirectionChange = (val: string) => {
     setDirection(val);
@@ -602,30 +607,8 @@ export default function CallsPage() {
 
   const handleOutboundCall = async () => {
     if (!outboundPhone.trim()) return;
-    setOutboundLoading(true);
     setOutboundResult(null);
-    try {
-      const res = await fetch("/api/calls/outbound", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: outboundPhone.trim() }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setOutboundResult({ ok: true, message: "Call initiated successfully." });
-        setOutboundPhone("");
-        setTimeout(() => {
-          fetchCalls(direction, page * PAGE_SIZE);
-          fetchLiveData();
-        }, 2000);
-      } else {
-        setOutboundResult({ ok: false, message: data.error || "Failed to initiate call." });
-      }
-    } catch (error) {
-      setOutboundResult({ ok: false, message: "Network error. Please try again." });
-    } finally {
-      setOutboundLoading(false);
-    }
+    outboundCallMutation.mutate(outboundPhone.trim());
   };
 
   const handleSelectCall = (call: Call) => {
@@ -637,28 +620,11 @@ export default function CallsPage() {
 
   const handleSaveNotes = async () => {
     if (!selectedCall) return;
-    setSavingNotes(true);
-    try {
-      const res = await fetch("/api/calls/notes", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          callId: selectedCall.id,
-          notes: editNotes,
-          tags: editTags,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to save");
-      toast({ title: "Saved", description: "Notes and tags updated." });
-      setSelectedCall({ ...selectedCall, notes: editNotes, tags: editTags });
-      setCalls((prev) =>
-        prev.map((c) => (c.id === selectedCall.id ? { ...c, notes: editNotes, tags: editTags } : c))
-      );
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save notes.", variant: "destructive" });
-    } finally {
-      setSavingNotes(false);
-    }
+    saveNotesMutation.mutate({
+      callId: selectedCall.id,
+      notes: editNotes,
+      tags: editTags,
+    });
   };
 
   const handleAddTag = () => {
@@ -975,7 +941,7 @@ export default function CallsPage() {
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">Auto-refreshes every 5s</span>
-                    <Button size="icon" variant="ghost" onClick={fetchLiveData} data-testid="button-refresh-live">
+                    <Button size="icon" variant="ghost" onClick={() => refetchLive()} data-testid="button-refresh-live">
                       <RefreshCw className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -1016,17 +982,12 @@ export default function CallsPage() {
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center justify-between gap-2 flex-wrap">
-                              <Badge variant="secondary" className="no-default-hover-elevate">
-                                {call.direction === "inbound" ? <PhoneIncoming className="h-3 w-3 mr-1" /> : <PhoneOutgoing className="h-3 w-3 mr-1" />}
+                            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                {call.direction === "inbound" ? <PhoneIncoming className="w-3 h-3" /> : <PhoneOutgoing className="w-3 h-3" />}
                                 {call.direction}
-                              </Badge>
-                              {call.agentName && (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Bot className="h-3 w-3" />
-                                  {call.agentName}
-                                </span>
-                              )}
+                              </span>
+                              {call.agentName && <span>{call.agentName}</span>}
                             </div>
                           </CardContent>
                         </Card>
@@ -1040,63 +1001,30 @@ export default function CallsPage() {
                 <Card>
                   <CardHeader className="space-y-0 pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <CircleDot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      Recent Activity
+                      <CircleDot className="h-4 w-4 text-muted-foreground" />
+                      Recently Completed
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
                       {liveData.recentCompleted.map((call) => (
-                        <div
-                          key={call.id}
-                          className="flex items-center justify-between gap-3 p-2.5 rounded-md hover-elevate cursor-pointer"
-                          data-testid={`row-recent-call-${call.id}`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className={`flex items-center justify-center w-7 h-7 rounded-full flex-shrink-0 ${
-                              call.status === "completed" ? "bg-emerald-500/10" : "bg-red-500/10"
-                            }`}>
-                              {call.status === "completed" ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                              ) : (
-                                <PhoneOff className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-medium">{call.callerNumber || "Unknown"}</span>
-                                {call.agentName && (
-                                  <span className="text-xs text-muted-foreground">{call.agentName}</span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                                <span className="text-xs text-muted-foreground">
-                                  {call.duration > 0 ? `${Math.floor(call.duration / 60)}:${String(call.duration % 60).padStart(2, "0")}` : "0:00"}
-                                </span>
-                                {call.sentimentLabel && (
-                                  <Badge variant="default" className={`no-default-hover-elevate text-[10px] py-0 h-4 ${getSentimentBadgeClass(call.sentimentLabel)}`}>
-                                    {call.sentimentLabel.replace(/_/g, " ")}
-                                  </Badge>
-                                )}
-                                {call.leadCaptured && (
-                                  <Badge variant="default" className="no-default-hover-elevate text-[10px] py-0 h-4 bg-teal-500/10 text-teal-600 dark:text-teal-400">
-                                    Lead
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
+                        <div key={call.id} className="flex items-center justify-between gap-3 py-2 border-b border-border last:border-0" data-testid={`row-recent-call-${call.id}`}>
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {call.direction === "inbound" ? (
+                              <PhoneIncoming className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                            ) : (
+                              <PhoneOutgoing className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                            )}
+                            <span className="text-sm truncate">{call.callerNumber || "Unknown"}</span>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            {call.qualityScore && Number(call.qualityScore) > 0 && (
-                              <span className={`text-xs font-semibold ${getQualityColor(Number(call.qualityScore))}`}>
-                                {Math.round(Number(call.qualityScore))}%
-                              </span>
-                            )}
-                            {call.endedAt && (
-                              <span className="text-[10px] text-muted-foreground/70">
-                                {new Date(call.endedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-                              </span>
-                            )}
+                            <span className="text-xs text-muted-foreground">{formatDuration(call.duration || 0)}</span>
+                            <Badge
+                              variant="default"
+                              className={`no-default-hover-elevate text-xs ${getStatusBadgeClass(call.status)}`}
+                            >
+                              {call.status}
+                            </Badge>
                           </div>
                         </div>
                       ))}
@@ -1109,22 +1037,15 @@ export default function CallsPage() {
             <div className="space-y-4">
               <Card>
                 <CardHeader className="space-y-0 pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Bot className="w-4 h-4" />
-                    Agent Status
-                  </CardTitle>
+                  <CardTitle className="text-base">Agent Status</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {liveData.agentStatus.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4" data-testid="text-no-agents">No agents configured</p>
+                    <p className="text-sm text-muted-foreground text-center py-4" data-testid="text-no-agents-status">No agents configured</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {liveData.agentStatus.map((agent) => (
-                        <div
-                          key={agent.id}
-                          className="flex items-center justify-between gap-3 p-2.5 rounded-md"
-                          data-testid={`row-agent-status-${agent.id}`}
-                        >
+                        <div key={agent.id} className="flex items-center justify-between gap-3" data-testid={`row-agent-status-${agent.id}`}>
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 ${
                               agent.isOnCall ? "bg-green-500/10" : agent.status === "active" ? "bg-blue-500/10" : "bg-muted"
@@ -1628,10 +1549,10 @@ export default function CallsPage() {
                     <Button
                       size="sm"
                       onClick={handleSaveNotes}
-                      disabled={savingNotes}
+                      disabled={saveNotesMutation.isPending}
                       data-testid="button-save-notes"
                     >
-                      {savingNotes ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Check className="w-3.5 h-3.5 mr-1.5" />}
+                      {saveNotesMutation.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Check className="w-3.5 h-3.5 mr-1.5" />}
                       Save
                     </Button>
                   </div>
@@ -1690,8 +1611,8 @@ export default function CallsPage() {
             <Button variant="outline" onClick={() => setOutboundOpen(false)} data-testid="button-cancel-outbound">
               Cancel
             </Button>
-            <Button onClick={handleOutboundCall} disabled={outboundLoading || !outboundPhone.trim()} data-testid="button-confirm-outbound">
-              {outboundLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Phone className="w-4 h-4 mr-2" />}
+            <Button onClick={handleOutboundCall} disabled={outboundCallMutation.isPending || !outboundPhone.trim()} data-testid="button-confirm-outbound">
+              {outboundCallMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Phone className="w-4 h-4 mr-2" />}
               Call
             </Button>
           </DialogFooter>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { useToast } from "@/lib/use-toast";
 import { Wallet, TrendingUp, TrendingDown, Hash, AlertTriangle, Cloud, Key, Server, Bell, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TalkTimeInfo } from "@/components/talk-time-info";
+import { apiRequest } from "@/components/query-provider";
 
 interface WalletData {
   balance: number;
@@ -42,116 +44,98 @@ interface Transaction {
 
 export default function WalletPage() {
   const { toast } = useToast();
-  const [wallet, setWallet] = useState<WalletData | null>(null);
-  const [stats, setStats] = useState<WalletStats | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loadingWallet, setLoadingWallet] = useState(true);
-  const [loadingTransactions, setLoadingTransactions] = useState(true);
-  const [error, setError] = useState(false);
+  const queryClient = useQueryClient();
   const [topUpAmount, setTopUpAmount] = useState("");
-  const [toppingUp, setToppingUp] = useState(false);
-  const [isDemo, setIsDemo] = useState(false);
-  const [deploymentModel, setDeploymentModel] = useState<string | null>(null);
   const [alertThreshold, setAlertThreshold] = useState("10");
   const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
-  const [savingSettings, setSavingSettings] = useState(false);
 
-  const fetchWallet = () => {
-    fetch("/api/wallet")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.wallet) setWallet(d.wallet);
-        if (d?.stats) setStats(d.stats);
-      })
-      .catch(() => { setError(true); })
-      .finally(() => setLoadingWallet(false));
-  };
+  const { data: walletData, isLoading: loadingWallet, isError: walletError } = useQuery<{ wallet: WalletData; stats: WalletStats }>({
+    queryKey: ["/api/wallet"],
+  });
 
-  const fetchTransactions = () => {
-    fetch("/api/wallet/transactions?limit=50&offset=0")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.transactions) setTransactions(d.transactions);
-      })
-      .catch(() => { setError(true); })
-      .finally(() => setLoadingTransactions(false));
-  };
+  const wallet = walletData?.wallet ?? null;
+  const stats = walletData?.stats ?? null;
+
+  const { data: transactionsData, isLoading: loadingTransactions, isError: transactionsError } = useQuery<{ transactions: Transaction[] }>({
+    queryKey: ["/api/wallet/transactions", { limit: 50, offset: 0 }],
+    queryFn: () => fetch("/api/wallet/transactions?limit=50&offset=0").then((r) => r.json()),
+  });
+
+  const transactions = transactionsData?.transactions ?? [];
+
+  const { data: meData } = useQuery<{ user?: { isDemo?: boolean }; org?: { deploymentModel?: string } }>({
+    queryKey: ["/api/auth/me"],
+  });
+
+  const isDemo = meData?.user?.isDemo ?? false;
+  const deploymentModel = meData?.org?.deploymentModel ?? null;
+
+  const { data: settingsData } = useQuery<{ lowBalanceThreshold?: number; lowBalanceEmailEnabled?: boolean }>({
+    queryKey: ["/api/wallet/settings"],
+  });
 
   useEffect(() => {
-    fetchWallet();
-    fetchTransactions();
+    if (settingsData?.lowBalanceThreshold !== undefined) {
+      setAlertThreshold(String(settingsData.lowBalanceThreshold));
+    }
+    if (settingsData?.lowBalanceEmailEnabled !== undefined) {
+      setEmailAlertsEnabled(settingsData.lowBalanceEmailEnabled);
+    }
+  }, [settingsData]);
 
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.user?.isDemo) setIsDemo(true);
-        if (d?.org?.deploymentModel) setDeploymentModel(d.org.deploymentModel);
-      })
-      .catch((error) => { console.error("Fetch wallet user data failed:", error); });
+  const error = walletError || transactionsError;
 
-    fetch("/api/wallet/settings")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.lowBalanceThreshold !== undefined) setAlertThreshold(String(d.lowBalanceThreshold));
-        if (d?.lowBalanceEmailEnabled !== undefined) setEmailAlertsEnabled(d.lowBalanceEmailEnabled);
-      })
-      .catch((error) => { console.error("Fetch wallet settings failed:", error); });
-  }, []);
+  const topUpMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      return apiRequest("/api/wallet/topup", {
+        method: "POST",
+        body: JSON.stringify({ amount }),
+      });
+    },
+    onSuccess: (data: any) => {
+      toast({ title: "Top-up successful", description: `Your new balance is £${Number(data.newBalance).toFixed(2)}.` });
+      setTopUpAmount("");
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet/transactions"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to top up wallet.", variant: "destructive" });
+    },
+  });
 
-  const handleTopUp = async () => {
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (settings: { lowBalanceThreshold: number; lowBalanceEmailEnabled: boolean }) => {
+      return apiRequest("/api/wallet/settings", {
+        method: "PUT",
+        body: JSON.stringify(settings),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Settings saved", description: "Your alert preferences have been updated." });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet/settings"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save alert settings.", variant: "destructive" });
+    },
+  });
+
+  const handleTopUp = () => {
     const amount = parseFloat(topUpAmount);
     if (!amount || amount <= 0 || amount > 10000) {
       toast({ title: "Invalid amount", description: "Please enter an amount between 0.01 and 10,000.", variant: "destructive" });
       return;
     }
-
-    setToppingUp(true);
-    try {
-      const res = await fetch("/api/wallet/topup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to top up");
-      }
-      const data = await res.json();
-      toast({ title: "Top-up successful", description: `Your new balance is £${Number(data.newBalance).toFixed(2)}.` });
-      setTopUpAmount("");
-      setLoadingWallet(true);
-      setLoadingTransactions(true);
-      fetchWallet();
-      fetchTransactions();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to top up wallet.";
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setToppingUp(false);
-    }
+    topUpMutation.mutate(amount);
   };
 
-  const handleSaveAlertSettings = async () => {
+  const handleSaveAlertSettings = () => {
     const threshold = parseFloat(alertThreshold);
     if (isNaN(threshold) || threshold < 0 || threshold > 10000) {
       toast({ title: "Invalid threshold", description: "Please enter a value between 0 and 10,000.", variant: "destructive" });
       return;
     }
-    setSavingSettings(true);
-    try {
-      const res = await fetch("/api/wallet/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lowBalanceThreshold: threshold, lowBalanceEmailEnabled: emailAlertsEnabled }),
-      });
-      if (!res.ok) throw new Error("Failed to save settings");
-      toast({ title: "Settings saved", description: "Your alert preferences have been updated." });
-      fetchWallet();
-    } catch {
-      toast({ title: "Error", description: "Failed to save alert settings.", variant: "destructive" });
-    } finally {
-      setSavingSettings(false);
-    }
+    saveSettingsMutation.mutate({ lowBalanceThreshold: threshold, lowBalanceEmailEnabled: emailAlertsEnabled });
   };
 
   const getTypeBadge = (type: string) => {
@@ -377,8 +361,8 @@ export default function WalletPage() {
                     data-testid="input-topup-amount"
                   />
                 </div>
-                <Button onClick={handleTopUp} disabled={toppingUp} data-testid="button-topup">
-                  {toppingUp ? "Processing..." : "Top Up"}
+                <Button onClick={handleTopUp} disabled={topUpMutation.isPending} data-testid="button-topup">
+                  {topUpMutation.isPending ? "Processing..." : "Top Up"}
                 </Button>
               </div>
               {wallet && wallet.balance < 5 && (
@@ -429,8 +413,8 @@ export default function WalletPage() {
               data-testid="switch-email-alerts"
             />
           </div>
-          <Button onClick={handleSaveAlertSettings} disabled={savingSettings} variant="outline" data-testid="button-save-alert-settings">
-            {savingSettings ? "Saving..." : "Save Alert Settings"}
+          <Button onClick={handleSaveAlertSettings} disabled={saveSettingsMutation.isPending} variant="outline" data-testid="button-save-alert-settings">
+            {saveSettingsMutation.isPending ? "Saving..." : "Save Alert Settings"}
           </Button>
         </CardContent>
       </Card>

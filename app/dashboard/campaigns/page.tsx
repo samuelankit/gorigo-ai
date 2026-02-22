@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -150,13 +152,8 @@ function formatBudget(spent: string | null, cap: string | null) {
 
 export default function CampaignsPage() {
   const { toast } = useToast();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [loadingAgents, setLoadingAgents] = useState(false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -172,39 +169,40 @@ export default function CampaignsPage() {
   const [dailySpendLimit, setDailySpendLimit] = useState("");
   const [script, setScript] = useState("");
 
-  const fetchCampaigns = () => {
-    setLoading(true);
-    fetch("/api/campaigns")
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setCampaigns(data);
-        }
-      })
-      .catch(() => {
-        toast({ title: "Error", description: "Failed to load campaigns", variant: "destructive" });
-      })
-      .finally(() => setLoading(false));
-  };
+  const { data: campaigns = [], isLoading: loading } = useQuery<Campaign[]>({
+    queryKey: ["/api/campaigns"],
+    queryFn: async () => {
+      const data = await apiRequest("/api/campaigns");
+      return Array.isArray(data) ? data : [];
+    },
+  });
 
-  const fetchAgents = () => {
-    setLoadingAgents(true);
-    fetch("/api/agents/multi")
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data?.agents)) {
-          setAgents(data.agents);
-        } else if (data?.agent) {
-          setAgents([data.agent]);
-        }
-      })
-      .catch((error) => { console.error("Fetch agents for campaigns failed:", error); })
-      .finally(() => setLoadingAgents(false));
-  };
+  const { data: agentsData, isLoading: loadingAgents } = useQuery<{ agents?: Agent[]; agent?: Agent }>({
+    queryKey: ["/api/agents/multi"],
+    enabled: dialogOpen,
+  });
 
-  useEffect(() => {
-    fetchCampaigns();
-  }, []);
+  const agents: Agent[] = agentsData?.agents
+    ? agentsData.agents
+    : agentsData?.agent
+    ? [agentsData.agent]
+    : [];
+
+  const createCampaignMutation = useMutation({
+    mutationFn: (payload: Record<string, unknown>) =>
+      apiRequest("/api/campaigns", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (_data, variables) => {
+      toast({ title: "Campaign Created", description: `"${variables.name}" has been created successfully.` });
+      setDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to create campaign", variant: "destructive" });
+    },
+  });
 
   const handleCountryChange = (code: string) => {
     setCountryCode(code);
@@ -228,7 +226,6 @@ export default function CampaignsPage() {
     setBudgetCap("");
     setDailySpendLimit("");
     setScript("");
-    fetchAgents();
     setDialogOpen(true);
   };
 
@@ -238,42 +235,22 @@ export default function CampaignsPage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/campaigns", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || null,
-          agentId: agentId ? parseInt(agentId) : null,
-          countryCode: countryCode || null,
-          language: language || null,
-          callingHoursStart: callingHoursStart || null,
-          callingHoursEnd: callingHoursEnd || null,
-          callingTimezone: callingTimezone || null,
-          pacingCallsPerMinute: parseInt(pacingCallsPerMinute) || 5,
-          pacingMaxConcurrent: parseInt(pacingMaxConcurrent) || 3,
-          budgetCap: budgetCap ? budgetCap : null,
-          dailySpendLimit: dailySpendLimit ? dailySpendLimit : null,
-          script: script.trim() || null,
-          scriptLanguage: language || null,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to create campaign");
-      }
-
-      toast({ title: "Campaign Created", description: `"${name}" has been created successfully.` });
-      setDialogOpen(false);
-      fetchCampaigns();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to create campaign", variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
+    createCampaignMutation.mutate({
+      name: name.trim(),
+      description: description.trim() || null,
+      agentId: agentId ? parseInt(agentId) : null,
+      countryCode: countryCode || null,
+      language: language || null,
+      callingHoursStart: callingHoursStart || null,
+      callingHoursEnd: callingHoursEnd || null,
+      callingTimezone: callingTimezone || null,
+      pacingCallsPerMinute: parseInt(pacingCallsPerMinute) || 5,
+      pacingMaxConcurrent: parseInt(pacingMaxConcurrent) || 3,
+      budgetCap: budgetCap ? budgetCap : null,
+      dailySpendLimit: dailySpendLimit ? dailySpendLimit : null,
+      script: script.trim() || null,
+      scriptLanguage: language || null,
+    });
   };
 
   const totalCampaigns = campaigns.length;
@@ -603,8 +580,8 @@ export default function CampaignsPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)} data-testid="button-cancel-campaign">
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={submitting} data-testid="button-submit-campaign">
-              {submitting ? (
+            <Button onClick={handleSubmit} disabled={createCampaignMutation.isPending} data-testid="button-submit-campaign">
+              {createCampaignMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Creating...

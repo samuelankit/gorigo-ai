@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -162,23 +163,6 @@ const demoChartData = [
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [businessName, setBusinessName] = useState("");
-  const [usage, setUsage] = useState<Usage | null>(null);
-  const [calls, setCalls] = useState<Call[]>([]);
-  const [subscription, setSubscription] = useState<{ planId: number } | null>(null);
-  const [loadingUsage, setLoadingUsage] = useState(true);
-  const [loadingCalls, setLoadingCalls] = useState(true);
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
-  const [error, setError] = useState(false);
-  const [agentStats, setAgentStats] = useState<AgentStatsData | null>(null);
-  const [loadingAgentStats, setLoadingAgentStats] = useState(true);
-  const [onboarding, setOnboarding] = useState<OnboardingData | null>(null);
-  const [todayStats, setTodayStats] = useState<TodayStatsData | null>(null);
-  const [liveData, setLiveData] = useState<LiveDashboardData | null>(null);
-  const [deploymentModel, setDeploymentModel] = useState<string | null>(null);
-  const [serviceHealth, setServiceHealth] = useState<"healthy" | "unhealthy" | null>(null);
-  const [internationalData, setInternationalData] = useState<InternationalSummary | null>(null);
-  const [loadingInternational, setLoadingInternational] = useState(true);
 
   const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -187,106 +171,68 @@ export default function DashboardPage() {
     return false;
   });
 
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => {
-        if (!r.ok) throw new Error("Not authenticated");
-        return r.json();
-      })
-      .then((d) => {
-        if (d?.user) setBusinessName(d.user.businessName || "");
-        if (d?.org?.deploymentModel) setDeploymentModel(d.org.deploymentModel);
-      })
-      .catch((error) => { console.error("Fetch dashboard user data failed:", error); });
+  const { data: meData } = useQuery<{ user?: { businessName?: string; isDemo?: boolean }; org?: { deploymentModel?: string } }>({
+    queryKey: ["/api/auth/me"],
+  });
 
-    fetch("/api/usage")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.usage) setUsage(d.usage);
-      })
-      .catch(() => { setError(true); })
-      .finally(() => setLoadingUsage(false));
+  const businessName = meData?.user?.businessName || "";
+  const deploymentModel = meData?.org?.deploymentModel ?? null;
 
-    fetch("/api/calls?limit=5")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.calls) setCalls(d.calls);
-      })
-      .catch(() => { setError(true); })
-      .finally(() => setLoadingCalls(false));
+  const { data: usageData, isLoading: loadingUsage, isError: usageError } = useQuery<{ usage: Usage }>({
+    queryKey: ["/api/usage"],
+  });
 
-    fetch("/api/billing/subscription")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.subscription) setSubscription(d.subscription);
-      })
-      .catch((error) => { console.error("Fetch subscription failed:", error); });
+  const usage = usageData?.usage ?? null;
 
-    fetch("/api/wallet")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.wallet) setWalletBalance(d.wallet.balance);
-      })
-      .catch((error) => { console.error("Fetch wallet balance failed:", error); });
+  const { data: callsData, isLoading: loadingCalls, isError: callsError } = useQuery<{ calls: Call[] }>({
+    queryKey: ["/api/calls", { limit: 5 }],
+    queryFn: () => fetch("/api/calls?limit=5").then((r) => r.json()),
+  });
 
-    fetch("/api/agents/stats")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d && !d.error) setAgentStats(d);
-      })
-      .catch((error) => { console.error("Fetch agent stats failed:", error); })
-      .finally(() => setLoadingAgentStats(false));
+  const calls = callsData?.calls ?? [];
 
-    fetch("/api/onboarding")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d && !d.error) setOnboarding(d);
-      })
-      .catch((error) => { console.error("Fetch onboarding status failed:", error); });
+  const { data: subscriptionData } = useQuery<{ subscription?: { planId: number } }>({
+    queryKey: ["/api/billing/subscription"],
+  });
 
-    fetch("/api/international/summary")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d && !d.error) setInternationalData(d);
-      })
-      .catch((error) => { console.error("Fetch international summary failed:", error); })
-      .finally(() => setLoadingInternational(false));
+  const subscription = subscriptionData?.subscription ?? null;
 
-    const fetchTodayStats = () => {
-      fetch("/api/calls/today")
-        .then((r) => r.json())
-        .then((d) => {
-          if (d && !d.error) setTodayStats(d);
-        })
-        .catch((error) => { console.error("Fetch today call stats failed:", error); });
-    };
-    fetchTodayStats();
-    const todayInterval = setInterval(fetchTodayStats, 15000);
+  const { data: walletData } = useQuery<{ wallet?: { balance: number } }>({
+    queryKey: ["/api/wallet"],
+  });
 
-    const fetchLiveData = () => {
-      fetch("/api/calls/live")
-        .then((r) => r.json())
-        .then((d) => {
-          if (d && !d.error) setLiveData(d);
-        })
-        .catch((error) => { console.error("Fetch live call data failed:", error); });
-    };
-    fetchLiveData();
-    const liveInterval = setInterval(fetchLiveData, 5000);
+  const walletBalance = walletData?.wallet?.balance ?? null;
 
-    const fetchHealth = () => {
-      fetch("/api/health")
-        .then((r) => r.json())
-        .then((d) => {
-          setServiceHealth(d?.status === "healthy" ? "healthy" : "unhealthy");
-        })
-        .catch(() => setServiceHealth("unhealthy"));
-    };
-    fetchHealth();
-    const healthInterval = setInterval(fetchHealth, 30000);
+  const { data: agentStats, isLoading: loadingAgentStats } = useQuery<AgentStatsData>({
+    queryKey: ["/api/agents/stats"],
+  });
 
-    return () => { clearInterval(todayInterval); clearInterval(liveInterval); clearInterval(healthInterval); };
-  }, []);
+  const { data: onboarding } = useQuery<OnboardingData>({
+    queryKey: ["/api/onboarding"],
+  });
+
+  const { data: internationalData, isLoading: loadingInternational } = useQuery<InternationalSummary>({
+    queryKey: ["/api/international/summary"],
+  });
+
+  const { data: todayStats } = useQuery<TodayStatsData>({
+    queryKey: ["/api/calls/today"],
+    refetchInterval: 15000,
+  });
+
+  const { data: liveData } = useQuery<LiveDashboardData>({
+    queryKey: ["/api/calls/live"],
+    refetchInterval: 5000,
+  });
+
+  const { data: healthData } = useQuery<{ status: string }>({
+    queryKey: ["/api/health"],
+    refetchInterval: 30000,
+  });
+
+  const serviceHealth = healthData ? (healthData.status === "healthy" ? "healthy" : "unhealthy") as "healthy" | "unhealthy" : null;
+
+  const error = usageError || callsError;
 
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);

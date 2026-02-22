@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext } from "react";
+import { useState, createContext, useContext } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -181,24 +183,11 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
 
 function OverviewTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<IntelligenceData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/analytics/intelligence?days=${days}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed");
-        return r.json();
-      })
-      .then((d) => {
-        if (!d.error) setData(d);
-        else setError(true);
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading, isError: error } = useQuery<IntelligenceData>({
+    queryKey: ["/api/analytics/intelligence", { days }],
+    queryFn: () => apiRequest(`/api/analytics/intelligence?days=${days}`),
+  });
 
   if (loading) {
     return (
@@ -381,24 +370,11 @@ function OverviewTab() {
 
 function SentimentTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<SentimentData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/analytics/sentiment?days=${days}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed");
-        return r.json();
-      })
-      .then((d) => {
-        if (!d.error) setData(d);
-        else setError(true);
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading, isError: error } = useQuery<SentimentData>({
+    queryKey: ["/api/analytics/sentiment", { days }],
+    queryFn: () => apiRequest(`/api/analytics/sentiment?days=${days}`),
+  });
 
   if (loading) {
     return (
@@ -535,24 +511,11 @@ function SentimentTab() {
 
 function QualityTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<QualityData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/analytics/quality?days=${days}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed");
-        return r.json();
-      })
-      .then((d) => {
-        if (!d.error) setData(d);
-        else setError(true);
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading, isError: error } = useQuery<QualityData>({
+    queryKey: ["/api/analytics/quality", { days }],
+    queryFn: () => apiRequest(`/api/analytics/quality?days=${days}`),
+  });
 
   if (loading) {
     return (
@@ -770,24 +733,11 @@ function QualityTab() {
 
 function AgentsTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<AgentData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/analytics/agent-performance?days=${days}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed");
-        return r.json();
-      })
-      .then((d) => {
-        if (!d.error) setData(d);
-        else setError(true);
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading, isError: error } = useQuery<AgentData>({
+    queryKey: ["/api/analytics/agent-performance", { days }],
+    queryFn: () => apiRequest(`/api/analytics/agent-performance?days=${days}`),
+  });
 
   if (loading) {
     return (
@@ -905,19 +855,11 @@ const PIE_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--cha
 
 function TrendsTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
-    fetch(`/api/analytics/trends?days=${days}`)
-      .then((r) => { if (!r.ok) throw new Error("Failed"); return r.json(); })
-      .then((d) => { if (!d.error) setData(d); else setError(true); })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading, isError: error } = useQuery<any>({
+    queryKey: ["/api/analytics/trends", { days }],
+    queryFn: () => apiRequest(`/api/analytics/trends?days=${days}`),
+  });
 
   if (loading) {
     return (
@@ -1066,19 +1008,11 @@ function TrendsTab() {
 
 function ActivityTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
-    fetch(`/api/analytics/activity?days=${days}`)
-      .then((r) => { if (!r.ok) throw new Error("Failed"); return r.json(); })
-      .then((d) => { if (!d.error) setData(d); else setError(true); })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading, isError: error } = useQuery<any>({
+    queryKey: ["/api/analytics/activity", { days }],
+    queryFn: () => apiRequest(`/api/analytics/activity?days=${days}`),
+  });
 
   if (loading) {
     return (

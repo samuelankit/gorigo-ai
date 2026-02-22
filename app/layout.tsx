@@ -5,13 +5,11 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { CookieConsent } from "@/components/cookie-consent";
+import { QueryProvider } from "@/components/query-provider";
 import { Suspense } from "react";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { StructuredData } from "@/components/seo/structured-data";
 import { VerificationMeta } from "@/components/seo/verification-meta";
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -71,6 +69,7 @@ export default function RootLayout({
         <meta name="author" content="International Business Exchange Limited" />
       </head>
       <body className={inter.className}>
+        <QueryProvider>
         <ThemeProvider>
           <ErrorBoundary>
             {children}
@@ -81,6 +80,7 @@ export default function RootLayout({
           <Toaster />
           <CookieConsent />
         </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { affiliates, affiliateCommissions, orgs, partners, partnerClients, failedDistributions, walletTransactions, distributionLedger } from "@/shared/schema";
+import { affiliates, affiliateCommissions, orgs, partners, partnerClients, failedDistributions, walletTransactions, distributionLedger, users } from "@/shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { topUpWallet } from "@/lib/wallet";
 import { roundMoney, calculatePercentage, safeSubtract, safeParseNumeric } from "@/lib/money";
@@ -222,20 +222,84 @@ export async function retryFailedDistributions() {
     .limit(10);
 
   let resolved = 0;
+  let deadLettered = 0;
   for (const entry of pending) {
     try {
       await retryDistributionEntry(entry);
       await db.update(failedDistributions).set({ status: "resolved", resolvedAt: new Date() }).where(eq(failedDistributions.id, entry.id));
       resolved++;
     } catch (err) {
+      const newRetryCount = (entry.retryCount ?? 0) + 1;
+      const maxRetries = entry.maxRetries ?? 3;
+      const isExhausted = newRetryCount >= maxRetries;
+
       await db.update(failedDistributions).set({
-        retryCount: (entry.retryCount ?? 0) + 1,
-        status: ((entry.retryCount ?? 0) + 1 >= (entry.maxRetries ?? 3)) ? "failed" : "pending",
+        retryCount: newRetryCount,
+        status: isExhausted ? "failed" : "pending",
         errorMessage: err instanceof Error ? err.message : "Unknown error",
       }).where(eq(failedDistributions.id, entry.id));
+
+      if (isExhausted) {
+        deadLettered++;
+        notifyDistributionDeadLetter(entry, err instanceof Error ? err.message : "Unknown error").catch(
+          (notifyErr) => console.error("Dead-letter notification failed:", notifyErr)
+        );
+      }
     }
   }
-  return { total: pending.length, resolved };
+  return { total: pending.length, resolved, deadLettered };
+}
+
+async function notifyDistributionDeadLetter(
+  entry: typeof failedDistributions.$inferSelect,
+  lastError: string
+) {
+  const { createNotification } = await import("@/lib/notifications");
+  const { logAudit } = await import("@/lib/audit");
+
+  const amount = safeParseNumeric(entry.deductionAmount, 0);
+
+  try {
+    const admins = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.globalRole, "SUPER_ADMIN"))
+      .limit(10);
+
+    for (const admin of admins) {
+      await createNotification({
+        userId: admin.id,
+        type: "system",
+        title: "Commission processing failed permanently",
+        message: `Distribution for org #${entry.orgId} (£${roundMoney(amount).toFixed(2)}) failed after ${entry.maxRetries ?? 3} retries. Last error: ${lastError}. Manual intervention required.`,
+        actionUrl: "/admin/distribution",
+        metadata: {
+          failedDistributionId: entry.id,
+          orgId: entry.orgId,
+          amount,
+          description: entry.description,
+        },
+      });
+    }
+  } catch (notifyErr) {
+    console.error("Failed to notify admins about dead-letter distribution:", notifyErr);
+  }
+
+  try {
+    await logAudit({
+      actorId: null,
+      action: "distribution.dead_letter",
+      entityType: "distribution",
+      entityId: entry.orgId,
+      details: {
+        failedDistributionId: entry.id,
+        deductionAmount: amount,
+        retryCount: entry.maxRetries ?? 3,
+        lastError,
+        description: entry.description,
+      },
+    });
+  } catch {}
 }
 
 export async function getDistributionHierarchy(orgId: number) {

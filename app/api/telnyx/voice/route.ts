@@ -10,6 +10,9 @@ import { getCountryVoiceConfig, getDisclosureText } from "@/lib/compliance-engin
 import { callLimiter } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { initCallConversation, generateVoiceResponse, cleanupCallConversation } from "@/lib/voice-ai";
+import { startCallBilling, stopCallBilling } from "@/lib/mid-call-billing";
+import { hasInsufficientBalance } from "@/lib/wallet";
+import { processCallRefund } from "@/lib/call-refund";
 
 const logger = createLogger("TelnyxVoice");
 
@@ -119,6 +122,14 @@ async function handleIncomingCall(
 
     const orgId = phoneRecord.orgId;
 
+    const insufficientBalance = await hasInsufficientBalance(orgId, 0.01);
+    if (insufficientBalance) {
+      logger.warn("Rejecting call due to zero wallet balance", { orgId, calledNumber });
+      await speakText(callControlId, "We're sorry, this service is temporarily unavailable. Please try again later.");
+      await hangupCall(callControlId);
+      return NextResponse.json({ status: "ok" });
+    }
+
     const [orgRecord] = await db.select().from(orgs).where(eq(orgs.id, orgId)).limit(1);
     if (orgRecord) {
       const businessHours = orgRecord.businessHours as BusinessHoursConfig | null;
@@ -171,6 +182,7 @@ async function handleIncomingCall(
       });
 
     initCallConversation(callControlId, activeAgent.id);
+    startCallBilling(callControlId, orgId, capturedRate.ratePerMinute);
 
     const phoneCountryCode = phoneRecord.countryCode;
     const agentLanguage = activeAgent.language || "en-GB";
@@ -268,6 +280,7 @@ async function handleCallHangup(
 
   logger.info("Call hangup", { callControlId, hangupCause, durationSecs });
 
+  stopCallBilling(callControlId);
   cleanupCallConversation(callControlId);
 
   try {
@@ -283,6 +296,10 @@ async function handleCallHangup(
   } catch (err) {
     logger.error("Failed to update call log on hangup", err instanceof Error ? err : undefined);
   }
+
+  processCallRefund(callControlId, hangupCause, durationSecs).catch(err => {
+    logger.error("Auto-refund check failed", err instanceof Error ? err : undefined);
+  });
 
   return NextResponse.json({ status: "ok" });
 }

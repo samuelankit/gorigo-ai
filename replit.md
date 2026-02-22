@@ -26,7 +26,8 @@ Key features include:
 - **Multi-Tier Partner Management**: Business Partners can create resellers, D2C clients, and affiliate partners.
 - **Affiliate Management**: Full CRUD for affiliate links, click tracking, and commission calculation.
 - **Multi-Tier Distribution Engine**: Manages a commission waterfall.
-- **Billing & Usage**: Talk-time only pricing, real-time wallet deductions, billing ledger, spending caps, and Stripe for top-ups.
+- **Billing & Usage**: Talk-time only pricing, real-time wallet deductions, mid-call balance enforcement with grace periods, billing ledger, spending caps, Stripe for top-ups, automated refunds for platform failures, and hardened Stripe webhooks (failed payments, disputes, refunds).
+- **Commission Distribution**: Multi-tier distribution engine with dead-letter handling and admin notifications for exhausted retries.
 - **Analytics Deep-Dive**: A 6-tab dashboard with global date range picker for detailed insights.
 - **Web Traffic Intelligence**: Custom-built analytics tracking system with PII auto-redaction.
 - **International Calling System**: Includes country management, per-org telephony isolation, compliance engine, fraud detection, and currency conversion.

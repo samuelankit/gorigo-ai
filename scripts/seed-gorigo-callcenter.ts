@@ -16,7 +16,6 @@ Key capabilities:
 - Knowledge base management with RAG (Retrieval Augmented Generation)
 - Real-time call monitoring and detailed analytics
 - Prepaid wallet system with talk-time-only billing
-- BYOK (Bring Your Own Keys) architecture for OpenAI
 - Multi-tier partner model for resellers and affiliates
 - TCPA/FCC compliant with AI disclosure, Do-Not-Call lists, and consent tracking
 - External API for LLM platform integration (ChatGPT, Claude, DeepSeek)
@@ -50,7 +49,6 @@ Pricing tiers:
    - Unlimited AI agents
    - Full analytics suite with sentiment analysis
    - Custom integrations and API access
-   - BYOK (Bring Your Own Keys) support
    - Dedicated account manager
    - SLA guarantees
 
@@ -92,9 +90,6 @@ The prepaid wallet system ensures you never get unexpected bills. Top up your wa
 
 Analytics Dashboard:
 Comprehensive analytics including call volume trends, agent performance metrics, lead conversion rates, sentiment analysis, and revenue tracking. The SuperAdmin console provides full visibility across all organisations and partners.
-
-BYOK Architecture:
-Bring Your Own Keys (BYOK) lets you use your own OpenAI credentials. This gives you full control over your AI costs, and enables self-hosted deployments for enterprise customers. Keys are encrypted with AES-256-GCM.
 
 Partner & Affiliate Program:
 GoRigo supports a three-tier business model:
@@ -147,8 +142,6 @@ Tips for success:
 - Text embeddings via text-embedding-3-small (768 dimensions)
 - Telnyx/Vonage for telephony
 - Session-based authentication with bcrypt password hashing
-- AES-256-GCM encryption for BYOK credential storage
-
 Security Features:
 - Rate limiting on all API endpoints
 - CSRF protection on state-changing requests
@@ -199,7 +192,7 @@ Q: How do I add more minutes to my account?
 A: Go to Dashboard > Wallet and click "Add Funds". You can top up via Stripe using a credit or debit card.
 
 Q: Can I use my own OpenAI API key?
-A: Yes! GoRigo supports BYOK (Bring Your Own Keys). Go to Dashboard > Settings > Integrations and enter your OpenAI API key. This gives you full control over your AI costs.
+A: GoRigo manages all AI infrastructure for you. Your AI costs are included in the talk-time rate, so there's nothing extra to configure.
 
 Q: How do I set up a multi-agent flow?
 A: Go to Dashboard > Agents & Flow > Flow tab. Use the visual builder to create your routing flow. Add agent nodes, decision nodes, and connect them with edges. Save and activate your flow.
@@ -247,8 +240,7 @@ Personality:
 Key selling points to emphasise:
 1. Talk-time only billing — you only pay for actual call minutes
 2. Multi-agent system — create specialised agents for different departments
-3. BYOK architecture — bring your own OpenAI keys for full control
-4. Knowledge base with RAG — your agents become true experts on your business
+3. Knowledge base with RAG — your agents become true experts on your business
 5. Partner program — earn revenue as a reseller or affiliate
 6. LLM integration — access your call centre from ChatGPT, Claude, etc.
 
@@ -275,7 +267,7 @@ Common support scenarios:
 2. Agent configuration — help set up greetings, FAQs, handoff rules
 3. Call quality issues — troubleshoot audio, latency, or transcription problems
 4. Account access — password resets, email changes, role management
-5. Integration help — telephony setup, BYOK configuration, webhook debugging
+5. Integration help — telephony setup, webhook debugging
 6. Feature requests — log them and thank the customer for feedback
 
 Always disclose that you are an AI agent at the start of the call.`;
@@ -359,7 +351,7 @@ async function seedGoRigoCallCenter() {
     faqEntries: [
       { question: "How much does GoRigo cost?", answer: "We use a simple talk-time-only billing model. Plans start at £29/month for 100 minutes. You only pay for actual call time — no hidden fees." },
       { question: "Can I try it for free?", answer: "Every new account gets £5 free credit to test the platform. No credit card required to sign up." },
-      { question: "What makes GoRigo different?", answer: "Three things: talk-time-only billing so you only pay for what you use, BYOK architecture so you can use your own AI keys, and a multi-agent system that lets you create specialised agents for different departments." },
+      { question: "What makes GoRigo different?", answer: "Three things: talk-time-only billing so you only pay for what you use, a fully managed AI infrastructure so you don't need to worry about API keys, and a multi-agent system that lets you create specialised agents for different departments." },
       { question: "Do you support multiple languages?", answer: "Yes! GoRigo supports English, Spanish, French, German, Italian, Portuguese, Dutch, and more. You can configure the language and voice for each agent." },
     ],
     complianceDisclosure: true,
@@ -389,7 +381,7 @@ async function seedGoRigoCallCenter() {
       { question: "How do I reset my password?", answer: "Go to the login page and click 'Forgot Password'. Enter your email and we'll send you a reset link." },
       { question: "Why isn't my agent answering calls?", answer: "Check three things: your wallet balance, agent status (must be 'active'), and that inbound calling is enabled in agent settings." },
       { question: "How do I add funds to my wallet?", answer: "Go to Dashboard > Wallet and click 'Add Funds'. You can pay securely via Stripe with a credit or debit card." },
-      { question: "Can I use my own API keys?", answer: "Yes! Go to Dashboard > Settings > Integrations to configure your own OpenAI credentials via our BYOK feature." },
+      { question: "Can I use my own API keys?", answer: "GoRigo manages all AI infrastructure for you. Your AI costs are included in the talk-time rate — no separate API keys needed." },
     ],
     complianceDisclosure: true,
     inboundEnabled: true,

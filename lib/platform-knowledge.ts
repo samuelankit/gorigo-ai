@@ -13,7 +13,7 @@ const GORIGO_KNOWLEDGE: Array<{ category: string; content: string }> = [
   },
   {
     category: "product",
-    content: "GoRigo provides AI voice agents that answer business calls 24/7 with natural conversation. The platform supports inbound and outbound calling. Users can run their entire AI call centre from their phone using the Rigo voice assistant. The mobile app is available for Managed and BYOK deployment packages.",
+    content: "GoRigo provides AI voice agents that answer business calls 24/7 with natural conversation. The platform supports inbound and outbound calling. Users can run their entire AI call centre from their phone using the Rigo voice assistant. The mobile app is available for all deployment packages.",
   },
   {
     category: "pricing",
@@ -21,7 +21,7 @@ const GORIGO_KNOWLEDGE: Array<{ category: string; content: string }> = [
   },
   {
     category: "deployment",
-    content: "GoRigo offers four deployment packages: Managed (GoRigo handles everything, mobile app included), BYOK - Bring Your Own Key (use your own AI API keys, mobile app included), Self-Hosted (deploy on your own infrastructure, web only), and Custom (tailored enterprise solutions, web only). Each package has different levels of control and support.",
+    content: "GoRigo offers three deployment packages: Managed (GoRigo handles everything at £0.20/min, mobile app included), White-Label (deploy under your own brand at £0.12/min, for partners), and Custom (tailored enterprise solutions with bespoke pricing). Each package has different levels of control and support.",
   },
   {
     category: "features",

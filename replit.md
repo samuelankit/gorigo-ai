@@ -20,7 +20,7 @@ GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentic
 The platform includes a Unit Economics System for real-time cost tracking and margin analysis, with a pricing simulator. An optional Rigo Voice Assistant provides AI voice control over the SaaS dashboard. Security hardening includes audit logging, robust session management, database-backed rate limiting, CSRF protection, email verification, account lockout, and comprehensive input validation using Zod schemas. Deployment utilizes Docker containers on Azure Container Apps with Azure PostgreSQL Flexible Server and Azure Key Vault. CI/CD is managed via GitHub Actions.
 
 Key features include:
-- **Deployment Packages**: Four commercial packages (Managed, BYOK, Self-Hosted, Custom).
+- **Deployment Packages**: Three commercial packages (Managed £0.20/min, White-Label £0.12/min, Custom Enterprise).
 - **Agent Configuration**: Customizable AI agents with roles, FAQs, knowledge bases, and language/voice selection.
 - **Knowledge Management**: Supports document upload, chunking, embedding, and audio transcription.
 - **Multi-Tier Partner Management**: Business Partners can create resellers, D2C clients, and affiliate partners.

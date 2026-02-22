@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { sessions, responseCache, knowledgeDocuments, jobs, publicConversations, rateLimits, passwordResetTokens, invitations } from "@/shared/schema";
+import { sessions, responseCache, knowledgeDocuments, jobs, publicConversations, rateLimits, passwordResetTokens, invitations, callLogs, auditLog, costEvents, analyticsEvents } from "@/shared/schema";
 import { lt, eq, and, sql, or, inArray } from "drizzle-orm";
 import { retryFailedDistributions } from "@/lib/distribution";
 import { createLogger } from "@/lib/logger";
@@ -124,6 +124,77 @@ export async function cleanupStaleConversations(): Promise<number> {
   return result.length;
 }
 
+const RETENTION_DAYS = {
+  callTranscripts: 365,
+  callConversationMessages: 90,
+  analyticsEvents: 180,
+  auditLogs: 730,
+  costEvents: 365,
+  publicConversations: 30,
+};
+
+export async function purgeOldCallTranscripts(): Promise<number> {
+  const cutoff = new Date(Date.now() - RETENTION_DAYS.callTranscripts * 24 * 60 * 60 * 1000);
+  const result = await db.update(callLogs).set({
+    transcript: null,
+    conversationMessages: [],
+  }).where(
+    and(
+      lt(callLogs.createdAt, cutoff),
+      sql`${callLogs.transcript} IS NOT NULL`
+    )
+  ).returning({ id: callLogs.id });
+  return result.length;
+}
+
+export async function purgeOldConversationMessages(): Promise<number> {
+  const cutoff = new Date(Date.now() - RETENTION_DAYS.callConversationMessages * 24 * 60 * 60 * 1000);
+  const result = await db.update(callLogs).set({
+    conversationMessages: [],
+  }).where(
+    and(
+      lt(callLogs.createdAt, cutoff),
+      sql`${callLogs.conversationMessages}::text != '[]'`
+    )
+  ).returning({ id: callLogs.id });
+  return result.length;
+}
+
+export async function purgeOldAnalyticsEvents(): Promise<number> {
+  const cutoff = new Date(Date.now() - RETENTION_DAYS.analyticsEvents * 24 * 60 * 60 * 1000);
+  const result = await db.delete(analyticsEvents).where(
+    lt(analyticsEvents.createdAt, cutoff)
+  ).returning({ id: analyticsEvents.id });
+  return result.length;
+}
+
+export async function purgeOldAuditLogs(): Promise<number> {
+  const cutoff = new Date(Date.now() - RETENTION_DAYS.auditLogs * 24 * 60 * 60 * 1000);
+  const result = await db.delete(auditLog).where(
+    lt(auditLog.createdAt, cutoff)
+  ).returning({ id: auditLog.id });
+  return result.length;
+}
+
+export async function purgeOldCostEvents(): Promise<number> {
+  const cutoff = new Date(Date.now() - RETENTION_DAYS.costEvents * 24 * 60 * 60 * 1000);
+  const result = await db.delete(costEvents).where(
+    lt(costEvents.createdAt, cutoff)
+  ).returning({ id: costEvents.id });
+  return result.length;
+}
+
+export async function purgeOldPublicConversations(): Promise<number> {
+  const cutoff = new Date(Date.now() - RETENTION_DAYS.publicConversations * 24 * 60 * 60 * 1000);
+  const result = await db.delete(publicConversations).where(
+    and(
+      eq(publicConversations.status, "ended"),
+      lt(publicConversations.startedAt, cutoff)
+    )
+  ).returning({ id: publicConversations.id });
+  return result.length;
+}
+
 interface CleanupResult {
   sessions: number;
   cache: number;
@@ -134,6 +205,14 @@ interface CleanupResult {
   documents: number;
   distributions: { total: number; resolved: number };
   staleConversations: number;
+  retentionPurged: {
+    transcripts: number;
+    conversationMessages: number;
+    analyticsEvents: number;
+    auditLogs: number;
+    costEvents: number;
+    publicConversations: number;
+  };
 }
 
 export async function runAllCleanupJobs(): Promise<CleanupResult> {
@@ -147,6 +226,12 @@ export async function runAllCleanupJobs(): Promise<CleanupResult> {
     documentsResult,
     distributionsResult,
     staleConversationsResult,
+    retTranscripts,
+    retConvMessages,
+    retAnalytics,
+    retAudit,
+    retCost,
+    retPubConv,
   ] = await Promise.allSettled([
     cleanupExpiredSessions(),
     cleanupExpiredCache(),
@@ -157,6 +242,12 @@ export async function runAllCleanupJobs(): Promise<CleanupResult> {
     retryFailedDocuments(),
     retryFailedDistributions(),
     cleanupStaleConversations(),
+    purgeOldCallTranscripts(),
+    purgeOldConversationMessages(),
+    purgeOldAnalyticsEvents(),
+    purgeOldAuditLogs(),
+    purgeOldCostEvents(),
+    purgeOldPublicConversations(),
   ]);
 
   return {
@@ -169,6 +260,14 @@ export async function runAllCleanupJobs(): Promise<CleanupResult> {
     documents: documentsResult.status === "fulfilled" ? documentsResult.value : 0,
     distributions: distributionsResult.status === "fulfilled" ? distributionsResult.value : { total: 0, resolved: 0 },
     staleConversations: staleConversationsResult.status === "fulfilled" ? staleConversationsResult.value : 0,
+    retentionPurged: {
+      transcripts: retTranscripts.status === "fulfilled" ? retTranscripts.value : 0,
+      conversationMessages: retConvMessages.status === "fulfilled" ? retConvMessages.value : 0,
+      analyticsEvents: retAnalytics.status === "fulfilled" ? retAnalytics.value : 0,
+      auditLogs: retAudit.status === "fulfilled" ? retAudit.value : 0,
+      costEvents: retCost.status === "fulfilled" ? retCost.value : 0,
+      publicConversations: retPubConv.status === "fulfilled" ? retPubConv.value : 0,
+    },
   };
 }
 
@@ -179,9 +278,12 @@ export function startPeriodicCleanup(intervalMs: number = 5 * 60 * 1000) {
   cleanupInterval = setInterval(async () => {
     try {
       const result = await runAllCleanupJobs();
+      const retPurged = result.retentionPurged;
       const totalCleaned = result.sessions + result.cache + result.rateLimits +
         result.passwordTokens + result.invitations + result.staleJobs +
-        result.documents + result.distributions.total + result.staleConversations;
+        result.documents + result.distributions.total + result.staleConversations +
+        retPurged.transcripts + retPurged.conversationMessages + retPurged.analyticsEvents +
+        retPurged.auditLogs + retPurged.costEvents + retPurged.publicConversations;
       if (totalCleaned > 0) {
         logger.info("Cleanup completed", result as unknown as Record<string, unknown>);
       }

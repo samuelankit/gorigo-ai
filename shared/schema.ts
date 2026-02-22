@@ -185,6 +185,7 @@ export const callLogs = pgTable("call_logs", {
   sttCost: numeric("stt_cost", { precision: 10, scale: 4 }),
   ttsCost: numeric("tts_cost", { precision: 10, scale: 4 }),
   responseLatencyAvg: integer("response_latency_avg"),
+  conversationMessages: jsonb("conversation_messages").default([]),
 }, (table) => [
   index("idx_call_logs_org_id").on(table.orgId),
   index("idx_call_logs_created_at").on(table.createdAt),
@@ -551,6 +552,7 @@ export const knowledgeChunks = pgTable("knowledge_chunks", {
 }, (table) => [
   index("idx_knowledge_chunks_doc_id").on(table.documentId),
   index("idx_knowledge_chunks_org_id").on(table.orgId),
+  // HNSW vector index: idx_knowledge_chunks_embedding_hnsw (created via SQL, not expressible in Drizzle)
 ]);
 
 export const responseCache = pgTable("response_cache", {
@@ -1642,6 +1644,7 @@ export const platformKnowledgeChunks = pgTable("platform_knowledge_chunks", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_platform_knowledge_category").on(table.category),
+  // HNSW vector index: idx_platform_knowledge_embedding_hnsw (created via SQL, not expressible in Drizzle)
 ]);
 
 export const insertPlatformKnowledgeChunkSchema = createInsertSchema(platformKnowledgeChunks).omit({ id: true, createdAt: true });

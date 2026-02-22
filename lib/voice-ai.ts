@@ -62,7 +62,20 @@ export async function generateVoiceResponse(
     return { responseText: "I'm sorry, this agent is no longer available. Please call back later.", turnCount: 0 };
   }
 
-  let history = callConversations.get(providerCallId) || [];
+  let history = callConversations.get(providerCallId);
+  if (!history) {
+    try {
+      const [callLog] = await db.select({ conversationMessages: callLogs.conversationMessages }).from(callLogs).where(eq(callLogs.providerCallId, providerCallId)).limit(1);
+      const persisted = callLog?.conversationMessages as ConversationMessage[] | null;
+      history = Array.isArray(persisted) && persisted.length > 0 ? persisted : [];
+      if (history.length > 0) {
+        logger.info("Restored conversation from DB", { providerCallId, turns: Math.floor(history.length / 2) });
+      }
+    } catch {
+      history = [];
+    }
+    callConversations.set(providerCallId, history);
+  }
 
   let ragContext = "";
   let ragAvailable = false;
@@ -100,16 +113,21 @@ export async function generateVoiceResponse(
     }
 
     const optOutResponse = "I understand, and I respect your request. I've added your number to our Do Not Call list. You will not receive any further calls from us. Thank you for letting me know, and I apologise for any inconvenience. Goodbye.";
+    history.push({ role: "user", content: userInput });
+    history.push({ role: "assistant", content: optOutResponse });
+    callConversations.set(providerCallId, history);
+    const optOutTurnCount = Math.floor(history.length / 2);
     const existingTranscript = await getExistingTranscript(providerCallId);
     const newTranscriptEntry = `\nCaller: ${userInput}\n${agent.name}: ${optOutResponse}`;
     try {
       await db.update(callLogs).set({
         transcript: (existingTranscript || "") + newTranscriptEntry,
-        turnCount: Math.floor((history.length / 2) + 1),
+        turnCount: optOutTurnCount,
+        conversationMessages: history,
       }).where(eq(callLogs.providerCallId, providerCallId));
     } catch {}
 
-    return { responseText: optOutResponse, turnCount: Math.floor(history.length / 2) + 1 };
+    return { responseText: optOutResponse, turnCount: optOutTurnCount };
   }
 
   const hasFAQGrounding = agentConfig.faqEntries && agentConfig.faqEntries.length > 0;
@@ -120,16 +138,21 @@ export async function generateVoiceResponse(
     logger.warn("NO RAG GROUNDING available — refusing LLM call (compliance)", { providerCallId, orgId });
     const fallbackResponse = "I don't have enough information to answer that question right now. Let me connect you with someone who can help. Please hold, or call us back during business hours.";
 
+    history.push({ role: "user", content: userInput });
+    history.push({ role: "assistant", content: fallbackResponse });
+    callConversations.set(providerCallId, history);
+    const noGroundingTurnCount = Math.floor(history.length / 2);
     const existingTranscript = await getExistingTranscript(providerCallId);
     const newTranscriptEntry = `\nCaller: ${userInput}\n${agent.name}: ${fallbackResponse}`;
     try {
       await db.update(callLogs).set({
         transcript: (existingTranscript || "") + newTranscriptEntry,
-        turnCount: Math.floor((history.length / 2) + 1),
+        turnCount: noGroundingTurnCount,
+        conversationMessages: history,
       }).where(eq(callLogs.providerCallId, providerCallId));
     } catch {}
 
-    return { responseText: fallbackResponse, turnCount: Math.floor(history.length / 2) + 1 };
+    return { responseText: fallbackResponse, turnCount: noGroundingTurnCount };
   }
 
   const systemMessages: ConversationMessage[] = [];
@@ -143,7 +166,36 @@ export async function generateVoiceResponse(
 
   const fullHistory = [...systemMessages, ...history];
 
-  const aiResponse = await generateAgentResponse(agentConfig, fullHistory, userInput, orgId);
+  const VOICE_LLM_TIMEOUT_MS = 8000;
+  let aiResponse;
+  try {
+    aiResponse = await Promise.race([
+      generateAgentResponse(agentConfig, fullHistory, userInput, orgId),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("VOICE_TIMEOUT")), VOICE_LLM_TIMEOUT_MS)
+      ),
+    ]);
+  } catch (timeoutErr) {
+    if (timeoutErr instanceof Error && timeoutErr.message === "VOICE_TIMEOUT") {
+      logger.warn("Voice LLM timeout exceeded", { providerCallId, timeoutMs: VOICE_LLM_TIMEOUT_MS });
+      const timeoutResponse = "I'm sorry, I'm taking a moment to think. Could you repeat that, or let me connect you with someone who can help?";
+      history.push({ role: "user", content: userInput });
+      history.push({ role: "assistant", content: timeoutResponse });
+      callConversations.set(providerCallId, history);
+      const turnCount = Math.floor(history.length / 2);
+      try {
+        const existingTranscript = await getExistingTranscript(providerCallId);
+        const newEntry = `\nCaller: ${userInput}\n${agent.name}: ${timeoutResponse}`;
+        await db.update(callLogs).set({
+          transcript: (existingTranscript || "") + newEntry,
+          turnCount,
+          conversationMessages: history,
+        }).where(eq(callLogs.providerCallId, providerCallId));
+      } catch {}
+      return { responseText: timeoutResponse, turnCount };
+    }
+    throw timeoutErr;
+  }
 
   history.push({ role: "user", content: userInput });
   history.push({ role: "assistant", content: aiResponse.content });
@@ -168,6 +220,7 @@ export async function generateVoiceResponse(
       transcript: updatedTranscript,
       turnCount,
       llmTokensUsed: (aiResponse.inputTokens || 0) + (aiResponse.outputTokens || 0),
+      conversationMessages: history,
     }).where(eq(callLogs.providerCallId, providerCallId));
   } catch (dbErr) {
     logger.error("Failed to update call transcript", dbErr instanceof Error ? dbErr : undefined);

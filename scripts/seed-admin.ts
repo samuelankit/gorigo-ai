@@ -5,10 +5,19 @@ import {
   partnerClients, platformSettings, auditLog, channelBillingRules 
 } from "@/shared/schema";
 import { hashPassword } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 async function seed() {
   console.log("Starting admin seed...");
+
+  try {
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding_hnsw ON knowledge_chunks USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_platform_knowledge_embedding_hnsw ON platform_knowledge_chunks USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_response_cache_embedding_hnsw ON response_cache USING hnsw (query_embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)`);
+    console.log("HNSW vector indexes ensured");
+  } catch (e) {
+    console.warn("HNSW index creation skipped (may already exist):", e instanceof Error ? e.message : e);
+  }
 
   const existingRules = await db.select().from(channelBillingRules).limit(1);
   if (existingRules.length === 0) {

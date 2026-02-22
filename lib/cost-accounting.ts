@@ -203,10 +203,7 @@ export function generatePricingRecommendations(params: {
   const fixedCostPerMin = fixedCostsMonthly / safeMinutes;
   const fullyLoadedCost = actualCostPerMinute + fixedCostPerMin;
 
-  const byokVariableCost = INTERNAL_COSTS.telephonyPerMin + INTERNAL_COSTS.azureHostingAmortisedPerMin;
-  const byokFullyLoadedCost = byokVariableCost + fixedCostPerMin;
-
-  const targetGrossMargin = { direct: 0.75, whiteLabel: 0.60, byok: 0.50, affiliate: 0.70 };
+  const targetGrossMargin = { direct: 0.75, whiteLabel: 0.60, affiliate: 0.70 };
 
   function calcRecommendedRate(margin: number, commissionRate: number, costBase: number): number {
     const denominator = 1 - margin - commissionRate;
@@ -245,19 +242,6 @@ export function generatePricingRecommendations(params: {
       marketBenchmark: "Wholesale AI voice: £0.08-£0.15/min. Partners typically resell at £0.18-£0.30/min.",
       minimumViableRate: round(fullyLoadedCost / Math.max(1 - partnerCommissionRate, 0.1) * 1.3, 2),
       suggestedWalletDeposit: 149,
-    },
-    {
-      customerType: "BYOK (Bring Your Own Key)",
-      key: "byok",
-      currentRatePerMin: CUSTOMER_TIERS.byok.ratePerMinute,
-      recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.byok, 0, byokFullyLoadedCost),
-      costPerMin: round(byokFullyLoadedCost, 4),
-      grossMarginPercent: safeMargin(CUSTOMER_TIERS.byok.ratePerMinute, byokFullyLoadedCost),
-      netMarginPercent: safeMargin(CUSTOMER_TIERS.byok.ratePerMinute, byokFullyLoadedCost),
-      rationale: "Platform fee only. Customer pays their own LLM/STT/TTS costs directly. Your costs are telephony (Telnyx/Vonage) + infrastructure share only. Lower rate but zero AI cost risk.",
-      marketBenchmark: "BYOK platforms: £0.05-£0.10/min platform fee. Customer bears API costs separately.",
-      minimumViableRate: round(byokFullyLoadedCost * 1.5, 2),
-      suggestedWalletDeposit: 49,
     },
     {
       customerType: "Affiliate-Referred D2C",

@@ -30,7 +30,7 @@ export default function BillingGuidePage() {
         },
         {
           title: "Understand the Pricing Tiers",
-          description: "Go to the Pricing page to see and manage rate cards. Managed clients pay 15p/min, BYOK pays 5p/min, and Self-Hosted pays 3p/min. These rates determine real-time deductions.",
+          description: "Go to the Pricing page to see and manage rate cards. Managed clients pay 20p/min and Self-Hosted pays 12p/min. These rates determine real-time deductions.",
         },
         {
           title: "Monitor Revenue",

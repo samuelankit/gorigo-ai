@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         Sales: [
           "Great question! GoRigo offers AI-powered call centre automation with talk-time-only billing starting at just £29/month. Would you like to know more about our plans or features?",
           "Thanks for your interest in GoRigo! We help businesses automate their call centres with intelligent AI agents. Every new account comes with £5 free credit to test the platform. Shall I walk you through the key features?",
-          "GoRigo stands out with our multi-agent system, BYOK architecture, and knowledge base RAG. You only pay for actual call minutes — no hidden fees. What aspect are you most interested in?",
+          "GoRigo stands out with our multi-agent system, flexible deployment options, and knowledge base RAG. You only pay for actual call minutes — no hidden fees. What aspect are you most interested in?",
         ],
         Support: [
           "I'd be happy to help! Could you describe the issue you're experiencing? I can assist with account settings, billing enquiries, agent configuration, and general troubleshooting.",

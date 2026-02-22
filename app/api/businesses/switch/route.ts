@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     const [org] = await db
-      .select({ id: orgs.id, name: orgs.name, deploymentModel: orgs.deploymentModel, byokMode: orgs.byokMode })
+      .select({ id: orgs.id, name: orgs.name, deploymentModel: orgs.deploymentModel })
       .from(orgs)
       .where(eq(orgs.id, businessId))
       .limit(1);

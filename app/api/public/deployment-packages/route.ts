@@ -8,13 +8,11 @@ import { cache, CACHE_TTL } from "@/lib/cache";
 
 const PACKAGE_KEYS = [
   "deployment_package_managed_enabled",
-  "deployment_package_byok_enabled",
   "deployment_package_self_hosted_enabled",
 ];
 
 const DEFAULTS: Record<string, boolean> = {
   deployment_package_managed_enabled: true,
-  deployment_package_byok_enabled: false,
   deployment_package_self_hosted_enabled: false,
 };
 
@@ -27,7 +25,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    const cached = cache.get<{ managed: boolean; byok: boolean; selfHosted: boolean }>(CACHE_KEY);
+    const cached = cache.get<{ managed: boolean; selfHosted: boolean }>(CACHE_KEY);
     if (cached) {
       return NextResponse.json(cached, {
         headers: { "Cache-Control": "public, max-age=300, s-maxage=300" },
@@ -46,7 +44,6 @@ export async function GET(request: NextRequest) {
 
     const data = {
       managed: result.deployment_package_managed_enabled,
-      byok: result.deployment_package_byok_enabled,
       selfHosted: result.deployment_package_self_hosted_enabled,
     };
 

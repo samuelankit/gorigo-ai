@@ -3,7 +3,6 @@ import { platformSettings } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 
 const DEFAULTS: Record<string, boolean> = {
-  deployment_package_byok_enabled: false,
   deployment_package_self_hosted_enabled: false,
   deployment_package_managed_enabled: true,
 };
@@ -22,8 +21,4 @@ export async function isDeploymentPackageEnabled(model: string): Promise<boolean
   } catch {
     return DEFAULTS[key] ?? true;
   }
-}
-
-export async function isByokEnabled(): Promise<boolean> {
-  return isDeploymentPackageEnabled("byok");
 }

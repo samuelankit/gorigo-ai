@@ -7,12 +7,6 @@ export const TIER_ENTRY_BARRIERS = {
     ratePerMinute: 0.20,
     description: "GoRigo manages everything. Full infrastructure provided.",
   },
-  byok: {
-    label: "Bring Your Own Keys",
-    minimumDeposit: 200,
-    ratePerMinute: 0.08,
-    description: "Use your own API keys. Lower rate, you manage keys.",
-  },
   self_hosted: {
     label: "White-Label",
     minimumDeposit: 1000,

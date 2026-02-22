@@ -42,14 +42,12 @@ const TIMEZONES = [
 
 const PACKAGE_INFO: Record<string, { name: string; rate: string; description: string; color: string; bgColor: string }> = {
   managed: { name: "Managed", rate: "£0.15/min", description: "AI + Telephony included", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
-  byok: { name: "BYOK", rate: "£0.05/min", description: "Platform fee only", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-500/10" },
   self_hosted: { name: "Self-Hosted", rate: "£0.03/min", description: "Licence fee only", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10" },
   custom: { name: "Custom", rate: "Custom", description: "Bespoke rates and features", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-500/10" },
 };
 
 const PACKAGE_ICONS: Record<string, typeof Cloud> = {
   managed: Cloud,
-  byok: Key,
   self_hosted: Server,
   custom: Cloud,
 };
@@ -85,14 +83,6 @@ export default function SettingsPage() {
   const [showPackageSwitch, setShowPackageSwitch] = useState(false);
   const [pendingPackage, setPendingPackage] = useState<string>("");
   const [switchingPackage, setSwitchingPackage] = useState(false);
-
-  const [byokStatus, setByokStatus] = useState<any>(null);
-  const [loadingByok, setLoadingByok] = useState(false);
-  const [openaiKey, setOpenaiKey] = useState("");
-  const [openaiBaseUrl, setOpenaiBaseUrl] = useState("");
-  const [validatingOpenai, setValidatingOpenai] = useState(false);
-  const [savingKeys, setSavingKeys] = useState(false);
-  const [openaiValid, setOpenaiValid] = useState<boolean | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -159,15 +149,6 @@ export default function SettingsPage() {
       .then(d => { if (Array.isArray(d)) setWebhookList(d); })
       .catch((error) => { console.error("Fetch webhooks failed:", error); })
       .finally(() => setLoadingWebhooks(false));
-  };
-
-  const fetchByokStatus = () => {
-    setLoadingByok(true);
-    fetch("/api/settings/integrations")
-      .then(r => r.json())
-      .then(d => { if (d && !d.error) setByokStatus(d); })
-      .catch((error) => { console.error("Fetch BYOK integration status failed:", error); })
-      .finally(() => setLoadingByok(false));
   };
 
   const saveWebhook = async () => {
@@ -258,31 +239,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSaveKeys = async () => {
-    setSavingKeys(true);
-    try {
-      const res = await fetch("/api/settings/integrations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "save",
-          mode: "byok",
-          openaiKey: openaiKey || undefined,
-          openaiBaseUrl: openaiBaseUrl || undefined,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      toast({ title: "Keys saved", description: "Your API keys have been securely stored." });
-      setOpenaiKey("");
-      setOpenaiBaseUrl("");
-      fetchByokStatus();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save keys.", variant: "destructive" });
-    } finally {
-      setSavingKeys(false);
-    }
-  };
-
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
@@ -357,7 +313,6 @@ export default function SettingsPage() {
       .finally(() => setLoadingPhones(false));
 
     fetchWebhooks();
-    fetchByokStatus();
   }, []);
 
   const handleUpdateProfile = async () => {
@@ -598,83 +553,6 @@ export default function SettingsPage() {
           )}
         </CardContent>
       </Card>
-
-      {deploymentModel === "byok" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Key className="h-4 w-4 text-muted-foreground" />
-              API Integrations
-            </CardTitle>
-            <CardDescription>Configure your own API keys for AI and telephony services.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5 p-5">
-            {loadingByok ? (
-              <div className="space-y-2">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ) : byokStatus && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3 p-3 rounded-md bg-muted/50 flex-wrap">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={cn("w-2 h-2 rounded-full shrink-0", byokStatus.openai?.configured ? "bg-emerald-500" : "bg-red-500")} />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">OpenAI</p>
-                      <p className="text-xs text-muted-foreground font-mono" data-testid="text-openai-masked">{byokStatus.openai?.masked}</p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="no-default-hover-elevate" data-testid="badge-openai-source">
-                    {byokStatus.openai?.source === "org" ? "Your Key" : "Platform Default"}
-                  </Badge>
-                </div>
-              </div>
-            )}
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">OpenAI Configuration</Label>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    <Input
-                      type="password"
-                      placeholder="sk-..."
-                      value={openaiKey}
-                      onChange={(e) => { setOpenaiKey(e.target.value); setOpenaiValid(null); }}
-                      data-testid="input-openai-key"
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleValidateOpenai}
-                    disabled={!openaiKey.trim() || validatingOpenai}
-                    data-testid="button-validate-openai"
-                  >
-                    {validatingOpenai ? <Loader2 className="h-4 w-4 animate-spin" /> : "Validate"}
-                  </Button>
-                  {openaiValid !== null && (
-                    <div className={cn("w-2 h-2 rounded-full shrink-0", openaiValid ? "bg-emerald-500" : "bg-red-500")} data-testid="indicator-openai-valid" />
-                  )}
-                </div>
-                <Input
-                  placeholder="Base URL (optional, e.g. https://api.openai.com/v1)"
-                  value={openaiBaseUrl}
-                  onChange={(e) => setOpenaiBaseUrl(e.target.value)}
-                  data-testid="input-openai-base-url"
-                />
-              </div>
-            </div>
-
-            <Button onClick={handleSaveKeys} disabled={savingKeys} data-testid="button-save-keys">
-              {savingKeys && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              {savingKeys ? "Saving..." : "Save Keys"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       <Card>
         <CardHeader>

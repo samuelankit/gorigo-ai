@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     let org = null;
     if (auth.orgId) {
-      const [orgRow] = await db.select({ id: orgs.id, name: orgs.name, deploymentModel: orgs.deploymentModel, byokMode: orgs.byokMode }).from(orgs).where(eq(orgs.id, auth.orgId)).limit(1);
+      const [orgRow] = await db.select({ id: orgs.id, name: orgs.name, deploymentModel: orgs.deploymentModel }).from(orgs).where(eq(orgs.id, auth.orgId)).limit(1);
       if (orgRow) {
         org = orgRow;
       }

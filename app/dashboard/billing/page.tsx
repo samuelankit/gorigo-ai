@@ -59,7 +59,6 @@ interface RateInfo {
 
 const DEPLOYMENT_MODEL_INFO: Record<string, { label: string; icon: typeof Cloud; description: string; color: string }> = {
   managed: { label: "Managed", icon: Cloud, description: "Full-service: AI, telephony & platform costs included in rate", color: "text-blue-600 dark:text-blue-400" },
-  byok: { label: "BYOK", icon: Key, description: "Platform fee only. You provide your own API keys for AI & telephony", color: "text-amber-600 dark:text-amber-400" },
   self_hosted: { label: "Self-Hosted", icon: Server, description: "License fee per usage. You run your own infrastructure", color: "text-emerald-600 dark:text-emerald-400" },
 };
 
@@ -291,7 +290,7 @@ export default function BillingPage() {
               const ModelIcon = info.icon;
               return (
                 <>
-                  <div className={cn("flex items-center justify-center w-10 h-10 rounded-lg shrink-0", deploymentModel === "managed" ? "bg-blue-500/10" : deploymentModel === "byok" ? "bg-amber-500/10" : "bg-emerald-500/10")}>
+                  <div className={cn("flex items-center justify-center w-10 h-10 rounded-lg shrink-0", deploymentModel === "managed" ? "bg-blue-500/10" : "bg-emerald-500/10")}>
                     <ModelIcon className={cn("w-5 h-5", info.color)} />
                   </div>
                   <div className="flex-1 min-w-0">

@@ -9,7 +9,6 @@ import { CheckCircle2, ArrowRight, Smartphone, Crown } from "lucide-react";
 
 interface PackageVisibility {
   managed: boolean;
-  byok: boolean;
   selfHosted: boolean;
 }
 
@@ -31,23 +30,6 @@ const allPackages = [
     mobileApp: true,
     gradient: "from-[#E8604C]/10 to-[#F5A623]/10",
     borderColor: "border-[#E8604C]/30",
-  },
-  {
-    key: "byok" as const,
-    name: "Bring Your Own Key",
-    description: "Use your own AI provider API keys with our engine. Lower costs, full control over AI spend.",
-    highlights: [
-      "Your own API keys",
-      "Full engine access",
-      "Lower per-minute costs",
-      "Self-service setup",
-      "Mobile app included",
-    ],
-    cta: "Get Started",
-    href: "/register",
-    mobileApp: true,
-    gradient: "from-blue-500/10 to-violet-500/10",
-    borderColor: "border-blue-500/20",
   },
   {
     key: "selfHosted" as const,
@@ -84,7 +66,6 @@ const allPackages = [
 export function DeploymentPackages() {
   const [visibility, setVisibility] = useState<PackageVisibility>({
     managed: true,
-    byok: true,
     selfHosted: false,
   });
 

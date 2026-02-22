@@ -6,14 +6,13 @@ import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
-import { getOrgByokStatus, validateOpenAIKey, getOrgKeys } from "@/lib/byok";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { checkEntryBarrier, TIER_ENTRY_BARRIERS, type DeploymentTier } from "@/lib/entry-barriers";
 import { isDeploymentPackageEnabled } from "@/lib/feature-flags";
 
 const deploymentModelSchema = z.object({
-  deploymentModel: z.enum(["managed", "byok", "self_hosted", "custom"]),
+  deploymentModel: z.enum(["managed", "self_hosted", "custom"]),
 }).strict();
 
 const PLAN_SWITCH_COOLDOWN_HOURS = 24;
@@ -93,34 +92,6 @@ export async function PUT(request: NextRequest) {
       }, { status: 422 });
     }
 
-    if (deploymentModel === "byok") {
-      const byokStatus = await getOrgByokStatus(auth.orgId);
-      const keys = await getOrgKeys(auth.orgId);
-      const prerequisites: Record<string, { ready: boolean; message: string }> = {};
-
-      if (byokStatus.openai.source === "org" && byokStatus.openai.configured) {
-        try {
-          const validation = await validateOpenAIKey(keys.openai.apiKey, keys.openai.baseUrl);
-          prerequisites.openai = validation.valid
-            ? { ready: true, message: "OpenAI API key validated" }
-            : { ready: false, message: `OpenAI key validation failed: ${validation.error}` };
-        } catch (error) {
-          prerequisites.openai = { ready: false, message: "OpenAI key could not be validated (network error)" };
-        }
-      } else {
-        prerequisites.openai = { ready: false, message: "You must configure your own OpenAI API key before switching to BYOK. Go to Settings > Integrations." };
-      }
-
-      const allMet = Object.values(prerequisites).every((p) => p.ready);
-      if (!allMet) {
-        return NextResponse.json({
-          error: "BYOK prerequisites not met. You must provide and validate your own API keys before switching.",
-          code: "BYOK_PREREQUISITES_NOT_MET",
-          prerequisites,
-        }, { status: 422 });
-      }
-    }
-
     if (deploymentModel === "self_hosted" || deploymentModel === "custom") {
       return NextResponse.json({
         error: "White-Label and Custom plans require admin approval. Please contact our team to discuss your requirements.",
@@ -128,11 +99,9 @@ export async function PUT(request: NextRequest) {
       }, { status: 403 });
     }
 
-    const byokMode = deploymentModel === "byok" ? "byok" : "platform";
-
     await db
       .update(orgs)
-      .set({ deploymentModel, byokMode })
+      .set({ deploymentModel })
       .where(eq(orgs.id, auth.orgId));
 
     await db.insert(deploymentModelChanges).values({
@@ -155,7 +124,7 @@ export async function PUT(request: NextRequest) {
         action: "deployment_model_update",
         entityType: "org",
         entityId: auth.orgId,
-        details: { oldModel, newModel: deploymentModel, byokMode, source: "onboarding" },
+        details: { oldModel, newModel: deploymentModel, source: "onboarding" },
       });
     } catch (auditErr) {
       console.error("Audit log error:", auditErr);

@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
       return withCors(NextResponse.json({ error: "Organization not found" }, { status: 404 }), request);
     }
 
-    if (org.deploymentModel !== "self_hosted" && org.deploymentModel !== "byok") {
-      return withCors(NextResponse.json({ error: "Usage reporting is only available for BYOK and Self-Hosted deployments" }, { status: 403 }), request);
+    if (org.deploymentModel !== "self_hosted") {
+      return withCors(NextResponse.json({ error: "Usage reporting is only available for Self-Hosted deployments" }, { status: 403 }), request);
     }
 
     const zeroBalance = await hasInsufficientBalance(orgId, 0.01);
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         await deductFromWallet(
           orgId,
           cost,
-          `${org.deploymentModel === "self_hosted" ? "Self-hosted" : "BYOK"} usage: ${Math.ceil(minCharge / 60)} min (${category})`,
+          `Self-hosted usage: ${Math.ceil(minCharge / 60)} min (${category})`,
           "call",
           `usage-report-${Date.now()}-${i}`
         );

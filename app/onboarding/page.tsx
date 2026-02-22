@@ -18,7 +18,7 @@ import {
   Cloud, Key, Server, Shield, Zap, Phone, Bot, Globe, Lock, MessageSquare,
 } from "lucide-react";
 
-type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
+type DeploymentModel = "managed" | "self_hosted" | "custom";
 
 interface FaqEntry {
   question: string;
@@ -58,25 +58,6 @@ const PACKAGES: {
       "24/7 platform monitoring",
     ],
     included: ["AI Models", "Telephony", "Platform", "Support"],
-  },
-  {
-    id: "byok",
-    name: "Bring Your Own Keys",
-    tagline: "Use your own API credentials",
-    price: "\u00A30.05",
-    priceUnit: "/min",
-    icon: Key,
-    color: "text-amber-600 dark:text-amber-400",
-    bgColor: "bg-amber-500/10",
-    borderColor: "border-amber-500/30",
-    features: [
-      "Platform fee only",
-      "Your OpenAI keys",
-      "Full cost control",
-      "Custom model selection",
-    ],
-    included: ["Platform"],
-    notIncluded: ["AI Models", "Telephony"],
   },
   {
     id: "self_hosted",
@@ -119,7 +100,6 @@ const PACKAGES: {
 
 interface PackageVisibility {
   managed: boolean;
-  byok: boolean;
   selfHosted: boolean;
 }
 
@@ -147,7 +127,7 @@ export default function OnboardingPage() {
 
   const [selectedCountries, setSelectedCountries] = useState<string[]>(["GB"]);
   const [availableCountries, setAvailableCountries] = useState<{ code: string; name: string }[]>([]);
-  const [packageVisibility, setPackageVisibility] = useState<PackageVisibility>({ managed: true, byok: false, selfHosted: false });
+  const [packageVisibility, setPackageVisibility] = useState<PackageVisibility>({ managed: true, selfHosted: false });
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -330,7 +310,6 @@ export default function OnboardingPage() {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {PACKAGES.filter((pkg) => {
-                if (pkg.id === "byok") return packageVisibility.byok;
                 if (pkg.id === "self_hosted") return packageVisibility.selfHosted;
                 return true;
               }).map((pkg) => {
@@ -409,19 +388,6 @@ export default function OnboardingPage() {
               })}
             </div>
 
-            {selectedPackage === "byok" && (
-              <Card className="border-amber-500/20 bg-amber-500/5">
-                <CardContent className="flex items-start gap-3 p-4">
-                  <Key className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-medium text-foreground">API Keys Required</p>
-                    <p className="text-muted-foreground mt-0.5">
-                      After setup, you will need to configure your OpenAI API key in Settings &gt; Integrations.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {selectedPackage === "self_hosted" && (
               <Card className="border-emerald-500/20 bg-emerald-500/5">

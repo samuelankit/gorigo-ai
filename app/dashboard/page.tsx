@@ -360,12 +360,10 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
-                deploymentModel === "managed" ? "bg-blue-500/10" : deploymentModel === "byok" ? "bg-amber-500/10" : deploymentModel === "custom" ? "bg-violet-500/10" : "bg-emerald-500/10"
+                deploymentModel === "managed" ? "bg-blue-500/10" : deploymentModel === "custom" ? "bg-violet-500/10" : "bg-emerald-500/10"
               )}>
                 {deploymentModel === "managed" ? (
                   <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                ) : deploymentModel === "byok" ? (
-                  <Key className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 ) : deploymentModel === "custom" ? (
                   <MessageSquare className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                 ) : (
@@ -375,20 +373,18 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium" data-testid="text-deployment-label">
-                    {deploymentModel === "managed" ? "Managed Package" : deploymentModel === "byok" ? "BYOK Package" : deploymentModel === "custom" ? "Custom Package" : "Self-Hosted Package"}
+                    {deploymentModel === "managed" ? "Managed Package" : deploymentModel === "custom" ? "Custom Package" : "Self-Hosted Package"}
                   </span>
                   <Badge variant="secondary" className="no-default-hover-elevate text-[11px]" data-testid="badge-rate">
-                    {deploymentModel === "managed" ? "\u00A30.15/min" : deploymentModel === "byok" ? "\u00A30.05/min" : deploymentModel === "custom" ? "Custom" : "\u00A30.03/min"}
+                    {deploymentModel === "managed" ? "\u00A30.20/min" : deploymentModel === "custom" ? "Custom" : "\u00A30.12/min"}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {deploymentModel === "managed"
                     ? "AI + Telephony included \u2022 Fully managed"
-                    : deploymentModel === "byok"
-                      ? "Platform fee only \u2022 Your API keys"
-                      : deploymentModel === "custom"
-                        ? "Tailored solution \u2022 Custom rates"
-                        : "Licence fee only \u2022 Your infrastructure"}
+                    : deploymentModel === "custom"
+                      ? "Tailored solution \u2022 Custom rates"
+                      : "Licence fee only \u2022 Your infrastructure"}
                 </p>
               </div>
             </div>
@@ -404,12 +400,6 @@ export default function DashboardPage() {
                     Telephony Included
                   </Badge>
                 </>
-              )}
-              {deploymentModel === "byok" && (
-                <Badge variant="outline" className="no-default-hover-elevate text-[11px]" data-testid="badge-byok-keys">
-                  <Key className="h-3 w-3 mr-1" />
-                  Your API Keys
-                </Badge>
               )}
               {deploymentModel === "self_hosted" && (
                 <Badge variant="outline" className="no-default-hover-elevate text-[11px]" data-testid="badge-self-hosted-infra">

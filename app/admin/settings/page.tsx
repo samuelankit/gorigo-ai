@@ -60,7 +60,6 @@ interface RateCard {
 
 const DEPLOYMENT_LABELS: Record<string, string> = {
   managed: "Managed",
-  byok: "BYOK",
   self_hosted: "Self-Hosted",
 };
 
@@ -108,7 +107,6 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   business_hours_start: "09:00",
   business_hours_end: "18:00",
   deployment_package_managed_enabled: "true",
-  deployment_package_byok_enabled: "false",
   deployment_package_self_hosted_enabled: "false",
 };
 
@@ -881,23 +879,6 @@ export default function PlatformSettingsPage() {
             </Card>
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Bring Your Own Key (BYOK)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">Clients use their own API keys with your platform for cost control.</p>
-                <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor="pkg-byok" className="text-sm">Visible on site</Label>
-                  <Switch
-                    id="pkg-byok"
-                    data-testid="switch-package-byok"
-                    checked={settings.deployment_package_byok_enabled === "true"}
-                    onCheckedChange={(checked) => updateSetting("deployment_package_byok_enabled", checked ? "true" : "false")}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
                 <CardTitle className="text-base">Self-Hosted</CardTitle>
               </CardHeader>
               <CardContent>
@@ -938,7 +919,6 @@ function RateCardForm({ form, onChange }: { form: Partial<RateCard>; onChange: (
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="managed">Managed</SelectItem>
-            <SelectItem value="byok">BYOK</SelectItem>
             <SelectItem value="self_hosted">Self-Hosted</SelectItem>
           </SelectContent>
         </Select>

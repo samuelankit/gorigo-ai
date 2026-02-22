@@ -44,12 +44,6 @@ const uptimeCommitments = [
     description: "Enterprise-grade reliability with proactive monitoring and automatic failover.",
   },
   {
-    plan: "Bring Your Own Key",
-    uptime: "99.5%",
-    monthlyDowntime: "~3.6 hours",
-    description: "High availability for the GoRigo platform. Third-party API uptime depends on your provider.",
-  },
-  {
     plan: "Self-Hosted",
     uptime: "Varies",
     monthlyDowntime: "Depends on your infrastructure",
@@ -71,14 +65,6 @@ const supportTiers = [
     medium: "1 business day",
     low: "2 business days",
     channels: "Phone, Email, Live Chat, Dedicated Slack",
-  },
-  {
-    plan: "BYOK",
-    critical: "4 hours",
-    high: "8 hours",
-    medium: "2 business days",
-    low: "3 business days",
-    channels: "Email, Live Chat, Community Forum",
   },
   {
     plan: "Self-Hosted",
@@ -449,7 +435,7 @@ export default function SlaPage() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span>Automated daily backups with 30-day retention (Managed and BYOK).</span>
+                      <span>Automated daily backups with 30-day retention (Managed).</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
@@ -468,11 +454,11 @@ export default function SlaPage() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span><span className="font-medium text-foreground">Recovery Time (RTO):</span> Managed: 4 hours. BYOK: 8 hours. Self-Hosted: your responsibility.</span>
+                      <span><span className="font-medium text-foreground">Recovery Time (RTO):</span> Managed: 4 hours. Self-Hosted: your responsibility.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span><span className="font-medium text-foreground">Recovery Point (RPO):</span> Managed: 1 hour. BYOK: 24 hours. Self-Hosted: your configuration.</span>
+                      <span><span className="font-medium text-foreground">Recovery Point (RPO):</span> Managed: 1 hour. Self-Hosted: your configuration.</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -498,7 +484,7 @@ export default function SlaPage() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Database className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span>Managed and BYOK data hosted in the UK (London region) by default.</span>
+                      <span>Managed data hosted in the UK (London region) by default.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Database className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
@@ -563,10 +549,6 @@ export default function SlaPage() {
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                       <span>Keep your account credentials secure and enable two-factor authentication where available.</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span>For BYOK customers: ensure your third-party API keys are valid and within usage limits.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />

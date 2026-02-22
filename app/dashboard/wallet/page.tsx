@@ -211,31 +211,27 @@ export default function WalletPage() {
             <div className="flex items-center gap-3">
               <div className={cn(
                 "flex items-center justify-center w-9 h-9 rounded-lg shrink-0",
-                deploymentModel === "managed" ? "bg-blue-500/10" : deploymentModel === "byok" ? "bg-amber-500/10" : "bg-emerald-500/10"
+                deploymentModel === "managed" ? "bg-blue-500/10" : "bg-emerald-500/10"
               )}>
                 {deploymentModel === "managed" ? (
                   <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                ) : deploymentModel === "byok" ? (
-                  <Key className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 ) : (
                   <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 )}
               </div>
               <div>
                 <p className="text-sm font-medium" data-testid="text-wallet-package">
-                  {deploymentModel === "managed" ? "Managed Package" : deploymentModel === "byok" ? "BYOK Package" : "Self-Hosted Package"}
+                  {deploymentModel === "managed" ? "Managed Package" : "Self-Hosted Package"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {deploymentModel === "managed"
                     ? "All costs included in your talk-time rate"
-                    : deploymentModel === "byok"
-                      ? "Platform fee deducted per unit of talk time"
-                      : "Licence fee deducted per unit of talk time"}
+                    : "Licence fee deducted per unit of talk time"}
                 </p>
               </div>
             </div>
             <Badge variant="secondary" className="no-default-hover-elevate text-sm" data-testid="badge-wallet-rate">
-              {deploymentModel === "managed" ? "£0.15/min" : deploymentModel === "byok" ? "£0.05/min" : "£0.03/min"}
+              {deploymentModel === "managed" ? "£0.20/min" : "£0.12/min"}
             </Badge>
           </CardContent>
         </Card>

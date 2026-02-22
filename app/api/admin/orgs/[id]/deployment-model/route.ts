@@ -5,14 +5,13 @@ import { eq, and, sql } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { getAllRatesForModel } from "@/lib/rate-resolver";
 import { logAudit } from "@/lib/audit";
-import { getOrgByokStatus, validateOpenAIKey } from "@/lib/byok";
 import { adminLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
 import { isDeploymentPackageEnabled } from "@/lib/feature-flags";
 
-type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
+type DeploymentModel = "managed" | "self_hosted" | "custom";
 
-const VALID_MODELS: DeploymentModel[] = ["managed", "byok", "self_hosted", "custom"];
+const VALID_MODELS: DeploymentModel[] = ["managed", "self_hosted", "custom"];
 
 async function getActiveCalls(orgId: number): Promise<number> {
   const [result] = await db
@@ -25,34 +24,6 @@ async function getActiveCalls(orgId: number): Promise<number> {
       )
     );
   return Number(result?.count ?? 0);
-}
-
-async function checkByokPrerequisites(orgId: number): Promise<{
-  met: boolean;
-  details: Record<string, { ready: boolean; message: string }>;
-}> {
-  const { getOrgKeys } = await import("@/lib/byok");
-  const keys = await getOrgKeys(orgId);
-  const byokStatus = await getOrgByokStatus(orgId);
-  const details: Record<string, { ready: boolean; message: string }> = {};
-
-  if (byokStatus.openai.source === "org" && byokStatus.openai.configured) {
-    try {
-      const validation = await validateOpenAIKey(keys.openai.apiKey, keys.openai.baseUrl);
-      if (validation.valid) {
-        details.openai = { ready: true, message: `OpenAI API key configured and validated (${(validation.models || []).length} models available)` };
-      } else {
-        details.openai = { ready: false, message: `OpenAI API key configured but validation failed: ${validation.error}` };
-      }
-    } catch (error) {
-      details.openai = { ready: false, message: "OpenAI API key configured but could not be validated (network error)" };
-    }
-  } else {
-    details.openai = { ready: false, message: "OpenAI API key not configured. Client must provide their own API key before switching to BYOK." };
-  }
-
-  const allMet = Object.values(details).every((d) => d.ready);
-  return { met: allMet, details };
 }
 
 export async function GET(
@@ -89,7 +60,6 @@ export async function GET(
     const currentModel = (org.deploymentModel || "managed") as DeploymentModel;
     const rateCards = await getAllRatesForModel(currentModel);
     const activeCalls = await getActiveCalls(orgId);
-    const byokStatus = await getOrgByokStatus(orgId);
 
     const changeHistory = await db
       .select()
@@ -98,15 +68,11 @@ export async function GET(
       .orderBy(sql`${deploymentModelChanges.createdAt} DESC`)
       .limit(20);
 
-    const availableModels: Record<string, { rates: Awaited<ReturnType<typeof getAllRatesForModel>>; prerequisites?: Awaited<ReturnType<typeof checkByokPrerequisites>> }> = {};
+    const availableModels: Record<string, { rates: Awaited<ReturnType<typeof getAllRatesForModel>> }> = {};
     for (const model of VALID_MODELS) {
       if (model === currentModel) continue;
       const rates = await getAllRatesForModel(model);
-      const entry: typeof availableModels[string] = { rates };
-      if (model === "byok") {
-        entry.prerequisites = await checkByokPrerequisites(orgId);
-      }
-      availableModels[model] = entry;
+      availableModels[model] = { rates };
     }
 
     return NextResponse.json({
@@ -114,13 +80,9 @@ export async function GET(
         id: org.id,
         name: org.name,
         deploymentModel: currentModel,
-        byokMode: org.byokMode,
       },
       rates: rateCards,
       activeCalls,
-      byokStatus: {
-        openai: byokStatus.openai,
-      },
       availableModels,
       changeHistory,
     });
@@ -162,7 +124,7 @@ export async function PUT(
 
     if (!VALID_MODELS.includes(deploymentModel)) {
       return NextResponse.json(
-        { error: 'deploymentModel must be "managed", "byok", "self_hosted", or "custom"' },
+        { error: 'deploymentModel must be "managed", "self_hosted", or "custom"' },
         { status: 400 }
       );
     }
@@ -206,36 +168,12 @@ export async function PUT(
       }, { status: 409 });
     }
 
-    let prerequisitesMet: Record<string, any> = { allMet: true };
-
-    if (deploymentModel === "byok") {
-      const prereqs = await checkByokPrerequisites(orgId);
-      prerequisitesMet = { allMet: prereqs.met, ...prereqs.details };
-
-      if (!prereqs.met && !forceSwitch) {
-        return NextResponse.json({
-          error: "BYOK prerequisites not met",
-          prerequisites: prereqs.details,
-          message: "Client must configure their own API keys before switching to BYOK. Set forceSwitch=true to override (not recommended - calls may fail).",
-          requiresForce: true,
-        }, { status: 422 });
-      }
-    }
-
-    let byokMode: string;
-    if (deploymentModel === "byok") {
-      byokMode = "byok";
-    } else {
-      byokMode = "platform";
-    }
-
     const now = new Date();
 
     const [updated] = await db
       .update(orgs)
       .set({
         deploymentModel,
-        byokMode,
       })
       .where(eq(orgs.id, orgId))
       .returning();
@@ -248,7 +186,6 @@ export async function PUT(
         newModel: deploymentModel,
         status: "completed",
         reason: reason || null,
-        prerequisitesMet,
         activeCallsAtSwitch: activeCalls,
         initiatedBy: auth.user.id,
         initiatedByEmail: auth.user.email,
@@ -266,11 +203,9 @@ export async function PUT(
       details: {
         oldModel,
         newModel: deploymentModel,
-        byokMode,
         reason: reason || null,
         activeCallsAtSwitch: activeCalls,
         forceSwitch: !!forceSwitch,
-        prerequisitesMet,
       },
     });
 
@@ -281,7 +216,6 @@ export async function PUT(
         id: updated.id,
         name: updated.name,
         deploymentModel: updated.deploymentModel,
-        byokMode: updated.byokMode,
       },
       changeLog,
       newRates,

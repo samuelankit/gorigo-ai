@@ -115,19 +115,16 @@ interface RevenueData {
 
 const PACKAGE_COLORS: Record<string, string> = {
   managed: "hsl(262, 83%, 58%)",
-  byok: "hsl(217, 91%, 60%)",
   "self-hosted": "hsl(142, 71%, 45%)",
 };
 
 const PACKAGE_LABELS: Record<string, string> = {
   managed: "Managed",
-  byok: "BYOK",
   "self-hosted": "Self-Hosted",
 };
 
 const PACKAGE_RATES: Record<string, string> = {
   managed: "0.15/min",
-  byok: "0.05/min",
   "self-hosted": "0.03/min",
 };
 
@@ -135,9 +132,6 @@ function PackageBadge({ model }: { model: string }) {
   const label = PACKAGE_LABELS[model] || model;
   if (model === "managed") {
     return <Badge className="no-default-hover-elevate bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20">{label}</Badge>;
-  }
-  if (model === "byok") {
-    return <Badge className="no-default-hover-elevate bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">{label}</Badge>;
   }
   if (model === "self-hosted") {
     return <Badge className="no-default-hover-elevate bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{label}</Badge>;

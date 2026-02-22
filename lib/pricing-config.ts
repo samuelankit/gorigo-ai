@@ -80,13 +80,6 @@ export const CUSTOMER_TIERS = {
     description: "Fully managed AI agents with dedicated support",
     customerPaysApiCosts: false,
   },
-  byok: {
-    name: "BYOK (Bring Your Own Key)",
-    key: "byok",
-    ratePerMinute: 0.08,
-    description: "Platform fee only — customer pays own API costs separately",
-    customerPaysApiCosts: true,
-  },
   whiteLabel: {
     name: "White-Label / Reseller",
     key: "whiteLabel",

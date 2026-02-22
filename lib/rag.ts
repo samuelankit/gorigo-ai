@@ -47,7 +47,7 @@ export function chunkText(text: string): string[] {
 
 export async function generateEmbedding(text: string, orgId?: number): Promise<number[]> {
   try {
-    const client = await getOpenAIClientForEmbeddings(orgId);
+    const client = await getOpenAIClientForEmbeddings();
     const response = await client.embeddings.create({
       model: EMBEDDING_MODEL,
       input: text.slice(0, 8000),
@@ -63,7 +63,7 @@ export async function generateEmbedding(text: string, orgId?: number): Promise<n
 export async function generateEmbeddings(texts: string[], orgId?: number): Promise<number[][]> {
   const truncated = texts.map((t) => t.slice(0, 8000));
   try {
-    const client = await getOpenAIClientForEmbeddings(orgId);
+    const client = await getOpenAIClientForEmbeddings();
     const response = await client.embeddings.create({
       model: EMBEDDING_MODEL,
       input: truncated,
@@ -485,7 +485,7 @@ export async function fetchAudioFromUrl(url: string): Promise<{ buffer: Buffer; 
 }
 
 export async function transcribeAudio(audioBuffer: Buffer, format: string, orgId?: number): Promise<string> {
-  const client = await getOpenAIClientForEmbeddings(orgId);
+  const client = await getOpenAIClientForEmbeddings();
   const file = await toFile(audioBuffer, `audio.${format}`);
   const response = await client.audio.transcriptions.create({
     file,

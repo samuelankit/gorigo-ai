@@ -25,13 +25,12 @@ import {
   Clock, Phone, Search, ChevronRight, History, ShieldAlert,
 } from "lucide-react";
 
-type DeploymentModel = "managed" | "byok" | "self_hosted" | "custom";
+type DeploymentModel = "managed" | "self_hosted" | "custom";
 
 interface OrgItem {
   id: number;
   name: string;
   deploymentModel: string;
-  byokMode: string;
   ownerEmail: string;
   balance: number;
   totalCalls: number;
@@ -65,13 +64,9 @@ interface SwitchPrerequisite {
 }
 
 interface SwitchDetails {
-  org: { id: number; name: string; deploymentModel: string; byokMode: string };
+  org: { id: number; name: string; deploymentModel: string };
   rates: Array<{ category: string; ratePerMinute: number; includesAiCost: boolean; includesTelephonyCost: boolean; label: string }>;
   activeCalls: number;
-  byokStatus: {
-    openai: { configured: boolean; masked: string; source: string };
-    twilio?: { configured: boolean; maskedSid: string; maskedPhone: string; source: string };
-  };
   availableModels: Record<string, {
     rates: Array<{ category: string; ratePerMinute: number; label: string }>;
     prerequisites?: { met: boolean; details: Record<string, SwitchPrerequisite> };
@@ -87,14 +82,6 @@ const MODEL_CONFIG: Record<DeploymentModel, { label: string; icon: typeof Cloud;
     bgColor: "bg-blue-500/10",
     badgeClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
     description: "Full-service hosted. AI + telephony costs included.",
-  },
-  byok: {
-    label: "BYOK",
-    icon: Key,
-    color: "text-amber-600 dark:text-amber-400",
-    bgColor: "bg-amber-500/10",
-    badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    description: "Bring Your Own Keys. Platform fee only.",
   },
   self_hosted: {
     label: "Self-Hosted",
@@ -260,7 +247,7 @@ export default function DeploymentsPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {(["managed", "byok", "self_hosted", "custom"] as DeploymentModel[]).map((model) => {
+        {(["managed", "self_hosted", "custom"] as DeploymentModel[]).map((model) => {
           const config = MODEL_CONFIG[model];
           const Icon = config.icon;
           const count = modelCounts[model] || 0;
@@ -302,7 +289,6 @@ export default function DeploymentsPage() {
                 <SelectContent>
                   <SelectItem value="all">All Models</SelectItem>
                   <SelectItem value="managed">Managed</SelectItem>
-                  <SelectItem value="byok">BYOK</SelectItem>
                   <SelectItem value="self_hosted">Self-Hosted</SelectItem>
                   <SelectItem value="custom">Custom</SelectItem>
                 </SelectContent>
@@ -417,19 +403,6 @@ export default function DeploymentsPage() {
                         <span className="font-mono font-medium">{"\u00A3"}{r.ratePerMinute.toFixed(4)}/min</span>
                       </div>
                     ))}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">BYOK Key Status</Label>
-                  <div className="mt-1 space-y-1.5">
-                    <div className="flex items-center gap-2 text-sm">
-                      {switchDetails.byokStatus.openai.configured ? (
-                        <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
-                      ) : (
-                        <X className="h-3.5 w-3.5 text-red-500 shrink-0" />
-                      )}
-                      <span>OpenAI: {switchDetails.byokStatus.openai.masked}</span>
-                    </div>
                   </div>
                 </div>
               </div>

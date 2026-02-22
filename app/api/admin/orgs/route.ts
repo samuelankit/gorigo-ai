@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
         id: orgs.id,
         name: orgs.name,
         deploymentModel: orgs.deploymentModel,
-        byokMode: orgs.byokMode,
         createdAt: orgs.createdAt,
       })
       .from(orgs)

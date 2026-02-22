@@ -17,13 +17,6 @@ const allDeploymentOptions = [
     rate: "From 12p/min",
   },
   {
-    value: "byok",
-    key: "byok" as const,
-    title: "Bring Your Own Key",
-    description: "Use your own API keys for maximum cost control.",
-    rate: "From 5p/min",
-  },
-  {
     value: "self-hosted",
     key: "selfHosted" as const,
     title: "Self-Hosted",
@@ -52,7 +45,7 @@ export default function NewBusinessPage() {
       })
       .catch(() => {
         setDeploymentOptions(allDeploymentOptions);
-        if (!deploymentModel) setDeploymentModel("byok");
+        if (!deploymentModel) setDeploymentModel("managed");
       });
   }, []);
 

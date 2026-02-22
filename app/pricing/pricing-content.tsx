@@ -16,7 +16,6 @@ import { PricingFaq } from "./faq";
 
 interface PackageVisibility {
   managed: boolean;
-  byok: boolean;
   selfHosted: boolean;
 }
 
@@ -43,26 +42,6 @@ const allPackages = [
     mobileApp: true,
   },
   {
-    key: "byok" as const,
-    name: "Bring Your Own Key",
-    rate: "From 8p",
-    rateUnit: "/min",
-    description: "Use your own OpenAI or Anthropic API keys with our platform for maximum cost control.",
-    features: [
-      "Full platform access",
-      "Lower per-minute costs",
-      "Self-service dashboard",
-      "Community support",
-      "All platform features",
-      "Use your own API keys",
-      "Mobile app included",
-    ],
-    bestFor: "Tech-savvy teams wanting cost control.",
-    cta: "Get Started",
-    href: "/register",
-    featured: false,
-  },
-  {
     key: "selfHosted" as const,
     name: "Self-Hosted",
     rate: "From 12p",
@@ -84,22 +63,22 @@ const allPackages = [
 ];
 
 const comparisonFeatures = [
-  { name: "AI Agent Management", managed: true, byok: true, selfHosted: true, custom: true },
-  { name: "Knowledge Base", managed: true, byok: true, selfHosted: true, custom: true },
-  { name: "Real-Time Analytics", managed: true, byok: true, selfHosted: true, custom: true },
-  { name: "Call Recording", managed: true, byok: true, selfHosted: true, custom: true },
-  { name: "Multi-Language", managed: true, byok: true, selfHosted: true, custom: true },
-  { name: "DNC Management", managed: true, byok: true, selfHosted: true, custom: true },
-  { name: "API Access", managed: true, byok: true, selfHosted: true, custom: true },
-  { name: "Custom Integrations", managed: true, byok: false, selfHosted: true, custom: true },
-  { name: "Dedicated Account Manager", managed: true, byok: false, selfHosted: true, custom: true },
-  { name: "SLA Guarantee", managed: true, byok: false, selfHosted: true, custom: true },
-  { name: "White Label", managed: false, byok: false, selfHosted: true, custom: true },
-  { name: "On-Premise Deployment", managed: false, byok: false, selfHosted: true, custom: true },
-  { name: "Mobile App", managed: true, byok: true, selfHosted: false, custom: false },
-  { name: "Custom Billing Rates", managed: false, byok: false, selfHosted: false, custom: true },
-  { name: "Bespoke Feature Selection", managed: false, byok: false, selfHosted: false, custom: true },
-  { name: "Dedicated Onboarding", managed: false, byok: false, selfHosted: false, custom: true },
+  { name: "AI Agent Management", managed: true, selfHosted: true, custom: true },
+  { name: "Knowledge Base", managed: true, selfHosted: true, custom: true },
+  { name: "Real-Time Analytics", managed: true, selfHosted: true, custom: true },
+  { name: "Call Recording", managed: true, selfHosted: true, custom: true },
+  { name: "Multi-Language", managed: true, selfHosted: true, custom: true },
+  { name: "DNC Management", managed: true, selfHosted: true, custom: true },
+  { name: "API Access", managed: true, selfHosted: true, custom: true },
+  { name: "Custom Integrations", managed: true, selfHosted: true, custom: true },
+  { name: "Dedicated Account Manager", managed: true, selfHosted: true, custom: true },
+  { name: "SLA Guarantee", managed: true, selfHosted: true, custom: true },
+  { name: "White Label", managed: false, selfHosted: true, custom: true },
+  { name: "On-Premise Deployment", managed: false, selfHosted: true, custom: true },
+  { name: "Mobile App", managed: true, selfHosted: false, custom: false },
+  { name: "Custom Billing Rates", managed: false, selfHosted: false, custom: true },
+  { name: "Bespoke Feature Selection", managed: false, selfHosted: false, custom: true },
+  { name: "Dedicated Onboarding", managed: false, selfHosted: false, custom: true },
 ];
 
 function FeatureIcon({ included }: { included: boolean }) {
@@ -112,7 +91,6 @@ function FeatureIcon({ included }: { included: boolean }) {
 export function PricingContent() {
   const [visibility, setVisibility] = useState<PackageVisibility>({
     managed: true,
-    byok: true,
     selfHosted: false,
   });
 
@@ -125,10 +103,9 @@ export function PricingContent() {
 
   const visiblePackages = allPackages.filter((pkg) => visibility[pkg.key]);
 
-  const columnKeys = (["managed", "byok", "selfHosted"] as const).filter((k) => visibility[k]);
+  const columnKeys = (["managed", "selfHosted"] as const).filter((k) => visibility[k]);
   const columnLabels: Record<string, string> = {
     managed: "Managed",
-    byok: "BYOK",
     selfHosted: "Self-Hosted",
   };
 

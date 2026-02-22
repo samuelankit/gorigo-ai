@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
-import { getOrgKeys } from "@/lib/byok";
 
 export type LLMProvider = "openai" | "anthropic";
 
@@ -130,7 +129,7 @@ export interface LLMCallResult {
   provider: LLMProvider;
   usedFallback: boolean;
   latencyMs: number;
-  keySource: "org" | "platform";
+  keySource: "platform";
   tier: number;
   inputTokens?: number;
   outputTokens?: number;
@@ -210,35 +209,6 @@ export async function callLLM(
 ): Promise<LLMCallResult> {
   const maxTokens = options?.maxTokens ?? 1024;
   const temperature = options?.temperature ?? 0.7;
-  const orgId = options?.orgId;
-
-  if (orgId) {
-    try {
-      const keys = await getOrgKeys(orgId);
-      if (keys.openai.source === "org" && keys.openai.apiKey) {
-        const orgClient = new OpenAI({
-          apiKey: keys.openai.apiKey,
-          baseURL: keys.openai.baseUrl || undefined,
-          timeout: REQUEST_TIMEOUT_MS,
-        });
-        const model = options?.preferredModel || OPENAI_MODELS.primary;
-        const result = await callOpenAI(orgClient, model, messages, maxTokens, temperature);
-        return {
-          content: result.content,
-          model,
-          provider: "openai",
-          usedFallback: false,
-          latencyMs: result.latencyMs,
-          keySource: "org",
-          tier: 0,
-          inputTokens: result.inputTokens,
-          outputTokens: result.outputTokens,
-        };
-      }
-    } catch (err) {
-      console.warn(`[LLM Router] BYOK call failed for org ${orgId}, falling back to platform providers:`, err);
-    }
-  }
 
   const errors: { provider: string; error: string; tier: number }[] = [];
 
@@ -328,30 +298,6 @@ export async function callLLMStream(
 ): Promise<AsyncIterable<NormalizedStreamChunk>> {
   const maxTokens = options?.maxTokens ?? 1024;
   const temperature = options?.temperature ?? 0.7;
-  const orgId = options?.orgId;
-
-  if (orgId) {
-    try {
-      const keys = await getOrgKeys(orgId);
-      if (keys.openai.source === "org" && keys.openai.apiKey) {
-        const orgClient = new OpenAI({
-          apiKey: keys.openai.apiKey,
-          baseURL: keys.openai.baseUrl || undefined,
-          timeout: REQUEST_TIMEOUT_MS,
-        });
-        const model = options?.preferredModel || OPENAI_MODELS.primary;
-        return orgClient.chat.completions.create({
-          model,
-          messages,
-          max_tokens: maxTokens,
-          temperature,
-          stream: true,
-        });
-      }
-    } catch (err) {
-      console.warn(`[LLM Router] BYOK stream failed for org ${orgId}, falling back:`, err);
-    }
-  }
 
   // Tier 1: OpenAI streaming
   if (isCircuitAllowing("openai")) {
@@ -404,26 +350,11 @@ export async function callLLMStream(
   throw new Error("All LLM providers failed for streaming.");
 }
 
-export function getOpenAIClientForEmbeddings(orgId?: number): Promise<OpenAI> {
-  return getOpenAIClientDirect(orgId);
+export function getOpenAIClientForEmbeddings(): Promise<OpenAI> {
+  return getOpenAIClientDirect();
 }
 
-async function getOpenAIClientDirect(orgId?: number): Promise<OpenAI> {
-  if (orgId) {
-    try {
-      const keys = await getOrgKeys(orgId);
-      if (keys.openai.source === "org" && keys.openai.apiKey) {
-        return new OpenAI({
-          apiKey: keys.openai.apiKey,
-          baseURL: keys.openai.baseUrl || undefined,
-          timeout: REQUEST_TIMEOUT_MS,
-        });
-      }
-    } catch (err) {
-      console.warn(`[LLM Router] BYOK client failed for org ${orgId}:`, err);
-    }
-  }
-
+async function getOpenAIClientDirect(): Promise<OpenAI> {
   const openaiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
   const openaiBase = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
   return new OpenAI({

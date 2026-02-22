@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { callLogs } from "@/shared/schema";
 import { eq } from "drizzle-orm";
-import { getWalletBalance, deductFromWallet } from "@/lib/wallet";
+import { getWalletBalance, deductFromWallet, getUsableBalance, MINIMUM_WALLET_BALANCE } from "@/lib/wallet";
 import { hangupCall, speakText } from "@/lib/telnyx";
 import { createLogger } from "@/lib/logger";
 import { roundMoney } from "@/lib/money";
@@ -56,13 +56,19 @@ export function stopCallBilling(callControlId: string): void {
       const unbilledMinutes = unbilledSecs / 60;
       const finalCharge = roundMoney(unbilledMinutes * billing.ratePerMinute);
       if (finalCharge > 0) {
-        deductFromWallet(
-          billing.orgId,
-          finalCharge,
-          `Call billing: final ${unbilledSecs}s at £${billing.ratePerMinute}/min`,
-          "call",
-          `call_billing_final_${callControlId}`
-        ).catch(err => {
+        getWalletBalance(billing.orgId).then(rawBalance => {
+          const usable = getUsableBalance(rawBalance);
+          const cappedCharge = roundMoney(Math.min(finalCharge, usable));
+          if (cappedCharge > 0) {
+            return deductFromWallet(
+              billing.orgId,
+              cappedCharge,
+              `Call billing: final ${unbilledSecs}s at £${billing.ratePerMinute}/min`,
+              "call",
+              `call_billing_final_${callControlId}`
+            );
+          }
+        }).catch(err => {
           logger.error("Final billing deduction failed", err instanceof Error ? err : undefined);
         });
       }
@@ -100,8 +106,9 @@ async function processBillingCycle(): Promise<void> {
 
       const unbilledMinutes = unbilledSecs / 60;
       const charge = roundMoney(unbilledMinutes * billing.ratePerMinute);
-      const balance = await getWalletBalance(billing.orgId);
-      const remainingMinutes = billing.ratePerMinute > 0 ? balance / billing.ratePerMinute : Infinity;
+      const rawBalance = await getWalletBalance(billing.orgId);
+      const usableBalance = getUsableBalance(rawBalance);
+      const remainingMinutes = billing.ratePerMinute > 0 ? usableBalance / billing.ratePerMinute : Infinity;
 
       if (remainingMinutes <= LOW_BALANCE_WARNING_THRESHOLD_MINUTES && !billing.lowBalanceWarned) {
         billing.lowBalanceWarned = true;
@@ -113,7 +120,7 @@ async function processBillingCycle(): Promise<void> {
         }
       }
 
-      if (balance <= 0 || (charge > 0 && balance < charge)) {
+      if (usableBalance <= 0 || (charge > 0 && usableBalance < charge)) {
         if (billing.lowBalanceWarned && billing.lowBalanceWarnedAt) {
           const elapsed = now - billing.lowBalanceWarnedAt;
           if (elapsed >= GRACE_WINDOW_AFTER_WARNING_MS) {
@@ -132,7 +139,7 @@ async function processBillingCycle(): Promise<void> {
         continue;
       }
 
-      if (charge > 0 && balance >= charge) {
+      if (charge > 0 && usableBalance >= charge) {
         try {
           await deductFromWallet(
             billing.orgId,
@@ -166,7 +173,7 @@ async function terminateCallForBilling(
   logger.warn("Terminating call due to billing", { callControlId, orgId: billing.orgId, reason });
 
   try {
-    await speakText(callControlId, "We're sorry, but your account balance has been depleted. This call will now end. Please top up your account to continue using our services. Goodbye.");
+    await speakText(callControlId, "We're sorry, but your account balance has reached the minimum threshold. This call will now end. Please top up your account to continue using our services. Goodbye.");
   } catch {}
 
   setTimeout(async () => {

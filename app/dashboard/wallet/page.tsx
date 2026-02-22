@@ -166,7 +166,25 @@ export default function WalletPage() {
         </div>
       )}
 
-      {!loadingWallet && wallet?.lowBalance && (
+      {!loadingWallet && wallet && wallet.balance <= 5 && (
+        <Card className="border-red-200 dark:border-red-800/40" data-testid="card-minimum-balance-warning">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-red-500/20 rounded-lg flex items-center justify-center shrink-0">
+                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Below Minimum Balance</p>
+                <p className="text-sm text-muted-foreground">
+                  Your balance (£{Number(wallet.balance).toFixed(2)}) is at or below the required £5.00 minimum. All services (calls, AI features) are blocked until you top up above £5.00.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!loadingWallet && wallet?.lowBalance && wallet.balance > 5 && (
         <Card className="border-amber-200 dark:border-amber-800/40" data-testid="card-low-balance-warning">
           <CardContent className="p-5">
             <div className="flex items-center gap-3">
@@ -308,25 +326,32 @@ export default function WalletPage() {
               Demo accounts cannot top up. Please upgrade to a full account.
             </p>
           ) : (
-            <div className="flex items-end gap-3 flex-wrap">
-              <div className="space-y-2 flex-1 min-w-48">
-                <Label htmlFor="topUpAmount">Amount (£)</Label>
-                <Input
-                  id="topUpAmount"
-                  type="number"
-                  value={topUpAmount}
-                  onChange={(e) => setTopUpAmount(e.target.value)}
-                  placeholder="50.00"
-                  min="0.01"
-                  max="10000"
-                  step="0.01"
-                  data-testid="input-topup-amount"
-                />
+            <>
+              <div className="flex items-end gap-3 flex-wrap">
+                <div className="space-y-2 flex-1 min-w-48">
+                  <Label htmlFor="topUpAmount">Amount (£)</Label>
+                  <Input
+                    id="topUpAmount"
+                    type="number"
+                    value={topUpAmount}
+                    onChange={(e) => setTopUpAmount(e.target.value)}
+                    placeholder="50.00"
+                    min="0.01"
+                    max="10000"
+                    step="0.01"
+                    data-testid="input-topup-amount"
+                  />
+                </div>
+                <Button onClick={handleTopUp} disabled={toppingUp} data-testid="button-topup">
+                  {toppingUp ? "Processing..." : "Top Up"}
+                </Button>
               </div>
-              <Button onClick={handleTopUp} disabled={toppingUp} data-testid="button-topup">
-                {toppingUp ? "Processing..." : "Top Up"}
-              </Button>
-            </div>
+              {wallet && wallet.balance < 5 && (
+                <p className="text-xs text-muted-foreground mt-2" data-testid="text-minimum-topup-hint">
+                  Suggested minimum top-up: £{(5 - wallet.balance).toFixed(2)} to restore your account above the £5.00 minimum required for services.
+                </p>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

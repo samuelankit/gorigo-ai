@@ -4,6 +4,8 @@ import { eq, sql, and } from "drizzle-orm";
 import { roundMoney, safeSubtract, safeAdd, validateAmount, safeParseNumeric } from "@/lib/money";
 import { createNotification } from "@/lib/notifications";
 
+export const MINIMUM_WALLET_BALANCE = 5.00;
+
 export type TransactionType = "top_up" | "deduction" | "refund" | "adjustment" | "bonus" | "commission" | "revenue_share" | "payout";
 export type ReferenceType = "call" | "ai_chat" | "rigo_assistant" | "ai_drafts" | "transcription" | "knowledge" | "manual" | "system" | "signup_bonus" | "affiliate_commission" | "partner_revenue_share" | "reseller_revenue_share" | "affiliate_payout";
 
@@ -52,7 +54,11 @@ export async function getWalletBalance(orgId: number): Promise<number> {
 
 export async function hasInsufficientBalance(orgId: number, requiredAmount: number = 0.01): Promise<boolean> {
   const balance = await getWalletBalance(orgId);
-  return balance < roundMoney(requiredAmount);
+  return balance < roundMoney(MINIMUM_WALLET_BALANCE + requiredAmount);
+}
+
+export function getUsableBalance(totalBalance: number): number {
+  return roundMoney(Math.max(0, totalBalance - MINIMUM_WALLET_BALANCE));
 }
 
 async function checkSpendingCap(orgId: number, amount: number): Promise<{ exceeded: boolean; cap: number | null; currentSpend: number }> {
@@ -111,7 +117,8 @@ export async function deductFromWallet(
 
     if (!wallet) throw new Error("Wallet not found");
     const currentBalance = roundMoney(safeParseNumeric(wallet.balance, 0));
-    if (currentBalance < roundedAmount) throw new Error("Insufficient balance");
+    const effectiveMinimum = roundMoney(MINIMUM_WALLET_BALANCE + roundedAmount);
+    if (currentBalance < effectiveMinimum) throw new Error(`Insufficient balance. £${MINIMUM_WALLET_BALANCE.toFixed(2)} minimum reserve must be maintained.`);
 
     const now = new Date();
     const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -149,7 +156,7 @@ export async function deductFromWallet(
     const balanceBefore = currentBalance;
 
     const updateRaw = await tx.execute(
-      sql`UPDATE wallets SET balance = ROUND((balance - ${roundedAmount})::numeric, 2), updated_at = NOW() WHERE org_id = ${orgId} AND balance >= ${roundedAmount} RETURNING balance`
+      sql`UPDATE wallets SET balance = ROUND((balance - ${roundedAmount})::numeric, 2), updated_at = NOW() WHERE org_id = ${orgId} AND balance >= ${effectiveMinimum} RETURNING balance`
     );
     const updateResult = updateRaw.rows as Record<string, unknown>[];
 
@@ -238,7 +245,7 @@ async function checkAndNotifyBalance(orgId: number, newBalance: number) {
       }
     }
 
-    if (roundedBalance <= 0) {
+    if (roundedBalance <= MINIMUM_WALLET_BALANCE) {
       const members = await db
         .select({ userId: orgMembers.userId })
         .from(orgMembers)
@@ -249,8 +256,8 @@ async function checkAndNotifyBalance(orgId: number, newBalance: number) {
           userId: member.userId,
           orgId,
           type: "spending_cap",
-          title: "Wallet balance depleted",
-          message: "Your wallet balance has reached zero. Calls will be blocked until you top up.",
+          title: "Wallet below minimum balance",
+          message: `Your wallet balance (£${roundedBalance.toFixed(2)}) is below the required £${MINIMUM_WALLET_BALANCE.toFixed(2)} minimum. Services will be blocked until you top up.`,
           actionUrl: "/dashboard/wallet",
         });
       }
@@ -437,6 +444,6 @@ export async function deductWithIdempotency(
 
 export async function isLowBalance(orgId: number): Promise<boolean> {
   const wallet = await getOrCreateWallet(orgId);
-  const threshold = roundMoney(safeParseNumeric(wallet.lowBalanceThreshold, 10));
+  const threshold = roundMoney(Math.max(safeParseNumeric(wallet.lowBalanceThreshold, 10), MINIMUM_WALLET_BALANCE));
   return roundMoney(safeParseNumeric(wallet.balance, 0)) <= threshold;
 }

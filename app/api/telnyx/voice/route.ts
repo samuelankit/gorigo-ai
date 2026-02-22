@@ -124,8 +124,8 @@ async function handleIncomingCall(
 
     const insufficientBalance = await hasInsufficientBalance(orgId, 0.01);
     if (insufficientBalance) {
-      logger.warn("Rejecting call due to zero wallet balance", { orgId, calledNumber });
-      await speakText(callControlId, "We're sorry, this service is temporarily unavailable. Please try again later.");
+      logger.warn("Rejecting call due to insufficient wallet balance (below £5 minimum)", { orgId, calledNumber });
+      await speakText(callControlId, "We're sorry, this service is temporarily unavailable due to insufficient account balance. Please try again later.");
       await hangupCall(callControlId);
       return NextResponse.json({ status: "ok" });
     }

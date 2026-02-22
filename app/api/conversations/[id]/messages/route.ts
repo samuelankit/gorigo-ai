@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { chatStorage } from "../../../../../replit_integrations/chat/storage";
 import { openai } from "../../../../../replit_integrations/chat/client-openai";
 import { anthropic } from "../../../../../replit_integrations/chat/client-anthropic";
-import { openrouter } from "../../../../../replit_integrations/chat/client-openrouter";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
@@ -10,11 +9,11 @@ import { z } from "zod";
 
 const messageBodySchema = z.object({
   content: z.string().min(1),
-  provider: z.enum(["openai", "anthropic", "openrouter"]).optional().default("openai"),
+  provider: z.enum(["openai", "anthropic"]).optional().default("openai"),
   model: z.string().optional(),
 }).strict();
 
-type Provider = "openai" | "anthropic" | "openrouter";
+type Provider = "openai" | "anthropic";
 
 const DEFAULT_OPENAI_MODEL = "gpt-5.2";
 const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5";
@@ -98,7 +97,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
               }
             }
           } else {
-            const client = provider === "openrouter" ? openrouter : openai;
+            const client = openai;
             const selectedModel = model || DEFAULT_OPENAI_MODEL;
 
             const openaiStream = await client.chat.completions.create({

@@ -49,7 +49,7 @@ Key features include:
 - **Transcript Archive**: SuperAdmin searchable transcript archive using PostgreSQL full-text search.
 
 ## External Dependencies
-- **AI Services**: OpenAI, Anthropic, OpenRouter (via Replit AI Integrations).
+- **AI Services**: OpenAI, Anthropic (via Replit AI Integrations).
 - **Database**: PostgreSQL.
 - **ORM**: Drizzle ORM.
 - **UI Components**: Shadcn/ui.

@@ -2,9 +2,8 @@ import type { Express } from "express";
 import { chatStorage } from "./storage";
 import { openai } from "./client-openai";
 import { anthropic } from "./client-anthropic";
-import { openrouter } from "./client-openrouter";
 
-type Provider = "openai" | "anthropic" | "openrouter";
+type Provider = "openai" | "anthropic";
 
 const DEFAULT_OPENAI_MODEL = "gpt-5.2";
 const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5";
@@ -96,9 +95,8 @@ export function registerChatRoutes(app: Express) {
           }
         }
       } else {
-        const client = provider === "openrouter" ? openrouter : openai;
-        const selectedModel =
-          model || (provider === "openrouter" ? DEFAULT_OPENAI_MODEL : DEFAULT_OPENAI_MODEL);
+        const client = openai;
+        const selectedModel = model || DEFAULT_OPENAI_MODEL;
 
         const stream = await client.chat.completions.create({
           model: selectedModel,

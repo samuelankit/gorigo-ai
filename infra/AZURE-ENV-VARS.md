@@ -37,9 +37,6 @@ These must be added manually after running `azure-setup.sh`:
 | `AI_INTEGRATIONS_OPENAI_BASE_URL` | OpenAI base URL (if using proxy) |
 | `AI_INTEGRATIONS_ANTHROPIC_API_KEY` | Anthropic API key |
 | `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` | Anthropic base URL (if using proxy) |
-| `AI_INTEGRATIONS_OPENROUTER_API_KEY` | OpenRouter API key |
-| `AI_INTEGRATIONS_OPENROUTER_BASE_URL` | OpenRouter base URL (if using proxy) |
-
 ### Monitoring
 
 | Setting | Value |
@@ -54,8 +51,7 @@ az webapp config appsettings set \
   --name gorigo-app \
   --settings \
     AI_INTEGRATIONS_OPENAI_API_KEY="sk-..." \
-    AI_INTEGRATIONS_ANTHROPIC_API_KEY="sk-ant-..." \
-    AI_INTEGRATIONS_OPENROUTER_API_KEY="sk-or-..."
+    AI_INTEGRATIONS_ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 ## Verifying Configuration

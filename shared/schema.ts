@@ -684,6 +684,8 @@ export const wallets = pgTable("wallets", {
   balance: numeric("balance", { precision: 12, scale: 2 }).default("0").notNull(),
   currency: text("currency").default("GBP").notNull(),
   lowBalanceThreshold: numeric("low_balance_threshold", { precision: 12, scale: 2 }).default("10"),
+  lowBalanceEmailEnabled: boolean("low_balance_email_enabled").default(true),
+  lastLowBalanceAlertAt: timestamp("last_low_balance_alert_at"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

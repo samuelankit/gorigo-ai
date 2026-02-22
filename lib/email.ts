@@ -215,7 +215,7 @@ export async function sendWelcomeEmail(
   return sendEmail(email, "Welcome to GoRigo — Your Agreement & SLA Confirmation", html);
 }
 
-function getBaseUrl(): string {
+export function getBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;
   }

@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/lib/use-toast";
-import { Wallet, TrendingUp, TrendingDown, Hash, AlertTriangle, Cloud, Key, Server } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, Hash, AlertTriangle, Cloud, Key, Server, Bell, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TalkTimeInfo } from "@/components/talk-time-info";
 
@@ -51,6 +52,9 @@ export default function WalletPage() {
   const [toppingUp, setToppingUp] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const [deploymentModel, setDeploymentModel] = useState<string | null>(null);
+  const [alertThreshold, setAlertThreshold] = useState("10");
+  const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const fetchWallet = () => {
     fetch("/api/wallet")
@@ -84,6 +88,14 @@ export default function WalletPage() {
         if (d?.org?.deploymentModel) setDeploymentModel(d.org.deploymentModel);
       })
       .catch((error) => { console.error("Fetch wallet user data failed:", error); });
+
+    fetch("/api/wallet/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.lowBalanceThreshold !== undefined) setAlertThreshold(String(d.lowBalanceThreshold));
+        if (d?.lowBalanceEmailEnabled !== undefined) setEmailAlertsEnabled(d.lowBalanceEmailEnabled);
+      })
+      .catch((error) => { console.error("Fetch wallet settings failed:", error); });
   }, []);
 
   const handleTopUp = async () => {
@@ -116,6 +128,29 @@ export default function WalletPage() {
       toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setToppingUp(false);
+    }
+  };
+
+  const handleSaveAlertSettings = async () => {
+    const threshold = parseFloat(alertThreshold);
+    if (isNaN(threshold) || threshold < 0 || threshold > 10000) {
+      toast({ title: "Invalid threshold", description: "Please enter a value between 0 and 10,000.", variant: "destructive" });
+      return;
+    }
+    setSavingSettings(true);
+    try {
+      const res = await fetch("/api/wallet/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lowBalanceThreshold: threshold, lowBalanceEmailEnabled: emailAlertsEnabled }),
+      });
+      if (!res.ok) throw new Error("Failed to save settings");
+      toast({ title: "Settings saved", description: "Your alert preferences have been updated." });
+      fetchWallet();
+    } catch {
+      toast({ title: "Error", description: "Failed to save alert settings.", variant: "destructive" });
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -356,6 +391,50 @@ export default function WalletPage() {
         </CardContent>
       </Card>
 
+      <Card data-testid="card-alert-settings">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-base">Balance Alerts</CardTitle>
+          </div>
+          <CardDescription>Get notified when your balance drops below a threshold.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-end gap-3 flex-wrap">
+            <div className="space-y-2 flex-1 min-w-48">
+              <Label htmlFor="alertThreshold">Alert Threshold (£)</Label>
+              <Input
+                id="alertThreshold"
+                type="number"
+                value={alertThreshold}
+                onChange={(e) => setAlertThreshold(e.target.value)}
+                placeholder="10.00"
+                min="0"
+                max="10000"
+                step="0.01"
+                data-testid="input-alert-threshold"
+              />
+              <p className="text-xs text-muted-foreground">You will be alerted when your balance drops below this amount.</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="emailAlerts">Email Alerts</Label>
+              <p className="text-xs text-muted-foreground">Receive email notifications for low balance warnings.</p>
+            </div>
+            <Switch
+              id="emailAlerts"
+              checked={emailAlertsEnabled}
+              onCheckedChange={setEmailAlertsEnabled}
+              data-testid="switch-email-alerts"
+            />
+          </div>
+          <Button onClick={handleSaveAlertSettings} disabled={savingSettings} variant="outline" data-testid="button-save-alert-settings">
+            {savingSettings ? "Saving..." : "Save Alert Settings"}
+          </Button>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Transaction History</CardTitle>
@@ -382,6 +461,7 @@ export default function WalletPage() {
                     <th className="text-right py-3 px-2 font-medium text-muted-foreground">Amount</th>
                     <th className="text-right py-3 px-2 font-medium text-muted-foreground">Balance After</th>
                     <th className="text-left py-3 px-2 font-medium text-muted-foreground">Description</th>
+                    <th className="text-center py-3 px-2 font-medium text-muted-foreground w-16"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -401,6 +481,18 @@ export default function WalletPage() {
                       </td>
                       <td className="py-3 px-2 text-muted-foreground max-w-xs truncate" data-testid={`text-description-${tx.id}`}>
                         {tx.description}
+                      </td>
+                      <td className="py-3 px-2 text-center">
+                        <a
+                          href={`/api/wallet/transactions/${tx.id}/receipt`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-muted transition-colors"
+                          title="View Receipt"
+                          data-testid={`link-receipt-${tx.id}`}
+                        >
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                        </a>
                       </td>
                     </tr>
                   ))}

@@ -632,6 +632,35 @@ export default function SettingsPage() {
               until you delete it. Contact support for data deletion requests.
             </p>
           </div>
+          <Separator />
+          <div className="space-y-2">
+            <p className="text-sm font-medium">GDPR Data Export</p>
+            <p className="text-sm text-muted-foreground">
+              Download a complete export of your account data (agents, calls, knowledge base, billing) in JSON format as required by GDPR Article 15.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/account/data-export", { method: "POST" });
+                  if (!res.ok) throw new Error("Export failed");
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `gorigo-data-export-${new Date().toISOString().split("T")[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                } catch {
+                  alert("Failed to export data. Please try again.");
+                }
+              }}
+              data-testid="button-gdpr-export"
+            >
+              Download My Data
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

@@ -1,4 +1,4 @@
-import { getAuthenticatedUser } from "@/lib/get-user";
+import { getAuthenticatedUser, requireOrgActive } from "@/lib/get-user";
 import { validateAudioUrl, importAudioFromUrl } from "@/lib/rag";
 import { NextRequest, NextResponse } from "next/server";
 import { knowledgeLimiter } from "@/lib/rate-limit";
@@ -29,6 +29,11 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const orgActiveCheck = await requireOrgActive(auth.orgId);
+    if (!orgActiveCheck.allowed) {
+      return NextResponse.json({ error: orgActiveCheck.error }, { status: orgActiveCheck.status || 403 });
     }
 
     if (auth.isDemo) {

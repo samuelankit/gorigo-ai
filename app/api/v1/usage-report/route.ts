@@ -39,13 +39,17 @@ export async function POST(request: NextRequest) {
     const orgId = auth.orgId;
 
     const [org] = await db
-      .select({ id: orgs.id, deploymentModel: orgs.deploymentModel })
+      .select({ id: orgs.id, deploymentModel: orgs.deploymentModel, status: orgs.status })
       .from(orgs)
       .where(eq(orgs.id, orgId))
       .limit(1);
 
     if (!org) {
       return withCors(NextResponse.json({ error: "Organization not found" }, { status: 404 }), request);
+    }
+
+    if (org.status === "suspended" || org.status === "terminated") {
+      return withCors(NextResponse.json({ error: "Organisation account is suspended. Please contact support." }, { status: 403 }), request);
     }
 
     if (org.deploymentModel !== "self_hosted") {

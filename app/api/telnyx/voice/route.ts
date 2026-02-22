@@ -131,6 +131,13 @@ async function handleIncomingCall(
     }
 
     const [orgRecord] = await db.select().from(orgs).where(eq(orgs.id, orgId)).limit(1);
+    if (!orgRecord || orgRecord.status === "suspended" || orgRecord.status === "terminated") {
+      logger.warn("Rejecting call: org suspended or terminated", { orgId, status: orgRecord?.status });
+      await speakText(callControlId, "We're sorry, this service is currently unavailable. Goodbye.");
+      await hangupCall(callControlId);
+      return NextResponse.json({ status: "ok" });
+    }
+
     if (orgRecord) {
       const businessHours = orgRecord.businessHours as BusinessHoursConfig | null;
       if (businessHours && businessHours.enabled && !isWithinBusinessHours(businessHours)) {

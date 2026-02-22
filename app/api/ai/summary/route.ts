@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateCallSummary } from "@/lib/ai";
-import { getAuthenticatedUser, requireEmailVerified } from "@/lib/get-user";
+import { getAuthenticatedUser, requireEmailVerified, requireOrgActive } from "@/lib/get-user";
 import { aiLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { hasInsufficientBalance, deductFromWallet } from "@/lib/wallet";
@@ -33,6 +33,11 @@ export async function POST(request: NextRequest) {
 
     if (!auth.orgId) {
       return NextResponse.json({ error: "No organization found" }, { status: 404 });
+    }
+
+    const orgActiveCheck = await requireOrgActive(auth.orgId);
+    if (!orgActiveCheck.allowed) {
+      return NextResponse.json({ error: orgActiveCheck.error }, { status: orgActiveCheck.status || 403 });
     }
 
     if (!auth.isDemo) {

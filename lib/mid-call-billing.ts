@@ -214,3 +214,40 @@ export function getActiveCallCount(): number {
 export function isCallActive(callControlId: string): boolean {
   return activeCallBilling.has(callControlId) && !activeCallBilling.get(callControlId)!.terminated;
 }
+
+export async function terminateAllCallsForOrg(orgId: number, reason: string = "org_suspended"): Promise<number> {
+  const entries = Array.from(activeCallBilling.entries());
+  let terminated = 0;
+
+  for (const [callControlId, billing] of entries) {
+    if (billing.orgId !== orgId || billing.terminated) continue;
+
+    billing.terminated = true;
+    terminated++;
+
+    logger.warn("Force-terminating call due to org suspension", { callControlId, orgId, reason });
+
+    try {
+      await speakText(callControlId, "We're sorry, this service has been suspended. This call will now end. Goodbye.");
+    } catch {}
+
+    setTimeout(async () => {
+      try {
+        await hangupCall(callControlId);
+      } catch {}
+
+      try {
+        await db.update(callLogs).set({
+          status: "completed",
+          endedAt: new Date(),
+          finalOutcome: reason,
+        }).where(eq(callLogs.providerCallId, callControlId));
+      } catch {}
+
+      cleanupCallConversation(callControlId);
+      activeCallBilling.delete(callControlId);
+    }, 3000);
+  }
+
+  return terminated;
+}

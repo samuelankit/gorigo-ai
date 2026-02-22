@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { users, sessions, orgMembers, apiKeys } from "@/shared/schema";
+import { users, sessions, orgMembers, apiKeys, orgs } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getSessionCookie, hashToken } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -239,4 +239,15 @@ export async function requireVerifiedAuth(): Promise<{ auth: AuthResult | null; 
     };
   }
   return { auth, error: null };
+}
+
+export async function requireOrgActive(orgId: number): Promise<{ allowed: boolean; error?: string; status?: number }> {
+  const [org] = await db.select({ status: orgs.status }).from(orgs).where(eq(orgs.id, orgId)).limit(1);
+  if (!org) {
+    return { allowed: false, error: "Organisation not found.", status: 404 };
+  }
+  if (org.status === "suspended" || org.status === "terminated") {
+    return { allowed: false, error: "Your organisation account is currently suspended. Please contact support.", status: 403 };
+  }
+  return { allowed: true };
 }

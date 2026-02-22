@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { agents, callLogs, phoneNumbers } from "@/shared/schema";
+import { agents, callLogs, orgs, phoneNumbers } from "@/shared/schema";
 import { resolveRate } from "@/lib/rate-resolver";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser, requireApiKeyScope, requireEmailVerified } from "@/lib/get-user";
@@ -98,6 +98,11 @@ export async function POST(request: NextRequest) {
         riskScore: fraudResult.riskScore,
         flags: fraudResult.flags,
       }, { status: 403 });
+    }
+
+    const [orgRecord] = await db.select().from(orgs).where(eq(orgs.id, auth.orgId)).limit(1);
+    if (!orgRecord || orgRecord.status === "suspended" || orgRecord.status === "terminated") {
+      return NextResponse.json({ error: "Your organisation account is currently suspended. Please contact support." }, { status: 403 });
     }
 
     const callCheck = await canStartCall(auth.orgId);

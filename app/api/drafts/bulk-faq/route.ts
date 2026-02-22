@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { agents, knowledgeChunks, drafts } from "@/shared/schema";
 import { eq, and, count } from "drizzle-orm";
-import { getAuthenticatedUser } from "@/lib/get-user";
+import { getAuthenticatedUser, requireOrgActive } from "@/lib/get-user";
 import { searchKnowledge, buildRAGContext } from "@/lib/rag";
 import { callLLM } from "@/lib/llm-router";
 import { AGENT_ANTI_INJECTION_PREAMBLE } from "@/lib/prompt-guard";
@@ -34,6 +34,11 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const orgActiveCheck = await requireOrgActive(auth.orgId);
+    if (!orgActiveCheck.allowed) {
+      return NextResponse.json({ error: orgActiveCheck.error }, { status: orgActiveCheck.status || 403 });
     }
 
     const body = await request.json();

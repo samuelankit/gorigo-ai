@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { agents, callLogs, knowledgeChunks } from "@/shared/schema";
 import { eq, and, sql, count } from "drizzle-orm";
 import { generateAgentResponse, streamAgentResponse } from "@/lib/ai";
-import { getAuthenticatedUser } from "@/lib/get-user";
+import { getAuthenticatedUser, requireOrgActive } from "@/lib/get-user";
 import { evaluateTransition, isValidState, STATE_ALLOWED_ACTIONS, type FSMState, type FSMConfig } from "@/lib/fsm";
 import { checkResponseCache, searchKnowledge, buildRAGContext, cacheResponse } from "@/lib/rag";
 import { aiLimiter } from "@/lib/rate-limit";
@@ -71,6 +71,11 @@ export async function POST(request: NextRequest) {
 
     if (!auth.orgId) {
       return NextResponse.json({ error: "No organization found" }, { status: 404 });
+    }
+
+    const orgActiveCheck = await requireOrgActive(auth.orgId);
+    if (!orgActiveCheck.allowed) {
+      return NextResponse.json({ error: orgActiveCheck.error }, { status: orgActiveCheck.status || 403 });
     }
 
     if (!auth.isDemo) {

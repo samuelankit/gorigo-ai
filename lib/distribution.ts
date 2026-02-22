@@ -164,6 +164,11 @@ export async function processDistribution(
     partnerRevenueShare: null as Awaited<ReturnType<typeof processPartnerRevenueShare>>,
   };
 
+  const [sourceOrg] = await db.select({ status: orgs.status }).from(orgs).where(eq(orgs.id, orgId)).limit(1);
+  if (sourceOrg && (sourceOrg.status === "suspended" || sourceOrg.status === "terminated")) {
+    return results;
+  }
+
   try {
     results.affiliateCommission = await processAffiliateCommission(
       orgId, deductionAmount, walletTransactionId, description
@@ -185,7 +190,13 @@ export async function processDistribution(
   return results;
 }
 
-async function retryDistributionEntry(entry: typeof failedDistributions.$inferSelect) {
+async function retryDistributionEntry(entry: typeof failedDistributions.$inferSelect): Promise<"processed" | "skipped_suspended"> {
+  const [sourceOrg] = await db.select({ status: orgs.status }).from(orgs).where(eq(orgs.id, entry.orgId)).limit(1);
+  if (sourceOrg && (sourceOrg.status === "suspended" || sourceOrg.status === "terminated")) {
+    console.log(`Skipping retry for org ${entry.orgId} (status: ${sourceOrg.status})`);
+    return "skipped_suspended";
+  }
+
   const isAffiliate = entry.description?.startsWith("affiliate_commission:");
   const isPartner = entry.description?.startsWith("partner_revenue_share:");
 
@@ -207,6 +218,7 @@ async function retryDistributionEntry(entry: typeof failedDistributions.$inferSe
     await processAffiliateCommission(entry.orgId, deductionAmt, entry.walletTransactionId ?? undefined, entry.description ?? undefined);
     await processPartnerRevenueShare(entry.orgId, deductionAmt, entry.description ?? undefined);
   }
+  return "processed";
 }
 
 export async function retryFailedDistributions() {
@@ -223,9 +235,15 @@ export async function retryFailedDistributions() {
 
   let resolved = 0;
   let deadLettered = 0;
+  let skipped = 0;
   for (const entry of pending) {
     try {
-      await retryDistributionEntry(entry);
+      const result = await retryDistributionEntry(entry);
+      if (result === "skipped_suspended") {
+        await db.update(failedDistributions).set({ status: "skipped_org_suspended", resolvedAt: new Date() }).where(eq(failedDistributions.id, entry.id));
+        skipped++;
+        continue;
+      }
       await db.update(failedDistributions).set({ status: "resolved", resolvedAt: new Date() }).where(eq(failedDistributions.id, entry.id));
       resolved++;
     } catch (err) {
@@ -247,7 +265,7 @@ export async function retryFailedDistributions() {
       }
     }
   }
-  return { total: pending.length, resolved, deadLettered };
+  return { total: pending.length, resolved, deadLettered, skipped };
 }
 
 async function notifyDistributionDeadLetter(

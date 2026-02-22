@@ -9,6 +9,7 @@ import { handleRouteError } from "@/lib/api-error";
 import { createLogger } from "@/lib/logger";
 import { getUncachableStripeClient, isStripeConnectorConfigured, getStripeSecretKey } from "@/lib/stripe-client";
 import { createNotification } from "@/lib/notifications";
+import { terminateAllCallsForOrg } from "@/lib/mid-call-billing";
 
 const logger = createLogger("StripeWebhook");
 
@@ -241,6 +242,11 @@ async function handleDisputeCreated(event: any) {
         updatedAt: new Date(),
       }).where(eq(orgs.id, orgId));
       logger.warn("Org suspended due to dispute", { orgId, disputeId: dispute.id });
+
+      const terminatedCalls = await terminateAllCallsForOrg(orgId, "dispute_suspension");
+      if (terminatedCalls > 0) {
+        logger.warn("Active calls terminated due to dispute suspension", { orgId, terminatedCalls });
+      }
     } catch (suspendErr) {
       logger.error("Failed to suspend org for dispute", suspendErr instanceof Error ? suspendErr : undefined);
     }

@@ -69,8 +69,9 @@ Key features include:
 - **Stripe**: Fully connected via Replit connector + STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET env secrets as backup. Wallet top-ups, webhooks, and withdrawals operational. Code: `lib/stripe-client.ts`, `lib/stripe-connect.ts`.
 - **Email (SendGrid)**: Fully connected. SENDGRID_API_KEY stored as secret. Sender verified (hello@gorigo.ai) with domain authentication. Code: `lib/email.ts`. Templates: verification, password reset, welcome, invitation.
 - **Telnyx (Primary Voice)**: Locked in as primary voice provider. SDK: `telnyx` npm package. Code: `lib/telnyx.ts`. Env vars: TELNYX_API_KEY, TELNYX_CONNECTION_ID, TELNYX_PHONE_NUMBER, TELNYX_PUBLIC_KEY. Features: outbound/inbound calls, call control (answer, hangup, speak, gather, transfer, bridge), number search/ordering, webhook validation. Cost: ~£0.007/min UK (58% cheaper than Twilio). Per-second billing. Own private IP network for lower latency. EU data centres for GDPR compliance. **Pending: API key from user.**
-- **Twilio (Fallback Voice)**: Fully connected with TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_PHONE_NUMBER (+44 1772 211802) stored as secrets. Voice calls, TwiML responses, signature validation, and sub-account management operational. Code: `lib/twilio.ts`. Cost: ~£0.017/min UK. Trial account — upgrade to paid for production use. Used as automatic fallback if Telnyx fails.
-- **Voice Provider Manager**: `lib/voice-provider.ts` manages provider selection. PRIMARY_VOICE_PROVIDER env var controls routing (default: telnyx). Automatic failover: if primary fails, routes to fallback. Outbound calls in `app/api/calls/outbound/route.ts` use provider-agnostic `makeOutboundCall()` from voice-provider.ts.
+- **Vonage (Fallback Voice)**: Replacement for Twilio as voice fallback. UK-based company (Ericsson, London HQ) — all voice data stays in UK. SDK: `@vonage/server-sdk` + `@vonage/voice` npm packages. Code: `lib/vonage.ts`. Webhook: `app/api/vonage/voice/route.ts`. Env vars: VONAGE_API_KEY, VONAGE_API_SECRET, VONAGE_APPLICATION_ID, VONAGE_PRIVATE_KEY, VONAGE_PHONE_NUMBER, VONAGE_SIGNATURE_SECRET. Features: outbound/inbound calls, NCCO-based call control (talk, input, connect, record, stream), TTS, DTMF, transfer, webhook JWT+SHA256 validation. Cost: ~£0.008/min UK (per-second billing). **Pending: API credentials from user.**
+- **Twilio (SMS/Sub-accounts only)**: Voice routing removed from Twilio. Still used for SMS features and sub-account management. Code: `lib/twilio.ts`. TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_PHONE_NUMBER (+44 1772 211802) stored as secrets. Trial account.
+- **Voice Provider Manager**: `lib/voice-provider.ts` manages provider selection. PRIMARY_VOICE_PROVIDER env var controls routing (default: telnyx). Providers: Telnyx (primary, £0.007/min) + Vonage (fallback, £0.008/min). Automatic failover: if primary fails, routes to fallback. Outbound calls in `app/api/calls/outbound/route.ts` use provider-agnostic `makeOutboundCall()` from voice-provider.ts. Both providers are UK/EU data-resident. Twilio dropped from voice pipeline.
 - **AI Services**: OpenAI, Anthropic, OpenRouter connected via Replit AI Integrations. RAG grounding enforced — no raw LLM queries without knowledge base context.
 - **Hydration Fix**: ROI calculator page uses deterministic formatters (formatGBP, formatPercent, formatNumber) instead of locale-dependent Intl APIs to prevent SSR/client mismatch.
 
@@ -80,7 +81,7 @@ Key features include:
 - **ORM**: Drizzle ORM.
 - **UI Components**: Shadcn/ui.
 - **Charting Library**: Recharts.
-- **Telephony**: Telnyx (primary, `telnyx` npm) + Twilio Programmable Voice (fallback).
+- **Telephony**: Telnyx (primary, `telnyx` npm) + Vonage (fallback, `@vonage/server-sdk` + `@vonage/voice` npm). Twilio retained for SMS/sub-accounts only.
 - **Payments**: Stripe.
 - **Email**: SendGrid (@sendgrid/mail).
 - **Mobile**: Expo SDK 54, expo-router, expo-speech, expo-av, expo-haptics.

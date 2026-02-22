@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
       ? `https://${request.headers.get("host")}`
       : `http://${request.headers.get("host")}`;
 
-    const webhookUrl = `${baseUrl}/api/twilio/voice`;
+    const webhookUrl = `${baseUrl}/api/telnyx/voice`;
 
     const hasRecordingConsent = await hasValidConsent(auth.orgId, sanitizedPhone, "recording");
 
@@ -193,9 +193,6 @@ export async function POST(request: NextRequest) {
         providerCallId: callResult.callId,
         status: "ringing",
       };
-      if (callResult.provider === "twilio") {
-        callLogUpdate.twilioCallSid = callResult.callId;
-      }
 
       await db
         .update(callLogs)

@@ -2,7 +2,7 @@ import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("VoiceProvider");
 
-export type VoiceProviderName = "telnyx" | "twilio";
+export type VoiceProviderName = "telnyx" | "vonage";
 
 export interface OutboundCallResult {
   provider: VoiceProviderName;
@@ -22,7 +22,7 @@ export interface VoiceProviderStatus {
 
 const PROVIDER_COSTS: Record<VoiceProviderName, number> = {
   telnyx: 0.007,
-  twilio: 0.017,
+  vonage: 0.008,
 };
 
 function getPrimaryProvider(): VoiceProviderName {
@@ -31,12 +31,12 @@ function getPrimaryProvider(): VoiceProviderName {
 
 function getFallbackProvider(): VoiceProviderName {
   const primary = getPrimaryProvider();
-  return primary === "telnyx" ? "twilio" : "telnyx";
+  return primary === "telnyx" ? "vonage" : "telnyx";
 }
 
 export function getProviderStatus(): VoiceProviderStatus[] {
   const { isTelnyxConfigured } = require("@/lib/telnyx");
-  const { isTwilioConfigured } = require("@/lib/twilio");
+  const { isVonageConfigured } = require("@/lib/vonage");
 
   const primary = getPrimaryProvider();
 
@@ -48,10 +48,10 @@ export function getProviderStatus(): VoiceProviderStatus[] {
       costPerMinuteGBP: PROVIDER_COSTS.telnyx,
     },
     {
-      name: "twilio",
-      configured: isTwilioConfigured(),
-      isPrimary: primary === "twilio",
-      costPerMinuteGBP: PROVIDER_COSTS.twilio,
+      name: "vonage",
+      configured: isVonageConfigured(),
+      isPrimary: primary === "vonage",
+      costPerMinuteGBP: PROVIDER_COSTS.vonage,
     },
   ];
 }
@@ -63,22 +63,22 @@ export function isAnyProviderConfigured(): boolean {
 
 export function getActiveProvider(): VoiceProviderName | null {
   const { isTelnyxConfigured } = require("@/lib/telnyx");
-  const { isTwilioConfigured } = require("@/lib/twilio");
+  const { isVonageConfigured } = require("@/lib/vonage");
 
   const primary = getPrimaryProvider();
   const fallback = getFallbackProvider();
 
   if (primary === "telnyx" && isTelnyxConfigured()) return "telnyx";
-  if (primary === "twilio" && isTwilioConfigured()) return "twilio";
+  if (primary === "vonage" && isVonageConfigured()) return "vonage";
   if (fallback === "telnyx" && isTelnyxConfigured()) return "telnyx";
-  if (fallback === "twilio" && isTwilioConfigured()) return "twilio";
+  if (fallback === "vonage" && isVonageConfigured()) return "vonage";
 
   return null;
 }
 
 export function getActiveCostPerMinute(): number {
   const provider = getActiveProvider();
-  if (!provider) return PROVIDER_COSTS.twilio;
+  if (!provider) return PROVIDER_COSTS.vonage;
   return PROVIDER_COSTS[provider];
 }
 
@@ -116,7 +116,7 @@ async function makeCallWithProvider(
   from: string,
   webhookUrl: string,
   options?: { record?: boolean },
-  orgId?: number
+  _orgId?: number
 ): Promise<OutboundCallResult> {
   if (provider === "telnyx") {
     const { makeOutboundCallTelnyx, isTelnyxConfigured, getTelnyxPhoneNumber } = await import("@/lib/telnyx");
@@ -124,7 +124,7 @@ async function makeCallWithProvider(
       throw new Error("Telnyx is not configured");
     }
 
-    const telnyxWebhookUrl = webhookUrl.replace("/api/twilio/voice", "/api/telnyx/voice");
+    const telnyxWebhookUrl = webhookUrl.replace("/api/vonage/voice", "/api/telnyx/voice").replace("/api/twilio/voice", "/api/telnyx/voice");
 
     const telnyxFrom = getTelnyxPhoneNumber() || from;
 
@@ -142,19 +142,26 @@ async function makeCallWithProvider(
     };
   }
 
-  if (provider === "twilio") {
-    const { makeOutboundCall: twilioCall, isTwilioConfigured } = await import("@/lib/twilio");
-    if (!isTwilioConfigured()) {
-      throw new Error("Twilio is not configured");
+  if (provider === "vonage") {
+    const { makeOutboundCallVonage, isVonageConfigured, getVonagePhoneNumber } = await import("@/lib/vonage");
+    if (!isVonageConfigured()) {
+      throw new Error("Vonage is not configured");
     }
 
-    const result = await twilioCall(to, from, webhookUrl, options, orgId);
+    const vonageWebhookUrl = webhookUrl.replace("/api/telnyx/voice", "/api/vonage/voice").replace("/api/twilio/voice", "/api/vonage/voice");
+
+    const vonageFrom = getVonagePhoneNumber() || from;
+
+    const result = await makeOutboundCallVonage(to, vonageFrom, vonageWebhookUrl, options);
     return {
-      provider: "twilio",
-      callId: result.sid,
+      provider: "vonage",
+      callId: result.callId,
       status: result.status,
       to: result.to,
       from: result.from,
+      metadata: {
+        conversationId: result.conversationId,
+      },
     };
   }
 

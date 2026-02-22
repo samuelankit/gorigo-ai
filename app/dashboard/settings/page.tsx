@@ -91,6 +91,11 @@ export default function SettingsPage() {
 
   const [complianceDisclosure, setComplianceDisclosure] = useState(true);
 
+  const [openaiKey, setOpenaiKey] = useState("");
+  const [openaiBaseUrl, setOpenaiBaseUrl] = useState("");
+  const [validatingOpenai, setValidatingOpenai] = useState(false);
+  const [openaiValid, setOpenaiValid] = useState<boolean | null>(null);
+
   const [businessHoursEnabled, setBusinessHoursEnabled] = useState(false);
   const [schedule, setSchedule] = useState<Schedule>(DEFAULT_SCHEDULE);
   const [closedDays, setClosedDays] = useState<Record<string, boolean>>({});

@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Bot, PhoneCall, Phone, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Server, Banknote, AudioLines } from "lucide-react";
+import { LayoutDashboard, Bot, PhoneCall, Phone, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Server, Banknote, AudioLines, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CustomIcon } from "@/components/ui/custom-icon";
 import type { ReactNode } from "react";
@@ -43,6 +43,7 @@ const manageMenuItems: MenuItemDef[] = [
   { title: "Compliance", url: "/dashboard/compliance", icon: Shield },
   { title: "Webhooks", url: "/dashboard/webhooks", icon: Webhook },
   { title: "Phone Numbers", url: "/dashboard/phone-numbers", icon: Phone },
+  { title: "Leads", url: "/dashboard/leads", icon: UserPlus },
 ];
 
 const partnerMenuItems: MenuItemDef[] = [

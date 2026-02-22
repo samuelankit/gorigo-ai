@@ -399,6 +399,17 @@ export async function refundToWallet(
     return { transaction: txn, newBalance: actualBalanceAfter };
   });
 
+  let spendingCapNote: string | null = null;
+  try {
+    const capCheck = await checkSpendingCap(orgId, 0);
+    if (capCheck.cap !== null && capCheck.cap > 0) {
+      const netSpendAfterRefund = roundMoney(Math.max(0, capCheck.currentSpend - roundedAmount));
+      if (netSpendAfterRefund < capCheck.currentSpend) {
+        spendingCapNote = `Refund reduces effective spend from £${capCheck.currentSpend.toFixed(2)} to £${netSpendAfterRefund.toFixed(2)} (cap: £${capCheck.cap.toFixed(2)})`;
+      }
+    }
+  } catch {}
+
   try {
     const { logAudit } = await import("@/lib/audit");
     await logAudit({
@@ -407,7 +418,14 @@ export async function refundToWallet(
       action: "wallet.refund",
       entityType: "wallet",
       entityId: orgId,
-      details: { amount: roundedAmount, description, referenceType, originalTransactionId, newBalance: result.newBalance },
+      details: {
+        amount: roundedAmount,
+        description,
+        referenceType,
+        originalTransactionId,
+        newBalance: result.newBalance,
+        ...(spendingCapNote ? { spendingCapNote } : {}),
+      },
     });
   } catch (auditErr) {
     console.error("Audit log error (refund):", auditErr);

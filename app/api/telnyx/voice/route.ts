@@ -308,5 +308,34 @@ async function handleCallHangup(
     logger.error("Auto-refund check failed", err instanceof Error ? err : undefined);
   });
 
+  (async () => {
+    try {
+      const [completedCall] = await db.select().from(callLogs).where(eq(callLogs.providerCallId, callControlId)).limit(1);
+      if (completedCall) {
+        const { calculateBasicQuality } = await import("@/lib/call-quality");
+        const sentimentScore = completedCall.sentimentScore ? parseFloat(String(completedCall.sentimentScore)) : null;
+        const callDuration = completedCall.startedAt && completedCall.endedAt
+          ? (new Date(completedCall.endedAt).getTime() - new Date(completedCall.startedAt).getTime()) / 1000
+          : durationSecs;
+        const quality = calculateBasicQuality(
+          completedCall.turnCount || 0,
+          10,
+          sentimentScore,
+          false,
+          completedCall.finalOutcome,
+          callDuration
+        );
+        await db.update(callLogs).set({
+          qualityScore: String(quality.overallScore),
+          qualityBreakdown: quality.breakdown,
+          csatPrediction: String(quality.csatPrediction),
+          resolutionStatus: quality.resolutionStatus,
+        }).where(eq(callLogs.id, completedCall.id));
+      }
+    } catch (qualityErr) {
+      logger.error("Call quality scoring failed", qualityErr instanceof Error ? qualityErr : undefined);
+    }
+  })();
+
   return NextResponse.json({ status: "ok" });
 }

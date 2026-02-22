@@ -31,10 +31,13 @@ export function calculateBasicQuality(
   else if (turnCount > maxTurns * 0.4) efficiency = 8;
 
   let resolution = 5;
-  if (finalOutcome === "completed_normally") resolution = 8;
-  else if (finalOutcome === "handoff_to_human") resolution = 6;
-  else if (finalOutcome === "max_turns_exceeded") resolution = 3;
-  else if (finalOutcome === "dial_failed") resolution = 2;
+  const outcome = (finalOutcome || "").toLowerCase();
+  if (outcome === "completed" || outcome === "completed_normally" || outcome === "normal_clearing") resolution = 8;
+  else if (outcome === "handoff_to_human" || outcome === "transfer") resolution = 6;
+  else if (outcome === "max_turns_exceeded") resolution = 3;
+  else if (outcome === "dial_failed" || outcome === "call_rejected") resolution = 2;
+  else if (outcome.includes("billing") || outcome === "billing_depleted" || outcome === "billing_insufficient") resolution = 4;
+  else if (outcome === "org_suspended" || outcome === "dispute_suspension") resolution = 3;
 
   let professionalism = 7;
   const sentimentAdjust = sentimentScore !== null ? Math.max(0, Math.min(3, (sentimentScore + 1) * 1.5)) : 1.5;
@@ -67,9 +70,10 @@ export function calculateBasicQuality(
   else csatPrediction = 1;
 
   let resolutionStatus: QualityResult["resolutionStatus"] = "unknown";
-  if (finalOutcome === "completed_normally") resolutionStatus = "resolved";
-  else if (handoffTriggered) resolutionStatus = "escalated";
-  else if (finalOutcome === "max_turns_exceeded") resolutionStatus = "unresolved";
+  if (outcome === "completed" || outcome === "completed_normally" || outcome === "normal_clearing") resolutionStatus = "resolved";
+  else if (handoffTriggered || outcome === "handoff_to_human" || outcome === "transfer") resolutionStatus = "escalated";
+  else if (outcome === "max_turns_exceeded") resolutionStatus = "unresolved";
+  else if (outcome.includes("billing") || outcome === "org_suspended" || outcome === "dispute_suspension") resolutionStatus = "unresolved";
 
   return { overallScore, breakdown, csatPrediction, resolutionStatus, improvements: [] };
 }

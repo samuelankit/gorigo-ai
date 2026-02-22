@@ -3,6 +3,7 @@ import { agents, callLogs } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { searchKnowledge, buildRAGContext } from "@/lib/rag";
 import { generateAgentResponse, type ConversationMessage } from "@/lib/ai";
+import { detectOptOut, handleOptOut } from "@/lib/compliance-engine";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("VoiceAI");
@@ -84,6 +85,31 @@ export async function generateVoiceResponse(
     negotiationEnabled: agent.negotiationEnabled ?? false,
     negotiationGuardrails: agent.negotiationGuardrails as any,
   };
+
+  const optOutCheck = detectOptOut(userInput);
+  if (optOutCheck.detected) {
+    logger.info("Opt-out detected during call", { providerCallId, orgId, keyword: optOutCheck.keyword });
+    const [callLog] = await db.select({ id: callLogs.id, callerNumber: callLogs.callerNumber }).from(callLogs).where(eq(callLogs.providerCallId, providerCallId)).limit(1);
+    if (callLog?.callerNumber) {
+      try {
+        await handleOptOut(orgId, callLog.callerNumber, callLog.id, `Opt-out detected in call: "${optOutCheck.keyword}"`);
+      } catch (optOutErr) {
+        logger.error("Failed to process opt-out", optOutErr instanceof Error ? optOutErr : undefined);
+      }
+    }
+
+    const optOutResponse = "I understand, and I respect your request. I've added your number to our Do Not Call list. You will not receive any further calls from us. Thank you for letting me know, and I apologise for any inconvenience. Goodbye.";
+    const existingTranscript = await getExistingTranscript(providerCallId);
+    const newTranscriptEntry = `\nCaller: ${userInput}\n${agent.name}: ${optOutResponse}`;
+    try {
+      await db.update(callLogs).set({
+        transcript: (existingTranscript || "") + newTranscriptEntry,
+        turnCount: Math.floor((history.length / 2) + 1),
+      }).where(eq(callLogs.providerCallId, providerCallId));
+    } catch {}
+
+    return { responseText: optOutResponse, turnCount: Math.floor(history.length / 2) + 1 };
+  }
 
   const hasFAQGrounding = agentConfig.faqEntries && agentConfig.faqEntries.length > 0;
   const hasBusinessContext = !!agentConfig.businessDescription;

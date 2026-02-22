@@ -201,7 +201,7 @@ async function retryDistributionEntry(entry: typeof failedDistributions.$inferSe
   const isPartner = entry.description?.startsWith("partner_revenue_share:");
 
   const deductionAmt = safeParseNumeric(entry.deductionAmount, 0);
-  if (deductionAmt <= 0) return;
+  if (deductionAmt <= 0) return "processed" as const;
 
   if (isAffiliate) {
     await processAffiliateCommission(
@@ -276,6 +276,19 @@ async function notifyDistributionDeadLetter(
   const { logAudit } = await import("@/lib/audit");
 
   const amount = safeParseNumeric(entry.deductionAmount, 0);
+  const distributionType = entry.description?.startsWith("affiliate_commission:")
+    ? "Affiliate Commission"
+    : entry.description?.startsWith("partner_revenue_share:")
+    ? "Partner Revenue Share"
+    : entry.description?.startsWith("multi_tier:")
+    ? "Multi-Tier Distribution"
+    : "Commission";
+
+  let orgName = `Org #${entry.orgId}`;
+  try {
+    const [org] = await db.select({ name: orgs.name }).from(orgs).where(eq(orgs.id, entry.orgId)).limit(1);
+    if (org?.name) orgName = `${org.name} (#${entry.orgId})`;
+  } catch {}
 
   try {
     const admins = await db
@@ -288,13 +301,16 @@ async function notifyDistributionDeadLetter(
       await createNotification({
         userId: admin.id,
         type: "system",
-        title: "Commission processing failed permanently",
-        message: `Distribution for org #${entry.orgId} (£${roundMoney(amount).toFixed(2)}) failed after ${entry.maxRetries ?? 3} retries. Last error: ${lastError}. Manual intervention required.`,
+        title: `${distributionType} failed permanently`,
+        message: `${distributionType} for ${orgName} (£${roundMoney(amount).toFixed(2)}) failed after ${entry.maxRetries ?? 3} retries. Error: ${lastError.substring(0, 200)}. Review in admin panel.`,
         actionUrl: "/admin/distribution",
         metadata: {
           failedDistributionId: entry.id,
           orgId: entry.orgId,
+          orgName,
           amount,
+          distributionType,
+          lastError,
           description: entry.description,
         },
       });
@@ -312,6 +328,8 @@ async function notifyDistributionDeadLetter(
       details: {
         failedDistributionId: entry.id,
         deductionAmount: amount,
+        distributionType,
+        orgName,
         retryCount: entry.maxRetries ?? 3,
         lastError,
         description: entry.description,
@@ -443,13 +461,16 @@ export function calculateWaterfall(
     resellerId = resellerPartner.id;
     partnerId = parentPartner.id;
 
-    if (safeParseNumeric(resellerPartner.revenueSharePercent, 0) > 0) {
+    const parentActive = parentPartner.status === "active";
+    const resellerActive = resellerPartner.status === "active";
+
+    if (resellerActive && parentActive && safeParseNumeric(resellerPartner.revenueSharePercent, 0) > 0) {
       resellerAmount = calculatePercentage(totalAmount, safeParseNumeric(resellerPartner.revenueSharePercent, 0));
       resellerAmount = Math.min(resellerAmount, remaining);
       remaining = safeSubtract(remaining, resellerAmount);
     }
 
-    if (safeParseNumeric(parentPartner.revenueSharePercent, 0) > 0) {
+    if (parentActive && safeParseNumeric(parentPartner.revenueSharePercent, 0) > 0) {
       partnerAmount = calculatePercentage(totalAmount, safeParseNumeric(parentPartner.revenueSharePercent, 0));
       partnerAmount = Math.min(partnerAmount, remaining);
       remaining = safeSubtract(remaining, partnerAmount);
@@ -457,7 +478,7 @@ export function calculateWaterfall(
   } else if (hierarchy.partner) {
     const partner = hierarchy.partner as any;
     partnerId = partner.id;
-    if (safeParseNumeric(partner.revenueSharePercent, 0) > 0) {
+    if (partner.status === "active" && safeParseNumeric(partner.revenueSharePercent, 0) > 0) {
       partnerAmount = calculatePercentage(totalAmount, safeParseNumeric(partner.revenueSharePercent, 0));
       partnerAmount = Math.min(partnerAmount, remaining);
       remaining = safeSubtract(remaining, partnerAmount);
@@ -511,6 +532,11 @@ export async function processMultiTierDistribution(
 ) {
   if (deductionAmount <= 0) return null;
 
+  const [sourceOrg] = await db.select({ status: orgs.status }).from(orgs).where(eq(orgs.id, orgId)).limit(1);
+  if (sourceOrg && (sourceOrg.status === "suspended" || sourceOrg.status === "terminated")) {
+    return null;
+  }
+
   try {
     const hierarchy = await getDistributionHierarchy(orgId);
     const waterfall = calculateWaterfall(deductionAmount, hierarchy);
@@ -521,17 +547,21 @@ export async function processMultiTierDistribution(
 
     if (waterfall.resellerAmount > 0 && waterfall.resellerId) {
       const resellerPartner = hierarchy?.reseller as any;
-      if (resellerPartner?.orgId) {
-        const refId = walletTransactionId
-          ? `reseller_${waterfall.resellerId}_txn_${walletTransactionId}`
-          : `reseller_${waterfall.resellerId}_org_${orgId}_${Date.now()}`;
-        await topUpWallet(
-          resellerPartner.orgId,
-          waterfall.resellerAmount,
-          description ?? `Reseller share: ${resellerPartner.revenueSharePercent}% of ${roundMoney(deductionAmount).toFixed(2)} from org #${orgId}`,
-          "reseller_revenue_share",
-          refId
-        );
+      if (resellerPartner?.orgId && resellerPartner?.status === "active") {
+        const parentPartner = hierarchy?.parentPartner as any;
+        const parentSuspended = parentPartner && (parentPartner.status === "suspended" || parentPartner.status === "terminated");
+        if (!parentSuspended) {
+          const refId = walletTransactionId
+            ? `reseller_${waterfall.resellerId}_txn_${walletTransactionId}`
+            : `reseller_${waterfall.resellerId}_org_${orgId}_${Date.now()}`;
+          await topUpWallet(
+            resellerPartner.orgId,
+            waterfall.resellerAmount,
+            description ?? `Reseller share: ${resellerPartner.revenueSharePercent}% of ${roundMoney(deductionAmount).toFixed(2)} from org #${orgId}`,
+            "reseller_revenue_share",
+            refId
+          );
+        }
       }
     }
 

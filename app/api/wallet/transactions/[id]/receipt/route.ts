@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { walletTransactions, orgs, users, orgMembers } from "@/shared/schema";
+import { walletTransactions, orgs, users, orgMembers, platformSettings } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
@@ -39,9 +39,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const amount = Math.abs(Number(tx.amount));
     const isTopUp = tx.type === "top_up";
-    const vatRate = 0.20;
-    const netAmount = Number((amount / (1 + vatRate)).toFixed(2));
-    const vatAmount = Number((amount - netAmount).toFixed(2));
+    const [vatSetting] = await db.select().from(platformSettings).where(eq(platformSettings.key, "vat_registered")).limit(1);
+    const isVatRegistered = vatSetting?.value === "true";
+    const [vatNumberSetting] = await db.select().from(platformSettings).where(eq(platformSettings.key, "vat_number")).limit(1);
+    const vatNumber = vatNumberSetting?.value || "";
+    const vatRate = isVatRegistered ? 0.20 : 0;
+    const netAmount = vatRate > 0 ? Number((amount / (1 + vatRate)).toFixed(2)) : amount;
+    const vatAmount = vatRate > 0 ? Number((amount - netAmount).toFixed(2)) : 0;
 
     const receiptDate = tx.createdAt ? new Date(tx.createdAt).toLocaleDateString("en-GB", {
       day: "2-digit", month: "long", year: "numeric",
@@ -134,8 +138,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
       ${isTopUp ? `
       <div class="totals">
+        ${isVatRegistered ? `
         <div class="total-row"><span>Subtotal (excl. VAT)</span><span>&pound;${netAmount.toFixed(2)}</span></div>
         <div class="total-row"><span>VAT @ 20%</span><span>&pound;${vatAmount.toFixed(2)}</span></div>
+        ` : ``}
         <div class="total-row grand"><span>Total Paid</span><span>&pound;${amount.toFixed(2)}</span></div>
       </div>
       ` : `
@@ -148,7 +154,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         <p><strong>International Business Exchange Limited</strong></p>
         <p>Company Number: 15985956</p>
         <p>Registered in England and Wales</p>
-        ${isTopUp ? `<p>VAT Registration: GB (pending registration)</p>` : ""}
+        ${isVatRegistered ? `<p>VAT Registration: ${vatNumber}</p>` : `<p>Not VAT registered</p>`}
         <p style="margin-top:8px;">GoRigo.ai - AI-Powered Call Centre Platform</p>
       </div>
     </div>

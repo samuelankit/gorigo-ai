@@ -72,8 +72,8 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 flex-wrap" data-testid="hero-talk-to-ai">
-              <a
-                href="tel:+440000000000"
+              <Link
+                href="/demo"
                 data-testid="link-hero-call-ai"
                 className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-2.5 shadow-sm hover-elevate dark:bg-white sm:hidden"
               >
@@ -83,9 +83,9 @@ export default function HomePage() {
                 </span>
                 <span className="flex flex-col items-start">
                   <span className="text-base font-semibold tracking-tight text-gray-900">Talk to Our AI</span>
-                  <span className="text-sm text-gray-500">Live demo call</span>
+                  <span className="text-sm text-gray-500">Try the live demo</span>
                 </span>
-              </a>
+              </Link>
               <WebCallButton />
               <span className="inline-flex items-center gap-2 text-sm font-medium text-[#E8604C] dark:text-[#F5A623]" data-testid="text-hero-availability">
                 <span className="relative flex h-2.5 w-2.5">

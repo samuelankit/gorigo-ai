@@ -5,6 +5,7 @@ import { searchKnowledge, buildRAGContext } from "@/lib/rag";
 import { generateAgentResponse, type ConversationMessage } from "@/lib/ai";
 import { detectOptOut, handleOptOut } from "@/lib/compliance-engine";
 import { createLogger } from "@/lib/logger";
+import { calculateLLMCost, logCostEvent } from "@/lib/unit-economics";
 
 const logger = createLogger("VoiceAI");
 
@@ -159,7 +160,10 @@ export async function generateVoiceResponse(
   const newTranscriptEntry = `\nCaller: ${userInput}\n${agent.name}: ${aiResponse.content}`;
   const updatedTranscript = existingTranscript ? existingTranscript + newTranscriptEntry : newTranscriptEntry;
 
+  let callLogId: number | undefined;
   try {
+    const [callLog] = await db.select({ id: callLogs.id }).from(callLogs).where(eq(callLogs.providerCallId, providerCallId)).limit(1);
+    callLogId = callLog?.id;
     await db.update(callLogs).set({
       transcript: updatedTranscript,
       turnCount,
@@ -167,6 +171,29 @@ export async function generateVoiceResponse(
     }).where(eq(callLogs.providerCallId, providerCallId));
   } catch (dbErr) {
     logger.error("Failed to update call transcript", dbErr instanceof Error ? dbErr : undefined);
+  }
+
+  try {
+    const inputTokens = aiResponse.inputTokens || 0;
+    const outputTokens = aiResponse.outputTokens || 0;
+    const llmCost = calculateLLMCost(aiResponse.model || "gpt-4o-mini", inputTokens, outputTokens);
+    await logCostEvent({
+      orgId,
+      callLogId,
+      category: "voice_ai",
+      provider: aiResponse.provider || "openai",
+      model: aiResponse.model || "gpt-4o-mini",
+      inputTokens,
+      outputTokens,
+      unitQuantity: inputTokens + outputTokens,
+      unitType: "tokens",
+      unitCost: llmCost.costGBP,
+      totalCost: llmCost.costGBP,
+      revenueCharged: llmCost.costGBP,
+      metadata: { providerCallId, turnCount, ragAvailable },
+    });
+  } catch (costErr) {
+    logger.error("Voice AI cost tracking error", costErr instanceof Error ? costErr : undefined);
   }
 
   const maxTurns = agent.maxTurns || 10;

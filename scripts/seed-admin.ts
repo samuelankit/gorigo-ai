@@ -2,13 +2,41 @@ import { db } from "@/lib/db";
 import { 
   users, orgs, orgMembers, agents, callLogs, usageRecords, 
   billingPlans, subscriptions, billingLedger, partners, 
-  partnerClients, platformSettings, auditLog 
+  partnerClients, platformSettings, auditLog, channelBillingRules 
 } from "@/shared/schema";
 import { hashPassword } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
 async function seed() {
   console.log("Starting admin seed...");
+
+  const existingRules = await db.select().from(channelBillingRules).limit(1);
+  if (existingRules.length === 0) {
+    await db.insert(channelBillingRules).values([
+      { channelType: "voice_call", talkTimeEquivalentMinutes: "1.0000", providerCostPerUnit: "0.0150", marginPercent: "50.00", isActive: true },
+      { channelType: "ai_drafts", talkTimeEquivalentMinutes: "0.5000", providerCostPerUnit: "0.0030", marginPercent: "60.00", isActive: true },
+      { channelType: "knowledge_embedding", talkTimeEquivalentMinutes: "0.2000", providerCostPerUnit: "0.0001", marginPercent: "70.00", isActive: true },
+      { channelType: "knowledge_query", talkTimeEquivalentMinutes: "0.1000", providerCostPerUnit: "0.0005", marginPercent: "65.00", isActive: true },
+      { channelType: "ai_chat", talkTimeEquivalentMinutes: "0.3000", providerCostPerUnit: "0.0020", marginPercent: "60.00", isActive: true },
+      { channelType: "ai_summary", talkTimeEquivalentMinutes: "0.2000", providerCostPerUnit: "0.0015", marginPercent: "60.00", isActive: true },
+      { channelType: "sms_outbound", talkTimeEquivalentMinutes: "0.1000", providerCostPerUnit: "0.0100", marginPercent: "55.00", isActive: true },
+      { channelType: "email_outbound", talkTimeEquivalentMinutes: "0.0500", providerCostPerUnit: "0.0020", marginPercent: "70.00", isActive: true },
+      { channelType: "rigo_assistant", talkTimeEquivalentMinutes: "0.1000", providerCostPerUnit: "0.0050", marginPercent: "50.00", isActive: true },
+      { channelType: "transcription", talkTimeEquivalentMinutes: "1.0000", providerCostPerUnit: "0.0060", marginPercent: "60.00", isActive: true },
+    ]);
+    console.log("Channel billing rules seeded (10 channel types)");
+  } else {
+    console.log("Channel billing rules already exist, skipping.");
+  }
+
+  const existingVatSetting = await db.select().from(platformSettings).where(eq(platformSettings.key, "vat_registered")).limit(1);
+  if (existingVatSetting.length === 0) {
+    await db.insert(platformSettings).values([
+      { key: "vat_registered", value: "false", description: "Whether International Business Exchange Limited is VAT registered" },
+      { key: "vat_number", value: "", description: "VAT registration number (e.g. GB 123456789)" },
+    ]);
+    console.log("VAT platform settings seeded (not registered)");
+  }
 
   const existingAdmin = await db.select().from(users).where(eq(users.email, "admin@gorigo.ai")).limit(1);
   if (existingAdmin.length > 0) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { twilioPhoneNumbers } from "@/shared/schema";
+import { phoneNumbers } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
@@ -20,15 +20,15 @@ export async function GET(request: NextRequest) {
 
     const numbers = await db
       .select({
-        id: twilioPhoneNumbers.id,
-        phoneNumber: twilioPhoneNumbers.phoneNumber,
-        friendlyName: twilioPhoneNumbers.friendlyName,
-        capabilities: twilioPhoneNumbers.capabilities,
-        isActive: twilioPhoneNumbers.isActive,
-        createdAt: twilioPhoneNumbers.createdAt,
+        id: phoneNumbers.id,
+        phoneNumber: phoneNumbers.phoneNumber,
+        friendlyName: phoneNumbers.friendlyName,
+        capabilities: phoneNumbers.capabilities,
+        isActive: phoneNumbers.isActive,
+        createdAt: phoneNumbers.createdAt,
       })
-      .from(twilioPhoneNumbers)
-      .where(eq(twilioPhoneNumbers.orgId, auth.orgId));
+      .from(phoneNumbers)
+      .where(eq(phoneNumbers.orgId, auth.orgId));
 
     return NextResponse.json({ phoneNumbers: numbers });
   } catch (error) {

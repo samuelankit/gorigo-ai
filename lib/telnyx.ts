@@ -252,6 +252,72 @@ export async function searchAvailableNumbers(options: {
   }
 }
 
+export async function sendSMS(
+  to: string,
+  body: string,
+  from?: string,
+  options?: { messagingProfileId?: string; webhookUrl?: string }
+): Promise<{ messageId: string; status: string; to: string; from: string }> {
+  const config = getTelnyxConfig();
+  if (!config) throw new Error("Telnyx is not configured. Please set TELNYX_API_KEY.");
+
+  const fromNumber = from || config.phoneNumber;
+  if (!fromNumber) throw new Error("No 'from' number provided and TELNYX_PHONE_NUMBER not set.");
+
+  const params: Record<string, unknown> = {
+    from: fromNumber,
+    to,
+    text: body,
+    type: "SMS",
+  };
+
+  if (options?.messagingProfileId) {
+    params.messaging_profile_id = options.messagingProfileId;
+  }
+  if (options?.webhookUrl) {
+    params.webhook_url = options.webhookUrl;
+  }
+
+  const response = await (config.client as any).messages.create(params);
+  const data = response.data as Record<string, unknown>;
+
+  return {
+    messageId: (data.id as string) || "",
+    status: ((data.to as Array<Record<string, unknown>>)?.[0]?.status as string) || "queued",
+    to,
+    from: fromNumber,
+  };
+}
+
+export async function sendMMS(
+  to: string,
+  body: string,
+  mediaUrls: string[],
+  from?: string
+): Promise<{ messageId: string; status: string; to: string; from: string }> {
+  const config = getTelnyxConfig();
+  if (!config) throw new Error("Telnyx is not configured.");
+
+  const fromNumber = from || config.phoneNumber;
+  if (!fromNumber) throw new Error("No 'from' number provided and TELNYX_PHONE_NUMBER not set.");
+
+  const response = await (config.client as any).messages.create({
+    from: fromNumber,
+    to,
+    text: body,
+    type: "MMS",
+    media_urls: mediaUrls,
+  });
+  const data = response.data as Record<string, unknown>;
+
+  return {
+    messageId: (data.id as string) || "",
+    status: ((data.to as Array<Record<string, unknown>>)?.[0]?.status as string) || "queued",
+    to,
+    from: fromNumber,
+  };
+}
+
 export async function orderPhoneNumber(phoneNumber: string, connectionId?: string): Promise<{
   orderId: string;
   phoneNumber: string;

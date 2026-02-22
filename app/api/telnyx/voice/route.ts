@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { agents, callLogs, orgs, twilioPhoneNumbers } from "@/shared/schema";
+import { agents, callLogs, orgs, phoneNumbers } from "@/shared/schema";
 import { resolveRate, type UsageCategory } from "@/lib/rate-resolver";
 import { eq, and } from "drizzle-orm";
 import { validateTelnyxWebhook, speakText, gatherInput, hangupCall, answerCall } from "@/lib/telnyx";
@@ -9,6 +9,7 @@ import { recordConsent } from "@/lib/dnc";
 import { getCountryVoiceConfig, getDisclosureText } from "@/lib/compliance-engine";
 import { callLimiter } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
+import { initCallConversation, generateVoiceResponse, cleanupCallConversation } from "@/lib/voice-ai";
 
 const logger = createLogger("TelnyxVoice");
 
@@ -67,10 +68,26 @@ export async function POST(request: NextRequest) {
       return await handleCallHangup(callControlId, payload);
     }
 
-    if (eventType === "call.speak.ended" || eventType === "call.gather.ended") {
+    if (eventType === "call.speak.ended") {
+      await gatherInput(callControlId, {
+        maxDigits: 10,
+        timeoutMillis: 15000,
+        interDigitTimeoutMillis: 5000,
+      });
+      return NextResponse.json({ status: "ok" });
+    }
+
+    if (eventType === "call.gather.ended") {
       const digits = payload.digits as string || "";
       const speech = (payload.speech as Record<string, unknown>)?.result as string || "";
-      logger.info(`Gather/speak ended`, { callControlId, digits, speech });
+      const userInput = speech || digits;
+
+      if (userInput) {
+        return await handleUserInput(callControlId, userInput);
+      }
+
+      await speakText(callControlId, "I didn't catch that. Could you please repeat?");
+      return NextResponse.json({ status: "ok" });
     }
 
     return NextResponse.json({ status: "ok" });
@@ -90,8 +107,8 @@ async function handleIncomingCall(
 
     const [phoneRecord] = await db
       .select()
-      .from(twilioPhoneNumbers)
-      .where(and(eq(twilioPhoneNumbers.phoneNumber, calledNumber), eq(twilioPhoneNumbers.isActive, true)))
+      .from(phoneNumbers)
+      .where(and(eq(phoneNumbers.phoneNumber, calledNumber), eq(phoneNumbers.isActive, true)))
       .limit(1);
 
     if (!phoneRecord || !phoneRecord.orgId) {
@@ -153,6 +170,8 @@ async function handleIncomingCall(
         billedRatePerMinute: String(capturedRate.ratePerMinute),
       });
 
+    initCallConversation(callControlId, activeAgent.id);
+
     const phoneCountryCode = phoneRecord.countryCode;
     const agentLanguage = activeAgent.language || "en-GB";
 
@@ -191,6 +210,46 @@ async function handleIncomingCall(
   }
 }
 
+async function handleUserInput(
+  callControlId: string,
+  userInput: string
+): Promise<NextResponse> {
+  try {
+    const [callLog] = await db
+      .select()
+      .from(callLogs)
+      .where(eq(callLogs.providerCallId, callControlId))
+      .limit(1);
+
+    if (!callLog) {
+      await speakText(callControlId, "I'm sorry, I'm having trouble with this call. Please try calling again.");
+      await hangupCall(callControlId);
+      return NextResponse.json({ status: "ok" });
+    }
+
+    const [agent] = await db.select().from(agents).where(eq(agents.id, callLog.agentId)).limit(1);
+
+    const { responseText } = await generateVoiceResponse(
+      callControlId,
+      userInput,
+      callLog.orgId
+    );
+
+    await speakText(callControlId, responseText, {
+      voice: agent?.voiceName || "female",
+      language: agent?.language || "en-GB",
+    });
+
+    return NextResponse.json({ status: "ok" });
+  } catch (err) {
+    logger.error("Failed to handle Telnyx user input", err instanceof Error ? err : undefined);
+    try {
+      await speakText(callControlId, "I'm sorry, I encountered an issue. Could you please repeat that?");
+    } catch {}
+    return NextResponse.json({ status: "ok" });
+  }
+}
+
 async function handleCallAnswered(
   callControlId: string,
   _callerNumber: string,
@@ -208,6 +267,8 @@ async function handleCallHangup(
   const durationSecs = payload.duration_secs as number || 0;
 
   logger.info("Call hangup", { callControlId, hangupCause, durationSecs });
+
+  cleanupCallConversation(callControlId);
 
   try {
     await db

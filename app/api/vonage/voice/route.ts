@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { agents, callLogs, orgs, twilioPhoneNumbers } from "@/shared/schema";
+import { agents, callLogs, orgs, phoneNumbers } from "@/shared/schema";
 import { resolveRate, type UsageCategory } from "@/lib/rate-resolver";
 import { eq, and } from "drizzle-orm";
 import { validateVonageWebhook, talkAction, inputAction, buildNCCO } from "@/lib/vonage";
@@ -9,6 +9,7 @@ import { recordConsent } from "@/lib/dnc";
 import { getCountryVoiceConfig, getDisclosureText } from "@/lib/compliance-engine";
 import { callLimiter } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
+import { initCallConversation, generateVoiceResponse, cleanupCallConversation } from "@/lib/voice-ai";
 
 const logger = createLogger("VonageVoice");
 
@@ -94,8 +95,8 @@ async function handleIncomingCall(
     for (const variant of searchVariants) {
       const [result] = await db
         .select()
-        .from(twilioPhoneNumbers)
-        .where(and(eq(twilioPhoneNumbers.phoneNumber, variant), eq(twilioPhoneNumbers.isActive, true)))
+        .from(phoneNumbers)
+        .where(and(eq(phoneNumbers.phoneNumber, variant), eq(phoneNumbers.isActive, true)))
         .limit(1);
       if (result) {
         phoneRecord = result;
@@ -160,6 +161,8 @@ async function handleIncomingCall(
         billedRatePerMinute: String(capturedRate.ratePerMinute),
       });
 
+    initCallConversation(callUuid, activeAgent.id);
+
     const phoneCountryCode = phoneRecord.countryCode;
     const agentLanguage = activeAgent.language || "en-GB";
 
@@ -213,6 +216,17 @@ async function handleInput(
 
   logger.info("Vonage input received", { callUuid, dtmfDigits, speechText });
 
+  if (!userInput) {
+    return NextResponse.json(buildNCCO([
+      talkAction("I didn't catch that. Could you please repeat?", { voiceName: "Amy", language: "en-GB", bargeIn: true }),
+      inputAction({
+        type: ["speech", "dtmf"],
+        speech: { language: "en-GB", endOnSilence: 2 },
+        dtmf: { maxDigits: 10, timeOut: 10 },
+      }),
+    ]));
+  }
+
   try {
     const [callLog] = await db
       .select()
@@ -220,20 +234,28 @@ async function handleInput(
       .where(eq(callLogs.providerCallId, callUuid))
       .limit(1);
 
-    if (callLog) {
-      await db
-        .update(callLogs)
-        .set({ turnCount: (callLog.turnCount || 0) + 1 })
-        .where(eq(callLogs.id, callLog.id));
+    if (!callLog) {
+      return NextResponse.json(buildNCCO([
+        talkAction("I'm sorry, I'm having trouble with this call. Please try calling again."),
+      ]));
     }
 
-    const responseText = "Thank you for your input. How else can I help you?";
+    const [agent] = await db.select().from(agents).where(eq(agents.id, callLog.agentId)).limit(1);
+
+    const { responseText } = await generateVoiceResponse(
+      callUuid,
+      userInput,
+      callLog.orgId
+    );
+
+    const voiceName = agent?.voiceName || "Amy";
+    const language = agent?.language || "en-GB";
 
     return NextResponse.json(buildNCCO([
-      talkAction(responseText, { voiceName: "Amy", language: "en-GB", bargeIn: true }),
+      talkAction(responseText, { voiceName, language, bargeIn: true }),
       inputAction({
         type: ["speech", "dtmf"],
-        speech: { language: "en-GB", endOnSilence: 2 },
+        speech: { language, endOnSilence: 2 },
         dtmf: { maxDigits: 10, timeOut: 10 },
       }),
     ]));
@@ -268,6 +290,8 @@ async function handleCallCompleted(
   const endTime = body.end_time as string || "";
 
   logger.info("Vonage call completed", { callUuid, duration });
+
+  cleanupCallConversation(callUuid);
 
   try {
     await db

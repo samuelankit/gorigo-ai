@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { twilioPhoneNumbers, orgs } from "@/shared/schema";
+import { phoneNumbers, orgs } from "@/shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { logAudit } from "@/lib/audit";
@@ -18,20 +18,20 @@ export async function GET(request: NextRequest) {
 
     const results = await db
       .select({
-        id: twilioPhoneNumbers.id,
-        phoneNumber: twilioPhoneNumbers.phoneNumber,
-        friendlyName: twilioPhoneNumbers.friendlyName,
-        orgId: twilioPhoneNumbers.orgId,
-        twilioSid: twilioPhoneNumbers.twilioSid,
-        capabilities: twilioPhoneNumbers.capabilities,
-        isActive: twilioPhoneNumbers.isActive,
-        assignedAt: twilioPhoneNumbers.assignedAt,
-        createdAt: twilioPhoneNumbers.createdAt,
+        id: phoneNumbers.id,
+        phoneNumber: phoneNumbers.phoneNumber,
+        friendlyName: phoneNumbers.friendlyName,
+        orgId: phoneNumbers.orgId,
+        twilioSid: phoneNumbers.twilioSid,
+        capabilities: phoneNumbers.capabilities,
+        isActive: phoneNumbers.isActive,
+        assignedAt: phoneNumbers.assignedAt,
+        createdAt: phoneNumbers.createdAt,
         orgName: orgs.name,
       })
-      .from(twilioPhoneNumbers)
-      .leftJoin(orgs, eq(twilioPhoneNumbers.orgId, orgs.id))
-      .orderBy(desc(twilioPhoneNumbers.createdAt));
+      .from(phoneNumbers)
+      .leftJoin(orgs, eq(phoneNumbers.orgId, orgs.id))
+      .orderBy(desc(phoneNumbers.createdAt));
 
     return NextResponse.json({ phoneNumbers: results });
   } catch (error) {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     const [phoneNumber] = await db
-      .insert(twilioPhoneNumbers)
+      .insert(phoneNumbers)
       .values({
         phoneNumber: body.phoneNumber,
         friendlyName: body.friendlyName ?? null,
@@ -124,9 +124,9 @@ export async function PUT(request: NextRequest) {
     }
 
     const [updated] = await db
-      .update(twilioPhoneNumbers)
+      .update(phoneNumbers)
       .set(updateData)
-      .where(eq(twilioPhoneNumbers.id, body.id))
+      .where(eq(phoneNumbers.id, body.id))
       .returning();
 
     if (!updated) {
@@ -169,9 +169,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     const [deactivated] = await db
-      .update(twilioPhoneNumbers)
+      .update(phoneNumbers)
       .set({ isActive: false })
-      .where(eq(twilioPhoneNumbers.id, id))
+      .where(eq(phoneNumbers.id, id))
       .returning();
 
     if (!deactivated) {

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         turnCount: callLogs.turnCount,
         sentimentScore: callLogs.sentimentScore,
         sentimentLabel: callLogs.sentimentLabel,
-        twilioCallSid: callLogs.twilioCallSid,
+        providerCallSid: callLogs.providerCallSid,
         handoffTriggered: callLogs.handoffTriggered,
         agentName: agents.name,
         agentType: agents.agentType,

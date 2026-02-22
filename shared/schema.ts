@@ -156,7 +156,7 @@ export const callLogs = pgTable("call_logs", {
   endedAt: timestamp("ended_at"),
   recordingUrl: text("recording_url"),
   recordingSid: text("recording_sid"),
-  twilioCallSid: text("twilio_call_sid"),
+  providerCallSid: text("provider_call_sid"),
   callCost: numeric("call_cost", { precision: 12, scale: 2 }),
   connectedAt: timestamp("connected_at"),
   sentimentScore: numeric("sentiment_score", { precision: 5, scale: 2 }),
@@ -186,7 +186,7 @@ export const callLogs = pgTable("call_logs", {
   complianceOptOutAt: timestamp("compliance_opt_out_at"),
   countrySurcharge: numeric("country_surcharge", { precision: 10, scale: 4 }),
   totalBilledRate: numeric("total_billed_rate", { precision: 12, scale: 6 }),
-  twilioCallCost: numeric("twilio_call_cost", { precision: 10, scale: 4 }),
+  providerCallCost: numeric("provider_call_cost", { precision: 10, scale: 4 }),
   llmTokensUsed: integer("llm_tokens_used"),
   sttCost: numeric("stt_cost", { precision: 10, scale: 4 }),
   ttsCost: numeric("tts_cost", { precision: 10, scale: 4 }),
@@ -812,12 +812,12 @@ export const insertAffiliatePayoutSchema = createInsertSchema(affiliatePayouts).
 export type InsertAffiliatePayout = z.infer<typeof insertAffiliatePayoutSchema>;
 export type AffiliatePayout = typeof affiliatePayouts.$inferSelect;
 
-export const twilioPhoneNumbers = pgTable("twilio_phone_numbers", {
+export const phoneNumbers = pgTable("phone_numbers", {
   id: serial("id").primaryKey(),
   phoneNumber: text("phone_number").unique().notNull(),
   friendlyName: text("friendly_name"),
   orgId: integer("org_id").references(() => orgs.id),
-  twilioSid: text("twilio_sid"),
+  providerSid: text("provider_sid"),
   capabilities: jsonb("capabilities").default({ voice: true, sms: false }),
   isActive: boolean("is_active").default(true),
   assignedAt: timestamp("assigned_at"),
@@ -885,9 +885,9 @@ export const insertFailedDistributionSchema = createInsertSchema(failedDistribut
 export type InsertFailedDistribution = z.infer<typeof insertFailedDistributionSchema>;
 export type FailedDistribution = typeof failedDistributions.$inferSelect;
 
-export const insertTwilioPhoneNumberSchema = createInsertSchema(twilioPhoneNumbers).omit({ id: true, createdAt: true });
-export type InsertTwilioPhoneNumber = z.infer<typeof insertTwilioPhoneNumberSchema>;
-export type TwilioPhoneNumber = typeof twilioPhoneNumbers.$inferSelect;
+export const insertPhoneNumberSchema = createInsertSchema(phoneNumbers).omit({ id: true, createdAt: true });
+export type InsertPhoneNumber = z.infer<typeof insertPhoneNumberSchema>;
+export type PhoneNumber = typeof phoneNumbers.$inferSelect;
 
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: serial("id").primaryKey(),
@@ -1521,14 +1521,14 @@ export const countryHolidays = pgTable("country_holidays", {
 ]);
 
 // ═══════════════════════════════════════════════════
-// INTERNATIONAL CALLING — TWILIO SUB-ACCOUNTS
+// INTERNATIONAL CALLING — PROVIDER SUB-ACCOUNTS
 // ═══════════════════════════════════════════════════
 
-export const twilioSubAccounts = pgTable("twilio_sub_accounts", {
+export const providerSubAccounts = pgTable("provider_sub_accounts", {
   id: serial("id").primaryKey(),
   orgId: integer("org_id").unique().notNull().references(() => orgs.id),
-  twilioAccountSid: text("twilio_account_sid").unique(),
-  twilioAuthToken: text("twilio_auth_token"),
+  providerAccountId: text("provider_account_id").unique(),
+  providerAuthToken: text("provider_auth_token"),
   friendlyName: text("friendly_name"),
   status: text("status").notNull().default("pending"),
   concurrentCallLimit: integer("concurrent_call_limit").default(10),
@@ -1539,7 +1539,7 @@ export const twilioSubAccounts = pgTable("twilio_sub_accounts", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  index("idx_twilio_sub_org").on(table.orgId),
+  index("idx_provider_sub_org").on(table.orgId),
 ]);
 
 // ═══════════════════════════════════════════════════
@@ -1598,9 +1598,9 @@ export const insertCountryHolidaySchema = createInsertSchema(countryHolidays).om
 export type InsertCountryHoliday = z.infer<typeof insertCountryHolidaySchema>;
 export type CountryHoliday = typeof countryHolidays.$inferSelect;
 
-export const insertTwilioSubAccountSchema = createInsertSchema(twilioSubAccounts).omit({ id: true, createdAt: true, updatedAt: true });
-export type InsertTwilioSubAccount = z.infer<typeof insertTwilioSubAccountSchema>;
-export type TwilioSubAccount = typeof twilioSubAccounts.$inferSelect;
+export const insertProviderSubAccountSchema = createInsertSchema(providerSubAccounts).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertProviderSubAccount = z.infer<typeof insertProviderSubAccountSchema>;
+export type ProviderSubAccount = typeof providerSubAccounts.$inferSelect;
 
 export const insertCampaignContactSchema = createInsertSchema(campaignContacts).omit({ id: true, createdAt: true });
 export type InsertCampaignContact = z.infer<typeof insertCampaignContactSchema>;

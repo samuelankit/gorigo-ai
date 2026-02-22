@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { agents, callLogs, twilioPhoneNumbers } from "@/shared/schema";
+import { agents, callLogs, phoneNumbers } from "@/shared/schema";
 import { resolveRate } from "@/lib/rate-resolver";
 import { eq, and } from "drizzle-orm";
 import { getAuthenticatedUser, requireApiKeyScope, requireEmailVerified } from "@/lib/get-user";
@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
 
     const [orgPhone] = await db
       .select()
-      .from(twilioPhoneNumbers)
-      .where(and(eq(twilioPhoneNumbers.orgId, auth.orgId), eq(twilioPhoneNumbers.isActive, true)))
+      .from(phoneNumbers)
+      .where(and(eq(phoneNumbers.orgId, auth.orgId), eq(phoneNumbers.isActive, true)))
       .limit(1);
 
     if (!orgPhone) {

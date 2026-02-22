@@ -45,50 +45,43 @@ export async function GET(request: NextRequest) {
       .groupBy(sql`TO_CHAR(${callLogs.createdAt}, 'YYYY-MM')`)
       .orderBy(sql`TO_CHAR(${callLogs.createdAt}, 'YYYY-MM')`);
 
-    const partnerPerformance = await db
-      .select({
-        partnerId: partners.id,
-        partnerName: partners.name,
-        tier: partners.tier,
-        status: partners.status,
-        clientCount: count(partnerClients.id),
-      })
-      .from(partners)
-      .leftJoin(partnerClients, eq(partners.id, partnerClients.partnerId))
-      .groupBy(partners.id, partners.name, partners.tier, partners.status)
-      .orderBy(desc(sql`count(${partnerClients.id})`));
-
-    const partnerRevenueData = [];
-    for (const p of partnerPerformance) {
-      const clientOrgs = await db
-        .select({ orgId: partnerClients.orgId })
-        .from(partnerClients)
-        .where(eq(partnerClients.partnerId, p.partnerId));
-
-      let totalRevenue = 0;
-      let totalCalls = 0;
-      if (clientOrgs.length > 0) {
-        const orgIds = clientOrgs.map((c) => c.orgId);
-        const [revResult] = await db
-          .select({ total: sum(billingLedger.cost) })
-          .from(billingLedger)
-          .where(sql`${billingLedger.orgId} IN (${sql.join(orgIds.map(id => sql`${id}`), sql`, `)})`);
-        totalRevenue = Number(revResult.total ?? 0);
-
-        const [callResult] = await db
-          .select({ total: count() })
-          .from(callLogs)
-          .where(sql`${callLogs.orgId} IN (${sql.join(orgIds.map(id => sql`${id}`), sql`, `)})`);
-        totalCalls = Number(callResult.total ?? 0);
-      }
-
-      partnerRevenueData.push({
-        ...p,
-        clientCount: Number(p.clientCount),
-        totalRevenue: Math.round(totalRevenue * 100) / 100,
-        totalCalls,
-      });
-    }
+    const partnerRevenueData = await db.execute(sql`
+      SELECT
+        p.id AS "partnerId",
+        p.name AS "partnerName",
+        p.tier,
+        p.status,
+        COALESCE(client_counts.cnt, 0)::int AS "clientCount",
+        COALESCE(rev.total, 0)::numeric AS "totalRevenue",
+        COALESCE(calls.total, 0)::int AS "totalCalls"
+      FROM partners p
+      LEFT JOIN (
+        SELECT partner_id, COUNT(*)::int AS cnt
+        FROM partner_clients
+        GROUP BY partner_id
+      ) client_counts ON client_counts.partner_id = p.id
+      LEFT JOIN (
+        SELECT pc.partner_id, SUM(bl.cost) AS total
+        FROM partner_clients pc
+        JOIN billing_ledger bl ON bl.org_id = pc.org_id
+        GROUP BY pc.partner_id
+      ) rev ON rev.partner_id = p.id
+      LEFT JOIN (
+        SELECT pc.partner_id, COUNT(*)::int AS total
+        FROM partner_clients pc
+        JOIN call_logs cl ON cl.org_id = pc.org_id
+        GROUP BY pc.partner_id
+      ) calls ON calls.partner_id = p.id
+      ORDER BY client_counts.cnt DESC NULLS LAST
+    `).then(res => res.rows.map((r: any) => ({
+      partnerId: r.partnerId,
+      partnerName: r.partnerName,
+      tier: r.tier,
+      status: r.status,
+      clientCount: Number(r.clientCount),
+      totalRevenue: Math.round(Number(r.totalRevenue ?? 0) * 100) / 100,
+      totalCalls: Number(r.totalCalls),
+    })));
 
     const clientGrowth = await db
       .select({

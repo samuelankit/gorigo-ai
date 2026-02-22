@@ -47,6 +47,13 @@ Key features include:
 - **Public Case Studies**: SEO-optimised pages with ROI statistics, structured data, industry badges, testimonials, and CTA sections.
 - **Rigo Jarvis Features**: Free voice assistant with personal productivity tools: reminders, notes, follow-ups, daily briefings, conversation memory, after-call AI summaries.
 - **Transcript Archive**: SuperAdmin searchable transcript archive using PostgreSQL full-text search.
+- **Low Balance Alerts**: Configurable wallet threshold alerts with SendGrid email notifications (6-hour cooldown), amber/red warning tiers.
+- **Invoice/Receipt Generation**: Downloadable HTML receipts for wallet transactions with VAT breakdown, company details (International Business Exchange Limited, 15985956).
+- **Public Status Page**: Real-time system health at /status with auto-refresh, monitoring Database, API, AI, Payments, Email, and Telephony services.
+- **Self-Service Phone Numbers**: Browse and purchase Telnyx phone numbers from /dashboard/phone-numbers with wallet deduction.
+- **Interactive Demo**: Public demo at /demo with pre-configured AI responses (no signup required, no LLM queries — compliance safe).
+- **Multi-Currency Support**: GBP/EUR/USD conversion API with indicative exchange rates at /api/wallet/currency.
+- **GDPR Data Export**: Full GDPR Article 15 compliant data export from Settings, including account, agents, calls, knowledge, billing, and data rights.
 
 ## External Dependencies
 - **AI Services**: OpenAI, Anthropic (via Replit AI Integrations).

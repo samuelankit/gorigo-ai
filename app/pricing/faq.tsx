@@ -14,6 +14,11 @@ const faqs = [
       "Talk time covers all platform usage — not just calls. This includes AI agent calls, content generation (drafts, scripts, FAQs), Rigo assistant queries, and knowledge base processing. There are no monthly seat fees, no subscriptions, and no hidden charges. Your usage is tracked in real time through your dashboard.",
   },
   {
+    question: "What exactly does 'talk-time' cover?",
+    answer:
+      "Talk-time is our unified billing metric that covers all platform compute usage, not just phone calls. This includes AI agent voice calls, AI-powered content generation (drafts, scripts, FAQ creation), knowledge base document processing and indexing, Rigo assistant interactions, and any other AI compute tasks on the platform. Think of it as a single, transparent measure of all the work the platform does for you — billed per minute of compute time with no hidden fees.",
+  },
+  {
     question: "Can I switch between packages?",
     answer:
       "Yes, you can upgrade or change packages at any time. Our team will help you migrate seamlessly between deployment options as your needs evolve.",

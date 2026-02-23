@@ -211,7 +211,7 @@ const termsData = [
   {
     icon: Clock,
     title: "Service Level",
-    description: "GoRigo commits to 99.5% platform uptime. Partners must communicate SLAs accurately to their clients and must not promise uptime guarantees beyond what GoRigo provides.",
+    description: "GoRigo commits to 99.9% platform uptime. Partners must communicate SLAs accurately to their clients and must not promise uptime guarantees beyond what GoRigo provides.",
     color: "text-[#2DD4A8]",
   },
   {

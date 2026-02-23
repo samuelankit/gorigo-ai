@@ -196,12 +196,13 @@ export default function ContactPage() {
             <Card data-testid="card-contact-phone">
               <CardContent className="p-6">
                 <Phone className="h-5 w-5 text-[#2DD4A8] mb-4" />
-                <h3 className="font-medium text-base mb-2">Call Our AI Demo Line</h3>
-                <p className="text-sm text-foreground" data-testid="text-phone-number">
-                  +44 (0) 000 000 0000
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Experience GoRigo&apos;s AI agent firsthand. Available 24/7.
+                <h3 className="font-medium text-base mb-2">AI Demo Line</h3>
+                <Badge variant="secondary" data-testid="badge-demo-line-status">
+                  Coming Soon
+                </Badge>
+                <p className="text-xs text-muted-foreground mt-2" data-testid="text-phone-number">
+                  Our dedicated AI demo line is being set up. In the meantime, book a live demo
+                  or try the online chat to experience GoRigo&apos;s AI agent firsthand.
                 </p>
               </CardContent>
             </Card>

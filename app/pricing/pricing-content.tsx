@@ -71,17 +71,21 @@ const comparisonFeatures = [
   { name: "DNC Management", managed: true, selfHosted: true, custom: true },
   { name: "API Access", managed: true, selfHosted: true, custom: true },
   { name: "Custom Integrations", managed: true, selfHosted: true, custom: true },
-  { name: "Dedicated Account Manager", managed: true, selfHosted: true, custom: true },
+  { name: "Dedicated Account Manager", managed: true, selfHosted: false, custom: true },
   { name: "SLA Guarantee", managed: true, selfHosted: true, custom: true },
   { name: "White Label", managed: false, selfHosted: true, custom: true },
   { name: "On-Premise Deployment", managed: false, selfHosted: true, custom: true },
-  { name: "Mobile App", managed: true, selfHosted: false, custom: false },
+  { name: "Source Code Access", managed: false, selfHosted: true, custom: true },
+  { name: "Mobile App", managed: "Included", selfHosted: "Available", custom: "Available" },
   { name: "Custom Billing Rates", managed: false, selfHosted: false, custom: true },
   { name: "Bespoke Feature Selection", managed: false, selfHosted: false, custom: true },
   { name: "Dedicated Onboarding", managed: false, selfHosted: false, custom: true },
 ];
 
-function FeatureIcon({ included }: { included: boolean }) {
+function FeatureIcon({ included }: { included: boolean | string }) {
+  if (typeof included === "string") {
+    return <span className="text-xs text-muted-foreground text-center block">{included}</span>;
+  }
   if (included) {
     return <CheckCircle2 className="h-4 w-4 text-foreground/60 mx-auto" />;
   }

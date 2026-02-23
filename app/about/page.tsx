@@ -72,6 +72,8 @@ const partners = [
     description:
       "White-label GoRigo under your own brand. Resell AI call centre capabilities to your clients with full platform access and dedicated support.",
     color: "text-[#2DD4A8]",
+    href: "/partners/whitelabel",
+    linkLabel: "Explore Whitelabel",
   },
   {
     icon: Users,
@@ -79,6 +81,8 @@ const partners = [
     description:
       "Sign up directly and deploy your own AI agents. Ideal for businesses that want to manage their call centre operations in-house.",
     color: "text-[#2DD4A8]",
+    href: "/register",
+    linkLabel: "Get Started",
   },
   {
     icon: Handshake,
@@ -86,6 +90,8 @@ const partners = [
     description:
       "Refer businesses to GoRigo and earn commissions on every customer you bring to the platform. Simple tracking, transparent payouts.",
     color: "text-[#2DD4A8]",
+    href: "/partners/affiliate",
+    linkLabel: "Become an Affiliate",
   },
 ];
 
@@ -134,11 +140,21 @@ export default function AboutPage() {
             data-testid="text-mission"
           >
             GoRigo was built to solve a real problem &mdash; traditional call
-            centres are expensive, hard to scale, and deliver inconsistent
-            experiences. We believe AI can do better. GoRigo gives businesses of
-            any size the power to deploy intelligent voice agents that handle
-            calls with human-like understanding, 24/7, at a fraction of the
-            cost.
+            centres cost businesses thousands per month in staffing, training,
+            and infrastructure, yet still deliver inconsistent customer
+            experiences with limited availability. We believe AI can do better.
+            GoRigo eliminates these barriers by giving businesses of any size
+            the power to deploy intelligent voice agents that handle inbound
+            and outbound calls with human-like understanding &mdash; 24/7,
+            across multiple languages, at a fraction of the cost. No more
+            missed calls, no more scaling headaches, no more compliance gaps.
+          </p>
+          <p
+            className="text-sm font-medium tracking-widest uppercase text-muted-foreground mt-10"
+            data-testid="text-social-proof"
+          >
+            Trusted by businesses across 15+ industries &mdash; from healthcare
+            and finance to retail, recruitment, and professional services
           </p>
         </div>
       </section>
@@ -226,14 +242,24 @@ export default function AboutPage() {
                 key={partner.title}
                 data-testid={`card-partner-${partner.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <CardContent className="p-8">
+                <CardContent className="p-8 flex flex-col h-full">
                   <partner.icon className={`h-5 w-5 ${partner.color} mb-5`} />
                   <h3 className="font-medium text-lg mb-2">
                     {partner.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">
                     {partner.description}
                   </p>
+                  <Link href={partner.href}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      data-testid={`link-partner-${partner.title.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      {partner.linkLabel}
+                      <ArrowRight className="ml-2 h-3 w-3" />
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}

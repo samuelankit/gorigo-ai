@@ -21,8 +21,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.png", sizes: "64x64", type: "image/png" },
+    ],
     apple: "/logo.png",
   },
   openGraph: {
@@ -31,12 +35,24 @@ export const metadata: Metadata = {
       "AI-powered call centre platform. Inbound receptionist, outbound sales, and seamless human handoff. Pay only for talk time.",
     siteName: "GoRigo",
     type: "website",
+    images: [
+      {
+        url: "https://gorigo.ai/logo.png",
+        width: 512,
+        height: 512,
+        alt: "GoRigo AI Call Centre Platform",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "GoRigo - AI Call Centre Platform",
     description:
       "AI-powered call centre platform. Pay only for talk time. UK compliant.",
+    images: ["https://gorigo.ai/logo.png"],
+  },
+  other: {
+    "theme-color": "#2196F3",
   },
   robots: {
     index: true,
@@ -64,6 +80,8 @@ export default function RootLayout({
           <VerificationMeta />
         </Suspense>
         <link rel="canonical" href="https://gorigo.ai" />
+        <link rel="alternate" hrefLang="en-GB" href="https://gorigo.ai" />
+        <link rel="alternate" hrefLang="x-default" href="https://gorigo.ai" />
         <meta name="geo.region" content="GB-LAN" />
         <meta name="geo.placename" content="Preston" />
         <meta name="author" content="International Business Exchange Limited" />

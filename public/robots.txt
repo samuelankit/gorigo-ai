@@ -36,6 +36,8 @@ Allow: /policies/terms
 Allow: /policies/cookies
 Allow: /policies/acceptable-use
 Allow: /sitemap
+Allow: /demo
+Allow: /status
 
 Disallow: /admin
 Disallow: /admin/*

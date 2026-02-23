@@ -193,8 +193,8 @@ const roadmapItems = [
   },
   {
     title: "ICO Registration",
-    description: "Registration with the UK Information Commissioner's Office as a data processor.",
-    timeline: "In Progress",
+    description: "Registered with the UK Information Commissioner's Office as a data processor.",
+    timeline: "Registered",
     icon: Building2,
   },
   {

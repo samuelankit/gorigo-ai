@@ -23,6 +23,8 @@ const staticPages: { path: string; priority: number; changefreq: string }[] = [
   { path: "/ai-transparency", priority: 0.7, changefreq: "monthly" },
   { path: "/trust", priority: 0.7, changefreq: "monthly" },
   { path: "/sla", priority: 0.6, changefreq: "monthly" },
+  { path: "/demo", priority: 0.7, changefreq: "monthly" },
+  { path: "/status", priority: 0.5, changefreq: "daily" },
 
   { path: "/partners", priority: 0.8, changefreq: "monthly" },
   { path: "/partners/whitelabel", priority: 0.7, changefreq: "monthly" },

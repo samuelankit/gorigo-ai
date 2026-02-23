@@ -1,0 +1,21 @@
+{
+  "name": "GoRigo - AI Call Centre Platform",
+  "short_name": "GoRigo",
+  "description": "AI-powered call centre platform. Deploy intelligent voice agents that handle inbound and outbound calls 24/7.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2196F3",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

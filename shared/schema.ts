@@ -195,7 +195,7 @@ export const callLogs = pgTable("call_logs", {
   index("idx_call_logs_org_agent").on(table.orgId, table.agentId),
   index("idx_call_logs_org_created").on(table.orgId, table.createdAt),
   index("idx_call_logs_started_at").on(table.startedAt),
-  index("idx_call_logs_transcript_fts").using("gin", sql`to_tsvector('english', coalesce(${table.transcript}, ''))`),
+  index("idx_call_logs_transcript_fts").using("gin", sql`to_tsvector('english'::regconfig, coalesce(${table.transcript}, ''::text))`),
 ]);
 
 export const usageRecords = pgTable("usage_records", {

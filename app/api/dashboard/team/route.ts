@@ -13,33 +13,29 @@ export async function GET(request: NextRequest) {
     const auth = await getAuthenticatedUser();
     if (!auth || !auth.orgId) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-    const [org] = await db.select().from(orgs).where(eq(orgs.id, auth.orgId)).limit(1);
+    const orgId = auth.orgId;
+    const [org] = await db.select().from(orgs).where(eq(orgs.id, orgId)).limit(1);
     if (!org) return NextResponse.json({ error: "Organization not found" }, { status: 404 });
 
     if (!["team", "custom"].includes(org.deploymentModel || "")) {
       return NextResponse.json({ error: "Team dashboard requires Team or Custom deployment model" }, { status: 403 });
     }
 
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
     const members = await db
       .select({
         userId: orgMembers.userId,
-        orgRole: orgMembers.orgRole,
-        joinedAt: orgMembers.joinedAt,
+        role: orgMembers.role,
         email: users.email,
         businessName: users.businessName,
       })
       .from(orgMembers)
       .innerJoin(users, eq(orgMembers.userId, users.id))
-      .where(eq(orgMembers.orgId, auth.orgId));
+      .where(eq(orgMembers.orgId, orgId));
 
     const depts = await db
       .select()
       .from(departments)
-      .where(and(eq(departments.orgId, auth.orgId), eq(departments.status, "active")));
+      .where(and(eq(departments.orgId, orgId), eq(departments.status, "active")));
 
     const deptMemberCounts = await db
       .select({
@@ -48,7 +44,7 @@ export async function GET(request: NextRequest) {
       })
       .from(departmentMembers)
       .innerJoin(departments, eq(departmentMembers.departmentId, departments.id))
-      .where(eq(departments.orgId, auth.orgId))
+      .where(eq(departments.orgId, orgId))
       .groupBy(departmentMembers.departmentId);
 
     const sharedAgentsList = await db
@@ -61,7 +57,7 @@ export async function GET(request: NextRequest) {
       })
       .from(agents)
       .where(and(
-        eq(agents.orgId, auth.orgId),
+        eq(agents.orgId, orgId),
         eq(agents.visibility, "shared")
       ));
 
@@ -79,7 +75,7 @@ export async function GET(request: NextRequest) {
       })
       .from(teamActivityLog)
       .innerJoin(users, eq(teamActivityLog.userId, users.id))
-      .where(eq(teamActivityLog.orgId, auth.orgId))
+      .where(eq(teamActivityLog.orgId, orgId))
       .orderBy(desc(teamActivityLog.createdAt))
       .limit(50);
 
@@ -110,9 +106,8 @@ export async function GET(request: NextRequest) {
         userId: m.userId,
         email: m.email,
         name: m.businessName || m.email,
-        role: m.orgRole,
-        roleLabel: m.orgRole === "VIEWER" ? "Board Member" : m.orgRole,
-        joinedAt: m.joinedAt,
+        role: m.role,
+        roleLabel: m.role === "VIEWER" ? "Board Member" : m.role,
       })),
       departments: departmentStats,
       sharedAgents: sharedAgentsList,

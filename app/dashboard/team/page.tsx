@@ -24,7 +24,6 @@ interface TeamDashboardData {
     name: string;
     role: string;
     roleLabel: string;
-    joinedAt: string;
   }>;
   departments: Array<{
     id: number;
@@ -207,13 +206,12 @@ export default function TeamDashboardPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Joined</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.members.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    <TableCell colSpan={2} className="text-center text-muted-foreground">
                       No team members yet
                     </TableCell>
                   </TableRow>
@@ -230,9 +228,6 @@ export default function TeamDashboardPage() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(member.role)}`}>
                           {member.roleLabel}
                         </span>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("en-GB") : "—"}
                       </TableCell>
                     </TableRow>
                   ))

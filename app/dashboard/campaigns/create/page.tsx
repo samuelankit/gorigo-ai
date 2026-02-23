@@ -46,6 +46,7 @@ import {
   Calendar,
   Info,
   XCircle,
+  RotateCcw,
 } from "lucide-react";
 import { SiGoogle, SiHubspot } from "react-icons/si";
 import { CsvUpload } from "@/components/dashboard/data-sources/csv-upload";
@@ -156,6 +157,58 @@ export default function CampaignCreatePage() {
   const [isApproving, setIsApproving] = useState(false);
   const [duplicateCount, setDuplicateCount] = useState(0);
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+  const [validatingState, setValidatingState] = useState(!!saved?.campaignId);
+  const [staleStateCleared, setStaleStateCleared] = useState(false);
+
+  const resetWizard = useCallback(() => {
+    clearWizardState();
+    setStep(1);
+    setCampaignName("");
+    setCampaignId(null);
+    setContactSource(null);
+    setShowSourceModal(false);
+    setSelectedAgentId("");
+    setCallingHoursStart("09:00");
+    setCallingHoursEnd("18:00");
+    setCallingDays(["mon", "tue", "wed", "thu", "fri"]);
+    setConsentConfirmed(false);
+    setEstimate(null);
+    setDuplicateCount(0);
+    setShowDuplicateWarning(false);
+    setStaleStateCleared(false);
+  }, []);
+
+  useEffect(() => {
+    if (!saved?.campaignId) {
+      setValidatingState(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        await apiRequest(`/api/campaigns/${saved.campaignId}`);
+        if (!cancelled) {
+          setValidatingState(false);
+        }
+      } catch {
+        if (!cancelled) {
+          clearWizardState();
+          setStep(1);
+          setCampaignName("");
+          setCampaignId(null);
+          setContactSource(null);
+          setSelectedAgentId("");
+          setCallingHoursStart("09:00");
+          setCallingHoursEnd("18:00");
+          setCallingDays(["mon", "tue", "wed", "thu", "fri"]);
+          setStaleStateCleared(true);
+          setValidatingState(false);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const state = {
@@ -348,6 +401,18 @@ export default function CampaignCreatePage() {
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-lg font-semibold" data-testid="text-wizard-title">New Campaign</h1>
+            {!validatingState && (campaignId || campaignName) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetWizard}
+                className="ml-auto"
+                data-testid="button-start-over"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Start Over
+              </Button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {stepLabels.map((label, i) => (
@@ -376,7 +441,23 @@ export default function CampaignCreatePage() {
 
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-2xl mx-auto space-y-4">
-          {step === 1 && (
+          {validatingState && (
+            <div className="flex items-center justify-center py-12 gap-3" data-testid="loading-validating-state">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Resuming your draft campaign...</span>
+            </div>
+          )}
+
+          {staleStateCleared && (
+            <Alert data-testid="alert-stale-state">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Your previous draft campaign is no longer available. A fresh wizard has been started.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {!validatingState && step === 1 && (
             <>
               <div className="space-y-3">
                 <Label htmlFor="campaign-name" className="text-sm font-medium">Campaign Name</Label>
@@ -567,7 +648,7 @@ export default function CampaignCreatePage() {
             </>
           )}
 
-          {step === 2 && (
+          {!validatingState && step === 2 && (
             <>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Select Agent</Label>
@@ -730,7 +811,7 @@ export default function CampaignCreatePage() {
             </>
           )}
 
-          {step === 3 && (
+          {!validatingState && step === 3 && (
             <>
               <div className="space-y-3" data-testid="section-review-summary">
                 <Label className="text-sm font-medium text-muted-foreground">Campaign Summary</Label>
@@ -813,7 +894,7 @@ export default function CampaignCreatePage() {
 
       <div className="sticky bottom-0 z-30 bg-background border-t p-3">
         <div className="max-w-2xl mx-auto flex gap-3">
-          {step > 1 && (
+          {!validatingState && step > 1 && (
             <Button
               variant="outline"
               className="flex-1"
@@ -826,7 +907,7 @@ export default function CampaignCreatePage() {
             </Button>
           )}
 
-          {step === 1 && (
+          {!validatingState && step === 1 && (
             <div className="flex items-center justify-between flex-1 gap-3">
               <span className="text-sm text-muted-foreground" data-testid="text-step1-count">
                 {contacts.length} contact{contacts.length !== 1 ? "s" : ""} selected
@@ -842,7 +923,7 @@ export default function CampaignCreatePage() {
             </div>
           )}
 
-          {step === 2 && (
+          {!validatingState && step === 2 && (
             <Button
               className="flex-1"
               onClick={() => goToStep(3)}
@@ -854,7 +935,7 @@ export default function CampaignCreatePage() {
             </Button>
           )}
 
-          {step === 3 && (
+          {!validatingState && step === 3 && (
             <Button
               className="flex-1 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
               onClick={handleApprove}

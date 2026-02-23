@@ -317,7 +317,7 @@ export default function CampaignDetailPage() {
   const isActiveCampaign = (status?: string) =>
     status === "running" || status === "active" || status === "approved";
 
-  const { data: campaign, isLoading: loading } = useQuery<CampaignDetail>({
+  const { data: campaign, isLoading: loading, isError: campaignError, error: campaignErrorObj } = useQuery<CampaignDetail>({
     queryKey: ["/api/campaigns", campaignId],
     queryFn: () => apiRequest(`/api/campaigns/${campaignId}`, { method: "GET" }),
     refetchInterval: (query) => {
@@ -326,6 +326,10 @@ export default function CampaignDetailPage() {
       return 30000;
     },
     enabled: !!campaignId,
+    retry: (failureCount, error) => {
+      if ((error as any)?.status === 404) return false;
+      return failureCount < 1;
+    },
   });
 
   const { data: progress, isLoading: progressLoading } = useQuery<ProgressData>({
@@ -534,7 +538,8 @@ export default function CampaignDetailPage() {
     );
   }
 
-  if (!campaign) {
+  if (campaignError || !campaign) {
+    const is404 = (campaignErrorObj as any)?.status === 404;
     return (
       <div className="space-y-6">
         <Link href="/dashboard/campaigns">
@@ -546,7 +551,16 @@ export default function CampaignDetailPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <AlertTriangle className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground" data-testid="text-campaign-not-found">Campaign not found</p>
+            <p className="text-lg font-medium text-foreground mb-1" data-testid="text-campaign-not-found">
+              {is404 ? "Campaign not found" : campaignError ? "Failed to load campaign" : "Campaign not found"}
+            </p>
+            <p className="text-sm text-muted-foreground" data-testid="text-campaign-error-detail">
+              {is404
+                ? "This campaign may have been deleted or you don't have access to it."
+                : campaignError
+                  ? (campaignErrorObj?.message || "An unexpected error occurred. Please try again.")
+                  : "The campaign could not be loaded."}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -650,7 +664,7 @@ export default function CampaignDetailPage() {
         </div>
         <div className="hidden lg:flex items-center gap-2 flex-wrap">
           {(campaign.status === "completed" || campaign.status === "cancelled") && (
-            <Button variant="outline" onClick={handleExport} data-testid="button-export-results">
+            <Button variant="outline" onClick={handleExport} disabled={campaign.totalContacts === 0} data-testid="button-export-results">
               <Download className="h-4 w-4 mr-2" />
               Download Results
             </Button>
@@ -1207,7 +1221,7 @@ export default function CampaignDetailPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t p-3 lg:hidden z-50" data-testid="mobile-action-bar">
         <div className="flex items-center gap-2 max-w-lg mx-auto">
           {(campaign.status === "completed" || campaign.status === "cancelled") && (
-            <Button className="flex-1" variant="outline" onClick={handleExport} data-testid="button-export-results-mobile">
+            <Button className="flex-1" variant="outline" onClick={handleExport} disabled={campaign.totalContacts === 0} data-testid="button-export-results-mobile">
               <Share2 className="h-4 w-4 mr-2" />
               Share Results
             </Button>

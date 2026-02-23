@@ -1555,7 +1555,7 @@ export const providerSubAccounts = pgTable("provider_sub_accounts", {
 
 export const campaignContacts = pgTable("campaign_contacts", {
   id: serial("id").primaryKey(),
-  campaignId: integer("campaign_id").notNull().references(() => campaigns.id),
+  campaignId: integer("campaign_id").references(() => campaigns.id),
   orgId: integer("org_id").notNull().references(() => orgs.id),
   phoneNumber: text("phone_number").notNull(),
   phoneNumberE164: text("phone_number_e164").notNull(),

@@ -73,8 +73,19 @@ Key features include:
 ### Data Connector Architecture
 - **Tables**: `data_connectors` (encrypted credentials, OAuth tokens, connector config), `connector_interest` (Coming Soon tracking)
 - **Extended tables**: `campaigns` (+sourceConnectorId, estimatedCost, lockedAmount, costCapReached, consentConfirmed), `wallets` (+lockedBalance)
+- **campaignContacts.campaignId**: Nullable — allows standalone contact imports from Data Sources page without a campaign
 - **Encryption**: `lib/encryption.ts` — AES-256-GCM with HKDF key derivation from SESSION_SECRET
+- **Phone normalisation**: `lib/phone-normalize.ts` — E.164 normalisation with UK default, column auto-detection
 - **OAuth helpers**: `lib/oauth-google.ts`, `lib/oauth-hubspot.ts` — HMAC-signed state parameters, automatic token refresh, graceful revocation handling
+- **API Routes** (Next.js App Router, all in `app/api/`):
+  - `app/api/connectors/` — CRUD, test, interest tracking
+  - `app/api/oauth/google/` and `app/api/oauth/hubspot/` — OAuth authorize/callback flows
+  - `app/api/connectors/[id]/google-sheets/` — list, preview, import spreadsheets
+  - `app/api/connectors/[id]/hubspot/` — contacts list, import
+  - `app/api/connectors/csv/` — upload (parse/preview), confirm (create contacts)
+  - `app/api/connectors/manual-entry/` — add contacts manually
+  - `app/api/connectors/companies-house/` — search, add to campaign
+  - `app/api/campaigns/[id]/` — estimate, approve, pause, resume, extend, progress, export
 - **Connector types**: csv, companies_house, google_sheets, hubspot, manual, google_places, yelp, apollo, salesforce, pipedrive, airtable
 - **Auth types**: none, api_key, oauth
 - **Connector statuses**: active, inactive, error, expired, disconnected, pending_auth

@@ -165,7 +165,7 @@ export const callLogs = pgTable("call_logs", {
   billedDeploymentModel: text("billed_deployment_model"),
   billedRatePerMinute: numeric("billed_rate_per_minute", { precision: 12, scale: 6 }),
   campaignId: integer("campaign_id").references(() => campaigns.id),
-  campaignContactId: integer("campaign_contact_id"),
+  campaignContactId: integer("campaign_contact_id").references(() => campaignContacts.id),
   destinationCountry: text("destination_country"),
   languageUsed: text("language_used"),
   translatedTranscript: text("translated_transcript"),

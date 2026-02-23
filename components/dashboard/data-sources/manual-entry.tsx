@@ -25,7 +25,7 @@ interface ManualEntryResult {
 }
 
 interface ManualEntryProps {
-  campaignId: number;
+  campaignId?: number;
   orgId?: number;
   onComplete?: (result: ManualEntryResult) => void;
   onCancel?: () => void;
@@ -76,7 +76,7 @@ export function ManualEntry({ campaignId, orgId = 1, onComplete, onCancel }: Man
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          campaignId,
+          ...(campaignId ? { campaignId } : {}),
           orgId,
           defaultCountry,
           skipDuplicates,

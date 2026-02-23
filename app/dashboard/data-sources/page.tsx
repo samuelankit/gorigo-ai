@@ -866,7 +866,6 @@ export default function DataSourcesPage() {
       >
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="dialog-csv-upload">
           <CsvUpload
-            campaignId={0}
             onComplete={() => {
               setActiveModal(null);
               queryClient.invalidateQueries({ queryKey: ["/api/connectors"] });
@@ -882,7 +881,6 @@ export default function DataSourcesPage() {
       >
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="dialog-manual-entry">
           <ManualEntry
-            campaignId={0}
             onComplete={() => {
               setActiveModal(null);
               queryClient.invalidateQueries({ queryKey: ["/api/connectors"] });

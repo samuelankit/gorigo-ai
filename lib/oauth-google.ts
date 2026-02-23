@@ -14,7 +14,11 @@ const SCOPES = [
 ].join(" ");
 
 function getHmacKey(): string {
-  return process.env.SESSION_SECRET || "fallback-key";
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error("SESSION_SECRET is required for OAuth state signing");
+  }
+  return secret;
 }
 
 function getClientId(): string {

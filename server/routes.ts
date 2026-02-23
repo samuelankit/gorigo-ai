@@ -1183,7 +1183,7 @@ export async function registerRoutes(
   app.post("/api/connectors/csv/confirm", async (req, res) => {
     try {
       const confirmSchema = z.object({
-        campaignId: z.number(),
+        campaignId: z.number().optional(),
         orgId: z.number().default(1),
         headers: z.array(z.string()),
         rows: z.array(z.array(z.string())),
@@ -1201,8 +1201,10 @@ export async function registerRoutes(
 
       const parsed = confirmSchema.parse(req.body);
 
-      const campaign = await storage.getCampaign(parsed.campaignId);
-      if (!campaign) return res.status(404).json({ error: "Campaign not found" });
+      if (parsed.campaignId) {
+        const campaign = await storage.getCampaign(parsed.campaignId);
+        if (!campaign) return res.status(404).json({ error: "Campaign not found" });
+      }
 
       const { headers, rows, columnMapping, defaultCountry } = parsed;
       const phoneIdx = columnMapping.phone ? headers.indexOf(columnMapping.phone) : -1;
@@ -1286,7 +1288,7 @@ export async function registerRoutes(
         }
 
         contacts.push({
-          campaignId: parsed.campaignId,
+          ...(parsed.campaignId ? { campaignId: parsed.campaignId } : {}),
           orgId: parsed.orgId,
           phoneNumber: phoneVal,
           phoneNumberE164: normalized.e164,
@@ -1317,7 +1319,7 @@ export async function registerRoutes(
   app.post("/api/connectors/manual-entry", async (req, res) => {
     try {
       const manualSchema = z.object({
-        campaignId: z.number(),
+        campaignId: z.number().optional(),
         orgId: z.number().default(1),
         defaultCountry: z.string().default("GB"),
         skipDuplicates: z.boolean().default(true),
@@ -1331,8 +1333,10 @@ export async function registerRoutes(
 
       const parsed = manualSchema.parse(req.body);
 
-      const campaign = await storage.getCampaign(parsed.campaignId);
-      if (!campaign) return res.status(404).json({ error: "Campaign not found" });
+      if (parsed.campaignId) {
+        const campaign = await storage.getCampaign(parsed.campaignId);
+        if (!campaign) return res.status(404).json({ error: "Campaign not found" });
+      }
 
       let existingPhones = new Set<string>();
       if (parsed.skipDuplicates) {
@@ -1383,7 +1387,7 @@ export async function registerRoutes(
         if (c.company) metadata.company = c.company;
 
         validContacts.push({
-          campaignId: parsed.campaignId,
+          ...(parsed.campaignId ? { campaignId: parsed.campaignId } : {}),
           orgId: parsed.orgId,
           phoneNumber: c.phone,
           phoneNumberE164: normalized.e164,

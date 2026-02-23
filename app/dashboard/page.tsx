@@ -164,12 +164,13 @@ const demoChartData = [
 export default function DashboardPage() {
   const router = useRouter();
 
-  const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("gorigo_onboarding_dismissed") === "true";
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("gorigo_onboarding_dismissed") === "true") {
+      setOnboardingDismissed(true);
     }
-    return false;
-  });
+  }, []);
 
   const { data: meData } = useQuery<{ user?: { businessName?: string; isDemo?: boolean }; org?: { deploymentModel?: string } }>({
     queryKey: ["/api/auth/me"],

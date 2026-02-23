@@ -42,7 +42,7 @@ interface ConfirmResult {
 }
 
 interface CsvUploadProps {
-  campaignId: number;
+  campaignId?: number;
   orgId?: number;
   onComplete?: (result: ConfirmResult) => void;
   onCancel?: () => void;
@@ -117,7 +117,7 @@ export function CsvUpload({ campaignId, orgId = 1, onComplete, onCancel }: CsvUp
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          campaignId,
+          ...(campaignId ? { campaignId } : {}),
           orgId,
           headers: preview.headers,
           rows: firstRowIsHeader ? preview.preview : [preview.headers, ...preview.preview],

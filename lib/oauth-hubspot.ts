@@ -8,7 +8,11 @@ const HUBSPOT_TOKEN_INFO_URL = "https://api.hubapi.com/oauth/v1/access-tokens";
 const SCOPES = ["crm.objects.contacts.read"];
 
 function getHmacKey(): string {
-  return process.env.SESSION_SECRET || "fallback-key";
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error("SESSION_SECRET is required for OAuth state signing");
+  }
+  return secret;
 }
 
 function getClientId(): string {

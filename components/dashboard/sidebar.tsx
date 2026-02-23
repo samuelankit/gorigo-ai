@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Bot, PhoneCall, Phone, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Server, Banknote, AudioLines, UserPlus, Plug } from "lucide-react";
+import { LayoutDashboard, Bot, PhoneCall, Phone, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Server, Banknote, AudioLines, UserPlus, Plug, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CustomIcon } from "@/components/ui/custom-icon";
 import type { ReactNode } from "react";
@@ -69,6 +69,7 @@ const accountMenuItems: MenuItemDef[] = [
 
 const PACKAGE_BADGE: Record<string, { label: string; icon: typeof Cloud; className: string }> = {
   managed: { label: "Managed", icon: Cloud, className: "text-blue-600 dark:text-blue-400 border-blue-500/30" },
+  team: { label: "Team", icon: Users, className: "text-indigo-600 dark:text-indigo-400 border-indigo-500/30" },
   self_hosted: { label: "Self-Hosted", icon: Server, className: "text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
 };
 
@@ -154,7 +155,12 @@ export function DashboardSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="py-1">
-        {renderMenuGroup("Main", mainMenuItems, (url) => pathname === url)}
+        {renderMenuGroup("Main", [
+          ...mainMenuItems,
+          ...(deploymentModel === "team" || deploymentModel === "custom"
+            ? [{ title: "Team Overview", url: "/dashboard/team", icon: Users } as MenuItemDef]
+            : []),
+        ], (url) => pathname === url)}
         {renderMenuGroup("Manage", manageMenuItems, (url) => pathname.startsWith(url))}
         {renderMenuGroup("Finance", financeMenuItems, (url) =>
           url === "/dashboard/finance" ? pathname === url : pathname.startsWith(url)

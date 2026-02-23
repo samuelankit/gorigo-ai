@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { getAuthenticatedUser, requireEmailVerified } from "@/lib/get-user";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
+import { logTeamActivity } from "@/lib/team-activity";
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,6 +56,9 @@ export async function POST(request: NextRequest) {
     });
 
     const [campaign] = await db.insert(campaigns).values(data).returning();
+
+    logTeamActivity(auth.orgId, auth.user.id, "campaign_created", "campaign", campaign.id, { name: campaign.name }).catch(() => {});
+
     return NextResponse.json(campaign, { status: 201 });
   } catch (error) {
     return handleRouteError(error, "Campaigns");

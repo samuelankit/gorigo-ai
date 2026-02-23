@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { requireOrgRole } from "@/lib/permissions";
 import { generalLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
+import { logTeamActivity } from "@/lib/team-activity";
 
 export async function GET(request: NextRequest) {
   try {
@@ -75,6 +76,9 @@ export async function PATCH(request: NextRequest) {
       .returning();
 
     if (!updated) return NextResponse.json({ error: "Member not found" }, { status: 404 });
+
+    logTeamActivity(auth!.orgId!, auth!.user.id, "member_role_changed", "member", updated.userId, { newRole: role }).catch(() => {});
+
     return NextResponse.json({ member: updated });
   } catch (err: any) {
     return handleRouteError(err, "AdminTeam");

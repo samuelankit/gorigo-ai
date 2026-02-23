@@ -9,6 +9,7 @@ import { sendInvitationEmail } from "@/lib/email";
 import { z } from "zod";
 import crypto from "crypto";
 import { handleRouteError } from "@/lib/api-error";
+import { logTeamActivity } from "@/lib/team-activity";
 
 const createInviteSchema = z.object({
   email: z.string().email().max(255).trim().toLowerCase(),
@@ -138,12 +139,76 @@ export async function POST(request: NextRequest) {
       auth!.user.businessName || auth!.user.email
     ).catch((err) => console.error("[Invitation] Email send failed:", err));
 
+    logTeamActivity(auth!.orgId!, auth!.user.id, "member_invited", "member", inv.id, { email: parsed.email, role: parsed.orgRole }).catch(() => {});
+
     return NextResponse.json({
       invitation: inv,
       inviteLink: `/invite/${token}`,
     }, { status: 201 });
   } catch (err: any) {
     if (err.name === "ZodError") return NextResponse.json({ error: "Invalid input", details: err.errors }, { status: 400 });
+    return handleRouteError(err, "Invitations");
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const rl = await generalLimiter(request);
+    if (!rl.allowed) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
+    const auth = await getAuthenticatedUser();
+    const perm = requireOrgRole(auth, "ADMIN");
+    if (!perm.allowed) return NextResponse.json({ error: perm.error }, { status: perm.status || 403 });
+
+    const body = await request.json();
+    const invId = body.id;
+    if (!invId) return NextResponse.json({ error: "id is required" }, { status: 400 });
+
+    const [existing] = await db
+      .select()
+      .from(invitations)
+      .where(and(eq(invitations.id, invId), eq(invitations.orgId, auth!.orgId!)))
+      .limit(1);
+
+    if (!existing) return NextResponse.json({ error: "Invitation not found" }, { status: 404 });
+    if (existing.status !== "pending" && existing.status !== "expired") {
+      return NextResponse.json({ error: "Can only resend pending or expired invitations" }, { status: 400 });
+    }
+
+    const newToken = crypto.randomBytes(32).toString("hex");
+    const newExpiresAt = new Date();
+    newExpiresAt.setDate(newExpiresAt.getDate() + 7);
+
+    await db
+      .update(invitations)
+      .set({ token: newToken, expiresAt: newExpiresAt, status: "pending" })
+      .where(eq(invitations.id, invId));
+
+    let orgName = "your organization";
+    try {
+      const [org] = await db.select({ name: orgs.name }).from(orgs).where(eq(orgs.id, auth!.orgId!)).limit(1);
+      if (org?.name) orgName = org.name;
+    } catch {}
+
+    let deptName: string | undefined;
+    if (existing.departmentId) {
+      try {
+        const [dept] = await db.select({ name: departments.name }).from(departments).where(eq(departments.id, existing.departmentId)).limit(1);
+        deptName = dept?.name || undefined;
+      } catch {}
+    }
+
+    sendInvitationEmail(
+      existing.email,
+      newToken,
+      orgName,
+      existing.orgRole,
+      deptName,
+      auth!.user.businessName || auth!.user.email
+    ).catch((err) => console.error("[Invitation] Resend email failed:", err));
+
+    return NextResponse.json({ success: true, inviteLink: `/invite/${newToken}` });
+  } catch (err: any) {
     return handleRouteError(err, "Invitations");
   }
 }

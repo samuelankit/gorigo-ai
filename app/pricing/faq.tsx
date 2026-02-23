@@ -48,6 +48,26 @@ const faqs = [
     answer:
       "Custom Plan rates are negotiated individually based on your specific needs, expected usage, and chosen features. Your dedicated account manager will work with you to agree on rates that work for your business. All billing is still based on talk time only — covering calls, AI content generation, and all platform usage — with no hidden fees.",
   },
+  {
+    question: "What is the Team package?",
+    answer:
+      "The Team package is designed for companies that need shared access for employees and board members. It includes unlimited team members, shared AI agents across the whole company, a team dashboard, per-department budgets, bulk CSV invites, and a team activity log. There are no per-seat fees — billing is purely based on talk-time at 18p/min. A minimum usage of £50/month applies.",
+  },
+  {
+    question: "Can I upgrade from Managed to Team?",
+    answer:
+      "Yes, upgrading from Managed to Team is seamless. Your rate changes from your next call, and all your existing agents and data are preserved. After upgrading, an admin can set visibility for existing agents — choosing whether each agent is private, visible to a department, or shared across the whole company.",
+  },
+  {
+    question: "Is there a limit on team members?",
+    answer:
+      "No limit. You can add your whole company including board members, with no per-seat charges. Board members get read-only access to view agent configurations, analytics, and dashboards without being able to modify settings or make calls.",
+  },
+  {
+    question: "What's the difference between Team and Partner?",
+    answer:
+      "Team is for managing your internal company — employees, departments, and board members all sharing AI agents and resources. Partner is for managing external clients that you sell to, with separate billing, white-labelling, and reseller capabilities. Think of it this way: Team manages inward, Partner manages outward.",
+  },
 ];
 
 export function PricingFaq() {

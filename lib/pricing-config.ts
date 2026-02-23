@@ -80,6 +80,13 @@ export const CUSTOMER_TIERS = {
     description: "Fully managed AI agents with dedicated support",
     customerPaysApiCosts: false,
   },
+  team: {
+    name: "Team",
+    key: "team",
+    ratePerMinute: 0.18,
+    description: "Whole-company collaboration with shared agents, departments, and team dashboard",
+    customerPaysApiCosts: false,
+  },
   whiteLabel: {
     name: "White-Label / Reseller",
     key: "whiteLabel",
@@ -88,6 +95,8 @@ export const CUSTOMER_TIERS = {
     customerPaysApiCosts: false,
   },
 } as const satisfies Record<string, CustomerTier>;
+
+export const TEAM_MINIMUM_MONTHLY_SPEND = 50.00;
 
 export type TierKey = keyof typeof CUSTOMER_TIERS;
 

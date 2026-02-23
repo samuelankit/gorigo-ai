@@ -3,7 +3,7 @@ import { rateCards, orgs } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { safeParseNumeric } from "@/lib/money";
 
-export type DeploymentModel = "managed" | "self_hosted" | "custom";
+export type DeploymentModel = "managed" | "team" | "self_hosted" | "custom";
 export type UsageCategory = "voice_inbound" | "voice_outbound" | "ai_chat";
 
 export interface ResolvedRate {
@@ -21,6 +21,11 @@ const DEFAULT_RATES: Record<DeploymentModel, Record<UsageCategory, ResolvedRate>
     voice_inbound: { deploymentModel: "managed", category: "voice_inbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Direct/Managed - Inbound Voice" },
     voice_outbound: { deploymentModel: "managed", category: "voice_outbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Direct/Managed - Outbound Voice" },
     ai_chat: { deploymentModel: "managed", category: "ai_chat", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: false, label: "Direct/Managed - AI Chat" },
+  },
+  team: {
+    voice_inbound: { deploymentModel: "team", category: "voice_inbound", ratePerMinute: 0.18, platformFeePerMinute: 0.18, includesAiCost: true, includesTelephonyCost: true, label: "Team - Inbound Voice" },
+    voice_outbound: { deploymentModel: "team", category: "voice_outbound", ratePerMinute: 0.18, platformFeePerMinute: 0.18, includesAiCost: true, includesTelephonyCost: true, label: "Team - Outbound Voice" },
+    ai_chat: { deploymentModel: "team", category: "ai_chat", ratePerMinute: 0.18, platformFeePerMinute: 0.18, includesAiCost: true, includesTelephonyCost: false, label: "Team - AI Chat" },
   },
   self_hosted: {
     voice_inbound: { deploymentModel: "self_hosted", category: "voice_inbound", ratePerMinute: 0.12, platformFeePerMinute: 0.12, includesAiCost: false, includesTelephonyCost: false, label: "White-Label - Inbound Voice" },
@@ -43,7 +48,7 @@ export async function getOrgDeploymentModel(orgId: number): Promise<DeploymentMo
 
   if (!org || !org.deploymentModel) return "managed";
   const model = org.deploymentModel as DeploymentModel;
-  if (!["managed", "self_hosted", "custom"].includes(model)) return "managed";
+  if (!["managed", "team", "self_hosted", "custom"].includes(model)) return "managed";
   return model;
 }
 

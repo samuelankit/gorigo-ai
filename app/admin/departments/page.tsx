@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Building2, Plus, Pencil, Trash2, Users, UserPlus, Crown } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Users, UserPlus, Crown, Wallet } from "lucide-react";
 
 interface Department {
   id: number;
@@ -40,6 +40,9 @@ interface Department {
   managerId?: number;
   manager?: { id: number; email: string; businessName: string } | null;
   memberCount?: number;
+  spendingCap?: string | null;
+  spentThisMonth?: string | null;
+  spendingCapResetAt?: string | null;
   createdAt?: string;
 }
 
@@ -64,6 +67,32 @@ interface TeamMember {
   orgRole?: string;
 }
 
+function getBudgetPercentage(dept: Department): number | null {
+  if (!dept.spendingCap) return null;
+  const cap = parseFloat(dept.spendingCap);
+  if (cap <= 0) return null;
+  const spent = parseFloat(dept.spentThisMonth || "0");
+  return Math.min((spent / cap) * 100, 100);
+}
+
+function getBudgetColor(pct: number): string {
+  if (pct >= 80) return "bg-red-500";
+  if (pct >= 60) return "bg-amber-500";
+  return "bg-emerald-500";
+}
+
+function getBudgetTextColor(pct: number): string {
+  if (pct >= 80) return "text-red-600 dark:text-red-400";
+  if (pct >= 60) return "text-amber-600 dark:text-amber-400";
+  return "text-emerald-600 dark:text-emerald-400";
+}
+
+function getNextResetDate(): string {
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return nextMonth.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
 export default function DepartmentsPage() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center p-8"><div className="animate-pulse text-muted-foreground">Loading...</div></div>}>
@@ -78,6 +107,8 @@ function DepartmentsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deploymentModel, setDeploymentModel] = useState<string>("managed");
+  const [userRole, setUserRole] = useState<string>("");
 
   const [createEditOpen, setCreateEditOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
@@ -85,6 +116,7 @@ function DepartmentsContent() {
   const [formDescription, setFormDescription] = useState("");
   const [formColor, setFormColor] = useState("#3b82f6");
   const [formManagerId, setFormManagerId] = useState("");
+  const [formSpendingCap, setFormSpendingCap] = useState("");
 
   const [viewOpen, setViewOpen] = useState(false);
   const [viewDept, setViewDept] = useState<DepartmentDetail | null>(null);
@@ -93,6 +125,9 @@ function DepartmentsContent() {
   const [addMemberUserId, setAddMemberUserId] = useState("");
   const [addMemberRole, setAddMemberRole] = useState("AGENT");
   const [addingMember, setAddingMember] = useState(false);
+
+  const showBudgetControls = deploymentModel === "team" || deploymentModel === "custom";
+  const canEditBudget = userRole === "OWNER" || userRole === "ADMIN";
 
   const fetchDepartments = () => {
     setLoading(true);
@@ -116,9 +151,20 @@ function DepartmentsContent() {
       .catch(() => {});
   };
 
+  const fetchUserInfo = () => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.org?.deploymentModel) setDeploymentModel(d.org.deploymentModel);
+        if (d?.role) setUserRole(d.role);
+      })
+      .catch(() => {});
+  };
+
   useEffect(() => {
     fetchDepartments();
     fetchTeamMembers();
+    fetchUserInfo();
   }, []);
 
   const activeDepts = departments.filter((d) => d.status === "active");
@@ -130,6 +176,7 @@ function DepartmentsContent() {
     setFormDescription("");
     setFormColor("#3b82f6");
     setFormManagerId("");
+    setFormSpendingCap("");
     setEditingDept(null);
   };
 
@@ -144,6 +191,7 @@ function DepartmentsContent() {
     setFormDescription(dept.description || "");
     setFormColor(dept.color || "#3b82f6");
     setFormManagerId(dept.managerId ? String(dept.managerId) : "");
+    setFormSpendingCap(dept.spendingCap || "");
     setCreateEditOpen(true);
   };
 
@@ -158,6 +206,14 @@ function DepartmentsContent() {
       };
       if (formManagerId && formManagerId !== "none") body.managerId = parseInt(formManagerId);
       else body.managerId = null;
+
+      if (showBudgetControls && canEditBudget && editingDept) {
+        if (formSpendingCap === "" || formSpendingCap === null) {
+          body.spendingCap = null;
+        } else {
+          body.spendingCap = formSpendingCap;
+        }
+      }
 
       const url = editingDept
         ? `/api/admin/departments/${editingDept.id}`
@@ -362,72 +418,111 @@ function DepartmentsContent() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {departments.map((dept) => (
-            <Card
-              key={dept.id}
-              className="hover-elevate cursor-pointer"
-              onClick={() => openViewDialog(dept)}
-              data-testid={`card-department-${dept.id}`}
-            >
-              <CardContent className="p-5 space-y-3">
-                <div className="flex items-start justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div
-                      className="w-3 h-3 rounded-full shrink-0"
-                      style={{ backgroundColor: dept.color || "#3b82f6" }}
-                      data-testid={`dot-department-color-${dept.id}`}
-                    />
-                    <h3 className="font-semibold text-foreground truncate" data-testid={`text-department-name-${dept.id}`}>
-                      {dept.name}
-                    </h3>
+          {departments.map((dept) => {
+            const budgetPct = showBudgetControls ? getBudgetPercentage(dept) : null;
+            const spent = parseFloat(dept.spentThisMonth || "0");
+            const cap = dept.spendingCap ? parseFloat(dept.spendingCap) : null;
+
+            return (
+              <Card
+                key={dept.id}
+                className="hover-elevate cursor-pointer"
+                onClick={() => openViewDialog(dept)}
+                data-testid={`card-department-${dept.id}`}
+              >
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: dept.color || "#3b82f6" }}
+                        data-testid={`dot-department-color-${dept.id}`}
+                      />
+                      <h3 className="font-semibold text-foreground truncate" data-testid={`text-department-name-${dept.id}`}>
+                        {dept.name}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <Badge variant="secondary" className={`no-default-hover-elevate ${getStatusBadgeClass(dept.status)}`}>
+                        {dept.status}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <Badge variant="secondary" className={`no-default-hover-elevate ${getStatusBadgeClass(dept.status)}`}>
-                      {dept.status}
+
+                  {dept.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-department-description-${dept.id}`}>
+                      {dept.description}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Crown className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground" data-testid={`text-department-manager-${dept.id}`}>
+                      {dept.manager?.businessName || dept.manager?.email || "No manager assigned"}
+                    </span>
+                  </div>
+
+                  {showBudgetControls && (
+                    <div className="space-y-1.5" data-testid={`budget-section-${dept.id}`}>
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Budget</span>
+                        </div>
+                        {cap !== null ? (
+                          <span className={`text-xs font-medium ${getBudgetTextColor(budgetPct!)}`} data-testid={`text-budget-amount-${dept.id}`}>
+                            £{spent.toFixed(2)} / £{cap.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground" data-testid={`text-budget-unlimited-${dept.id}`}>
+                            Unlimited
+                          </span>
+                        )}
+                      </div>
+                      {budgetPct !== null && (
+                        <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden" data-testid={`progress-budget-${dept.id}`}>
+                          <div
+                            className={`h-full rounded-full transition-all ${getBudgetColor(budgetPct)}`}
+                            style={{ width: `${budgetPct}%` }}
+                          />
+                        </div>
+                      )}
+                      {cap !== null && (
+                        <p className="text-[10px] text-muted-foreground" data-testid={`text-budget-reset-${dept.id}`}>
+                          Resets on {getNextResetDate()}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
+                    <Badge variant="secondary" className="no-default-hover-elevate" data-testid={`badge-member-count-${dept.id}`}>
+                      <Users className="w-3 h-3 mr-1" />
+                      {dept.memberCount || 0} members
                     </Badge>
+                    <div className="flex items-center gap-1" style={{ visibility: "visible" }}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => { e.stopPropagation(); openEditDialog(dept); }}
+                        data-testid={`button-edit-department-${dept.id}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => { e.stopPropagation(); handleDelete(dept); }}
+                        data-testid={`button-delete-department-${dept.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-
-                {dept.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-department-description-${dept.id}`}>
-                    {dept.description}
-                  </p>
-                )}
-
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Crown className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground" data-testid={`text-department-manager-${dept.id}`}>
-                    {dept.manager?.businessName || dept.manager?.email || "No manager assigned"}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
-                  <Badge variant="secondary" className="no-default-hover-elevate" data-testid={`badge-member-count-${dept.id}`}>
-                    <Users className="w-3 h-3 mr-1" />
-                    {dept.memberCount || 0} members
-                  </Badge>
-                  <div className="flex items-center gap-1" style={{ visibility: "visible" }}>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={(e) => { e.stopPropagation(); openEditDialog(dept); }}
-                      data-testid={`button-edit-department-${dept.id}`}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={(e) => { e.stopPropagation(); handleDelete(dept); }}
-                      data-testid={`button-delete-department-${dept.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -491,6 +586,24 @@ function DepartmentsContent() {
                 </SelectContent>
               </Select>
             </div>
+            {showBudgetControls && canEditBudget && editingDept && (
+              <div className="space-y-2" data-testid="budget-field-section">
+                <Label htmlFor="dept-budget">Monthly Budget (£)</Label>
+                <Input
+                  id="dept-budget"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formSpendingCap}
+                  onChange={(e) => setFormSpendingCap(e.target.value)}
+                  placeholder="Leave empty for unlimited"
+                  data-testid="input-department-budget"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Set a monthly spending cap for this department. Leave empty for unlimited budget.
+                </p>
+              </div>
+            )}
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => setCreateEditOpen(false)} data-testid="button-cancel-department">
                 Cancel
@@ -544,6 +657,62 @@ function DepartmentsContent() {
                   </span>
                 </div>
               </div>
+
+              {showBudgetControls && (() => {
+                const viewCap = viewDept.spendingCap ? parseFloat(viewDept.spendingCap) : null;
+                const viewSpent = parseFloat(viewDept.spentThisMonth || "0");
+                const viewPct = viewCap && viewCap > 0 ? Math.min((viewSpent / viewCap) * 100, 100) : null;
+                const viewRemaining = viewCap !== null ? Math.max(viewCap - viewSpent, 0) : null;
+
+                return (
+                  <div className="rounded-md border p-4 space-y-3" data-testid="view-budget-section">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Wallet className="w-4 h-4 text-muted-foreground" />
+                      <h4 className="text-sm font-semibold text-foreground">Department Budget</h4>
+                    </div>
+                    {viewCap !== null ? (
+                      <>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Spent</p>
+                            <p className="text-sm font-semibold text-foreground" data-testid="text-view-budget-spent">£{viewSpent.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Budget</p>
+                            <p className="text-sm font-semibold text-foreground" data-testid="text-view-budget-cap">£{viewCap.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Remaining</p>
+                            <p className={`text-sm font-semibold ${viewPct !== null ? getBudgetTextColor(viewPct) : "text-foreground"}`} data-testid="text-view-budget-remaining">
+                              £{viewRemaining!.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                        {viewPct !== null && (
+                          <div className="space-y-1">
+                            <div className="w-full h-2 rounded-full bg-muted overflow-hidden" data-testid="progress-view-budget">
+                              <div
+                                className={`h-full rounded-full transition-all ${getBudgetColor(viewPct)}`}
+                                style={{ width: `${viewPct}%` }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className={`text-xs font-medium ${getBudgetTextColor(viewPct)}`}>
+                                {viewPct.toFixed(0)}% used
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                Resets on {getNextResetDate()}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground" data-testid="text-view-budget-unlimited">No spending cap set (unlimited)</p>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div>
                 <h4 className="text-sm font-semibold text-foreground mb-3">Members</h4>

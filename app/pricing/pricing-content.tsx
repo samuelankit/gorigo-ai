@@ -12,11 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-import { CheckCircle2, Minus, ArrowRight, MessageSquare } from "lucide-react";
+import { CheckCircle2, Minus, ArrowRight, MessageSquare, Users } from "lucide-react";
 import { PricingFaq } from "./faq";
 
 interface PackageVisibility {
   managed: boolean;
+  team: boolean;
   selfHosted: boolean;
 }
 
@@ -39,13 +40,44 @@ const allPackages = [
     bestFor: "Businesses that want zero technical overhead.",
     cta: "Book a Demo",
     href: "/contact",
-    featured: true,
+    featured: false,
     mobileApp: true,
     themeColor: "blue",
     borderClass: "border-t-4 border-t-blue-500",
     badgeClass: "text-blue-600 dark:text-blue-400",
     checkClass: "text-blue-500 dark:text-blue-400",
     accentBg: "bg-blue-500/10",
+  },
+  {
+    key: "team" as const,
+    name: "Team",
+    rate: "From 18p",
+    rateUnit: "/min",
+    subtitle: "For your whole company",
+    description: "Bring your whole company together with shared AI agents, team dashboard, and department budgets. No per-seat fees.",
+    features: [
+      "Unlimited team members (employees + board)",
+      "Shared AI agents across the company",
+      "Shared knowledge base",
+      "Team dashboard with usage analytics",
+      "Per-department budgets",
+      "Individual + bulk CSV invites",
+      "Team activity log",
+      "99.9% uptime SLA",
+      "30-minute critical response time",
+      "Priority support (Phone, Email, Chat, Slack, Video)",
+      "Mobile app",
+    ],
+    bestFor: "Companies needing shared access for their whole team.",
+    cta: "Get Started",
+    href: "/contact",
+    featured: true,
+    themeColor: "indigo",
+    borderClass: "border-t-4 border-t-indigo-500",
+    badgeClass: "text-indigo-600 dark:text-indigo-400",
+    checkClass: "text-indigo-500 dark:text-indigo-400",
+    accentBg: "bg-indigo-500/10",
+    minimumSpend: true,
   },
   {
     key: "selfHosted" as const,
@@ -74,23 +106,30 @@ const allPackages = [
 ];
 
 const comparisonFeatures = [
-  { name: "AI Agent Management", managed: true, selfHosted: true, custom: true },
-  { name: "Knowledge Base", managed: true, selfHosted: true, custom: true },
-  { name: "Real-Time Analytics", managed: true, selfHosted: true, custom: true },
-  { name: "Call Recording", managed: true, selfHosted: true, custom: true },
-  { name: "Multi-Language", managed: true, selfHosted: true, custom: true },
-  { name: "DNC Management", managed: true, selfHosted: true, custom: true },
-  { name: "API Access", managed: true, selfHosted: true, custom: true },
-  { name: "Custom Integrations", managed: true, selfHosted: true, custom: true },
-  { name: "Dedicated Account Manager", managed: true, selfHosted: false, custom: true },
-  { name: "SLA Guarantee", managed: true, selfHosted: true, custom: true },
-  { name: "White Label", managed: false, selfHosted: true, custom: true },
-  { name: "On-Premise Deployment", managed: false, selfHosted: true, custom: true },
-  { name: "Source Code Access", managed: false, selfHosted: true, custom: true },
-  { name: "Mobile App", managed: "Included", selfHosted: "Available", custom: "Available" },
-  { name: "Custom Billing Rates", managed: false, selfHosted: false, custom: true },
-  { name: "Bespoke Feature Selection", managed: false, selfHosted: false, custom: true },
-  { name: "Dedicated Onboarding", managed: false, selfHosted: false, custom: true },
+  { name: "AI Agent Management", managed: true, team: true, selfHosted: true, custom: true },
+  { name: "Knowledge Base", managed: true, team: true, selfHosted: true, custom: true },
+  { name: "Real-Time Analytics", managed: true, team: true, selfHosted: true, custom: true },
+  { name: "Call Recording", managed: true, team: true, selfHosted: true, custom: true },
+  { name: "Multi-Language", managed: true, team: true, selfHosted: true, custom: true },
+  { name: "DNC Management", managed: true, team: true, selfHosted: true, custom: true },
+  { name: "API Access", managed: true, team: true, selfHosted: true, custom: true },
+  { name: "Custom Integrations", managed: true, team: true, selfHosted: true, custom: true },
+  { name: "Unlimited Team Members", managed: false, team: true, selfHosted: false, custom: true },
+  { name: "Shared Agents (Whole Company)", managed: false, team: true, selfHosted: false, custom: true },
+  { name: "Per-Department Budgets", managed: false, team: true, selfHosted: false, custom: true },
+  { name: "Team Dashboard", managed: false, team: true, selfHosted: false, custom: true },
+  { name: "Bulk CSV Invites", managed: false, team: true, selfHosted: false, custom: true },
+  { name: "Team Activity Log", managed: false, team: true, selfHosted: false, custom: true },
+  { name: "Dedicated Account Manager", managed: true, team: true, selfHosted: false, custom: true },
+  { name: "SLA Guarantee", managed: true, team: true, selfHosted: true, custom: true },
+  { name: "30-Min Critical Response", managed: false, team: true, selfHosted: false, custom: true },
+  { name: "White Label", managed: false, team: false, selfHosted: true, custom: true },
+  { name: "On-Premise Deployment", managed: false, team: false, selfHosted: true, custom: true },
+  { name: "Source Code Access", managed: false, team: false, selfHosted: true, custom: true },
+  { name: "Mobile App", managed: "Included", team: "Included", selfHosted: "Available", custom: "Available" },
+  { name: "Custom Billing Rates", managed: false, team: false, selfHosted: false, custom: true },
+  { name: "Bespoke Feature Selection", managed: false, team: false, selfHosted: false, custom: true },
+  { name: "Dedicated Onboarding", managed: false, team: false, selfHosted: false, custom: true },
 ];
 
 function FeatureIcon({ included }: { included: boolean | string }) {
@@ -106,6 +145,7 @@ function FeatureIcon({ included }: { included: boolean | string }) {
 export function PricingContent() {
   const [visibility, setVisibility] = useState<PackageVisibility>({
     managed: true,
+    team: true,
     selfHosted: false,
   });
 
@@ -118,9 +158,10 @@ export function PricingContent() {
 
   const visiblePackages = allPackages.filter((pkg) => visibility[pkg.key]);
 
-  const columnKeys = (["managed", "selfHosted"] as const).filter((k) => visibility[k]);
+  const columnKeys = (["managed", "team", "selfHosted"] as const).filter((k) => visibility[k]);
   const columnLabels: Record<string, string> = {
     managed: "Managed",
+    team: "Team",
     selfHosted: "Self-Hosted",
   };
 
@@ -193,19 +234,27 @@ export function PricingContent() {
                 >
                   <CardContent className="p-8">
                     {pkg.featured && (
-                      <Badge className="mb-4 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 no-default-hover-elevate no-default-active-elevate" data-testid="badge-most-popular">
+                      <Badge className={`mb-4 ${pkg.accentBg} ${pkg.badgeClass} border-current/20 no-default-hover-elevate no-default-active-elevate`} data-testid="badge-most-popular">
                         Most Popular
                       </Badge>
                     )}
                     <h3 className="font-medium text-xl mb-2">{pkg.name}</h3>
+                    {"subtitle" in pkg && pkg.subtitle && (
+                      <p className={`text-sm font-medium ${pkg.badgeClass} mb-1`} data-testid={`text-subtitle-${pkg.name.toLowerCase().replace(/\s+/g, "-")}`}>{pkg.subtitle}</p>
+                    )}
                     <div className="mb-3" data-testid={`text-rate-${pkg.name.toLowerCase().replace(/\s+/g, "-")}`}>
                       <span className="text-2xl font-semibold">{pkg.rate}</span>
                       <span className="text-sm text-muted-foreground">{pkg.rateUnit}</span>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{pkg.description}</p>
-                    <p className="text-xs text-muted-foreground mb-6">
+                    <p className="text-xs text-muted-foreground mb-2">
                       Talk-time only. No subscriptions or seat fees.
                     </p>
+                    {"minimumSpend" in pkg && pkg.minimumSpend && (
+                      <p className="text-xs text-muted-foreground mb-4">
+                        <span className="font-medium text-foreground">Minimum:</span> £50/month usage
+                      </p>
+                    )}
                     <ul className="space-y-2.5 mb-6">
                       {pkg.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2 text-sm">
@@ -292,6 +341,17 @@ export function PricingContent() {
                 </CardContent>
               </Card>
             </div>
+
+            <div className="mt-8 text-center" data-testid="text-team-vs-partner">
+              <Card className="inline-block overflow-visible">
+                <CardContent className="p-4 flex items-center gap-3 flex-wrap justify-center">
+                  <Users className="h-5 w-5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Team vs Partner:</span> Partners manage external clients. Team manages your internal company.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </section>
 
@@ -314,7 +374,7 @@ export function PricingContent() {
                       <tr className="border-b border-border/50 bg-muted/30">
                         <th className="text-left p-4 font-medium text-muted-foreground">Feature</th>
                         {columnKeys.map((k) => (
-                          <th key={k} className="text-center p-4 font-medium text-muted-foreground">
+                          <th key={k} className={`text-center p-4 font-medium ${k === "team" ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground"}`}>
                             {columnLabels[k]}
                           </th>
                         ))}

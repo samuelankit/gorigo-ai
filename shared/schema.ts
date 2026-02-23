@@ -113,6 +113,8 @@ export const agents = pgTable("agents", {
   strictKnowledgeMode: boolean("strict_knowledge_mode").default(false),
   maxTokensPerCall: integer("max_tokens_per_call").default(4096),
   maxTokensPerSession: integer("max_tokens_per_session").default(16384),
+  visibility: text("visibility").default("shared"),
+  sharedWithDepartments: jsonb("shared_with_departments").default([]),
 }, (table) => [
   index("idx_agents_org_id").on(table.orgId),
   index("idx_agents_user_id").on(table.userId),
@@ -2318,6 +2320,10 @@ export const departments = pgTable("departments", {
   managerId: integer("manager_id").references(() => users.id),
   status: text("status").notNull().default("active"),
   color: text("color").default("#6366f1"),
+  spendingCap: numeric("spending_cap", { precision: 12, scale: 2 }),
+  spentThisMonth: numeric("spent_this_month", { precision: 12, scale: 2 }).default("0"),
+  spendingCapResetAt: timestamp("spending_cap_reset_at"),
+  budgetAlertSentAt: timestamp("budget_alert_sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -2774,5 +2780,26 @@ export const insertConnectorInterestSchema = createInsertSchema(connectorInteres
 });
 export type InsertConnectorInterest = z.infer<typeof insertConnectorInterestSchema>;
 export type ConnectorInterest = typeof connectorInterest.$inferSelect;
+
+// ==================== TEAM ACTIVITY LOG ====================
+
+export const teamActivityLog = pgTable("team_activity_log", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  action: text("action").notNull(),
+  entityType: text("entity_type"),
+  entityId: integer("entity_id"),
+  details: jsonb("details"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_team_activity_org_created").on(table.orgId, table.createdAt),
+  index("idx_team_activity_user").on(table.userId),
+]);
+
+export const insertTeamActivityLogSchema = createInsertSchema(teamActivityLog).omit({ id: true, createdAt: true });
+export type InsertTeamActivityLog = z.infer<typeof insertTeamActivityLogSchema>;
+export type TeamActivityLog = typeof teamActivityLog.$inferSelect;
 
 export * from "./models/chat";

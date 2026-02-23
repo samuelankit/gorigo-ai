@@ -31,7 +31,7 @@ GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentic
 The platform includes a Unit Economics System for real-time cost tracking and margin analysis, with a pricing simulator. An optional Rigo Voice Assistant provides AI voice control over the SaaS dashboard. Security hardening includes audit logging, robust session management, database-backed rate limiting, CSRF protection, email verification, account lockout, and comprehensive input validation using Zod schemas. Deployment utilizes Docker containers on Azure Container Apps with Azure PostgreSQL Flexible Server and Azure Key Vault. CI/CD is managed via GitHub Actions.
 
 Key features include:
-- **Deployment Packages**: Three commercial packages (Managed £0.20/min, White-Label £0.12/min, Custom Enterprise).
+- **Deployment Packages**: Four commercial packages (Managed £0.20/min, Team £0.18/min, White-Label £0.12/min, Custom Enterprise). Team package targets 5-50 person companies with whole-company collaboration, no per-seat fees, £50/month minimum usage.
 - **Agent Configuration**: Customizable AI agents with roles, FAQs, knowledge bases, and language/voice selection.
 - **Knowledge Management**: Supports document upload, chunking, embedding, and audio transcription.
 - **Multi-Tier Partner Management**: Business Partners can create resellers, D2C clients, and affiliate partners.
@@ -49,7 +49,8 @@ Key features include:
 - **Agent Assist (Enterprise)**: Real-time agent assist system with a 5-tab dashboard for live call monitoring, human agent management, assist sessions, coaching rules, and canned responses. Features supervisor modes, intelligent handoff, and knowledge search.
 - **Voice Biometrics (Enterprise)**: Voice biometric authentication with a 4-tab dashboard.
 - **Omnichannel Messaging (Enterprise)**: Unified messaging across WhatsApp, SMS, email, and web chat with a 5-tab dashboard.
-- **Department & Team Management**: Organizational hierarchy with departments, role-based permissions, and employee invitation system.
+- **Department & Team Management**: Organizational hierarchy with departments, role-based permissions, employee invitation system (individual + bulk CSV), per-department spending caps with colour-coded progress bars, budget alerts at 60/80/100% with 6hr cooldown, monthly reset by org timezone.
+- **Team Package Features**: Agent visibility (Private / My Department / Whole Company including board members), Team Dashboard with member stats, department budgets, shared agents list, and team activity feed. Team activity log with 90-day retention. Team settings (default agent visibility, budget alert threshold). Enhanced invite system with "Board Member" role label (maps to VIEWER), bulk CSV upload with preview/validation, pending invite management with resend/revoke. Strict SLA with 30-min critical response, higher service credits (15-100%), dedicated escalation path, 48hr post-mortems, 2hr RTO, 30min RPO.
 - **System Monitoring**: Admin monitoring dashboard with real-time health metrics.
 - **Blog Section**: Public blog with categories, articles, and SEO-friendly features.
 - **AI Transparency & Education**: Comprehensive public page covering benefits, limitations, architecture, safety, human-in-the-loop design, data privacy, and best practices.

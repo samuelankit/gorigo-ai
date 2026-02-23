@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Phone,
   TrendingUp,
+  Users,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -147,6 +148,23 @@ const capabilities = [
       "Custom spending caps",
     ],
   },
+  {
+    slug: "team-collaboration",
+    title: "Team Collaboration",
+    tagline: "Bring your whole company onto one platform",
+    description:
+      "Bring your whole company — employees, departments, board members. Shared AI agents, team dashboard, department budgets, and activity tracking. No per-seat fees.",
+    video: "/features/team-collaboration-intro.mp4",
+    icon: Users,
+    color: "text-indigo-600 dark:text-indigo-400",
+    bgAccent: "bg-indigo-500/10",
+    borderAccent: "border-indigo-500/30",
+    highlights: [
+      "Unlimited team members with no per-seat charges",
+      "Shared AI agents across the whole company",
+      "Per-department budgets and activity tracking",
+    ],
+  },
 ];
 
 const platformStats = [
@@ -200,7 +218,7 @@ export default function CapabilitiesPage() {
             className="mt-5 text-lg sm:text-xl text-muted-foreground font-light max-w-3xl mx-auto leading-relaxed"
             data-testid="text-hero-subtitle"
           >
-            Six powerful capabilities working together to automate your calls,
+            Seven powerful capabilities working together to automate your calls,
             protect your business, and grow your revenue — all powered by AI.
           </p>
         </div>

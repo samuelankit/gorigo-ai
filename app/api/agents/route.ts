@@ -6,6 +6,7 @@ import { getAuthenticatedUser, requireWriteAccess, requireEmailVerified } from "
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
+import { logTeamActivity } from "@/lib/team-activity";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { createLogger } from "@/lib/logger";
@@ -136,6 +137,8 @@ export async function PUT(request: NextRequest) {
     } catch (auditErr) {
       logger.error("Audit log error", auditErr);
     }
+
+    logTeamActivity(auth.orgId, auth.user.id, "agent_updated", "agent", updatedAgent.id, { name: updatedAgent.name }).catch(() => {});
 
     return NextResponse.json({ agent: updatedAgent }, { status: 200 });
   } catch (error) {

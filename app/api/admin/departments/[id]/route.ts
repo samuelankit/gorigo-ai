@@ -8,6 +8,7 @@ import { generalLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
 
 import { handleRouteError } from "@/lib/api-error";
+import { logTeamActivity } from "@/lib/team-activity";
 
 const updateDeptSchema = z.object({
   name: z.string().min(1).max(100).trim().optional(),
@@ -15,6 +16,7 @@ const updateDeptSchema = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   managerId: z.number().int().positive().optional().nullable(),
   status: z.enum(["active", "archived"]).optional(),
+  spendingCap: z.string().regex(/^\d+(\.\d{1,2})?$/).optional().nullable(),
 });
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -90,8 +92,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (parsed.color !== undefined) updateData.color = parsed.color;
     if (parsed.managerId !== undefined) updateData.managerId = parsed.managerId;
     if (parsed.status !== undefined) updateData.status = parsed.status;
+    if (parsed.spendingCap !== undefined) updateData.spendingCap = parsed.spendingCap;
 
     const [updated] = await db.update(departments).set(updateData).where(eq(departments.id, deptId)).returning();
+
+    if (parsed.spendingCap !== undefined) {
+      logTeamActivity(auth.orgId, auth.user.id, "department_budget_set", "department", deptId, { spendingCap: parsed.spendingCap, name: updated.name }).catch(() => {});
+    } else {
+      logTeamActivity(auth.orgId, auth.user.id, "department_updated", "department", deptId, { name: updated.name }).catch(() => {});
+    }
+
     return NextResponse.json({ department: updated });
   } catch (err: any) {
     if (err.name === "ZodError") return NextResponse.json({ error: "Invalid input", details: err.errors }, { status: 400 });

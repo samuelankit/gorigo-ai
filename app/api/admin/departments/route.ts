@@ -8,6 +8,7 @@ import { generalLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
 
 import { handleRouteError } from "@/lib/api-error";
+import { logTeamActivity } from "@/lib/team-activity";
 
 const createDeptSchema = z.object({
   name: z.string().min(1).max(100).trim(),
@@ -35,6 +36,10 @@ export async function GET(request: NextRequest) {
         managerId: departments.managerId,
         status: departments.status,
         color: departments.color,
+        spendingCap: departments.spendingCap,
+        spentThisMonth: departments.spentThisMonth,
+        spendingCapResetAt: departments.spendingCapResetAt,
+        budgetAlertSentAt: departments.budgetAlertSentAt,
         createdAt: departments.createdAt,
         updatedAt: departments.updatedAt,
         memberCount: sql<number>`(SELECT COUNT(*) FROM department_members WHERE department_id = ${departments.id})`.as("member_count"),
@@ -105,6 +110,8 @@ export async function POST(request: NextRequest) {
         departmentRole: "MANAGER",
       }).onConflictDoNothing();
     }
+
+    logTeamActivity(auth!.orgId!, auth!.user.id, "department_created", "department", dept.id, { name: parsed.name }).catch(() => {});
 
     return NextResponse.json({ department: dept }, { status: 201 });
   } catch (err) {

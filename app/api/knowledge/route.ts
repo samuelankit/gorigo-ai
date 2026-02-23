@@ -7,6 +7,7 @@ import { knowledgeLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { logTeamActivity } from "@/lib/team-activity";
 
 const knowledgeCreateSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long (max 200 characters)").transform(v => v.trim()),
@@ -85,6 +86,8 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
+    logTeamActivity(auth.orgId, auth.user.id, "knowledge_uploaded", "knowledge", document.id, { title }).catch(() => {});
+
     return NextResponse.json({ document }, { status: 201 });
   } catch (error) {
     return handleRouteError(error, "Knowledge");
@@ -127,6 +130,8 @@ export async function DELETE(request: NextRequest) {
 
     await db.delete(knowledgeChunks).where(eq(knowledgeChunks.documentId, id));
     await db.delete(knowledgeDocuments).where(eq(knowledgeDocuments.id, id));
+
+    logTeamActivity(auth.orgId, auth.user.id, "knowledge_deleted", "knowledge", id, { title: existing.title }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

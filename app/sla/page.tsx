@@ -18,6 +18,8 @@ import {
   Database,
   Headphones,
   Scale,
+  Users,
+  Star,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +48,15 @@ const uptimeCommitments = [
     accentColor: "from-amber-500 to-orange-500",
     badgeBg: "bg-amber-500/10",
     badgeText: "text-amber-600 dark:text-amber-400",
+  },
+  {
+    plan: "Team",
+    uptime: "99.9%",
+    monthlyDowntime: "~43 minutes",
+    description: "Same enterprise-grade reliability as Managed, with faster response times, dedicated escalation, and stronger accountability.",
+    accentColor: "from-indigo-500 to-violet-500",
+    badgeBg: "bg-indigo-500/10",
+    badgeText: "text-indigo-600 dark:text-indigo-400",
   },
   {
     plan: "Self-Hosted",
@@ -77,6 +88,14 @@ const supportTiers = [
     channels: "Phone, Email, Live Chat, Dedicated Slack",
   },
   {
+    plan: "Team",
+    critical: "30 minutes",
+    high: "2 hours",
+    medium: "4 hours",
+    low: "1 business day",
+    channels: "Phone, Email, Live Chat, Dedicated Slack, Video Call Escalation",
+  },
+  {
     plan: "Self-Hosted",
     critical: "4 hours",
     high: "1 business day",
@@ -95,10 +114,10 @@ const supportTiers = [
 ];
 
 const creditTiers = [
-  { downtime: "Less than target but above 99.0%", credit: "10% of monthly spend" },
-  { downtime: "Between 98.0% and 99.0%", credit: "25% of monthly spend" },
-  { downtime: "Between 95.0% and 98.0%", credit: "50% of monthly spend" },
-  { downtime: "Below 95.0%", credit: "100% of monthly spend" },
+  { downtime: "Less than target but above 99.0%", managedCredit: "10%", teamCredit: "15%" },
+  { downtime: "Between 98.0% and 99.0%", managedCredit: "25%", teamCredit: "35%" },
+  { downtime: "Between 95.0% and 98.0%", managedCredit: "50%", teamCredit: "60%" },
+  { downtime: "Below 95.0%", managedCredit: "100%", teamCredit: "100%" },
 ];
 
 const sectionIcons = [
@@ -282,8 +301,8 @@ export default function SlaPage() {
               </CardContent>
             </Card>
 
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {supportTiers.slice(0, 2).map((tier) => (
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {supportTiers.slice(0, 3).map((tier) => (
                 <Card key={tier.plan} data-testid={`card-channels-${tier.plan.toLowerCase()}`}>
                   <CardContent className="p-6">
                     <h3 className="font-medium mb-2">{tier.plan} Support Channels</h3>
@@ -319,7 +338,8 @@ export default function SlaPage() {
                     <thead>
                       <tr className="border-b border-border/50">
                         <th className="text-left p-4 font-medium text-muted-foreground">Monthly Uptime</th>
-                        <th className="text-left p-4 font-medium text-muted-foreground">Credit Amount</th>
+                        <th className="text-center p-4 font-medium text-muted-foreground">Managed Credit</th>
+                        <th className="text-center p-4 font-medium text-indigo-600 dark:text-indigo-400">Team Credit</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -330,7 +350,8 @@ export default function SlaPage() {
                           data-testid={`row-credit-${i}`}
                         >
                           <td className="p-4">{tier.downtime}</td>
-                          <td className="p-4 font-medium">{tier.credit}</td>
+                          <td className="p-4 text-center font-medium">{tier.managedCredit}</td>
+                          <td className="p-4 text-center font-medium text-indigo-600 dark:text-indigo-400">{tier.teamCredit}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -387,7 +408,7 @@ export default function SlaPage() {
                 { step: 2, title: "Acknowledgement", description: "We acknowledge the issue publicly on our status page and send notifications to affected customers via email and dashboard alerts.", color: "text-blue-500", bg: "bg-blue-500/10" },
                 { step: 3, title: "Updates", description: "We post updates every 30 minutes for critical incidents and every 2 hours for high-priority issues until resolved. You will never be left wondering what is happening.", color: "text-violet-500", bg: "bg-violet-500/10" },
                 { step: 4, title: "Resolution", description: "Once the issue is fixed, we confirm resolution and monitor closely for 24 hours to ensure stability.", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-                { step: 5, title: "Post-Incident Review", description: "Within 5 business days, we publish a Root Cause Analysis explaining what happened, why, and what we are doing to prevent it from happening again. Managed and Custom clients receive a private, detailed report.", color: "text-rose-500", bg: "bg-rose-500/10" },
+                { step: 5, title: "Post-Incident Review", description: "Within 5 business days, we publish a Root Cause Analysis explaining what happened, why, and what we are doing to prevent it from happening again. Managed and Custom clients receive a private, detailed report. Team clients receive their post-mortem within 48 hours via their dedicated escalation contact.", color: "text-rose-500", bg: "bg-rose-500/10" },
               ].map((item) => (
                 <Card key={item.step}>
                   <CardContent className="p-6">
@@ -398,6 +419,82 @@ export default function SlaPage() {
                         <p className="text-sm text-muted-foreground">
                           {item.description}
                         </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative py-16" data-testid="section-team-sla-extras">
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/[0.03] to-transparent dark:from-indigo-500/[0.02]" />
+          <div className="relative max-w-4xl mx-auto px-6">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-indigo-500/10">
+                <Star className="h-4 w-4 text-indigo-500" />
+              </span>
+              <h2 className="text-2xl font-light tracking-tight" data-testid="text-team-extras-title">
+                4b. Team SLA Extras
+              </h2>
+              <Badge variant="outline" className="border-indigo-500/30 text-indigo-600 dark:text-indigo-400" data-testid="badge-team-extras">
+                Team Package
+              </Badge>
+            </div>
+            <p className="text-muted-foreground mb-8 max-w-2xl">
+              Team package customers receive these additional SLA commitments
+              beyond the standard Managed package, providing stronger accountability
+              and faster resolution for your entire organisation.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                {
+                  title: "Dedicated Escalation Path",
+                  description: "A named contact for escalation, not a ticket queue. Your issues go directly to a person who knows your account.",
+                  icon: Users,
+                },
+                {
+                  title: "Monthly SLA Review Call",
+                  description: "A scheduled monthly call with your account manager to review SLA performance, discuss upcoming needs, and address any concerns.",
+                  icon: Headphones,
+                },
+                {
+                  title: "48-Hour Incident Post-Mortem",
+                  description: "Receive a detailed post-mortem within 48 hours of any incident, compared to 5 business days for Managed clients.",
+                  icon: Clock,
+                },
+                {
+                  title: "Quarterly Capacity Planning",
+                  description: "Proactive capacity planning reviews every quarter to ensure your infrastructure scales with your team's growth.",
+                  icon: Database,
+                },
+                {
+                  title: "Priority Incident Resolution",
+                  description: "Team incidents are prioritised and resolved before the Managed queue, ensuring your organisation gets back online faster.",
+                  icon: AlertTriangle,
+                },
+                {
+                  title: "Enhanced Data Recovery",
+                  description: "Recovery Time Objective (RTO): 2 hours (vs Managed's 4 hours). Recovery Point Objective (RPO): 30 minutes (vs Managed's 1 hour).",
+                  icon: Shield,
+                },
+                {
+                  title: "Budget Overspend Protection",
+                  description: "Guarantee that department spending caps are enforced accurately. If a system error allows overspend, the excess amount is credited back.",
+                  icon: Scale,
+                },
+              ].map((item) => (
+                <Card key={item.title} data-testid={`card-team-extra-${item.title.toLowerCase().replace(/\s+/g, "-")}`}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-indigo-500/10 shrink-0">
+                        <item.icon className="h-4 w-4 text-indigo-500" />
+                      </span>
+                      <div>
+                        <h3 className="font-medium mb-1">{item.title}</h3>
+                        <p className="text-sm text-muted-foreground">{item.description}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -449,11 +546,11 @@ export default function SlaPage() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span><span className="font-medium text-foreground">Recovery Time (RTO):</span> Managed: 4 hours. Self-Hosted: your responsibility.</span>
+                      <span><span className="font-medium text-foreground">Recovery Time (RTO):</span> Team: 2 hours. Managed: 4 hours. Self-Hosted: your responsibility.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span><span className="font-medium text-foreground">Recovery Point (RPO):</span> Managed: 1 hour. Self-Hosted: your configuration.</span>
+                      <span><span className="font-medium text-foreground">Recovery Point (RPO):</span> Team: 30 minutes. Managed: 1 hour. Self-Hosted: your configuration.</span>
                     </li>
                   </ul>
                 </CardContent>

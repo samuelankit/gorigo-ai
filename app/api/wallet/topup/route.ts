@@ -6,6 +6,7 @@ import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
+import { logTeamActivity } from "@/lib/team-activity";
 
 const topupSchema = z.object({
   amount: z.number().positive("Amount must be positive").finite().max(10000, "Maximum top-up amount is 10,000"),
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
       entityId: auth.orgId,
       details: { amount, newBalance: result.newBalance, method: "admin_manual" },
     });
+
+    logTeamActivity(auth.orgId, auth.user.id, "wallet_topped_up", "wallet", auth.orgId, { amount, newBalance: result.newBalance }).catch(() => {});
 
     return NextResponse.json({
       success: true,

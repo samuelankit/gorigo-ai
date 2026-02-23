@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from "@/lib/get-user";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { settingsLimiter } from "@/lib/rate-limit";
+import { logTeamActivity } from "@/lib/team-activity";
 
 const campaignStatusSchema = z.object({
   status: z.enum(["draft", "active", "paused", "completed", "cancelled"]),
@@ -105,6 +106,15 @@ export async function PATCH(
       .set(updateData)
       .where(and(eq(campaigns.id, campaignId), eq(campaigns.orgId, auth.orgId)))
       .returning();
+
+    const actionMap: Record<string, "campaign_started" | "campaign_paused"> = {
+      active: "campaign_started",
+      paused: "campaign_paused",
+    };
+    const activityAction = actionMap[newStatus];
+    if (activityAction) {
+      logTeamActivity(auth.orgId, auth.user.id, activityAction, "campaign", campaignId, { name: campaign.name, from: currentStatus, to: newStatus }).catch(() => {});
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

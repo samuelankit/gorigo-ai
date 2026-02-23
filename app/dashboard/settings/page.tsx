@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/lib/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Settings, Building2, Lock, Shield, User, Clock, Phone, AlertTriangle, Webhook, Plus, Trash2, Edit, Eye, EyeOff, Copy, Loader2, Cloud, Key, Server } from "lucide-react";
+import { Settings, Building2, Lock, Shield, User, Clock, Phone, AlertTriangle, Webhook, Plus, Trash2, Edit, Eye, EyeOff, Copy, Loader2, Cloud, Key, Server, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
@@ -44,12 +44,14 @@ const TIMEZONES = [
 
 const PACKAGE_INFO: Record<string, { name: string; rate: string; description: string; color: string; bgColor: string }> = {
   managed: { name: "Managed", rate: "\u00a30.15/min", description: "AI + Telephony included", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
+  team: { name: "Team", rate: "\u00a30.18/min", description: "For your whole company", color: "text-indigo-600 dark:text-indigo-400", bgColor: "bg-indigo-500/10" },
   self_hosted: { name: "Self-Hosted", rate: "\u00a30.03/min", description: "Licence fee only", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10" },
   custom: { name: "Custom", rate: "Custom", description: "Bespoke rates and features", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-500/10" },
 };
 
 const PACKAGE_ICONS: Record<string, typeof Cloud> = {
   managed: Cloud,
+  team: Key,
   self_hosted: Server,
   custom: Cloud,
 };
@@ -137,6 +139,11 @@ export default function SettingsPage() {
   const [editingWebhook, setEditingWebhook] = useState<WebhookRecord | null>(null);
   const [visibleSecrets, setVisibleSecrets] = useState<Record<number, boolean>>({});
 
+  const [defaultAgentVisibility, setDefaultAgentVisibility] = useState("shared");
+  const [budgetAlertThreshold, setBudgetAlertThreshold] = useState(80);
+  const [teamDescription, setTeamDescription] = useState("");
+  const [teamSettingsLoaded, setTeamSettingsLoaded] = useState(false);
+
   const { data: authData, isLoading: loading } = useQuery<any>({
     queryKey: ["/api/auth/me"],
     select: (d: any) => {
@@ -220,6 +227,38 @@ export default function SettingsPage() {
     queryKey: ["/api/webhooks"],
   });
   const webhookList: WebhookRecord[] = Array.isArray(webhooksRaw) ? webhooksRaw : [];
+
+  const isTeamOrCustom = deploymentModel === "team" || deploymentModel === "custom";
+
+  const { data: teamSettingsRaw, isLoading: loadingTeamSettings } = useQuery<any>({
+    queryKey: ["/api/settings/team"],
+    enabled: isTeamOrCustom,
+  });
+  if (teamSettingsRaw?.settings && !teamSettingsLoaded) {
+    setDefaultAgentVisibility(teamSettingsRaw.settings.defaultAgentVisibility || "shared");
+    setBudgetAlertThreshold(teamSettingsRaw.settings.budgetAlertThreshold ?? 80);
+    setTeamDescription(teamSettingsRaw.settings.teamDescription || "");
+    setTeamSettingsLoaded(true);
+  }
+
+  const saveTeamSettingsMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("/api/settings/team", {
+        method: "PUT",
+        body: JSON.stringify({
+          defaultAgentVisibility,
+          budgetAlertThreshold,
+          teamDescription: teamDescription.trim(),
+        }),
+      }),
+    onSuccess: () => {
+      toast({ title: "Team settings updated", description: "Your team settings have been saved." });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings/team"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save team settings.", variant: "destructive" });
+    },
+  });
 
   const updateProfileMutation = useMutation({
     mutationFn: () => apiRequest("/api/settings/profile", { method: "PUT", body: JSON.stringify({ businessName }) }),
@@ -517,6 +556,89 @@ export default function SettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      {isTeamOrCustom && (
+        loadingTeamSettings ? (
+          <Skeleton className="h-64 w-full" data-testid="skeleton-team-settings" />
+        ) : (
+          <Card className="bg-gradient-to-br from-indigo-500/5 to-transparent dark:from-indigo-500/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-7 h-7 rounded-md flex items-center justify-center bg-indigo-500/10">
+                  <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                Team Settings
+              </CardTitle>
+              <CardDescription>Configure team-wide defaults and preferences for your organisation.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-5">
+              <div className="space-y-2">
+                <Label htmlFor="defaultAgentVisibility">Default Agent Visibility</Label>
+                <p className="text-xs text-muted-foreground">Set the default visibility for newly created agents.</p>
+                <Select value={defaultAgentVisibility} onValueChange={setDefaultAgentVisibility}>
+                  <SelectTrigger data-testid="select-default-agent-visibility">
+                    <SelectValue placeholder="Select visibility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="private" data-testid="select-item-visibility-private">Private (Creator only)</SelectItem>
+                    <SelectItem value="department" data-testid="select-item-visibility-department">My Department</SelectItem>
+                    <SelectItem value="shared" data-testid="select-item-visibility-shared">Whole Company</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label htmlFor="budgetAlertThreshold">Budget Alert Threshold (%)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Send budget alerts when department spending reaches this percentage of their cap.
+                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Input
+                    id="budgetAlertThreshold"
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={budgetAlertThreshold}
+                    onChange={(e) => setBudgetAlertThreshold(Math.min(100, Math.max(1, parseInt(e.target.value) || 80)))}
+                    className="w-24"
+                    data-testid="input-budget-alert-threshold"
+                  />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label htmlFor="teamDescription">Team Description</Label>
+                <p className="text-xs text-muted-foreground">
+                  An optional description of your team visible to members.
+                </p>
+                <Textarea
+                  id="teamDescription"
+                  value={teamDescription}
+                  onChange={(e) => setTeamDescription(e.target.value)}
+                  placeholder="Describe your team or organisation..."
+                  maxLength={500}
+                  data-testid="textarea-team-description"
+                />
+                <p className="text-xs text-muted-foreground text-right">{teamDescription.length}/500</p>
+              </div>
+
+              <Button
+                onClick={() => saveTeamSettingsMutation.mutate()}
+                disabled={saveTeamSettingsMutation.isPending}
+                data-testid="button-save-team-settings"
+              >
+                {saveTeamSettingsMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                {saveTeamSettingsMutation.isPending ? "Saving..." : "Save Team Settings"}
+              </Button>
+            </CardContent>
+          </Card>
+        )
+      )}
 
       <Card>
         <CardHeader>

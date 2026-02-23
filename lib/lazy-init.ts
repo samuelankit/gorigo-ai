@@ -11,6 +11,14 @@ export async function ensureServicesStarted() {
     console.error("[GoRigo] Environment validation failed:", e);
   }
 
+  try {
+    const { db } = await import("@/lib/db");
+    const { sql } = await import("drizzle-orm");
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_call_logs_transcript_fts ON call_logs USING gin (to_tsvector('english'::regconfig, COALESCE(transcript, ''::text)))`);
+  } catch (e) {
+    console.error("[GoRigo] FTS index creation skipped:", e instanceof Error ? e.message : e);
+  }
+
   const isProduction = process.env.NODE_ENV === "production";
 
   try {

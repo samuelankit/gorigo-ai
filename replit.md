@@ -65,6 +65,20 @@ Key features include:
 - **Interactive Demo**: Public demo at /demo with pre-configured AI responses (no signup required, no LLM queries — compliance safe).
 - **Multi-Currency Support**: GBP/EUR/USD conversion API with indicative exchange rates at /api/wallet/currency.
 - **GDPR Data Export**: Full GDPR Article 15 compliant data export from Settings, including account, agents, calls, knowledge, billing, and data rights.
+- **Data Source Connectors**: OAuth-first, mobile-first data connection system. Users connect data sources (Google Sheets, HubSpot via OAuth; CSV upload; Companies House auto-connected; Manual Entry) to import contacts for campaigns. BYOK (Bring Your Own Key) option for advanced users. Features: AES-256 encrypted credential storage (`lib/encryption.ts`), automatic OAuth token refresh, connector interest tracking for "Coming Soon" sources.
+- **Wallet Fund Locking**: Atomic fund locking with row-level locks for campaign cost pre-approval. Available balance = balance - lockedBalance. Features: cost estimation with scaled orchestration fees, 80% cost cap enforcement (auto-pause), periodic excess fund release every 25 contacts, 24-hour lock expiry, fund release on cancellation. Transaction types: fund_lock, fund_charge, fund_release, fund_partial_release.
+- **Campaign Wizard (Mobile-First)**: 3-step creation flow — Add Contacts (from any data source) → Configure & Estimate (agent, schedule, cost breakdown) → Approve & Start (consent checkbox required). Wizard state persists in localStorage. Bottom-sticky action bars on mobile. Inline OAuth connection from wizard.
+- **Campaign Progress & Cost Cap**: Real-time progress monitoring with 10s polling, circular progress on mobile, stacked stat cards, cost tracker. Cost cap pauses campaign at 80% of locked funds. Stalled campaign detection (1hr auto-pause, 4hr auto-cancel). CSV export with mobile share sheet.
+
+### Data Connector Architecture
+- **Tables**: `data_connectors` (encrypted credentials, OAuth tokens, connector config), `connector_interest` (Coming Soon tracking)
+- **Extended tables**: `campaigns` (+sourceConnectorId, estimatedCost, lockedAmount, costCapReached, consentConfirmed), `wallets` (+lockedBalance)
+- **Encryption**: `lib/encryption.ts` — AES-256-GCM with HKDF key derivation from SESSION_SECRET
+- **OAuth helpers**: `lib/oauth-google.ts`, `lib/oauth-hubspot.ts` — HMAC-signed state parameters, automatic token refresh, graceful revocation handling
+- **Connector types**: csv, companies_house, google_sheets, hubspot, manual, google_places, yelp, apollo, salesforce, pipedrive, airtable
+- **Auth types**: none, api_key, oauth
+- **Connector statuses**: active, inactive, error, expired, disconnected, pending_auth
+- **Environment secrets needed**: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, HUBSPOT_CLIENT_ID, HUBSPOT_CLIENT_SECRET, COMPANIES_HOUSE_API_KEY
 
 ## External Dependencies
 - **AI Services**: OpenAI, Anthropic (via Replit AI Integrations).

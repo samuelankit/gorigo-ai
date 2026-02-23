@@ -688,6 +688,7 @@ export const wallets = pgTable("wallets", {
   lowBalanceThreshold: numeric("low_balance_threshold", { precision: 12, scale: 2 }).default("10"),
   lowBalanceEmailEnabled: boolean("low_balance_email_enabled").default(true),
   lastLowBalanceAlertAt: timestamp("last_low_balance_alert_at"),
+  lockedBalance: numeric("locked_balance", { precision: 12, scale: 2 }).default("0").notNull(),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -955,6 +956,14 @@ export const campaigns = pgTable("campaigns", {
   archivedAt: timestamp("archived_at"),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
+  sourceConnectorId: integer("source_connector_id"),
+  estimatedCost: numeric("estimated_cost", { precision: 12, scale: 2 }),
+  lockedAmount: numeric("locked_amount", { precision: 12, scale: 2 }),
+  costCapReached: boolean("cost_cap_reached").default(false),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: integer("approved_by"),
+  consentConfirmed: boolean("consent_confirmed").default(false),
+  consentConfirmedAt: timestamp("consent_confirmed_at"),
 }, (table) => [
   index("idx_campaigns_org_status").on(table.orgId, table.status),
   index("idx_campaigns_country").on(table.countryCode),
@@ -2678,5 +2687,93 @@ export type RigoFollowUp = typeof rigoFollowUps.$inferSelect;
 export const insertRigoConversationSchema = createInsertSchema(rigoConversations).omit({ id: true, createdAt: true });
 export type InsertRigoConversation = z.infer<typeof insertRigoConversationSchema>;
 export type RigoConversation = typeof rigoConversations.$inferSelect;
+
+// ═══════════════════════════════════════════════════
+// DATA CONNECTORS
+// ═══════════════════════════════════════════════════
+
+export const dataConnectors = pgTable("data_connectors", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  connectorType: text("connector_type").notNull(),
+  name: text("name").notNull(),
+  authType: text("auth_type").notNull(),
+  encryptedCredentials: text("encrypted_credentials"),
+  oauthAccessToken: text("oauth_access_token"),
+  oauthRefreshToken: text("oauth_refresh_token"),
+  oauthExpiresAt: timestamp("oauth_expires_at"),
+  oauthScopes: text("oauth_scopes"),
+  oauthEmail: text("oauth_email"),
+  config: jsonb("config"),
+  status: text("status").default("active").notNull(),
+  lastTestedAt: timestamp("last_tested_at"),
+  lastErrorMessage: text("last_error_message"),
+  totalLookups: integer("total_lookups").default(0).notNull(),
+  deletedAt: timestamp("deleted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_data_connectors_org").on(table.orgId),
+  index("idx_data_connectors_user").on(table.userId),
+  index("idx_data_connectors_type").on(table.connectorType),
+  index("idx_data_connectors_org_status").on(table.orgId, table.status),
+]);
+
+export const insertDataConnectorSchema = createInsertSchema(dataConnectors).omit({
+  id: true,
+  createdAt: true,
+  lastTestedAt: true,
+  lastErrorMessage: true,
+  totalLookups: true,
+  deletedAt: true,
+});
+export type InsertDataConnector = z.infer<typeof insertDataConnectorSchema>;
+export type DataConnector = typeof dataConnectors.$inferSelect;
+
+export const connectorTypeEnum = z.enum([
+  "csv",
+  "companies_house",
+  "google_places",
+  "yelp",
+  "apollo",
+  "hubspot",
+  "google_sheets",
+  "salesforce",
+  "pipedrive",
+  "airtable",
+  "manual",
+]);
+export type ConnectorType = z.infer<typeof connectorTypeEnum>;
+
+export const connectorAuthTypeEnum = z.enum(["none", "api_key", "oauth"]);
+export type ConnectorAuthType = z.infer<typeof connectorAuthTypeEnum>;
+
+export const connectorStatusEnum = z.enum([
+  "active",
+  "inactive",
+  "error",
+  "expired",
+  "disconnected",
+  "pending_auth",
+]);
+export type ConnectorStatus = z.infer<typeof connectorStatusEnum>;
+
+export const connectorInterest = pgTable("connector_interest", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  connectorType: text("connector_type").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_connector_interest_org").on(table.orgId),
+  index("idx_connector_interest_type").on(table.connectorType),
+]);
+
+export const insertConnectorInterestSchema = createInsertSchema(connectorInterest).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertConnectorInterest = z.infer<typeof insertConnectorInterestSchema>;
+export type ConnectorInterest = typeof connectorInterest.$inferSelect;
 
 export * from "./models/chat";

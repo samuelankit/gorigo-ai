@@ -3,13 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -32,6 +34,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Globe,
   ArrowLeft,
   Play,
@@ -49,8 +70,18 @@ import {
   Languages,
   Settings,
   MapPin,
+  Download,
+  Share2,
+  WifiOff,
+  CircleDollarSign,
+  Timer,
+  TrendingUp,
+  XCircle,
+  SkipForward,
+  CheckCircle2,
 } from "lucide-react";
 import { useToast } from "@/lib/use-toast";
+import { apiRequest } from "@/components/query-provider";
 
 interface CampaignDetail {
   id: number;
@@ -83,6 +114,29 @@ interface CampaignDetail {
   validCount: number;
   invalidCount: number;
   dncBlockedCount: number;
+  estimatedCost: string | null;
+  lockedAmount: string | null;
+  costCapReached: boolean;
+  consentConfirmed: boolean;
+  approvedAt: string | null;
+  startedAt: string | null;
+}
+
+interface ProgressData {
+  campaignId: number;
+  status: string;
+  totalContacts: number;
+  completed: number;
+  failed: number;
+  skipped: number;
+  pending: number;
+  inProgress: number;
+  progressPercent: number;
+  budgetSpent: string;
+  estimatedCost: string;
+  lockedAmount: string;
+  costCapReached: boolean;
+  estimatedTimeRemainingMinutes: number | null;
 }
 
 interface Contact {
@@ -95,6 +149,11 @@ interface Contact {
   status: string;
   dncResult: string | null;
   callAttempts: number;
+  attemptCount?: number;
+  lastCallDisposition?: string | null;
+  completedAt?: string | null;
+  callDuration?: number | null;
+  callCost?: string | null;
   createdAt: string;
 }
 
@@ -147,12 +206,17 @@ function getCampaignStatusBadge(status: string) {
   switch (status) {
     case "draft":
       return <Badge variant="outline" className="no-default-hover-elevate">{status}</Badge>;
+    case "approved":
+      return <Badge className="no-default-hover-elevate bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">{status}</Badge>;
+    case "running":
     case "active":
       return <Badge className="no-default-hover-elevate bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{status}</Badge>;
     case "paused":
       return <Badge className="no-default-hover-elevate bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20">{status}</Badge>;
     case "completed":
-      return <Badge variant="outline" className="no-default-hover-elevate">{status}</Badge>;
+      return <Badge className="no-default-hover-elevate bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{status}</Badge>;
+    case "expired":
+      return <Badge className="no-default-hover-elevate bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20">expired</Badge>;
     case "cancelled":
     case "archived":
       return <Badge variant="destructive" className="no-default-hover-elevate">{status}</Badge>;
@@ -163,159 +227,226 @@ function getCampaignStatusBadge(status: string) {
 
 function getContactStatusBadge(status: string) {
   switch (status) {
+    case "completed":
+    case "answered":
     case "valid":
-      return <Badge className="no-default-hover-elevate bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{status}</Badge>;
+      return <Badge className="no-default-hover-elevate bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{status === "valid" ? "valid" : "answered"}</Badge>;
+    case "no_answer":
+      return <Badge variant="outline" className="no-default-hover-elevate">no answer</Badge>;
+    case "failed":
     case "invalid":
       return <Badge variant="destructive" className="no-default-hover-elevate">{status}</Badge>;
     case "dnc_blocked":
-      return <Badge className="no-default-hover-elevate bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20">dnc blocked</Badge>;
+    case "skipped":
+      return <Badge className="no-default-hover-elevate bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20">{status === "dnc_blocked" ? "blocked" : "skipped"}</Badge>;
+    case "cancelled":
+      return <Badge variant="outline" className="no-default-hover-elevate text-muted-foreground">cancelled</Badge>;
     case "pending":
+    case "queued":
       return <Badge variant="outline" className="no-default-hover-elevate">{status}</Badge>;
+    case "in_progress":
+    case "calling":
+      return <Badge className="no-default-hover-elevate bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">in progress</Badge>;
     default:
       return <Badge variant="outline" className="no-default-hover-elevate">{status}</Badge>;
   }
+}
+
+function CircularProgress({ percent, size = 120, strokeWidth = 10 }: { percent: number; size?: number; strokeWidth?: number }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percent / 100) * circumference;
+
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          className="text-muted/30"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className="text-emerald-500 transition-all duration-500"
+        />
+      </svg>
+      <span className="absolute text-xl font-bold text-foreground">{percent}%</span>
+    </div>
+  );
 }
 
 export default function CampaignDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const campaignId = params.id as string;
 
-  const [campaign, setCampaign] = useState<CampaignDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [contactsLoading, setContactsLoading] = useState(false);
   const [contactsPage, setContactsPage] = useState(1);
-  const [contactsTotalPages, setContactsTotalPages] = useState(1);
-  const [contactsTotalCount, setContactsTotalCount] = useState(0);
   const [statusFilter, setStatusFilter] = useState("all");
-
   const [importText, setImportText] = useState("");
-  const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-
-  const fetchCampaign = useCallback(() => {
-    setLoading(true);
-    fetch(`/api/campaigns/${campaignId}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed to load campaign");
-        return r.json();
-      })
-      .then((data) => setCampaign(data))
-      .catch(() => {
-        toast({ title: "Error", description: "Failed to load campaign details", variant: "destructive" });
-      })
-      .finally(() => setLoading(false));
-  }, [campaignId]);
-
-  const fetchContacts = useCallback(() => {
-    setContactsLoading(true);
-    const statusParam = statusFilter !== "all" ? `&status=${statusFilter}` : "";
-    fetch(`/api/campaigns/${campaignId}/contacts?page=${contactsPage}&limit=50${statusParam}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed to load contacts");
-        return r.json();
-      })
-      .then((data: ContactsResponse) => {
-        setContacts(data.contacts);
-        setContactsTotalPages(data.totalPages);
-        setContactsTotalCount(data.totalCount);
-      })
-      .catch(() => {
-        toast({ title: "Error", description: "Failed to load contacts", variant: "destructive" });
-      })
-      .finally(() => setContactsLoading(false));
-  }, [campaignId, contactsPage, statusFilter]);
+  const [cancelSheetOpen, setCancelSheetOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [extendAmount, setExtendAmount] = useState("10");
 
   useEffect(() => {
-    fetchCampaign();
-  }, [fetchCampaign]);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    setIsOnline(navigator.onLine);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
-  useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+  const isActiveCampaign = (status?: string) =>
+    status === "running" || status === "active" || status === "approved";
 
-  const handleStatusChange = async (newStatus: string, reason?: string) => {
-    setActionLoading(true);
-    try {
-      const body: Record<string, string> = { status: newStatus };
-      if (reason) body.reason = reason;
+  const { data: campaign, isLoading: loading } = useQuery<CampaignDetail>({
+    queryKey: ["/api/campaigns", campaignId],
+    queryFn: () => apiRequest(`/api/campaigns/${campaignId}`, { method: "GET" }),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      if (isActiveCampaign(status)) return 10000;
+      return 30000;
+    },
+    enabled: !!campaignId,
+  });
 
-      const res = await fetch(`/api/campaigns/${campaignId}/status`, {
+  const { data: progress, isLoading: progressLoading } = useQuery<ProgressData>({
+    queryKey: ["/api/campaigns", campaignId, "progress"],
+    queryFn: () => apiRequest(`/api/campaigns/${campaignId}/progress`, { method: "GET" }),
+    refetchInterval: (query) => {
+      if (isActiveCampaign(campaign?.status)) return 10000;
+      return 30000;
+    },
+    enabled: !!campaignId,
+  });
+
+  const statusParam = statusFilter !== "all" ? `&status=${statusFilter}` : "";
+  const { data: contactsData, isLoading: contactsLoading } = useQuery<ContactsResponse>({
+    queryKey: ["/api/campaigns", campaignId, "contacts", contactsPage, statusFilter],
+    queryFn: () => apiRequest(`/api/campaigns/${campaignId}/contacts?page=${contactsPage}&limit=50${statusParam}`, { method: "GET" }),
+    enabled: !!campaignId,
+  });
+
+  const contacts = contactsData?.contacts ?? [];
+  const contactsTotalPages = contactsData?.totalPages ?? 1;
+  const contactsTotalCount = contactsData?.totalCount ?? 0;
+
+  const pauseMutation = useMutation({
+    mutationFn: () => apiRequest(`/api/campaigns/${campaignId}/pause`, {
+      method: "POST",
+      body: JSON.stringify({ reason: "Manually paused" }),
+    }),
+    onSuccess: () => {
+      toast({ title: "Campaign Paused", description: "Your campaign has been paused." });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId, "progress"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to pause campaign", variant: "destructive" });
+    },
+  });
+
+  const resumeMutation = useMutation({
+    mutationFn: () => apiRequest(`/api/campaigns/${campaignId}/resume`, { method: "POST" }),
+    onSuccess: () => {
+      toast({ title: "Campaign Resumed", description: "Your campaign is running again." });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId, "progress"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to resume campaign", variant: "destructive" });
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: () => apiRequest(`/api/campaigns/${campaignId}`, {
+      method: "DELETE",
+    }),
+    onSuccess: () => {
+      toast({ title: "Campaign Cancelled", description: "Locked funds have been returned to your wallet." });
+      setCancelSheetOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId, "progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to cancel campaign", variant: "destructive" });
+    },
+  });
+
+  const extendMutation = useMutation({
+    mutationFn: (additionalAmount: number) => apiRequest(`/api/campaigns/${campaignId}/extend`, {
+      method: "POST",
+      body: JSON.stringify({ additionalAmount }),
+    }),
+    onSuccess: () => {
+      toast({ title: "Funds Added", description: "Additional funds locked and campaign resumed." });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId, "progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to add funds. Your balance may have changed.", variant: "destructive" });
+    },
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: () => apiRequest(`/api/campaigns/${campaignId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "completed" }),
+    }),
+    onSuccess: () => {
+      toast({ title: "Campaign Completed", description: "Excess locked funds have been returned to your wallet." });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId, "progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to complete campaign", variant: "destructive" });
+    },
+  });
+
+  const statusChangeMutation = useMutation({
+    mutationFn: ({ status, reason }: { status: string; reason?: string }) =>
+      apiRequest(`/api/campaigns/${campaignId}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+        body: JSON.stringify({ status, ...(reason ? { reason } : {}) }),
+      }),
+    onSuccess: (_, variables) => {
+      toast({ title: "Status Updated", description: `Campaign status changed to "${variables.status}".` });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId, "progress"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to update status", variant: "destructive" });
+    },
+  });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to update status");
-      }
-
-      toast({ title: "Status Updated", description: `Campaign status changed to "${newStatus}".` });
-      fetchCampaign();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to update status", variant: "destructive" });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleArchive = async () => {
-    setActionLoading(true);
-    try {
-      const res = await fetch(`/api/campaigns/${campaignId}`, { method: "DELETE" });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to archive");
-      }
-      toast({ title: "Archived", description: "Campaign has been archived." });
-      router.push("/dashboard/campaigns");
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to archive", variant: "destructive" });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleImport = async () => {
-    const lines = importText
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-
-    if (lines.length === 0) {
-      toast({ title: "Validation Error", description: "Please enter at least one phone number", variant: "destructive" });
-      return;
-    }
-
-    const contactsPayload = lines.map((line) => {
-      const parts = line.split(",").map((p) => p.trim());
-      return {
-        phone: parts[0],
-        name: parts[1] || undefined,
-        email: parts[2] || undefined,
-      };
-    });
-
-    setImporting(true);
-    setImportResult(null);
-    try {
-      const res = await fetch(`/api/campaigns/${campaignId}/contacts/import`, {
+  const importMutation = useMutation({
+    mutationFn: (contactsPayload: Array<{ phone: string; name?: string; email?: string }>) =>
+      apiRequest(`/api/campaigns/${campaignId}/contacts/import`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contacts: contactsPayload }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to import contacts");
-      }
-
-      const result = await res.json();
+      }),
+    onSuccess: (result: any) => {
       setImportResult({
         imported: result.imported,
         valid: result.valid,
@@ -325,12 +456,41 @@ export default function CampaignDetailPage() {
       });
       setImportText("");
       toast({ title: "Import Complete", description: `${result.imported} contacts imported.` });
-      fetchContacts();
-      fetchCampaign();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to import contacts", variant: "destructive" });
-    } finally {
-      setImporting(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId, "contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaignId, "progress"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to import contacts", variant: "destructive" });
+    },
+  });
+
+  const handleImport = () => {
+    const lines = importText.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+    if (lines.length === 0) {
+      toast({ title: "Validation Error", description: "Please enter at least one phone number", variant: "destructive" });
+      return;
+    }
+    const contactsPayload = lines.map((line) => {
+      const parts = line.split(",").map((p) => p.trim());
+      return { phone: parts[0], name: parts[1] || undefined, email: parts[2] || undefined };
+    });
+    importMutation.mutate(contactsPayload);
+  };
+
+  const handleExport = async () => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        const res = await fetch(`/api/campaigns/${campaignId}/export`);
+        const csvText = await res.text();
+        const blob = new Blob([csvText], { type: "text/csv" });
+        const file = new File([blob], `campaign-${campaignId}-results.csv`, { type: "text/csv" });
+        await navigator.share({ files: [file], title: `Campaign ${campaign?.name} Results` });
+      } else {
+        window.open(`/api/campaigns/${campaignId}/export`, "_blank");
+      }
+    } catch {
+      window.open(`/api/campaigns/${campaignId}/export`, "_blank");
     }
   };
 
@@ -338,6 +498,22 @@ export default function CampaignDetailPage() {
     setStatusFilter(value);
     setContactsPage(1);
   };
+
+  const anyActionPending = pauseMutation.isPending || resumeMutation.isPending ||
+    cancelMutation.isPending || extendMutation.isPending || completeMutation.isPending ||
+    statusChangeMutation.isPending;
+
+  const showProgress = campaign && (
+    isActiveCampaign(campaign.status) ||
+    campaign.status === "paused" ||
+    campaign.status === "completed" ||
+    campaign.status === "cancelled"
+  );
+
+  const budgetSpent = parseFloat(progress?.budgetSpent || campaign?.budgetSpent || "0");
+  const estimatedCost = parseFloat(progress?.estimatedCost || campaign?.estimatedCost || "0");
+  const lockedAmount = parseFloat(progress?.lockedAmount || campaign?.lockedAmount || "0");
+  const costCapReached = progress?.costCapReached || campaign?.costCapReached || false;
 
   if (loading) {
     return (
@@ -378,7 +554,83 @@ export default function CampaignDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24 lg:pb-6">
+      {!isOnline && (
+        <Card className="border-amber-300 dark:border-amber-700" data-testid="card-offline-banner">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <WifiOff className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-foreground">You're offline</p>
+                <p className="text-xs text-muted-foreground">Showing last known data. Progress will auto-refresh when you reconnect.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {campaign.status === "expired" && (
+        <Card className="border-orange-300 dark:border-orange-700" data-testid="card-expired-banner">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Campaign Expired</p>
+                <p className="text-xs text-muted-foreground">This campaign didn't start within 24 hours. Funds have been returned to your wallet.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {costCapReached && (campaign.status === "paused" || campaign.status === "running") && (
+        <Card className="border-amber-300 dark:border-amber-700" data-testid="card-cost-cap-banner">
+          <CardContent className="p-5">
+            <div className="flex items-start gap-3">
+              <CircleDollarSign className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Cost Cap Reached</p>
+                  <p className="text-sm text-muted-foreground">
+                    Your campaign has used {"\u00A3"}{budgetSpent.toFixed(2)} of {"\u00A3"}{lockedAmount.toFixed(2)} locked. Approve additional funds to continue.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={extendAmount}
+                      onChange={(e) => setExtendAmount(e.target.value)}
+                      className="w-24"
+                      min="1"
+                      step="1"
+                      data-testid="input-extend-amount"
+                    />
+                    <Button
+                      onClick={() => extendMutation.mutate(parseFloat(extendAmount) || 10)}
+                      disabled={anyActionPending}
+                      data-testid="button-extend-funds"
+                    >
+                      {extendMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <TrendingUp className="h-4 w-4 mr-2" />}
+                      Add & Continue
+                    </Button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => completeMutation.mutate()}
+                    disabled={anyActionPending}
+                    data-testid="button-complete-now"
+                  >
+                    {completeMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                    Complete Campaign Now
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
           <Link href="/dashboard/campaigns">
@@ -396,90 +648,220 @@ export default function CampaignDetailPage() {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="hidden lg:flex items-center gap-2 flex-wrap">
+          {(campaign.status === "completed" || campaign.status === "cancelled") && (
+            <Button variant="outline" onClick={handleExport} data-testid="button-export-results">
+              <Download className="h-4 w-4 mr-2" />
+              Download Results
+            </Button>
+          )}
           {campaign.status === "draft" && (
             <Button
-              onClick={() => handleStatusChange("active")}
-              disabled={actionLoading}
+              onClick={() => statusChangeMutation.mutate({ status: "active" })}
+              disabled={anyActionPending}
               data-testid="button-start-campaign"
             >
-              {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+              {statusChangeMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
               Start Campaign
             </Button>
           )}
-          {campaign.status === "active" && (
+          {(campaign.status === "running" || campaign.status === "active") && (
             <Button
               variant="outline"
-              onClick={() => handleStatusChange("paused", "Manual pause")}
-              disabled={actionLoading}
+              onClick={() => pauseMutation.mutate()}
+              disabled={anyActionPending}
               data-testid="button-pause-campaign"
             >
-              {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Pause className="h-4 w-4 mr-2" />}
+              {pauseMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Pause className="h-4 w-4 mr-2" />}
               Pause
             </Button>
           )}
-          {campaign.status === "paused" && (
+          {campaign.status === "paused" && !costCapReached && (
             <Button
-              onClick={() => handleStatusChange("active")}
-              disabled={actionLoading}
+              onClick={() => resumeMutation.mutate()}
+              disabled={anyActionPending}
               data-testid="button-resume-campaign"
             >
-              {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+              {resumeMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
               Resume
             </Button>
           )}
-          {(campaign.status === "draft" || campaign.status === "paused") && (
+          {(campaign.status === "running" || campaign.status === "active" || campaign.status === "paused") && (
             <Button
               variant="destructive"
-              onClick={handleArchive}
-              disabled={actionLoading}
+              onClick={() => setCancelSheetOpen(true)}
+              disabled={anyActionPending}
+              data-testid="button-cancel-campaign"
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+          )}
+          {(campaign.status === "draft" || campaign.status === "paused") && !isActiveCampaign(campaign.status) && campaign.status !== "running" && (
+            <Button
+              variant="destructive"
+              onClick={() => cancelMutation.mutate()}
+              disabled={anyActionPending}
               data-testid="button-archive-campaign"
             >
-              {actionLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Ban className="h-4 w-4 mr-2" />}
+              <Ban className="h-4 w-4 mr-2" />
               Archive
             </Button>
           )}
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Contacts</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-stat-total-contacts">{campaign.totalContacts || 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Valid / Ready</CardTitle>
-            <Check className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400" data-testid="text-stat-valid-contacts">{campaign.validCount || 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">DNC Blocked</CardTitle>
-            <Ban className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400" data-testid="text-stat-dnc-blocked">{campaign.dncBlockedCount || 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Invalid</CardTitle>
-            <X className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400" data-testid="text-stat-invalid-contacts">{campaign.invalidCount || 0}</div>
-          </CardContent>
-        </Card>
-      </div>
+      {showProgress && progress && (
+        <div className="space-y-4">
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-[auto_1fr]">
+            <Card className="flex items-center justify-center p-6 lg:hidden" data-testid="card-circular-progress">
+              <div className="flex flex-col items-center gap-2">
+                <CircularProgress percent={progress.progressPercent} />
+                <p className="text-sm text-muted-foreground mt-1" data-testid="text-progress-count">
+                  {progress.completed + progress.failed + progress.skipped} of {progress.totalContacts} contacts
+                </p>
+                {progress.estimatedTimeRemainingMinutes !== null && progress.estimatedTimeRemainingMinutes > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Timer className="h-3 w-3" />
+                    <span data-testid="text-time-remaining">~{progress.estimatedTimeRemainingMinutes} min remaining</span>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <Card className="hidden lg:block" data-testid="card-bar-progress">
+              <CardContent className="p-5 space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-medium text-foreground" data-testid="text-progress-label">
+                    {progress.completed + progress.failed + progress.skipped} of {progress.totalContacts} contacts processed
+                  </p>
+                  <p className="text-sm font-bold text-foreground">{progress.progressPercent}%</p>
+                </div>
+                <Progress value={progress.progressPercent} className="h-3" data-testid="progress-bar" />
+                {progress.estimatedTimeRemainingMinutes !== null && progress.estimatedTimeRemainingMinutes > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Timer className="h-3 w-3" />
+                    <span data-testid="text-time-remaining-desktop">~{progress.estimatedTimeRemainingMinutes} minutes remaining</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 lg:col-span-2">
+              <Card className="bg-emerald-500/5 dark:bg-emerald-500/10" data-testid="card-stat-completed">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <p className="text-xs font-medium text-muted-foreground">Completed</p>
+                  </div>
+                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400" data-testid="text-progress-completed">{progress.completed}</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-red-500/5 dark:bg-red-500/10" data-testid="card-stat-failed">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <XCircle className="h-4 w-4 text-red-500" />
+                    <p className="text-xs font-medium text-muted-foreground">Failed</p>
+                  </div>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400" data-testid="text-progress-failed">{progress.failed}</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-amber-500/5 dark:bg-amber-500/10" data-testid="card-stat-skipped">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <SkipForward className="h-4 w-4 text-amber-500" />
+                    <p className="text-xs font-medium text-muted-foreground">Skipped</p>
+                  </div>
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400" data-testid="text-progress-skipped">{progress.skipped}</p>
+                </CardContent>
+              </Card>
+              <Card data-testid="card-stat-pending">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-xs font-medium text-muted-foreground">Pending</p>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground" data-testid="text-progress-pending">{progress.pending}</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {(estimatedCost > 0 || lockedAmount > 0) && (
+            <Card data-testid="card-cost-tracker">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Estimated</p>
+                    <p className="text-lg font-bold text-foreground" data-testid="text-cost-estimated">{"\u00A3"}{estimatedCost.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Spent</p>
+                    <p className="text-lg font-bold text-foreground" data-testid="text-cost-spent">{"\u00A3"}{budgetSpent.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Locked</p>
+                    <p className="text-lg font-bold text-foreground" data-testid="text-cost-locked">{"\u00A3"}{lockedAmount.toFixed(2)}</p>
+                  </div>
+                </div>
+                {lockedAmount > 0 && (
+                  <div className="mt-3">
+                    <Progress
+                      value={lockedAmount > 0 ? Math.min((budgetSpent / lockedAmount) * 100, 100) : 0}
+                      className="h-2"
+                      data-testid="progress-cost"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {lockedAmount > 0 ? Math.round((budgetSpent / lockedAmount) * 100) : 0}% of locked funds used
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {!showProgress && (
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Contacts</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold" data-testid="text-stat-total-contacts">{campaign.totalContacts || 0}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Valid / Ready</CardTitle>
+              <Check className="h-4 w-4 text-emerald-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400" data-testid="text-stat-valid-contacts">{campaign.validCount || 0}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">DNC Blocked</CardTitle>
+              <Ban className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400" data-testid="text-stat-dnc-blocked">{campaign.dncBlockedCount || 0}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Invalid</CardTitle>
+              <X className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400" data-testid="text-stat-invalid-contacts">{campaign.invalidCount || 0}</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -534,10 +916,10 @@ export default function CampaignDetailPage() {
                 <p className="text-xs text-muted-foreground">Budget</p>
                 <p className="text-sm font-medium" data-testid="text-detail-budget">
                   {campaign.budgetCap
-                    ? `$${parseFloat(campaign.budgetSpent || "0").toFixed(2)} / $${parseFloat(campaign.budgetCap).toFixed(2)}`
-                    : "No limit"}
+                    ? `${"\u00A3"}${parseFloat(campaign.budgetSpent || "0").toFixed(2)} / ${"\u00A3"}${parseFloat(campaign.budgetCap).toFixed(2)}`
+                    : estimatedCost > 0 ? `Est. ${"\u00A3"}${estimatedCost.toFixed(2)}` : "No limit"}
                   {campaign.dailySpendLimit && (
-                    <span className="text-muted-foreground"> (daily: ${parseFloat(campaign.dailySpendLimit).toFixed(2)})</span>
+                    <span className="text-muted-foreground"> (daily: {"\u00A3"}{parseFloat(campaign.dailySpendLimit).toFixed(2)})</span>
                   )}
                 </p>
               </div>
@@ -576,8 +958,11 @@ export default function CampaignDetailPage() {
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="valid">Valid</SelectItem>
+                  <SelectItem value="completed">Answered</SelectItem>
+                  <SelectItem value="no_answer">No Answer</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
                   <SelectItem value="invalid">Invalid</SelectItem>
-                  <SelectItem value="dnc_blocked">DNC Blocked</SelectItem>
+                  <SelectItem value="dnc_blocked">Blocked</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
@@ -587,7 +972,54 @@ export default function CampaignDetailPage() {
             </p>
           </div>
 
-          <Card>
+          <div className="block lg:hidden space-y-3" data-testid="contact-cards-mobile">
+            {contactsLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-24 w-full rounded-md" />
+                ))}
+              </div>
+            ) : contacts.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Users className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground" data-testid="text-no-contacts-mobile">No contacts found.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              contacts.map((contact) => (
+                <Card key={contact.id} data-testid={`card-contact-${contact.id}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground truncate" data-testid={`text-contact-name-${contact.id}`}>
+                          {contact.contactName || "Unknown"}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono" data-testid={`text-contact-phone-${contact.id}`}>
+                          {contact.phoneNumberE164 || contact.phoneNumber || "No phone"}
+                        </p>
+                      </div>
+                      <div data-testid={`badge-contact-status-${contact.id}`}>
+                        {getContactStatusBadge(contact.status)}
+                      </div>
+                    </div>
+                    {(contact.callDuration !== undefined || contact.callCost) && (
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        {contact.callDuration !== undefined && contact.callDuration !== null && (
+                          <span>{Math.floor(contact.callDuration / 60)}m {contact.callDuration % 60}s</span>
+                        )}
+                        {contact.callCost && (
+                          <span>{"\u00A3"}{parseFloat(contact.callCost).toFixed(2)}</span>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+
+          <Card className="hidden lg:block">
             <CardContent className="p-0">
               {contactsLoading ? (
                 <div className="p-6 space-y-3">
@@ -631,7 +1063,7 @@ export default function CampaignDetailPage() {
                           {contact.dncResult || "-"}
                         </TableCell>
                         <TableCell className="text-right" data-testid={`text-contact-attempts-${contact.id}`}>
-                          {contact.callAttempts || 0}
+                          {contact.callAttempts || contact.attemptCount || 0}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -690,8 +1122,8 @@ export default function CampaignDetailPage() {
                   data-testid="textarea-import-contacts"
                 />
               </div>
-              <Button onClick={handleImport} disabled={importing} data-testid="button-import-contacts">
-                {importing ? (
+              <Button onClick={handleImport} disabled={importMutation.isPending} data-testid="button-import-contacts">
+                {importMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Importing...
@@ -737,6 +1169,126 @@ export default function CampaignDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Sheet open={cancelSheetOpen} onOpenChange={setCancelSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-xl">
+          <SheetHeader>
+            <SheetTitle>Cancel Campaign?</SheetTitle>
+            <SheetDescription>
+              {progress && progress.pending > 0
+                ? `${progress.pending} contacts haven't been called yet. `
+                : ""}
+              Locked funds will be returned to your wallet.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Button
+              variant="destructive"
+              onClick={() => cancelMutation.mutate()}
+              disabled={cancelMutation.isPending}
+              className="w-full sm:w-auto"
+              data-testid="button-confirm-cancel"
+            >
+              {cancelMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
+              Yes, Cancel Campaign
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setCancelSheetOpen(false)}
+              className="w-full sm:w-auto"
+              data-testid="button-keep-running"
+            >
+              Keep Running
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t p-3 lg:hidden z-50" data-testid="mobile-action-bar">
+        <div className="flex items-center gap-2 max-w-lg mx-auto">
+          {(campaign.status === "completed" || campaign.status === "cancelled") && (
+            <Button className="flex-1" variant="outline" onClick={handleExport} data-testid="button-export-results-mobile">
+              <Share2 className="h-4 w-4 mr-2" />
+              Share Results
+            </Button>
+          )}
+          {campaign.status === "draft" && (
+            <Button
+              className="flex-1"
+              onClick={() => statusChangeMutation.mutate({ status: "active" })}
+              disabled={anyActionPending}
+              data-testid="button-start-campaign-mobile"
+            >
+              {statusChangeMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+              Start Campaign
+            </Button>
+          )}
+          {(campaign.status === "running" || campaign.status === "active") && (
+            <>
+              <Button
+                className="flex-1"
+                variant="outline"
+                onClick={() => pauseMutation.mutate()}
+                disabled={anyActionPending}
+                data-testid="button-pause-mobile"
+              >
+                {pauseMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Pause className="h-4 w-4 mr-2" />}
+                Pause
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setCancelSheetOpen(true)}
+                disabled={anyActionPending}
+                data-testid="button-cancel-mobile"
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          {campaign.status === "paused" && !costCapReached && (
+            <>
+              <Button
+                className="flex-1"
+                onClick={() => resumeMutation.mutate()}
+                disabled={anyActionPending}
+                data-testid="button-resume-mobile"
+              >
+                {resumeMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+                Resume
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setCancelSheetOpen(true)}
+                disabled={anyActionPending}
+                data-testid="button-cancel-paused-mobile"
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          {costCapReached && (campaign.status === "paused" || campaign.status === "running") && (
+            <>
+              <Button
+                className="flex-1"
+                onClick={() => extendMutation.mutate(parseFloat(extendAmount) || 10)}
+                disabled={anyActionPending}
+                data-testid="button-extend-mobile"
+              >
+                {extendMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <TrendingUp className="h-4 w-4 mr-2" />}
+                Add Funds & Continue
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => completeMutation.mutate()}
+                disabled={anyActionPending}
+                data-testid="button-complete-mobile"
+              >
+                {completeMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

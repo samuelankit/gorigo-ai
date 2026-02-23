@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Bot, PhoneCall, Phone, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Server, Banknote, AudioLines, UserPlus } from "lucide-react";
+import { LayoutDashboard, Bot, PhoneCall, Phone, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Server, Banknote, AudioLines, UserPlus, Plug } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CustomIcon } from "@/components/ui/custom-icon";
 import type { ReactNode } from "react";
@@ -34,6 +34,7 @@ const mainMenuItems: MenuItemDef[] = [
 const manageMenuItems: MenuItemDef[] = [
   { title: "Agents & Flow", url: "/dashboard/agent", customIcon: "ai-voice-head" },
   { title: "Agent Testing", url: "/dashboard/agent-test", customIcon: "vr-voice-chat" },
+  { title: "Data Sources", url: "/dashboard/data-sources", icon: Plug },
   { title: "Knowledge Base", url: "/dashboard/knowledge", customIcon: "ai-voice-chip" },
   { title: "Smart Drafts", url: "/dashboard/drafts", icon: FileText },
   { title: "Campaigns", url: "/dashboard/campaigns", icon: Send },

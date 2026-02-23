@@ -31,6 +31,10 @@ export async function GET(request: NextRequest) {
       .from(walletTransactions)
       .where(eq(walletTransactions.orgId, auth.orgId));
 
+    const balance = Number(wallet.balance);
+    const lockedBal = Number(wallet.lockedBalance ?? 0);
+    const availableBal = balance - lockedBal;
+
     return NextResponse.json({
       wallet: {
         balance: wallet.balance,
@@ -38,6 +42,8 @@ export async function GET(request: NextRequest) {
         lowBalanceThreshold: wallet.lowBalanceThreshold,
         isActive: wallet.isActive,
         lowBalance,
+        lockedBalance: lockedBal,
+        availableBalance: availableBal,
       },
       stats: {
         totalTopUps: Number(stats.totalTopUps),

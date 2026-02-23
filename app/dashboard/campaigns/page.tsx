@@ -265,10 +265,17 @@ export default function CampaignsPage() {
           <h1 className="text-2xl font-bold text-foreground" data-testid="text-campaigns-title">Campaigns</h1>
           <p className="text-muted-foreground text-sm mt-1">Manage international outbound calling campaigns</p>
         </div>
-        <Button onClick={openDialog} data-testid="button-new-campaign">
-          <Plus className="h-4 w-4 mr-2" />
-          New Campaign
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button asChild data-testid="button-new-campaign-wizard">
+            <Link href="/dashboard/campaigns/create">
+              <Plus className="h-4 w-4 mr-2" />
+              New Campaign
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={openDialog} data-testid="button-new-campaign">
+            Quick Create
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

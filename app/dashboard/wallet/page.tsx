@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/lib/use-toast";
-import { Wallet, TrendingUp, TrendingDown, Hash, AlertTriangle, Cloud, Key, Server, Bell, FileText } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, Hash, AlertTriangle, Cloud, Key, Server, Bell, FileText, Lock, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TalkTimeInfo } from "@/components/talk-time-info";
 import { apiRequest } from "@/components/query-provider";
@@ -21,6 +21,8 @@ interface WalletData {
   lowBalanceThreshold: number;
   isActive: boolean;
   lowBalance: boolean;
+  lockedBalance?: number;
+  availableBalance?: number;
 }
 
 interface WalletStats {
@@ -144,6 +146,10 @@ export default function WalletPage() {
       deduction: { label: "Deduction", className: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20" },
       refund: { label: "Refund", className: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/20" },
       adjustment: { label: "Adjustment", className: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20" },
+      fund_lock: { label: "Funds Locked", className: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20" },
+      fund_charge: { label: "Campaign Charged", className: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20" },
+      fund_release: { label: "Funds Released", className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" },
+      fund_partial_release: { label: "Partial Release", className: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/20" },
     };
     const v = variants[type] || { label: type, className: "" };
     return (
@@ -222,24 +228,43 @@ export default function WalletPage() {
       )}
 
       {loadingWallet ? (
-        <Card>
-          <CardContent className="p-6">
-            <Skeleton className="h-12 w-48 mb-2" />
-            <Skeleton className="h-4 w-32" />
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+          <Skeleton className="h-28 w-full rounded-md" />
+          <Skeleton className="h-28 w-full rounded-md" />
+          <Skeleton className="h-28 w-full rounded-md" />
+        </div>
       ) : (
-        <Card data-testid="card-wallet-balance">
-          <CardContent className="p-6">
-            <p className="text-sm font-medium text-muted-foreground mb-1">Current Balance</p>
-            <p className="text-4xl font-bold text-foreground" data-testid="text-wallet-balance">
-              £{Number(wallet?.balance ?? 0).toFixed(2)}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1" data-testid="text-wallet-currency">
-              {wallet?.currency ?? "GBP"}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+          <Card className="bg-emerald-500/5 dark:bg-emerald-500/10" data-testid="card-available-balance">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground mb-1">Available Balance</p>
+              <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400" data-testid="text-available-balance">
+                £{Number(wallet?.availableBalance ?? wallet?.balance ?? 0).toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Ready to use</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-amber-500/5 dark:bg-amber-500/10" data-testid="card-locked-balance">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground mb-1">Locked for Campaigns</p>
+              <p className="text-3xl font-bold text-amber-600 dark:text-amber-400" data-testid="text-locked-balance">
+                £{Number(wallet?.lockedBalance ?? 0).toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Reserved for active campaigns</p>
+            </CardContent>
+          </Card>
+          <Card data-testid="card-wallet-balance">
+            <CardContent className="p-5">
+              <p className="text-sm font-medium text-muted-foreground mb-1">Total Balance</p>
+              <p className="text-3xl font-bold text-foreground" data-testid="text-wallet-balance">
+                £{Number(wallet?.balance ?? 0).toFixed(2)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1" data-testid="text-wallet-currency">
+                {wallet?.currency ?? "GBP"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {deploymentModel && (
@@ -419,6 +444,18 @@ export default function WalletPage() {
         </CardContent>
       </Card>
 
+      {!loadingWallet && wallet && Number(wallet.lockedBalance ?? 0) > 0 && (
+        <Card data-testid="card-locked-funds-breakdown">
+          <CardHeader>
+            <CardTitle className="text-base">Locked Funds Breakdown</CardTitle>
+            <CardDescription>Funds reserved for active campaigns.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LockedFundsBreakdown />
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Transaction History</CardTitle>
@@ -486,6 +523,61 @@ export default function WalletPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function LockedFundsBreakdown() {
+  const { data: locks = [], isLoading } = useQuery<Array<{
+    campaignId: number;
+    campaignName: string;
+    lockedAmount: string;
+    status: string;
+  }>>({
+    queryKey: ["/api/wallet/locks"],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (locks.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground text-center py-4">
+        No active fund locks.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2" data-testid="list-locked-funds">
+      {locks.map((lock) => (
+        <div
+          key={lock.campaignId}
+          className="flex items-center justify-between gap-3 p-3 rounded-md bg-muted/50 flex-wrap"
+          data-testid={`row-lock-${lock.campaignId}`}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Lock className="h-4 w-4 text-amber-500 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate" data-testid={`text-lock-campaign-${lock.campaignId}`}>
+                {lock.campaignName}
+              </p>
+              <Badge variant="outline" className="text-xs no-default-hover-elevate no-default-active-elevate mt-0.5">
+                {lock.status}
+              </Badge>
+            </div>
+          </div>
+          <span className="text-sm font-medium text-amber-600 dark:text-amber-400 whitespace-nowrap" data-testid={`text-lock-amount-${lock.campaignId}`}>
+            £{Number(lock.lockedAmount).toFixed(2)}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

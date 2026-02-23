@@ -3,6 +3,7 @@ import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { PublicLayout } from "@/components/public-layout";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
@@ -52,8 +53,9 @@ const capabilities = [
       "Deploy intelligent voice agents that listen, understand, and respond naturally to every call. They never tire, never take breaks, and handle thousands of conversations simultaneously with consistent quality.",
     video: "/features/ai-agents-intro.mp4",
     icon: Bot,
-    color: "text-[#2DD4A8]",
-    bgAccent: "bg-[#2DD4A8]/10",
+    color: "text-emerald-600 dark:text-emerald-400",
+    bgAccent: "bg-emerald-500/10",
+    borderAccent: "border-emerald-500/30",
     highlights: [
       "Natural conversational voice",
       "Instant knowledge base updates",
@@ -68,8 +70,9 @@ const capabilities = [
       "Every call to your business is answered instantly, whether it arrives at midday or 2am on a bank holiday. Zero wait time, no hold music, no voicemail. Your customers always reach someone who can help.",
     video: "/features/call-handling-intro.mp4",
     icon: Clock,
-    color: "text-[#2DD4A8]",
-    bgAccent: "bg-[#2DD4A8]/10",
+    color: "text-blue-600 dark:text-blue-400",
+    bgAccent: "bg-blue-500/10",
+    borderAccent: "border-blue-500/30",
     highlights: [
       "Zero missed calls",
       "Sub-second answer time",
@@ -84,8 +87,9 @@ const capabilities = [
       "DNC registry checks, calling hours enforcement by timezone, AI disclosure in 12 languages, consent management, and PII redaction all happen automatically on every call. Your business stays compliant across 20 countries without extra effort.",
     video: "/features/compliance-intro.mp4",
     icon: Shield,
-    color: "text-[#2DD4A8]",
-    bgAccent: "bg-[#2DD4A8]/10",
+    color: "text-violet-600 dark:text-violet-400",
+    bgAccent: "bg-violet-500/10",
+    borderAccent: "border-violet-500/30",
     highlights: [
       "Country-specific DNC and calling hours",
       "AI disclosure in 12 languages",
@@ -100,8 +104,9 @@ const capabilities = [
       "Every call generates valuable data. Live dashboards show call volumes, quality scores, customer sentiment, and trends as they develop. Spot problems instantly and make data-driven decisions from a single view.",
     video: "/features/analytics-intro.mp4",
     icon: BarChart3,
-    color: "text-[#2DD4A8]",
-    bgAccent: "bg-[#2DD4A8]/10",
+    color: "text-amber-600 dark:text-amber-400",
+    bgAccent: "bg-amber-500/10",
+    borderAccent: "border-amber-500/30",
     highlights: [
       "Live sentiment tracking",
       "Agent performance metrics",
@@ -116,8 +121,9 @@ const capabilities = [
       "Call internationally across the UK, US, France, Germany, India, Canada, Australia, Spain, Italy, Netherlands, Japan, Brazil, Mexico, UAE, Singapore, South Africa, Ireland, Sweden, Switzerland, and Poland. AI agents detect languages, adapt to accents, and handle every conversation naturally.",
     video: "/features/multi-language-intro.mp4",
     icon: Globe,
-    color: "text-[#2DD4A8]",
-    bgAccent: "bg-[#2DD4A8]/10",
+    color: "text-rose-600 dark:text-rose-400",
+    bgAccent: "bg-rose-500/10",
+    borderAccent: "border-rose-500/30",
     highlights: [
       "20 countries with per-country compliance",
       "12+ languages with accent adaptation",
@@ -132,8 +138,9 @@ const capabilities = [
       "No seat licences, no subscriptions, no per-agent fees. You only pay for actual talk time — calls, AI content generation, and all platform usage. Quiet month? Lower bill. Busy month? It scales with you. Transparent, predictable, and fair.",
     video: "/features/pay-per-talk-time-intro.mp4",
     icon: Zap,
-    color: "text-[#2DD4A8]",
-    bgAccent: "bg-[#2DD4A8]/10",
+    color: "text-teal-600 dark:text-teal-400",
+    bgAccent: "bg-teal-500/10",
+    borderAccent: "border-teal-500/30",
     highlights: [
       "No idle time charges",
       "Real-time usage dashboard",
@@ -143,10 +150,10 @@ const capabilities = [
 ];
 
 const platformStats = [
-  { label: "Countries", value: "20", icon: Globe },
-  { label: "Languages", value: "12+", icon: Phone },
-  { label: "Uptime", value: "99.9%", icon: TrendingUp },
-  { label: "Concurrent Calls", value: "Unlimited", icon: Bot },
+  { label: "Countries", value: "20", icon: Globe, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10" },
+  { label: "Languages", value: "12+", icon: Phone, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
+  { label: "Uptime", value: "99.9%", icon: TrendingUp, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+  { label: "Concurrent Calls", value: "Unlimited", icon: Bot, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
 ];
 
 export default function CapabilitiesPage() {
@@ -168,20 +175,26 @@ export default function CapabilitiesPage() {
 
       <Breadcrumbs items={[{ label: "Capabilities" }]} />
 
-      <section className="relative" data-testid="section-hero">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
+      <section className="relative overflow-hidden" data-testid="section-hero">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#E8604C]/8 via-transparent to-[#F5A623]/8 dark:from-[#E8604C]/5 dark:to-[#F5A623]/5" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12),transparent_65%)]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.06),transparent_70%)]" />
+        <div className="absolute top-20 left-0 w-[300px] h-[300px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.06),transparent_70%)]" />
         <div className="relative max-w-6xl mx-auto px-6 pt-28 pb-16 text-center">
-          <p
-            className="text-sm font-medium tracking-widest uppercase text-primary mb-6"
-            data-testid="badge-capabilities"
-          >
+          <Badge variant="outline" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide border-[#E8604C]/30 text-[#E8604C] dark:text-[#F5A623]" data-testid="badge-capabilities">
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8604C] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#E8604C]" />
+            </span>
             Platform Capabilities
-          </p>
+          </Badge>
           <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1]"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
             data-testid="text-hero-title"
           >
-            Everything Your Call Centre Needs
+            Everything Your Call Centre
+            <br />
+            <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">Needs</span>
           </h1>
           <p
             className="mt-5 text-lg sm:text-xl text-muted-foreground font-light max-w-3xl mx-auto leading-relaxed"
@@ -202,7 +215,9 @@ export default function CapabilitiesPage() {
                 className="flex flex-col items-center text-center gap-1"
                 data-testid={`stat-${stat.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <stat.icon className="h-5 w-5 text-primary mb-1" />
+                <div className={`flex items-center justify-center h-10 w-10 rounded-md ${stat.bg} mb-1`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
                 <span className="text-2xl sm:text-3xl font-light tracking-tight">
                   {stat.value}
                 </span>
@@ -215,8 +230,9 @@ export default function CapabilitiesPage() {
         </div>
       </section>
 
-      <section className="py-20" data-testid="section-capabilities">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col gap-24">
+      <section className="relative py-20" data-testid="section-capabilities">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#E8604C]/3 to-transparent dark:via-[#E8604C]/2 pointer-events-none" />
+        <div className="relative max-w-6xl mx-auto px-6 flex flex-col gap-24">
           {capabilities.map((cap, index) => {
             const isReversed = index % 2 !== 0;
             return (
@@ -252,7 +268,7 @@ export default function CapabilitiesPage() {
 
                 <div className="w-full lg:w-1/2">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className={`flex items-center justify-center h-10 w-10 rounded-md ${cap.bgAccent}`}>
+                    <div className={`flex items-center justify-center h-11 w-11 rounded-full ${cap.bgAccent}`}>
                       <cap.icon className={`h-5 w-5 ${cap.color}`} />
                     </div>
                     <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground">
@@ -266,7 +282,7 @@ export default function CapabilitiesPage() {
                   >
                     {cap.title}
                   </h2>
-                  <p className="mt-1 text-base text-primary font-medium">
+                  <p className={`mt-1 text-base font-medium ${cap.color}`}>
                     {cap.tagline}
                   </p>
                   <p className="mt-4 text-base text-muted-foreground leading-relaxed">

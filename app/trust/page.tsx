@@ -55,6 +55,28 @@ export const metadata: Metadata = {
   },
 };
 
+const securityIconColors = [
+  "text-blue-500",
+  "text-violet-500",
+  "text-emerald-500",
+  "text-rose-500",
+  "text-amber-500",
+  "text-blue-500",
+  "text-violet-500",
+  "text-emerald-500",
+];
+
+const securityBgColors = [
+  "bg-blue-500/10",
+  "bg-violet-500/10",
+  "bg-emerald-500/10",
+  "bg-rose-500/10",
+  "bg-amber-500/10",
+  "bg-blue-500/10",
+  "bg-violet-500/10",
+  "bg-emerald-500/10",
+];
+
 const securityPractices = [
   {
     icon: Lock,
@@ -114,6 +136,20 @@ const securityPractices = [
   },
 ];
 
+const complianceIconColors = [
+  "text-violet-500",
+  "text-blue-500",
+  "text-emerald-500",
+  "text-amber-500",
+];
+
+const complianceBgColors = [
+  "bg-violet-500/10",
+  "bg-blue-500/10",
+  "bg-emerald-500/10",
+  "bg-amber-500/10",
+];
+
 const compliancePractices = [
   {
     icon: Ban,
@@ -143,6 +179,20 @@ const compliancePractices = [
       "Data processing follows GDPR principles: purpose limitation, data minimisation, and storage limitation. Users can request data access, correction, or deletion through their organisation admin.",
     status: "active" as const,
   },
+];
+
+const infraIconColors = [
+  "text-blue-500",
+  "text-emerald-500",
+  "text-violet-500",
+  "text-amber-500",
+];
+
+const infraBgColors = [
+  "bg-blue-500/10",
+  "bg-emerald-500/10",
+  "bg-violet-500/10",
+  "bg-amber-500/10",
 ];
 
 const infrastructurePractices = [
@@ -205,17 +255,23 @@ const roadmapItems = [
   },
 ];
 
+function getTimelineBadgeStyle(timeline: string) {
+  if (timeline === "Registered") return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30";
+  if (timeline === "Following Type I") return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30";
+  return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30";
+}
+
 function StatusBadge({ status }: { status: "active" | "planned" }) {
   if (status === "active") {
     return (
-      <Badge variant="outline" className="text-xs" data-testid="badge-status-active">
+      <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" data-testid="badge-status-active">
         <CheckCircle2 className="h-3 w-3 mr-1" />
         Active
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="text-xs" data-testid="badge-status-planned">
+    <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" data-testid="badge-status-planned">
       <Clock className="h-3 w-3 mr-1" />
       Planned
     </Badge>
@@ -240,22 +296,25 @@ export default function TrustCenterPage() {
       <Navbar />
       <Breadcrumbs items={[{ label: "Trust Centre" }]} />
 
-      <section className="relative" data-testid="section-trust-hero">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
+      <section className="relative overflow-hidden" data-testid="section-trust-hero">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 via-transparent to-violet-500/8 dark:from-blue-500/5 dark:to-violet-500/5" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12),transparent_65%)]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.06),transparent_70%)]" />
         <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-20 text-center">
-          <p
-            className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6"
-            data-testid="badge-trust"
-          >
+          <Badge variant="outline" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide border-blue-500/30 text-blue-600 dark:text-blue-400" data-testid="badge-trust">
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
+            </span>
             Security & Compliance
-          </p>
+          </Badge>
           <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1]"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
             data-testid="text-trust-hero-title"
           >
             How we protect
             <br />
-            <span className="font-normal">your data</span>
+            <span className="bg-gradient-to-r from-blue-500 via-violet-500 to-blue-600 bg-clip-text text-transparent">your data</span>
           </h1>
           <p
             className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"
@@ -285,7 +344,7 @@ export default function TrustCenterPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {securityPractices.map((practice) => (
+            {securityPractices.map((practice, index) => (
               <Card
                 key={practice.title}
                 data-testid={`card-security-${practice.title.toLowerCase().replace(/\s+/g, "-")}`}
@@ -293,7 +352,9 @@ export default function TrustCenterPage() {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2">
-                      <practice.icon className="h-4 w-4 text-primary shrink-0" />
+                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${securityBgColors[index]} shrink-0`}>
+                        <practice.icon className={`h-4 w-4 ${securityIconColors[index]}`} />
+                      </span>
                       <h3 className="font-medium text-sm">{practice.title}</h3>
                     </div>
                     <StatusBadge status={practice.status} />
@@ -308,8 +369,9 @@ export default function TrustCenterPage() {
         </div>
       </section>
 
-      <section className="py-20 border-t border-border/50" data-testid="section-compliance">
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="relative py-20" data-testid="section-compliance">
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-500/[0.03] to-transparent dark:from-violet-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Regulatory Compliance
@@ -324,7 +386,7 @@ export default function TrustCenterPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {compliancePractices.map((practice) => (
+            {compliancePractices.map((practice, index) => (
               <Card
                 key={practice.title}
                 data-testid={`card-compliance-${practice.title.toLowerCase().replace(/\s+/g, "-")}`}
@@ -332,7 +394,9 @@ export default function TrustCenterPage() {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2">
-                      <practice.icon className="h-4 w-4 text-[#2DD4A8] shrink-0" />
+                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${complianceBgColors[index]} shrink-0`}>
+                        <practice.icon className={`h-4 w-4 ${complianceIconColors[index]}`} />
+                      </span>
                       <h3 className="font-medium text-sm">{practice.title}</h3>
                     </div>
                     <StatusBadge status={practice.status} />
@@ -347,8 +411,9 @@ export default function TrustCenterPage() {
         </div>
       </section>
 
-      <section className="py-20 border-t border-border/50" data-testid="section-infrastructure">
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="relative py-20" data-testid="section-infrastructure">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent dark:from-blue-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Infrastructure
@@ -363,13 +428,15 @@ export default function TrustCenterPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {infrastructurePractices.map((practice) => (
+            {infrastructurePractices.map((practice, index) => (
               <Card
                 key={practice.title}
                 data-testid={`card-infra-${practice.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-6">
-                  <practice.icon className="h-4 w-4 text-[#2DD4A8] mb-3" />
+                  <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${infraBgColors[index]} mb-3`}>
+                    <practice.icon className={`h-4 w-4 ${infraIconColors[index]}`} />
+                  </span>
                   <h3 className="font-medium text-sm mb-2">{practice.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {practice.description}
@@ -381,8 +448,9 @@ export default function TrustCenterPage() {
         </div>
       </section>
 
-      <section className="py-20 border-t border-border/50" data-testid="section-roadmap">
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="relative py-20" data-testid="section-roadmap">
+        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.03] to-transparent dark:from-amber-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-12">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Compliance Roadmap
@@ -409,7 +477,7 @@ export default function TrustCenterPage() {
                       <item.icon className="h-4 w-4 text-muted-foreground shrink-0" />
                       <h3 className="font-medium text-sm">{item.title}</h3>
                     </div>
-                    <Badge variant="secondary" className="text-xs" data-testid={`badge-roadmap-${item.title.toLowerCase().replace(/\s+/g, "-")}`}>
+                    <Badge variant="outline" className={`text-xs ${getTimelineBadgeStyle(item.timeline)}`} data-testid={`badge-roadmap-${item.title.toLowerCase().replace(/\s+/g, "-")}`}>
                       <Clock className="h-3 w-3 mr-1" />
                       {item.timeline}
                     </Badge>
@@ -429,7 +497,9 @@ export default function TrustCenterPage() {
           <Card data-testid="card-commitment">
             <CardContent className="p-8">
               <div className="flex items-start gap-4">
-                <Shield className="h-6 w-6 text-primary shrink-0 mt-1" />
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-blue-500/10 shrink-0 mt-1">
+                  <Shield className="h-5 w-5 text-blue-500" />
+                </span>
                 <div>
                   <h3 className="font-medium text-lg mb-2">Our Commitment</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">

@@ -67,19 +67,22 @@ const opportunityStats = [
     icon: TrendingUp,
     stat: "$12.9 billion",
     label: "AI call centre market projected value by 2032",
-    color: "text-[#2DD4A8]",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
   },
   {
     icon: Users,
     stat: "64%",
     label: "of businesses exploring AI for customer service",
-    color: "text-[#2DD4A8]",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
   },
   {
     icon: Rocket,
     stat: "3x",
     label: "year-on-year growth in AI voice solution adoption",
-    color: "text-[#2DD4A8]",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
   },
 ];
 
@@ -96,7 +99,9 @@ const partnershipModels = [
       "Dedicated account manager and priority support",
       "Revenue share model with no upfront fees",
     ],
-    color: "text-[#2DD4A8]",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+    border: "border-t-blue-500",
   },
   {
     icon: Handshake,
@@ -110,7 +115,9 @@ const partnershipModels = [
       "Marketing materials and landing page templates",
       "Monthly payouts with transparent reporting",
     ],
-    color: "text-[#2DD4A8]",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+    border: "border-t-violet-500",
   },
   {
     icon: Code,
@@ -124,7 +131,9 @@ const partnershipModels = [
       "Dedicated technical account manager",
       "Co-marketing and joint go-to-market opportunities",
     ],
-    color: "text-[#2DD4A8]",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    border: "border-t-amber-500",
   },
 ];
 
@@ -133,37 +142,43 @@ const partnerBenefits = [
     icon: LayoutDashboard,
     title: "Partner Dashboard",
     description: "Dedicated dashboard with real-time analytics, client management, and performance tracking.",
-    color: "text-[#2DD4A8]",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
   },
   {
     icon: GraduationCap,
     title: "Training and Onboarding",
     description: "Structured onboarding programme with product training, sales enablement, and certification.",
-    color: "text-[#2DD4A8]",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
   },
   {
     icon: FileText,
     title: "Marketing Materials",
     description: "Ready-to-use sales collateral, pitch decks, case studies, and co-branded content.",
-    color: "text-[#2DD4A8]",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
   },
   {
     icon: Headphones,
     title: "Technical Support",
     description: "Priority access to our support team, comprehensive documentation, and integration guides.",
-    color: "text-[#2DD4A8]",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
   },
   {
     icon: Rocket,
     title: "Product Updates",
     description: "Regular product roadmap access, early feature previews, and beta programme invitations.",
-    color: "text-[#2DD4A8]",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
   },
   {
     icon: BarChart3,
     title: "Transparent Reporting",
     description: "Clear commission tracking, detailed revenue reports, and automated monthly statements.",
-    color: "text-[#2DD4A8]",
+    color: "text-teal-500",
+    bg: "bg-teal-500/10",
   },
 ];
 
@@ -173,28 +188,32 @@ const steps = [
     title: "Apply",
     description: "Fill in your details and tell us about your business. We review every application within 48 hours.",
     icon: ClipboardCheck,
-    color: "text-[#2DD4A8]",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
   },
   {
     number: "2",
     title: "Onboard",
     description: "We set up your partner account, provide product training, and equip you with everything you need.",
     icon: GraduationCap,
-    color: "text-[#2DD4A8]",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
   },
   {
     number: "3",
     title: "Launch",
     description: "Start selling, referring, or integrating GoRigo. Use our materials or create your own approach.",
     icon: Rocket,
-    color: "text-[#2DD4A8]",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
   },
   {
     number: "4",
     title: "Earn",
     description: "Track your revenue and commissions in real-time through your partner dashboard.",
     icon: DollarSign,
-    color: "text-[#2DD4A8]",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
   },
 ];
 
@@ -203,37 +222,43 @@ const idealPartners = [
     icon: Phone,
     title: "BPO and Call Centre Operators",
     description: "Enhance your existing operations with AI-powered agents that scale without adding headcount.",
-    color: "text-[#2DD4A8]",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
   },
   {
     icon: Wifi,
     title: "Telecoms Companies and ISPs",
     description: "Bundle AI call centre capabilities with your connectivity products for added value.",
-    color: "text-[#2DD4A8]",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
   },
   {
     icon: Briefcase,
     title: "Business Consultants and Advisors",
     description: "Recommend GoRigo to clients seeking to modernise their customer service operations.",
-    color: "text-[#2DD4A8]",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
   },
   {
     icon: Megaphone,
     title: "Digital Agencies and Marketing Firms",
     description: "Add AI voice solutions to your service portfolio and deliver more value to your clients.",
-    color: "text-[#2DD4A8]",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
   },
   {
     icon: Monitor,
     title: "IT Service Providers and MSPs",
     description: "Integrate AI call handling into your managed service offerings for business clients.",
-    color: "text-[#2DD4A8]",
+    color: "text-teal-500",
+    bg: "bg-teal-500/10",
   },
   {
     icon: Pen,
     title: "Industry Influencers and Bloggers",
     description: "Earn commissions by sharing GoRigo with your audience through authentic content and reviews.",
-    color: "text-[#2DD4A8]",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
   },
 ];
 
@@ -243,56 +268,56 @@ const terms = [
     title: "Governing Law",
     description:
       "All partnerships are governed by UK law. GoRigo is operated by International Business Exchange Limited, registered in England and Wales (Company No. 15985956).",
-    color: "text-[#2DD4A8]",
+    color: "text-violet-500",
   },
   {
     icon: Handshake,
     title: "Non-Exclusive Agreements",
     description:
       "Partnership agreements are non-exclusive. Partners are free to work with other providers and offer competing products alongside GoRigo.",
-    color: "text-[#2DD4A8]",
+    color: "text-blue-500",
   },
   {
     icon: CheckCircle2,
     title: "Minimum Standards",
     description:
       "Partners must represent GoRigo professionally and accurately. Misleading claims, spam, or unethical marketing practices are not permitted.",
-    color: "text-[#2DD4A8]",
+    color: "text-emerald-500",
   },
   {
     icon: Shield,
     title: "Data Protection",
     description:
       "Partners must comply with GDPR and UK data protection laws. Any client data shared during the partnership must be handled in accordance with applicable regulations.",
-    color: "text-[#2DD4A8]",
+    color: "text-blue-500",
   },
   {
     icon: Lock,
     title: "Intellectual Property",
     description:
       "The GoRigo brand, technology, and platform remain the property of International Business Exchange Limited. Partners receive a licence to use approved branding materials.",
-    color: "text-[#2DD4A8]",
+    color: "text-amber-500",
   },
   {
     icon: CreditCard,
     title: "Commission Payments",
     description:
       "Commissions are processed monthly. A minimum payout threshold applies. Detailed commission statements are available through the partner dashboard.",
-    color: "text-[#2DD4A8]",
+    color: "text-emerald-500",
   },
   {
     icon: Calendar,
     title: "Termination",
     description:
       "Either party can end the partnership with 30 days written notice. Outstanding commissions earned before termination will be paid in the next billing cycle.",
-    color: "text-[#2DD4A8]",
+    color: "text-rose-500",
   },
   {
     icon: Eye,
     title: "Confidentiality",
     description:
       "Partners must keep commercial terms, pricing structures, and client data confidential. This obligation survives the termination of the partnership.",
-    color: "text-[#2DD4A8]",
+    color: "text-violet-500",
   },
 ];
 
@@ -358,20 +383,27 @@ export default function PartnersPage() {
       <Navbar />
       <Breadcrumbs items={[{ label: "Partners" }]} />
 
-      <section className="relative" data-testid="section-hero">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
+      <section className="relative overflow-hidden" data-testid="section-hero">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/8 via-transparent to-blue-500/8 dark:from-violet-500/5 dark:to-blue-500/5" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12),transparent_65%)]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.06),transparent_70%)]" />
         <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-20 text-center">
           <p
-            className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6"
+            className="inline-flex items-center text-sm font-medium tracking-widest uppercase mb-6 px-4 py-1.5 rounded-full border border-violet-500/30 text-violet-600 dark:text-violet-400"
             data-testid="badge-partners"
           >
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-500 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500" />
+            </span>
             Partnership Programme
           </p>
           <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1]"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
             data-testid="text-hero-title"
           >
-            Partner with GoRigo
+            Partner with{" "}
+            <span className="bg-gradient-to-r from-violet-500 via-blue-500 to-indigo-500 bg-clip-text text-transparent">GoRigo</span>
           </h1>
           <p
             className="mt-4 text-xl text-muted-foreground font-light"
@@ -392,8 +424,9 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      <section className="py-24 border-t border-border/50" data-testid="section-opportunity">
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="py-24 border-t border-border/50 relative" data-testid="section-opportunity">
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-500/[0.03] to-transparent dark:from-violet-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               The Opportunity
@@ -419,7 +452,9 @@ export default function PartnersPage() {
                 data-testid={`card-stat-${item.stat.toLowerCase().replace(/[^a-z0-9]/g, "-")}`}
               >
                 <CardContent className="p-8 text-center">
-                  <item.icon className={`h-5 w-5 ${item.color} mx-auto mb-4`} />
+                  <div className={`w-10 h-10 rounded-md ${item.bg} flex items-center justify-center mx-auto mb-4`}>
+                    <item.icon className={`h-5 w-5 ${item.color}`} />
+                  </div>
                   <p className="text-2xl font-semibold mb-2" data-testid={`text-stat-value-${item.stat.toLowerCase().replace(/[^a-z0-9]/g, "-")}`}>
                     {item.stat}
                   </p>
@@ -433,7 +468,7 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      <section className="py-24 border-t border-border/50" data-testid="section-models">
+      <section className="py-24 border-t border-border/50 relative" data-testid="section-models">
         <div className="max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
@@ -455,11 +490,13 @@ export default function PartnersPage() {
             {partnershipModels.map((model) => (
               <Card
                 key={model.title}
-                className="hover-elevate"
+                className={`hover-elevate border-t-2 ${model.border}`}
                 data-testid={`card-model-${model.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8 flex flex-col h-full">
-                  <model.icon className={`h-5 w-5 ${model.color} mb-5`} />
+                  <div className={`w-10 h-10 rounded-md ${model.bg} flex items-center justify-center mb-5`}>
+                    <model.icon className={`h-5 w-5 ${model.color}`} />
+                  </div>
                   <h3 className="font-medium text-lg mb-2">{model.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-6">
                     {model.description}
@@ -488,8 +525,9 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      <section className="py-24 border-t border-border/50" data-testid="section-benefits">
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="py-24 border-t border-border/50 relative" data-testid="section-benefits">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent dark:from-blue-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Partner Support
@@ -513,7 +551,9 @@ export default function PartnersPage() {
                 className="p-6 rounded-md border border-border/50"
                 data-testid={`benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <benefit.icon className={`h-5 w-5 ${benefit.color} mb-4`} />
+                <div className={`w-9 h-9 rounded-md ${benefit.bg} flex items-center justify-center mb-4`}>
+                  <benefit.icon className={`h-4 w-4 ${benefit.color}`} />
+                </div>
                 <h3 className="font-medium mb-1.5">{benefit.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {benefit.description}
@@ -546,7 +586,9 @@ export default function PartnersPage() {
                       {step.number}
                     </span>
                     <div className="h-px flex-1 bg-border/50" />
-                    <step.icon className={`h-5 w-5 ${step.color}`} />
+                    <div className={`w-8 h-8 rounded-md ${step.bg} flex items-center justify-center`}>
+                      <step.icon className={`h-4 w-4 ${step.color}`} />
+                    </div>
                   </div>
                   <h3 className="font-medium text-lg mb-2">{step.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
@@ -559,8 +601,9 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      <section className="py-24 border-t border-border/50" data-testid="section-ideal-partners">
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="py-24 border-t border-border/50 relative" data-testid="section-ideal-partners">
+        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.03] to-transparent dark:from-amber-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Ideal Partners
@@ -584,7 +627,9 @@ export default function PartnersPage() {
                 className="p-6 rounded-md border border-border/50"
                 data-testid={`partner-profile-${partner.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <partner.icon className={`h-5 w-5 ${partner.color} mb-4`} />
+                <div className={`w-9 h-9 rounded-md ${partner.bg} flex items-center justify-center mb-4`}>
+                  <partner.icon className={`h-4 w-4 ${partner.color}`} />
+                </div>
                 <h3 className="font-medium mb-1.5">{partner.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {partner.description}
@@ -674,7 +719,8 @@ export default function PartnersPage() {
             className="text-3xl font-light tracking-tight mb-4"
             data-testid="text-cta-title"
           >
-            Ready to partner?
+            Ready to{" "}
+            <span className="bg-gradient-to-r from-violet-500 to-blue-500 bg-clip-text text-transparent">partner</span>?
           </h2>
           <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
             Join our growing network of partners and start earning with the AI

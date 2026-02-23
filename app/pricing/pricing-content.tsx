@@ -9,6 +9,7 @@ import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
 import { TalkTimeInfo } from "@/components/talk-time-info";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { CheckCircle2, Minus, ArrowRight, MessageSquare } from "lucide-react";
@@ -40,6 +41,11 @@ const allPackages = [
     href: "/contact",
     featured: true,
     mobileApp: true,
+    themeColor: "blue",
+    borderClass: "border-t-4 border-t-blue-500",
+    badgeClass: "text-blue-600 dark:text-blue-400",
+    checkClass: "text-blue-500 dark:text-blue-400",
+    accentBg: "bg-blue-500/10",
   },
   {
     key: "selfHosted" as const,
@@ -59,6 +65,11 @@ const allPackages = [
     cta: "Contact Sales",
     href: "/contact",
     featured: false,
+    themeColor: "violet",
+    borderClass: "border-t-4 border-t-violet-500",
+    badgeClass: "text-violet-600 dark:text-violet-400",
+    checkClass: "text-violet-500 dark:text-violet-400",
+    accentBg: "bg-violet-500/10",
   },
 ];
 
@@ -87,7 +98,7 @@ function FeatureIcon({ included }: { included: boolean | string }) {
     return <span className="text-xs text-muted-foreground text-center block">{included}</span>;
   }
   if (included) {
-    return <CheckCircle2 className="h-4 w-4 text-foreground/60 mx-auto" />;
+    return <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400 mx-auto" />;
   }
   return <Minus className="h-4 w-4 text-muted-foreground/40 mx-auto" />;
 }
@@ -138,19 +149,27 @@ export function PricingContent() {
         <Navbar />
         <Breadcrumbs items={[{ label: "Pricing" }]} />
 
-        <section className="relative" data-testid="section-pricing-hero">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
+        <section className="relative overflow-hidden" data-testid="section-pricing-hero">
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-500/8 via-transparent to-emerald-500/8 dark:from-teal-500/5 dark:to-emerald-500/5" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12),transparent_65%)]" />
+          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.06),transparent_70%)]" />
+
           <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-20 text-center">
-            <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6" data-testid="badge-pricing">
-              Talk-Time Only Billing<TalkTimeInfo />
-            </p>
+            <Badge variant="outline" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide border-teal-500/30" data-testid="badge-pricing">
+              <span className="relative flex h-2 w-2 mr-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-500 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500" />
+              </span>
+              <span className="bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent font-semibold">Talk-Time Only Billing</span>
+              <TalkTimeInfo />
+            </Badge>
             <h1
-              className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1]"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
               data-testid="text-pricing-hero-title"
             >
               Flexible pricing for
               <br />
-              <span className="font-normal">every business</span>
+              <span className="bg-gradient-to-r from-teal-500 via-emerald-500 to-green-500 bg-clip-text text-transparent">every business</span>
             </h1>
             <p
               className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"
@@ -162,20 +181,21 @@ export function PricingContent() {
           </div>
         </section>
 
-        <section className="py-20" data-testid="section-packages">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="py-20 relative" data-testid="section-packages">
+          <div className="absolute inset-0 bg-gradient-to-b from-teal-500/[0.03] via-transparent to-transparent dark:from-teal-500/[0.02]" />
+          <div className="relative max-w-7xl mx-auto px-6">
             <div className={`grid ${gridClass} gap-6`}>
               {visiblePackages.map((pkg) => (
                 <Card
                   key={pkg.name}
-                  className={pkg.featured ? "border-primary/40" : ""}
+                  className={`${pkg.borderClass} overflow-visible`}
                   data-testid={`card-package-${pkg.name.toLowerCase().replace(/\s+/g, "-")}`}
                 >
                   <CardContent className="p-8">
                     {pkg.featured && (
-                      <p className="text-xs font-medium tracking-widest uppercase text-primary mb-4" data-testid="badge-most-popular">
+                      <Badge className="mb-4 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 no-default-hover-elevate no-default-active-elevate" data-testid="badge-most-popular">
                         Most Popular
-                      </p>
+                      </Badge>
                     )}
                     <h3 className="font-medium text-xl mb-2">{pkg.name}</h3>
                     <div className="mb-3" data-testid={`text-rate-${pkg.name.toLowerCase().replace(/\s+/g, "-")}`}>
@@ -189,7 +209,7 @@ export function PricingContent() {
                     <ul className="space-y-2.5 mb-6">
                       {pkg.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2 text-sm">
-                          <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                          <CheckCircle2 className={`h-4 w-4 ${pkg.checkClass} shrink-0 mt-0.5`} />
                           <span className="text-muted-foreground">{feature}</span>
                         </li>
                       ))}
@@ -212,13 +232,13 @@ export function PricingContent() {
               ))}
 
               <Card
-                className="border-primary/20 bg-gradient-to-b from-primary/[0.03] to-transparent"
+                className="border-t-4 border-t-amber-500 overflow-visible"
                 data-testid="card-package-custom"
               >
                 <CardContent className="p-8">
-                  <p className="text-xs font-medium tracking-widest uppercase text-primary mb-4" data-testid="badge-enterprise">
+                  <Badge className="mb-4 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 no-default-hover-elevate no-default-active-elevate" data-testid="badge-enterprise">
                     Enterprise
-                  </p>
+                  </Badge>
                   <h3 className="font-medium text-xl mb-2">Custom Plan</h3>
                   <div className="mb-3" data-testid="text-rate-custom">
                     <span className="text-2xl font-semibold">Custom</span>
@@ -232,27 +252,27 @@ export function PricingContent() {
                   </p>
                   <ul className="space-y-2.5 mb-6">
                     <li className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                       <span className="text-muted-foreground">Pick and choose features</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                       <span className="text-muted-foreground">Custom billing rates</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                       <span className="text-muted-foreground">Dedicated onboarding</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                       <span className="text-muted-foreground">Bespoke SLAs</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                       <span className="text-muted-foreground">Priority engineering support</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                       <span className="text-muted-foreground">Volume discounts</span>
                     </li>
                   </ul>
@@ -275,14 +295,15 @@ export function PricingContent() {
           </div>
         </section>
 
-        <section className="py-20 border-t border-border/50" data-testid="section-comparison">
-          <div className="max-w-4xl mx-auto px-6">
+        <section className="py-20 relative" data-testid="section-comparison">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/[0.03] to-transparent dark:via-emerald-500/[0.02]" />
+          <div className="relative max-w-4xl mx-auto px-6">
             <div className="mb-12">
-              <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
+              <Badge variant="outline" className="mb-4 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 no-default-hover-elevate no-default-active-elevate" data-testid="badge-comparison">
                 Comparison
-              </p>
-              <h2 className="text-3xl font-light tracking-tight" data-testid="text-comparison-title">
-                Feature comparison
+              </Badge>
+              <h2 className="text-3xl font-bold tracking-tight" data-testid="text-comparison-title">
+                <span className="bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent">Feature</span> comparison
               </h2>
             </div>
             <Card data-testid="card-comparison-table">
@@ -290,21 +311,21 @@ export function PricingContent() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border/50">
+                      <tr className="border-b border-border/50 bg-muted/30">
                         <th className="text-left p-4 font-medium text-muted-foreground">Feature</th>
                         {columnKeys.map((k) => (
                           <th key={k} className="text-center p-4 font-medium text-muted-foreground">
                             {columnLabels[k]}
                           </th>
                         ))}
-                        <th className="text-center p-4 font-medium text-primary">Custom</th>
+                        <th className="text-center p-4 font-medium text-amber-600 dark:text-amber-400">Custom</th>
                       </tr>
                     </thead>
                     <tbody>
                       {comparisonFeatures.map((feature, index) => (
                         <tr
                           key={feature.name}
-                          className={index < comparisonFeatures.length - 1 ? "border-b border-border/50" : ""}
+                          className={`${index < comparisonFeatures.length - 1 ? "border-b border-border/50" : ""} ${index % 2 === 0 ? "bg-muted/10" : ""}`}
                           data-testid={`row-feature-${feature.name.toLowerCase().replace(/\s+/g, "-")}`}
                         >
                           <td className="p-4 text-foreground">{feature.name}</td>
@@ -326,7 +347,7 @@ export function PricingContent() {
           </div>
         </section>
 
-        <section className="py-12 border-t border-border/50" data-testid="section-sla-link">
+        <section className="py-12" data-testid="section-sla-link">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <p className="text-sm text-muted-foreground">
               All packages are backed by our{" "}
@@ -338,24 +359,26 @@ export function PricingContent() {
           </div>
         </section>
 
-        <section className="py-20 border-t border-border/50" data-testid="section-faq">
-          <div className="max-w-3xl mx-auto px-6">
+        <section className="py-20 relative" data-testid="section-faq">
+          <div className="absolute inset-0 bg-gradient-to-b from-teal-500/[0.02] via-transparent to-emerald-500/[0.02] dark:from-teal-500/[0.01] dark:to-emerald-500/[0.01]" />
+          <div className="relative max-w-3xl mx-auto px-6">
             <div className="mb-12">
-              <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
+              <Badge variant="outline" className="mb-4 border-teal-500/30 text-teal-600 dark:text-teal-400 no-default-hover-elevate no-default-active-elevate" data-testid="badge-faq">
                 FAQ
-              </p>
-              <h2 className="text-3xl font-light tracking-tight" data-testid="text-faq-title">
-                Frequently asked questions
+              </Badge>
+              <h2 className="text-3xl font-bold tracking-tight" data-testid="text-faq-title">
+                Frequently asked <span className="bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent">questions</span>
               </h2>
             </div>
             <PricingFaq />
           </div>
         </section>
 
-        <section className="py-20 border-t border-border/50" data-testid="section-pricing-cta">
-          <div className="max-w-2xl mx-auto px-6 text-center">
-            <h2 className="text-3xl font-light tracking-tight mb-4" data-testid="text-pricing-cta-title">
-              Not sure which package is right?
+        <section className="py-20 relative overflow-hidden" data-testid="section-pricing-cta">
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-500/[0.05] via-transparent to-emerald-500/[0.05] dark:from-teal-500/[0.03] dark:to-emerald-500/[0.03]" />
+          <div className="relative max-w-2xl mx-auto px-6 text-center">
+            <h2 className="text-3xl font-bold tracking-tight mb-4" data-testid="text-pricing-cta-title">
+              Not sure which package is <span className="bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent">right?</span>
             </h2>
             <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
               Our team can help you choose the best deployment option for your

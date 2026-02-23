@@ -53,6 +53,8 @@ const emailChannels = [
     email: "hello@gorigo.ai",
     description: "Questions about our platform, features, or getting started.",
     testId: "link-email-general",
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
   },
   {
     icon: Handshake,
@@ -60,6 +62,8 @@ const emailChannels = [
     email: "partners@gorigo.ai",
     description: "White-label, reseller, and affiliate partnership opportunities.",
     testId: "link-email-partners",
+    color: "text-violet-500",
+    bgColor: "bg-violet-500/10",
   },
   {
     icon: LifeBuoy,
@@ -67,6 +71,8 @@ const emailChannels = [
     email: "support@gorigo.ai",
     description: "Technical support and account assistance for existing clients.",
     testId: "link-email-support",
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
   },
   {
     icon: Building2,
@@ -74,6 +80,8 @@ const emailChannels = [
     email: "enterprise@gorigo.ai",
     description: "Custom deployments, SLAs, and enterprise-grade solutions.",
     testId: "link-email-enterprise",
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
   },
 ];
 
@@ -96,20 +104,25 @@ export default function ContactPage() {
       <Navbar />
       <Breadcrumbs items={[{ label: "Contact" }]} />
 
-      <section className="relative" data-testid="section-contact-hero">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
+      <section className="relative overflow-hidden" data-testid="section-contact-hero">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 via-transparent to-violet-500/8 dark:from-blue-500/5 dark:to-violet-500/5" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12),transparent_65%)]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.06),transparent_70%)]" />
+
         <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-20 text-center">
-          <p
-            className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6"
-            data-testid="badge-contact"
-          >
+          <Badge variant="outline" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide border-blue-500/30 text-blue-600 dark:text-blue-400" data-testid="badge-contact">
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
+            </span>
             Contact
-          </p>
+          </Badge>
           <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1]"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
             data-testid="text-contact-hero-title"
           >
-            Let&apos;s talk
+            Let&apos;s{" "}
+            <span className="bg-gradient-to-r from-blue-500 via-violet-500 to-purple-500 bg-clip-text text-transparent">talk</span>
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">
             Whether you want to see GoRigo in action, explore a partnership, or
@@ -121,11 +134,11 @@ export default function ContactPage() {
 
       <section className="pb-20" data-testid="section-book-demo">
         <div className="max-w-5xl mx-auto px-6">
-          <Card className="border-primary/20 bg-primary/[0.03]" data-testid="card-book-demo">
+          <Card className="border-violet-500/20 bg-gradient-to-r from-blue-500/[0.03] to-violet-500/[0.03]" data-testid="card-book-demo">
             <CardContent className="p-8 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div className="flex items-start gap-4">
-                <div className="h-12 w-12 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                  <CalendarCheck className="h-6 w-6 text-primary" />
+                <div className="h-12 w-12 rounded-md bg-gradient-to-br from-blue-500/15 to-violet-500/15 flex items-center justify-center shrink-0">
+                  <CalendarCheck className="h-6 w-6 text-violet-500" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold mb-1" data-testid="text-demo-title">
@@ -137,7 +150,7 @@ export default function ContactPage() {
                     demo to your business.
                   </p>
                   <div className="flex items-center gap-2 mt-3 flex-wrap">
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
                       <Clock className="h-3 w-3 mr-1" />
                       30 min
                     </Badge>
@@ -158,8 +171,9 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="pb-20" data-testid="section-contact-channels">
-        <div className="max-w-5xl mx-auto px-6">
+      <section className="relative pb-20" data-testid="section-contact-channels">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/[0.02] to-transparent dark:via-violet-500/[0.01]" />
+        <div className="relative max-w-5xl mx-auto px-6">
           <h2 className="text-lg font-semibold mb-6" data-testid="text-channels-heading">
             Get in Touch
           </h2>
@@ -169,7 +183,9 @@ export default function ContactPage() {
               return (
                 <Card key={channel.email} data-testid={`card-channel-${channel.label.toLowerCase().replace(/\s+/g, "-")}`}>
                   <CardContent className="p-5">
-                    <Icon className="h-5 w-5 text-muted-foreground mb-3" />
+                    <div className={`h-9 w-9 rounded-md ${channel.bgColor} flex items-center justify-center mb-3`}>
+                      <Icon className={`h-5 w-5 ${channel.color}`} />
+                    </div>
                     <h3 className="font-medium text-sm mb-1">{channel.label}</h3>
                     <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
                       {channel.description}
@@ -195,9 +211,11 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card data-testid="card-contact-phone">
               <CardContent className="p-6">
-                <Phone className="h-5 w-5 text-[#2DD4A8] mb-4" />
+                <div className="h-10 w-10 rounded-md bg-emerald-500/10 flex items-center justify-center mb-4">
+                  <Phone className="h-5 w-5 text-emerald-500" />
+                </div>
                 <h3 className="font-medium text-base mb-2">AI Demo Line</h3>
-                <Badge variant="secondary" data-testid="badge-demo-line-status">
+                <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" data-testid="badge-demo-line-status">
                   Coming Soon
                 </Badge>
                 <p className="text-xs text-muted-foreground mt-2" data-testid="text-phone-number">
@@ -209,7 +227,9 @@ export default function ContactPage() {
 
             <Card data-testid="card-contact-address">
               <CardContent className="p-6">
-                <MapPin className="h-5 w-5 text-[#2DD4A8] mb-4" />
+                <div className="h-10 w-10 rounded-md bg-blue-500/10 flex items-center justify-center mb-4">
+                  <MapPin className="h-5 w-5 text-blue-500" />
+                </div>
                 <h3 className="font-medium text-base mb-2">Our Office</h3>
                 <p className="text-sm text-foreground" data-testid="text-address-country">
                   Cotton Court Business Centre
@@ -228,20 +248,22 @@ export default function ContactPage() {
 
             <Card data-testid="card-contact-response">
               <CardContent className="p-6">
-                <Clock className="h-5 w-5 text-[#2DD4A8] mb-4" />
+                <div className="h-10 w-10 rounded-md bg-violet-500/10 flex items-center justify-center mb-4">
+                  <Clock className="h-5 w-5 text-violet-500" />
+                </div>
                 <h3 className="font-medium text-base mb-2">Response Times</h3>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs text-muted-foreground">General</span>
-                    <span className="text-xs font-medium">1 business day</span>
+                    <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 text-xs">1 business day</Badge>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs text-muted-foreground">Support</span>
-                    <span className="text-xs font-medium">4 hours</span>
+                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs">4 hours</Badge>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs text-muted-foreground">Enterprise</span>
-                    <span className="text-xs font-medium">Same day</span>
+                    <Badge variant="secondary" className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20 text-xs">Same day</Badge>
                   </div>
                 </div>
               </CardContent>
@@ -250,8 +272,9 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="pb-20" data-testid="section-connect-social">
-        <div className="max-w-5xl mx-auto px-6">
+      <section className="relative pb-20" data-testid="section-connect-social">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/[0.02] to-transparent dark:via-blue-500/[0.01]" />
+        <div className="relative max-w-5xl mx-auto px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-semibold mb-2" data-testid="text-social-heading">
               Connect With Us

@@ -6,6 +6,7 @@ import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ConversionCta } from "@/components/seo/conversion-cta";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
@@ -42,18 +43,27 @@ const uptimeCommitments = [
     uptime: "99.9%",
     monthlyDowntime: "~43 minutes",
     description: "Enterprise-grade reliability with proactive monitoring and automatic failover.",
+    accentColor: "from-amber-500 to-orange-500",
+    badgeBg: "bg-amber-500/10",
+    badgeText: "text-amber-600 dark:text-amber-400",
   },
   {
     plan: "Self-Hosted",
     uptime: "Varies",
     monthlyDowntime: "Depends on your infrastructure",
     description: "You control the hosting. We provide the software updates, patches, and guidance.",
+    accentColor: "from-blue-500 to-violet-500",
+    badgeBg: "bg-blue-500/10",
+    badgeText: "text-blue-600 dark:text-blue-400",
   },
   {
     plan: "Custom / Enterprise",
     uptime: "Negotiated",
     monthlyDowntime: "Per agreement",
     description: "Bespoke SLA tailored to your exact requirements, with dedicated uptime targets.",
+    accentColor: "from-emerald-500 to-teal-500",
+    badgeBg: "bg-emerald-500/10",
+    badgeText: "text-emerald-600 dark:text-emerald-400",
   },
 ];
 
@@ -91,6 +101,15 @@ const creditTiers = [
   { downtime: "Below 95.0%", credit: "100% of monthly spend" },
 ];
 
+const sectionIcons = [
+  { icon: Shield, color: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: Headphones, color: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: Scale, color: "text-violet-500", bg: "bg-violet-500/10" },
+  { icon: AlertTriangle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: Database, color: "text-rose-500", bg: "bg-rose-500/10" },
+  { icon: Scale, color: "text-amber-500", bg: "bg-amber-500/10" },
+];
+
 export default function SlaPage() {
   return (
     <PublicLayout>
@@ -109,19 +128,25 @@ export default function SlaPage() {
         <Navbar />
         <Breadcrumbs items={[{ label: "Service Level Agreement" }]} />
 
-        <section className="relative" data-testid="section-sla-hero">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
+        <section className="relative overflow-hidden" data-testid="section-sla-hero">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 via-transparent to-orange-500/8 dark:from-amber-500/5 dark:to-orange-500/5" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.10),transparent_65%)]" />
+          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.06),transparent_70%)]" />
           <div className="relative max-w-4xl mx-auto px-6 pt-28 pb-20 text-center">
-            <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6" data-testid="badge-sla">
+            <Badge variant="outline" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide border-amber-500/30 text-amber-600 dark:text-amber-400" data-testid="badge-sla">
+              <span className="relative flex h-2 w-2 mr-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+              </span>
               Our Promise to You
-            </p>
+            </Badge>
             <h1
-              className="text-4xl sm:text-5xl font-light tracking-tight leading-[1.1]"
+              className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
               data-testid="text-sla-hero-title"
             >
               Service Level
               <br />
-              <span className="font-normal">Agreement</span>
+              <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 bg-clip-text text-transparent">Agreement</span>
             </h1>
             <p
               className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"
@@ -139,7 +164,9 @@ export default function SlaPage() {
         <section className="py-16" data-testid="section-uptime">
           <div className="max-w-4xl mx-auto px-6">
             <div className="flex items-center gap-3 mb-2">
-              <Shield className="h-5 w-5 text-primary" />
+              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${sectionIcons[0].bg}`}>
+                <Shield className={`h-4 w-4 ${sectionIcons[0].color}`} />
+              </span>
               <h2 className="text-2xl font-light tracking-tight" data-testid="text-uptime-title">
                 1. Uptime Guarantees
               </h2>
@@ -156,7 +183,7 @@ export default function SlaPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
                       <h3 className="font-medium">{item.plan}</h3>
-                      <span className="text-lg font-semibold text-primary">{item.uptime}</span>
+                      <span className={`text-lg font-semibold bg-gradient-to-r ${item.accentColor} bg-clip-text text-transparent`}>{item.uptime}</span>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
                     <p className="text-xs text-muted-foreground">
@@ -172,26 +199,26 @@ export default function SlaPage() {
                 <h3 className="font-medium mb-3">What counts as downtime?</h3>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                     <span>The GoRigo platform or API is completely unreachable for more than 5 consecutive minutes.</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                     <span>Calls cannot be placed or received due to a fault on our side.</span>
                   </li>
                 </ul>
                 <h3 className="font-medium mb-3 mt-5">What does not count as downtime?</h3>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                     <span>Scheduled maintenance (we give at least 48 hours&apos; notice via email and dashboard).</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                     <span>Outages caused by your own infrastructure, third-party API providers, or internet connectivity.</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                     <span>Force majeure events (natural disasters, war, government action).</span>
                   </li>
                 </ul>
@@ -200,10 +227,13 @@ export default function SlaPage() {
           </div>
         </section>
 
-        <section className="py-16 border-t border-border/50" data-testid="section-support">
-          <div className="max-w-4xl mx-auto px-6">
+        <section className="relative py-16" data-testid="section-support">
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent dark:from-blue-500/[0.02]" />
+          <div className="relative max-w-4xl mx-auto px-6">
             <div className="flex items-center gap-3 mb-2">
-              <Headphones className="h-5 w-5 text-primary" />
+              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${sectionIcons[1].bg}`}>
+                <Headphones className={`h-4 w-4 ${sectionIcons[1].color}`} />
+              </span>
               <h2 className="text-2xl font-light tracking-tight" data-testid="text-support-title">
                 2. Support Response Times
               </h2>
@@ -265,10 +295,13 @@ export default function SlaPage() {
           </div>
         </section>
 
-        <section className="py-16 border-t border-border/50" data-testid="section-compensation">
-          <div className="max-w-4xl mx-auto px-6">
+        <section className="relative py-16" data-testid="section-compensation">
+          <div className="absolute inset-0 bg-gradient-to-b from-violet-500/[0.03] to-transparent dark:from-violet-500/[0.02]" />
+          <div className="relative max-w-4xl mx-auto px-6">
             <div className="flex items-center gap-3 mb-2">
-              <Scale className="h-5 w-5 text-primary" />
+              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${sectionIcons[2].bg}`}>
+                <Scale className={`h-4 w-4 ${sectionIcons[2].color}`} />
+              </span>
               <h2 className="text-2xl font-light tracking-tight" data-testid="text-compensation-title">
                 3. What Happens If We Miss Our Targets
               </h2>
@@ -311,19 +344,19 @@ export default function SlaPage() {
                 <h3 className="font-medium mb-3">How credits work</h3>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />
                     <span>Credits are calculated based on your talk-time spend in the affected month.</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />
                     <span>For widespread outages, credits are applied automatically to your wallet within 5 business days.</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />
                     <span>Credits cannot be converted to cash or transferred between accounts.</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />
                     <span>Maximum credit in any single month is capped at 100% of that month&apos;s spend.</span>
                   </li>
                 </ul>
@@ -332,10 +365,13 @@ export default function SlaPage() {
           </div>
         </section>
 
-        <section className="py-16 border-t border-border/50" data-testid="section-incidents">
-          <div className="max-w-4xl mx-auto px-6">
+        <section className="relative py-16" data-testid="section-incidents">
+          <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/[0.03] to-transparent dark:from-emerald-500/[0.02]" />
+          <div className="relative max-w-4xl mx-auto px-6">
             <div className="flex items-center gap-3 mb-2">
-              <AlertTriangle className="h-5 w-5 text-primary" />
+              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${sectionIcons[3].bg}`}>
+                <AlertTriangle className={`h-4 w-4 ${sectionIcons[3].color}`} />
+              </span>
               <h2 className="text-2xl font-light tracking-tight" data-testid="text-incidents-title">
                 4. How We Handle Incidents
               </h2>
@@ -346,79 +382,38 @@ export default function SlaPage() {
             </p>
 
             <div className="space-y-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-semibold shrink-0">1</div>
-                    <div>
-                      <h3 className="font-medium mb-1">Detection</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Our automated monitoring systems detect issues within seconds. We also accept reports from customers via support channels.
-                      </p>
+              {[
+                { step: 1, title: "Detection", description: "Our automated monitoring systems detect issues within seconds. We also accept reports from customers via support channels.", color: "text-amber-500", bg: "bg-amber-500/10" },
+                { step: 2, title: "Acknowledgement", description: "We acknowledge the issue publicly on our status page and send notifications to affected customers via email and dashboard alerts.", color: "text-blue-500", bg: "bg-blue-500/10" },
+                { step: 3, title: "Updates", description: "We post updates every 30 minutes for critical incidents and every 2 hours for high-priority issues until resolved. You will never be left wondering what is happening.", color: "text-violet-500", bg: "bg-violet-500/10" },
+                { step: 4, title: "Resolution", description: "Once the issue is fixed, we confirm resolution and monitor closely for 24 hours to ensure stability.", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                { step: 5, title: "Post-Incident Review", description: "Within 5 business days, we publish a Root Cause Analysis explaining what happened, why, and what we are doing to prevent it from happening again. Managed and Custom clients receive a private, detailed report.", color: "text-rose-500", bg: "bg-rose-500/10" },
+              ].map((item) => (
+                <Card key={item.step}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-full ${item.bg} ${item.color} text-sm font-semibold shrink-0`}>{item.step}</div>
+                      <div>
+                        <h3 className="font-medium mb-1">{item.title}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {item.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-semibold shrink-0">2</div>
-                    <div>
-                      <h3 className="font-medium mb-1">Acknowledgement</h3>
-                      <p className="text-sm text-muted-foreground">
-                        We acknowledge the issue publicly on our status page and send notifications to affected customers via email and dashboard alerts.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-semibold shrink-0">3</div>
-                    <div>
-                      <h3 className="font-medium mb-1">Updates</h3>
-                      <p className="text-sm text-muted-foreground">
-                        We post updates every 30 minutes for critical incidents and every 2 hours for high-priority issues until resolved. You will never be left wondering what is happening.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-semibold shrink-0">4</div>
-                    <div>
-                      <h3 className="font-medium mb-1">Resolution</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Once the issue is fixed, we confirm resolution and monitor closely for 24 hours to ensure stability.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-semibold shrink-0">5</div>
-                    <div>
-                      <h3 className="font-medium mb-1">Post-Incident Review</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Within 5 business days, we publish a Root Cause Analysis explaining what happened, why, and what we are doing to prevent it from happening again. Managed and Custom clients receive a private, detailed report.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="py-16 border-t border-border/50" data-testid="section-data-protection">
-          <div className="max-w-4xl mx-auto px-6">
+        <section className="relative py-16" data-testid="section-data-protection">
+          <div className="absolute inset-0 bg-gradient-to-b from-rose-500/[0.03] to-transparent dark:from-rose-500/[0.02]" />
+          <div className="relative max-w-4xl mx-auto px-6">
             <div className="flex items-center gap-3 mb-2">
-              <Database className="h-5 w-5 text-primary" />
+              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${sectionIcons[4].bg}`}>
+                <Database className={`h-4 w-4 ${sectionIcons[4].color}`} />
+              </span>
               <h2 className="text-2xl font-light tracking-tight" data-testid="text-data-title">
                 5. Data Protection and Recovery
               </h2>
@@ -434,15 +429,15 @@ export default function SlaPage() {
                   <h3 className="font-medium mb-3">Backups</h3>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                       <span>Automated daily backups with 30-day retention (Managed).</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                       <span>Point-in-time recovery available for Managed clients (last 7 days).</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                       <span>Self-Hosted clients manage their own backup schedule with our guidance.</span>
                     </li>
                   </ul>
@@ -453,11 +448,11 @@ export default function SlaPage() {
                   <h3 className="font-medium mb-3">Recovery Targets</h3>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                       <span><span className="font-medium text-foreground">Recovery Time (RTO):</span> Managed: 4 hours. Self-Hosted: your responsibility.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                       <span><span className="font-medium text-foreground">Recovery Point (RPO):</span> Managed: 1 hour. Self-Hosted: your configuration.</span>
                     </li>
                   </ul>
@@ -468,11 +463,11 @@ export default function SlaPage() {
                   <h3 className="font-medium mb-3">Encryption</h3>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Shield className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <Shield className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                       <span>All data encrypted in transit (TLS 1.2+) and at rest (AES-256).</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Shield className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <Shield className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                       <span>Call recordings encrypted with per-organisation keys.</span>
                     </li>
                   </ul>
@@ -483,11 +478,11 @@ export default function SlaPage() {
                   <h3 className="font-medium mb-3">Data Residency</h3>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Database className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <Database className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />
                       <span>Managed data hosted in the UK (London region) by default.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Database className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <Database className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />
                       <span>Custom plans can specify alternative regions (EU, US, APAC).</span>
                     </li>
                   </ul>
@@ -497,10 +492,13 @@ export default function SlaPage() {
           </div>
         </section>
 
-        <section className="py-16 border-t border-border/50" data-testid="section-legal">
-          <div className="max-w-4xl mx-auto px-6">
+        <section className="relative py-16" data-testid="section-legal">
+          <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.03] to-transparent dark:from-amber-500/[0.02]" />
+          <div className="relative max-w-4xl mx-auto px-6">
             <div className="flex items-center gap-3 mb-2">
-              <Scale className="h-5 w-5 text-primary" />
+              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${sectionIcons[5].bg}`}>
+                <Scale className={`h-4 w-4 ${sectionIcons[5].color}`} />
+              </span>
               <h2 className="text-2xl font-light tracking-tight" data-testid="text-legal-title">
                 6. Legal Terms
               </h2>
@@ -539,19 +537,19 @@ export default function SlaPage() {
                   <h3 className="font-medium mb-2">Your responsibilities</h3>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                       <span>Maintain a valid and funded wallet balance to ensure uninterrupted service.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                       <span>Report issues promptly through the appropriate support channels for your package.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                       <span>Keep your account credentials secure and enable two-factor authentication where available.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                       <span>For Self-Hosted customers: maintain your hosting infrastructure according to our minimum requirements.</span>
                     </li>
                   </ul>

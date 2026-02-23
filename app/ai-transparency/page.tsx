@@ -78,6 +78,17 @@ export const metadata: Metadata = {
   },
 };
 
+const benefitColors = [
+  { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: "text-violet-500", bg: "bg-violet-500/10" },
+  { icon: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: "text-rose-500", bg: "bg-rose-500/10" },
+  { icon: "text-teal-500", bg: "bg-teal-500/10" },
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+];
+
 const benefits = [
   {
     icon: TrendingDown,
@@ -162,6 +173,15 @@ const limitations = [
   },
 ];
 
+const hallucinationColors = [
+  { text: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { text: "text-blue-500", bg: "bg-blue-500/10" },
+  { text: "text-violet-500", bg: "bg-violet-500/10" },
+  { text: "text-rose-500", bg: "bg-rose-500/10" },
+  { text: "text-amber-500", bg: "bg-amber-500/10" },
+  { text: "text-teal-500", bg: "bg-teal-500/10" },
+];
+
 const hallucinationSteps = [
   {
     step: 1,
@@ -219,6 +239,16 @@ const ragCards = [
   },
 ];
 
+const guardrailColors = [
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: "text-rose-500", bg: "bg-rose-500/10" },
+  { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: "text-violet-500", bg: "bg-violet-500/10" },
+  { icon: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: "text-teal-500", bg: "bg-teal-500/10" },
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+];
+
 const guardrails = [
   {
     icon: Shield,
@@ -264,6 +294,12 @@ const guardrails = [
   },
 ];
 
+const humanLoopColors = [
+  { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: "text-violet-500", bg: "bg-violet-500/10" },
+];
+
 const humanLoopCards = [
   {
     icon: Bot,
@@ -283,6 +319,13 @@ const humanLoopCards = [
     description:
       "Managers can listen in to live AI calls, whisper coaching suggestions, or barge in to take over. This isn't surveillance \u2014 it's quality assurance and continuous improvement. AI handles volume; humans handle complexity.",
   },
+];
+
+const agentColors = [
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: "text-violet-500", bg: "bg-violet-500/10" },
 ];
 
 const agentTypes = [
@@ -310,6 +353,14 @@ const agentTypes = [
     description:
       "Conducts post-interaction surveys, collects feedback, measures CSAT. Neutral, consistent, non-leading.",
   },
+];
+
+const voiceColors = [
+  { icon: "text-rose-500", bg: "bg-rose-500/10" },
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: "text-violet-500", bg: "bg-violet-500/10" },
+  { icon: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: "text-teal-500", bg: "bg-teal-500/10" },
 ];
 
 const voiceComparisons = [
@@ -345,6 +396,12 @@ const voiceComparisons = [
   },
 ];
 
+const costColors = [
+  { icon: "text-teal-500", bg: "bg-teal-500/10" },
+  { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+];
+
 const costItems = [
   {
     icon: Mic,
@@ -364,6 +421,15 @@ const costItems = [
     description:
       "Top up your wallet, and usage is deducted automatically per operation. Real-time balance visible in your dashboard. Low-balance alerts before you run out.",
   },
+];
+
+const privacyColors = [
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: "text-violet-500", bg: "bg-violet-500/10" },
+  { icon: "text-rose-500", bg: "bg-rose-500/10" },
+  { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: "text-teal-500", bg: "bg-teal-500/10" },
 ];
 
 const privacyCards = [
@@ -405,6 +471,15 @@ const privacyCards = [
   },
 ];
 
+const knowledgeColors = [
+  { text: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { text: "text-blue-500", bg: "bg-blue-500/10" },
+  { text: "text-violet-500", bg: "bg-violet-500/10" },
+  { text: "text-amber-500", bg: "bg-amber-500/10" },
+  { text: "text-rose-500", bg: "bg-rose-500/10" },
+  { text: "text-teal-500", bg: "bg-teal-500/10" },
+];
+
 const knowledgeSteps = [
   {
     step: 1,
@@ -444,6 +519,15 @@ const knowledgeSteps = [
   },
 ];
 
+const practiceColors = [
+  { icon: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: "text-violet-500", bg: "bg-violet-500/10" },
+  { icon: "text-rose-500", bg: "bg-rose-500/10" },
+  { icon: "text-teal-500", bg: "bg-teal-500/10" },
+];
+
 const bestPractices = [
   {
     icon: Target,
@@ -481,6 +565,15 @@ const bestPractices = [
     description:
       "It's tempting to hide the AI disclosure for a \"smoother\" experience. Don't. It's legally required in most jurisdictions and builds trust.",
   },
+];
+
+const metricColors = [
+  { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { icon: "text-blue-500", bg: "bg-blue-500/10" },
+  { icon: "text-violet-500", bg: "bg-violet-500/10" },
+  { icon: "text-amber-500", bg: "bg-amber-500/10" },
+  { icon: "text-rose-500", bg: "bg-rose-500/10" },
+  { icon: "text-teal-500", bg: "bg-teal-500/10" },
 ];
 
 const metrics = [
@@ -600,19 +693,25 @@ export default function AITransparencyPage() {
       <Navbar />
       <Breadcrumbs items={[{ label: "AI Transparency" }]} />
 
-      <section className="relative" data-testid="section-transparency-hero">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.06),transparent_60%)]" />
+      <section className="relative overflow-hidden" data-testid="section-transparency-hero">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/8 via-transparent to-teal-500/8 dark:from-emerald-500/5 dark:to-teal-500/5" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.10),transparent_65%)]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(20,184,166,0.06),transparent_70%)]" />
         <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-20 text-center">
-          <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-6" data-testid="badge-transparency">
+          <Badge variant="outline" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide border-emerald-500/30 text-emerald-600 dark:text-emerald-400" data-testid="badge-transparency">
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
             AI Transparency & Education
-          </p>
+          </Badge>
           <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1]"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
             data-testid="text-transparency-hero-title"
           >
             Honest AI for honest business
             <br />
-            <span className="font-normal">What we do, what we don&apos;t, and why it matters</span>
+            <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 bg-clip-text text-transparent">What we do, what we don&apos;t, and why it matters</span>
           </h1>
           <p
             className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"
@@ -654,13 +753,15 @@ export default function AITransparencyPage() {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {benefits.map((benefit) => (
+            {benefits.map((benefit, index) => (
               <Card
                 key={benefit.title}
                 data-testid={`card-benefit-${benefit.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <benefit.icon className="h-5 w-5 text-[#2DD4A8] mb-5" />
+                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-md ${benefitColors[index].bg} mb-5`}>
+                    <benefit.icon className={`h-5 w-5 ${benefitColors[index].icon}`} />
+                  </span>
                   <h3 className="font-medium text-lg mb-2">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {benefit.description}
@@ -672,8 +773,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="limitations" className="py-24 border-t border-border/50" data-testid="section-limitations">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="limitations" className="relative py-24" data-testid="section-limitations">
+        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.03] to-transparent dark:from-amber-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Honest Realities
@@ -686,13 +788,15 @@ export default function AITransparencyPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {limitations.map((limitation) => (
+            {limitations.map((limitation, index) => (
               <Card
                 key={limitation.title}
                 data-testid={`card-limitation-${limitation.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <AlertTriangle className="h-5 w-5 text-[#2DD4A8] mb-5" />
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-amber-500/10 mb-5">
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                  </span>
                   <h3 className="font-medium text-lg mb-2">{limitation.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {limitation.description}
@@ -704,8 +808,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="hallucination" className="py-24 border-t border-border/50" data-testid="section-hallucination">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="hallucination" className="relative py-24" data-testid="section-hallucination">
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/[0.03] to-transparent dark:from-emerald-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Anti-Hallucination
@@ -718,14 +823,14 @@ export default function AITransparencyPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {hallucinationSteps.map((item) => (
+            {hallucinationSteps.map((item, index) => (
               <Card
                 key={item.step}
                 data-testid={`card-hallucination-step-${item.step}`}
               >
                 <CardContent className="p-8">
                   <div className="flex items-center gap-3 mb-5">
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#2DD4A8]/10 text-[#2DD4A8] text-sm font-bold">
+                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${hallucinationColors[index].bg} ${hallucinationColors[index].text} text-sm font-bold`}>
                       {item.step}
                     </span>
                     <h3 className="font-medium text-lg">{item.title}</h3>
@@ -741,9 +846,11 @@ export default function AITransparencyPage() {
             <Card data-testid="card-hallucination-declaration">
               <CardContent className="p-8">
                 <div className="flex items-start gap-4">
-                  <Shield className="h-5 w-5 text-[#2DD4A8] shrink-0 mt-0.5" />
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-emerald-500/10 shrink-0">
+                    <Shield className="h-5 w-5 text-emerald-500" />
+                  </span>
                   <div>
-                    <Badge variant="outline" className="mb-3 text-xs" data-testid="badge-declaration">
+                    <Badge variant="outline" className="mb-3 text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" data-testid="badge-declaration">
                       Declaration
                     </Badge>
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -757,8 +864,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="rag-explained" className="py-24 border-t border-border/50" data-testid="section-rag-explained">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="rag-explained" className="relative py-24" data-testid="section-rag-explained">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent dark:from-blue-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               RAG Explained
@@ -769,7 +877,9 @@ export default function AITransparencyPage() {
           </div>
           <Card className="mb-8" data-testid="card-rag-analogy">
             <CardContent className="p-8">
-              <Lightbulb className="h-5 w-5 text-[#2DD4A8] mb-5" />
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-amber-500/10 mb-5">
+                <Lightbulb className="h-5 w-5 text-amber-500" />
+              </span>
               <h3 className="font-medium text-lg mb-3">The Library Analogy</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Imagine you hire a new receptionist. They&apos;re intelligent, articulate, and great on the phone. But they know nothing about your business. If a customer calls and asks about your return policy, this receptionist has two choices: make something up that sounds plausible, or check the policy document first. RAG is the &ldquo;check the document first&rdquo; approach.
@@ -777,25 +887,33 @@ export default function AITransparencyPage() {
             </CardContent>
           </Card>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {ragCards.map((card) => (
-              <Card
-                key={card.title}
-                data-testid={`card-rag-${card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")}`}
-              >
-                <CardContent className="p-8">
-                  <h3 className="font-medium text-lg mb-3">{card.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {card.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+            {ragCards.map((card, index) => {
+              const ragCardColors = [
+                { icon: "text-rose-500", bg: "bg-rose-500/10" },
+                { icon: "text-emerald-500", bg: "bg-emerald-500/10" },
+                { icon: "text-blue-500", bg: "bg-blue-500/10" },
+              ];
+              return (
+                <Card
+                  key={card.title}
+                  data-testid={`card-rag-${card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")}`}
+                >
+                  <CardContent className="p-8">
+                    <h3 className="font-medium text-lg mb-3">{card.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {card.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section id="guardrails" className="py-24 border-t border-border/50" data-testid="section-guardrails">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="guardrails" className="relative py-24" data-testid="section-guardrails">
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-500/[0.03] to-transparent dark:from-violet-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Safety Architecture
@@ -812,10 +930,12 @@ export default function AITransparencyPage() {
               >
                 <CardContent className="p-8">
                   <div className="flex items-center gap-3 mb-5">
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#2DD4A8]/10 text-[#2DD4A8] text-sm font-bold">
+                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${guardrailColors[index].bg} ${guardrailColors[index].icon} text-sm font-bold`}>
                       {index + 1}
                     </span>
-                    <item.icon className="h-5 w-5 text-[#2DD4A8]" />
+                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${guardrailColors[index].bg}`}>
+                      <item.icon className={`h-5 w-5 ${guardrailColors[index].icon}`} />
+                    </span>
                   </div>
                   <h3 className="font-medium text-lg mb-2">{item.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
@@ -828,8 +948,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="human-in-the-loop" className="py-24 border-t border-border/50" data-testid="section-human-in-the-loop">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="human-in-the-loop" className="relative py-24" data-testid="section-human-in-the-loop">
+        <div className="absolute inset-0 bg-gradient-to-b from-teal-500/[0.03] to-transparent dark:from-teal-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Human-in-the-Loop
@@ -842,13 +963,15 @@ export default function AITransparencyPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {humanLoopCards.map((card) => (
+            {humanLoopCards.map((card, index) => (
               <Card
                 key={card.title}
                 data-testid={`card-human-loop-${card.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <card.icon className="h-5 w-5 text-[#2DD4A8] mb-5" />
+                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-md ${humanLoopColors[index].bg} mb-5`}>
+                    <card.icon className={`h-5 w-5 ${humanLoopColors[index].icon}`} />
+                  </span>
                   <h3 className="font-medium text-lg mb-2">{card.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {card.description}
@@ -860,8 +983,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="multi-agent" className="py-24 border-t border-border/50" data-testid="section-multi-agent">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="multi-agent" className="relative py-24" data-testid="section-multi-agent">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent dark:from-blue-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Multi-Agent Orchestration
@@ -874,13 +998,15 @@ export default function AITransparencyPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {agentTypes.map((agent) => (
+            {agentTypes.map((agent, index) => (
               <Card
                 key={agent.title}
                 data-testid={`card-agent-${agent.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <agent.icon className="h-5 w-5 text-[#2DD4A8] mb-5" />
+                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-md ${agentColors[index].bg} mb-5`}>
+                    <agent.icon className={`h-5 w-5 ${agentColors[index].icon}`} />
+                  </span>
                   <h3 className="font-medium text-lg mb-2">{agent.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {agent.description}
@@ -895,8 +1021,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="voice-vs-text" className="py-24 border-t border-border/50" data-testid="section-voice-vs-text">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="voice-vs-text" className="relative py-24" data-testid="section-voice-vs-text">
+        <div className="absolute inset-0 bg-gradient-to-b from-rose-500/[0.03] to-transparent dark:from-rose-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Voice AI Challenges
@@ -906,13 +1033,15 @@ export default function AITransparencyPage() {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {voiceComparisons.map((item) => (
+            {voiceComparisons.map((item, index) => (
               <Card
                 key={item.title}
                 data-testid={`card-voice-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <item.icon className="h-5 w-5 text-[#2DD4A8] mb-5" />
+                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-md ${voiceColors[index].bg} mb-5`}>
+                    <item.icon className={`h-5 w-5 ${voiceColors[index].icon}`} />
+                  </span>
                   <h3 className="font-medium text-lg mb-3">{item.title}</h3>
                   <div className="space-y-3">
                     <div>
@@ -931,8 +1060,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="cost-transparency" className="py-24 border-t border-border/50" data-testid="section-cost-transparency">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="cost-transparency" className="relative py-24" data-testid="section-cost-transparency">
+        <div className="absolute inset-0 bg-gradient-to-b from-teal-500/[0.03] to-transparent dark:from-teal-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Pricing Model
@@ -942,13 +1072,15 @@ export default function AITransparencyPage() {
             </h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {costItems.map((item) => (
+            {costItems.map((item, index) => (
               <Card
                 key={item.title}
                 data-testid={`card-cost-${item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")}`}
               >
                 <CardContent className="p-8">
-                  <item.icon className="h-5 w-5 text-[#2DD4A8] mb-5" />
+                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-md ${costColors[index].bg} mb-5`}>
+                    <item.icon className={`h-5 w-5 ${costColors[index].icon}`} />
+                  </span>
                   <h3 className="font-medium text-lg mb-2">{item.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {item.description}
@@ -959,7 +1091,9 @@ export default function AITransparencyPage() {
           </div>
           <Card className="mt-8" data-testid="card-cost-comparison">
             <CardContent className="p-8">
-              <PiggyBank className="h-5 w-5 text-[#2DD4A8] mb-5" />
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-emerald-500/10 mb-5">
+                <PiggyBank className="h-5 w-5 text-emerald-500" />
+              </span>
               <h3 className="font-medium text-lg mb-3">Cost Comparison</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
@@ -986,8 +1120,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="data-privacy" className="py-24 border-t border-border/50" data-testid="section-data-privacy">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="data-privacy" className="relative py-24" data-testid="section-data-privacy">
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-500/[0.03] to-transparent dark:from-violet-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Data Protection
@@ -997,13 +1132,15 @@ export default function AITransparencyPage() {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {privacyCards.map((card) => (
+            {privacyCards.map((card, index) => (
               <Card
                 key={card.title}
                 data-testid={`card-privacy-${card.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <card.icon className="h-5 w-5 text-[#2DD4A8] mb-5" />
+                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-md ${privacyColors[index].bg} mb-5`}>
+                    <card.icon className={`h-5 w-5 ${privacyColors[index].icon}`} />
+                  </span>
                   <h3 className="font-medium text-lg mb-2">{card.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {card.description}
@@ -1015,8 +1152,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="knowledge-base" className="py-24 border-t border-border/50" data-testid="section-knowledge-base">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="knowledge-base" className="relative py-24" data-testid="section-knowledge-base">
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/[0.03] to-transparent dark:from-emerald-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Knowledge Base Guide
@@ -1029,14 +1167,14 @@ export default function AITransparencyPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {knowledgeSteps.map((item) => (
+            {knowledgeSteps.map((item, index) => (
               <Card
                 key={item.step}
                 data-testid={`card-knowledge-step-${item.step}`}
               >
                 <CardContent className="p-8">
                   <div className="flex items-center gap-3 mb-5">
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#2DD4A8]/10 text-[#2DD4A8] text-sm font-bold">
+                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md ${knowledgeColors[index].bg} ${knowledgeColors[index].text} text-sm font-bold`}>
                       {item.step}
                     </span>
                     <h3 className="font-medium text-lg">{item.title}</h3>
@@ -1050,23 +1188,25 @@ export default function AITransparencyPage() {
           </div>
           <Card className="mt-8" data-testid="card-knowledge-pro-tips">
             <CardContent className="p-8">
-              <Lightbulb className="h-5 w-5 text-[#2DD4A8] mb-5" />
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-amber-500/10 mb-5">
+                <Lightbulb className="h-5 w-5 text-amber-500" />
+              </span>
               <h3 className="font-medium text-lg mb-3">Pro Tips</h3>
               <ul className="space-y-2">
                 <li className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
-                  <CircleDot className="h-3.5 w-3.5 text-[#2DD4A8] shrink-0 mt-1" />
+                  <CircleDot className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-1" />
                   Keep answers under 3 sentences for voice delivery
                 </li>
                 <li className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
-                  <CircleDot className="h-3.5 w-3.5 text-[#2DD4A8] shrink-0 mt-1" />
+                  <CircleDot className="h-3.5 w-3.5 text-blue-500 shrink-0 mt-1" />
                   Include common misspellings and alternative phrasings
                 </li>
                 <li className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
-                  <CircleDot className="h-3.5 w-3.5 text-[#2DD4A8] shrink-0 mt-1" />
+                  <CircleDot className="h-3.5 w-3.5 text-violet-500 shrink-0 mt-1" />
                   Add context: &ldquo;If the caller asks about X, they usually also want to know about Y&rdquo;
                 </li>
                 <li className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
-                  <CircleDot className="h-3.5 w-3.5 text-[#2DD4A8] shrink-0 mt-1" />
+                  <CircleDot className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-1" />
                   Test by calling your own AI agent and trying to break it
                 </li>
               </ul>
@@ -1075,8 +1215,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="best-practices" className="py-24 border-t border-border/50" data-testid="section-best-practices">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="best-practices" className="relative py-24" data-testid="section-best-practices">
+        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.03] to-transparent dark:from-amber-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Practical Guidance
@@ -1086,13 +1227,15 @@ export default function AITransparencyPage() {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {bestPractices.map((practice) => (
+            {bestPractices.map((practice, index) => (
               <Card
                 key={practice.title}
                 data-testid={`card-practice-${practice.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <practice.icon className="h-5 w-5 text-[#2DD4A8] mb-5" />
+                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-md ${practiceColors[index].bg} mb-5`}>
+                    <practice.icon className={`h-5 w-5 ${practiceColors[index].icon}`} />
+                  </span>
                   <h3 className="font-medium text-lg mb-2">{practice.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {practice.description}
@@ -1104,8 +1247,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="measuring-performance" className="py-24 border-t border-border/50" data-testid="section-measuring-performance">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="measuring-performance" className="relative py-24" data-testid="section-measuring-performance">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] to-transparent dark:from-blue-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               AI Metrics
@@ -1115,13 +1259,15 @@ export default function AITransparencyPage() {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {metrics.map((metric) => (
+            {metrics.map((metric, index) => (
               <Card
                 key={metric.title}
                 data-testid={`card-metric-${metric.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <CardContent className="p-8">
-                  <metric.icon className="h-5 w-5 text-[#2DD4A8] mb-5" />
+                  <span className={`inline-flex items-center justify-center w-10 h-10 rounded-md ${metricColors[index].bg} mb-5`}>
+                    <metric.icon className={`h-5 w-5 ${metricColors[index].icon}`} />
+                  </span>
                   <h3 className="font-medium text-lg mb-2">{metric.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {metric.description}
@@ -1133,8 +1279,9 @@ export default function AITransparencyPage() {
         </div>
       </section>
 
-      <section id="myths" className="py-24 border-t border-border/50" data-testid="section-myths">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="myths" className="relative py-24" data-testid="section-myths">
+        <div className="absolute inset-0 bg-gradient-to-b from-rose-500/[0.03] to-transparent dark:from-rose-500/[0.02]" />
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="mb-16">
             <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
               Setting the Record Straight
@@ -1152,13 +1299,13 @@ export default function AITransparencyPage() {
                 <CardContent className="p-8">
                   <div className="space-y-4">
                     <div>
-                      <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-1">Myth</p>
+                      <Badge variant="outline" className="mb-2 text-xs bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30">Myth</Badge>
                       <p className="font-medium text-sm leading-relaxed">
                         &ldquo;{item.myth}&rdquo;
                       </p>
                     </div>
                     <div className="border-t border-border/50 pt-4">
-                      <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-1">Reality</p>
+                      <Badge variant="outline" className="mb-2 text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">Reality</Badge>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {item.reality}
                       </p>

@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -127,158 +129,103 @@ const CONSENT_TYPE_LABELS: Record<string, string> = {
 
 export default function CompliancePage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const [overviewData, setOverviewData] = useState<ComplianceOverviewData | null>(null);
-  const [loadingOverview, setLoadingOverview] = useState(true);
   const [selectedDisclosureLang, setSelectedDisclosureLang] = useState("en");
 
-  const [dncEntries, setDncEntries] = useState<DNCEntry[]>([]);
-  const [loadingDnc, setLoadingDnc] = useState(true);
   const [addPhone, setAddPhone] = useState("");
   const [addReason, setAddReason] = useState("");
-  const [addingDnc, setAddingDnc] = useState(false);
   const [checkPhone, setCheckPhone] = useState("");
   const [checkResult, setCheckResult] = useState<{ blocked: boolean } | null>(null);
-  const [checkingDnc, setCheckingDnc] = useState(false);
 
-  const [consentRecords, setConsentRecords] = useState<ConsentRecord[]>([]);
-  const [loadingConsent, setLoadingConsent] = useState(true);
   const [consentFilter, setConsentFilter] = useState("all");
 
   const [piiText, setPiiText] = useState("");
   const [piiResult, setPiiResult] = useState<PIIScanResult | null>(null);
-  const [scanningPii, setScanningPii] = useState(false);
   const [exportingDnc, setExportingDnc] = useState(false);
 
-  const fetchOverview = () => {
-    setLoadingOverview(true);
-    fetch("/api/compliance/overview")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.countries) setOverviewData(d);
-      })
-      .catch(() => {
-        toast({ title: "Failed to load compliance overview", variant: "destructive" });
-      })
-      .finally(() => setLoadingOverview(false));
-  };
+  const { data: overviewRaw, isLoading: loadingOverview } = useQuery<any>({
+    queryKey: ["/api/compliance/overview"],
+  });
+  const overviewData: ComplianceOverviewData | null = overviewRaw?.countries ? overviewRaw : null;
 
-  const fetchDnc = () => {
-    setLoadingDnc(true);
-    fetch("/api/compliance/dnc")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.entries) setDncEntries(d.entries);
-      })
-      .catch(() => {
-        toast({ title: "Failed to load DNC list", variant: "destructive" });
-      })
-      .finally(() => setLoadingDnc(false));
-  };
+  const { data: dncRaw, isLoading: loadingDnc } = useQuery<any>({
+    queryKey: ["/api/compliance/dnc"],
+  });
+  const dncEntries: DNCEntry[] = dncRaw?.entries || [];
 
-  const fetchConsent = () => {
-    setLoadingConsent(true);
-    fetch("/api/compliance/consent")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.records) setConsentRecords(d.records);
-      })
-      .catch(() => {
-        toast({ title: "Failed to load consent records", variant: "destructive" });
-      })
-      .finally(() => setLoadingConsent(false));
-  };
+  const { data: consentRaw, isLoading: loadingConsent } = useQuery<any>({
+    queryKey: ["/api/compliance/consent"],
+  });
+  const consentRecords: ConsentRecord[] = consentRaw?.records || [];
 
-  useEffect(() => {
-    fetchOverview();
-    fetchDnc();
-    fetchConsent();
-  }, []);
-
-  const handleAddDnc = async () => {
-    if (!addPhone.trim()) return;
-    setAddingDnc(true);
-    try {
-      const res = await fetch("/api/compliance/dnc", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: addPhone.trim(), reason: addReason.trim() || undefined }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to add number");
-      }
+  const addDncMutation = useMutation({
+    mutationFn: (data: { phoneNumber: string; reason?: string }) =>
+      apiRequest("/api/compliance/dnc", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
       toast({ title: "Number added to DNC list" });
       setAddPhone("");
       setAddReason("");
-      fetchDnc();
-    } catch (e: any) {
+      queryClient.invalidateQueries({ queryKey: ["/api/compliance/dnc"] });
+    },
+    onError: (e: any) => {
       toast({ title: e.message || "Failed to add number", variant: "destructive" });
-    } finally {
-      setAddingDnc(false);
-    }
-  };
+    },
+  });
 
-  const handleDeleteDnc = async (phoneNumber: string) => {
-    try {
-      const res = await fetch(`/api/compliance/dnc?phoneNumber=${encodeURIComponent(phoneNumber)}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to remove number");
-      }
+  const deleteDncMutation = useMutation({
+    mutationFn: (phoneNumber: string) =>
+      apiRequest(`/api/compliance/dnc?phoneNumber=${encodeURIComponent(phoneNumber)}`, { method: "DELETE" }),
+    onSuccess: () => {
       toast({ title: "Number removed from DNC list" });
-      fetchDnc();
-    } catch (e: any) {
+      queryClient.invalidateQueries({ queryKey: ["/api/compliance/dnc"] });
+    },
+    onError: (e: any) => {
       toast({ title: e.message || "Failed to remove number", variant: "destructive" });
-    }
-  };
+    },
+  });
 
-  const handleCheckDnc = async () => {
-    if (!checkPhone.trim()) return;
-    setCheckingDnc(true);
-    setCheckResult(null);
-    try {
-      const res = await fetch("/api/compliance/dnc/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: checkPhone.trim() }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Check failed");
-      }
-      const data = await res.json();
+  const checkDncMutation = useMutation({
+    mutationFn: (phoneNumber: string) =>
+      apiRequest("/api/compliance/dnc/check", { method: "POST", body: JSON.stringify({ phoneNumber }) }),
+    onSuccess: (data: any) => {
       setCheckResult({ blocked: data.blocked });
-    } catch (e: any) {
+    },
+    onError: (e: any) => {
       toast({ title: e.message || "DNC check failed", variant: "destructive" });
-    } finally {
-      setCheckingDnc(false);
-    }
+    },
+  });
+
+  const piiScanMutation = useMutation({
+    mutationFn: (text: string) =>
+      apiRequest("/api/compliance/pii-scan", { method: "POST", body: JSON.stringify({ text }) }),
+    onSuccess: (data: any) => {
+      setPiiResult(data);
+    },
+    onError: (e: any) => {
+      toast({ title: e.message || "PII scan failed", variant: "destructive" });
+    },
+  });
+
+  const handleAddDnc = () => {
+    if (!addPhone.trim()) return;
+    addDncMutation.mutate({ phoneNumber: addPhone.trim(), reason: addReason.trim() || undefined });
   };
 
-  const handlePiiScan = async () => {
+  const handleDeleteDnc = (phoneNumber: string) => {
+    deleteDncMutation.mutate(phoneNumber);
+  };
+
+  const handleCheckDnc = () => {
+    if (!checkPhone.trim()) return;
+    setCheckResult(null);
+    checkDncMutation.mutate(checkPhone.trim());
+  };
+
+  const handlePiiScan = () => {
     if (!piiText.trim()) return;
-    setScanningPii(true);
     setPiiResult(null);
-    try {
-      const res = await fetch("/api/compliance/pii-scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: piiText }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Scan failed");
-      }
-      const data = await res.json();
-      setPiiResult(data);
-    } catch (e: any) {
-      toast({ title: e.message || "PII scan failed", variant: "destructive" });
-    } finally {
-      setScanningPii(false);
-    }
+    piiScanMutation.mutate(piiText);
   };
 
   const handleExportDnc = async () => {
@@ -368,7 +315,6 @@ export default function CompliancePage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* ── OVERVIEW TAB ── */}
         <TabsContent value="overview" className="space-y-4 mt-4">
           {loadingOverview ? (
             <div className="space-y-4">
@@ -500,7 +446,6 @@ export default function CompliancePage() {
           )}
         </TabsContent>
 
-        {/* ── CALLING HOURS TAB ── */}
         <TabsContent value="hours" className="space-y-4 mt-4">
           {loadingOverview ? (
             <div className="space-y-3">
@@ -659,7 +604,6 @@ export default function CompliancePage() {
           ) : null}
         </TabsContent>
 
-        {/* ── AI DISCLOSURE TAB ── */}
         <TabsContent value="disclosure" className="space-y-4 mt-4">
           {loadingOverview ? (
             <div className="space-y-3">
@@ -812,7 +756,6 @@ export default function CompliancePage() {
           ) : null}
         </TabsContent>
 
-        {/* ── DNC TAB ── */}
         <TabsContent value="dnc" className="space-y-4 mt-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <Card>
@@ -855,7 +798,7 @@ export default function CompliancePage() {
                   </div>
                   <Button
                     onClick={handleCheckDnc}
-                    disabled={checkingDnc || !checkPhone.trim()}
+                    disabled={checkDncMutation.isPending || !checkPhone.trim()}
                     data-testid="button-dnc-check"
                   >
                     <Search className="h-4 w-4 mr-1.5" />
@@ -907,7 +850,7 @@ export default function CompliancePage() {
                 </div>
                 <Button
                   onClick={handleAddDnc}
-                  disabled={addingDnc || !addPhone.trim()}
+                  disabled={addDncMutation.isPending || !addPhone.trim()}
                   data-testid="button-add-dnc"
                 >
                   <Plus className="h-4 w-4 mr-1.5" />
@@ -988,7 +931,6 @@ export default function CompliancePage() {
           </Card>
         </TabsContent>
 
-        {/* ── CONSENT TAB ── */}
         <TabsContent value="consent" className="space-y-4 mt-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 pb-3">
@@ -1074,7 +1016,6 @@ export default function CompliancePage() {
           </Card>
         </TabsContent>
 
-        {/* ── PII SCANNER TAB ── */}
         <TabsContent value="pii" className="space-y-4 mt-4">
           <Card>
             <CardHeader className="pb-3">
@@ -1100,7 +1041,7 @@ export default function CompliancePage() {
               </div>
               <Button
                 onClick={handlePiiScan}
-                disabled={scanningPii || !piiText.trim()}
+                disabled={piiScanMutation.isPending || !piiText.trim()}
                 data-testid="button-pii-scan"
               >
                 <Search className="h-4 w-4 mr-1.5" />

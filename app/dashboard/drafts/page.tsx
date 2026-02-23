@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -117,6 +119,7 @@ interface Agent {
 
 export default function SmartDraftsPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState("create");
   const [selectedType, setSelectedType] = useState("call_script");
@@ -127,36 +130,28 @@ export default function SmartDraftsPage() {
   const [generatedTitle, setGeneratedTitle] = useState("");
   const [qualityScore, setQualityScore] = useState<number | null>(null);
   const [charCount, setCharCount] = useState(0);
-  const [generating, setGenerating] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [refineFeedback, setRefineFeedback] = useState("");
   const [showRefine, setShowRefine] = useState(false);
 
-  const [savedDrafts, setSavedDrafts] = useState<Draft[]>([]);
-  const [draftsLoading, setDraftsLoading] = useState(false);
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [pagination, setPagination] = useState({ page: 1, total: 0, totalPages: 0 });
+  const [page, setPage] = useState(1);
 
   const [editingDraft, setEditingDraft] = useState<Draft | null>(null);
   const [editContent, setEditContent] = useState("");
   const [editTitle, setEditTitle] = useState("");
 
   const [publishDialog, setPublishDialog] = useState<Draft | null>(null);
-  const [publishing, setPublishing] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<Draft | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState<number | null>(null);
 
-  const [bulkGenerating, setBulkGenerating] = useState(false);
   const [bulkCount, setBulkCount] = useState(5);
   const [bulkTone, setBulkTone] = useState("professional");
   const [bulkLanguage, setBulkLanguage] = useState("en");
 
   const [ttsPlaying, setTtsPlaying] = useState(false);
 
-  const [orgAgents, setOrgAgents] = useState<Agent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<number | undefined>(undefined);
 
   const [versionHistory, setVersionHistory] = useState<Draft[]>([]);
@@ -165,76 +160,43 @@ export default function SmartDraftsPage() {
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  useEffect(() => {
-    fetch("/api/agents")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.agents) {
-          setOrgAgents(data.agents.map((a: Agent) => ({ id: a.id, name: a.name })));
-        }
-      })
-      .catch((error) => { console.error("Fetch org agents for drafts failed:", error); });
-  }, []);
+  const { data: agentsData } = useQuery<any>({
+    queryKey: ["/api/agents"],
+  });
+  const orgAgents: Agent[] = agentsData?.agents ? agentsData.agents.map((a: Agent) => ({ id: a.id, name: a.name })) : [];
 
-  const fetchDrafts = useCallback(async () => {
-    setDraftsLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(pagination.page), limit: "20" });
+  const draftsQueryKey = ["/api/drafts", { page, filterType, filterStatus, searchQuery }] as const;
+  const { data: draftsData, isLoading: draftsLoading } = useQuery<any>({
+    queryKey: draftsQueryKey,
+    queryFn: async () => {
+      const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (filterType !== "all") params.set("type", filterType);
       if (filterStatus !== "all") params.set("status", filterStatus);
       if (searchQuery) params.set("search", searchQuery);
-
       const res = await fetch(`/api/drafts?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSavedDrafts(data.drafts || []);
-        setPagination(prev => ({ ...prev, total: data.pagination.total, totalPages: data.pagination.totalPages }));
-      }
-    } catch (error) {
-      console.error("Fetch drafts failed:", error);
-    }
-    setDraftsLoading(false);
-  }, [filterType, filterStatus, searchQuery, pagination.page]);
-
-  useEffect(() => {
-    fetchDrafts();
-  }, [fetchDrafts]);
+      if (!res.ok) throw new Error("Failed to fetch drafts");
+      return res.json();
+    },
+  });
+  const savedDrafts: Draft[] = draftsData?.drafts || [];
+  const pagination = {
+    page,
+    total: draftsData?.pagination?.total || 0,
+    totalPages: draftsData?.pagination?.totalPages || 0,
+  };
 
   const handleSearchChange = (value: string) => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
       setSearchQuery(value);
-      setPagination(prev => ({ ...prev, page: 1 }));
+      setPage(1);
     }, 300);
   };
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) return;
-    setGenerating(true);
-    setGeneratedContent("");
-    setQualityScore(null);
-
-    try {
-      const body: Record<string, unknown> = { type: selectedType, prompt, tone, language };
-      if (showRefine && refineFeedback && generatedContent) {
-        body.refineFeedback = refineFeedback;
-        body.previousContent = generatedContent;
-      }
-
-      const res = await fetch("/api/drafts/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        toast({ title: "Generation failed", description: err.error || "Failed to generate draft", variant: "destructive" });
-        setGenerating(false);
-        return;
-      }
-
-      const data = await res.json();
+  const generateMutation = useMutation({
+    mutationFn: async (body: Record<string, unknown>) =>
+      apiRequest("/api/drafts/generate", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: (data: any) => {
       setGeneratedContent(data.content);
       setGeneratedTitle(data.suggestedTitle || "");
       setQualityScore(data.qualityScore);
@@ -242,162 +204,144 @@ export default function SmartDraftsPage() {
       setShowRefine(false);
       setRefineFeedback("");
       toast({ title: "Draft generated", description: `Quality: ${Math.round((data.qualityScore || 0) * 100)}%` });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to generate draft. Please try again.", variant: "destructive" });
+    },
+    onError: (e: any) => {
+      toast({ title: "Generation failed", description: e.message || "Failed to generate draft", variant: "destructive" });
+    },
+  });
+
+  const handleGenerate = () => {
+    if (!prompt.trim()) return;
+    setGeneratedContent("");
+    setQualityScore(null);
+    const body: Record<string, unknown> = { type: selectedType, prompt, tone, language };
+    if (showRefine && refineFeedback && generatedContent) {
+      body.refineFeedback = refineFeedback;
+      body.previousContent = generatedContent;
     }
-    setGenerating(false);
+    generateMutation.mutate(body);
   };
 
-  const handleSave = async () => {
+  const saveMutation = useMutation({
+    mutationFn: async (body: Record<string, unknown>) =>
+      apiRequest("/api/drafts", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => {
+      toast({ title: "Draft saved", description: "Your draft has been saved to the library." });
+      setActiveTab("library");
+      setGeneratedContent("");
+      setPrompt("");
+      setGeneratedTitle("");
+      setQualityScore(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/drafts"] });
+    },
+    onError: (e: any) => {
+      toast({ title: "Save failed", description: e.message || "Could not save draft", variant: "destructive" });
+    },
+  });
+
+  const handleSave = () => {
     if (!generatedContent) return;
-    setSaving(true);
-    try {
-      const res = await fetch("/api/drafts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: selectedType,
-          title: generatedTitle || `Draft ${new Date().toLocaleDateString()}`,
-          content: generatedContent,
-          prompt,
-          tone,
-          language,
-          qualityScore,
-        }),
-      });
-      if (res.ok) {
-        toast({ title: "Draft saved", description: "Your draft has been saved to the library." });
-        setActiveTab("library");
-        setGeneratedContent("");
-        setPrompt("");
-        setGeneratedTitle("");
-        setQualityScore(null);
-        fetchDrafts();
-      } else {
-        const err = await res.json();
-        toast({ title: "Save failed", description: err.error || "Could not save draft", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save draft", variant: "destructive" });
-    }
-    setSaving(false);
+    saveMutation.mutate({
+      type: selectedType,
+      title: generatedTitle || `Draft ${new Date().toLocaleDateString()}`,
+      content: generatedContent,
+      prompt,
+      tone,
+      language,
+      qualityScore,
+    });
   };
 
-  const handleUpdate = async () => {
+  const updateMutation = useMutation({
+    mutationFn: async (body: Record<string, unknown>) =>
+      apiRequest("/api/drafts", { method: "PATCH", body: JSON.stringify(body) }),
+    onSuccess: () => {
+      toast({ title: "Draft updated", description: `Version ${(editingDraft?.version || 0) + 1} saved.` });
+      setEditingDraft(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/drafts"] });
+    },
+    onError: (e: any) => {
+      toast({ title: "Update failed", description: e.message || "Could not update draft", variant: "destructive" });
+    },
+  });
+
+  const handleUpdate = () => {
     if (!editingDraft || !editContent) return;
-    setSaving(true);
-    try {
-      const res = await fetch("/api/drafts", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: editingDraft.id,
-          title: editTitle,
-          content: editContent,
-        }),
-      });
-      if (res.ok) {
-        toast({ title: "Draft updated", description: `Version ${editingDraft.version + 1} saved.` });
-        setEditingDraft(null);
-        fetchDrafts();
-      } else {
-        const err = await res.json();
-        toast({ title: "Update failed", description: err.error || "Could not update draft", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to update draft", variant: "destructive" });
-    }
-    setSaving(false);
+    updateMutation.mutate({ id: editingDraft.id, title: editTitle, content: editContent });
   };
 
-  const handleDuplicate = async (id: number) => {
-    setDuplicating(id);
-    try {
-      const res = await fetch("/api/drafts/duplicate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (res.ok) {
-        toast({ title: "Draft duplicated", description: "A copy has been created in your library." });
-        fetchDrafts();
-      } else {
-        const err = await res.json();
-        toast({ title: "Duplicate failed", description: err.error || "Could not duplicate draft", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to duplicate draft", variant: "destructive" });
-    }
-    setDuplicating(null);
-  };
+  const duplicateMutation = useMutation({
+    mutationFn: async (id: number) => {
+      setDuplicating(id);
+      return apiRequest("/api/drafts/duplicate", { method: "POST", body: JSON.stringify({ id }) });
+    },
+    onSuccess: () => {
+      toast({ title: "Draft duplicated", description: "A copy has been created in your library." });
+      queryClient.invalidateQueries({ queryKey: ["/api/drafts"] });
+      setDuplicating(null);
+    },
+    onError: (e: any) => {
+      toast({ title: "Duplicate failed", description: e.message || "Could not duplicate draft", variant: "destructive" });
+      setDuplicating(null);
+    },
+  });
 
-  const handleDelete = async () => {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) =>
+      apiRequest(`/api/drafts?id=${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast({ title: "Draft deleted", description: "The draft has been permanently removed." });
+      setDeleteDialog(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/drafts"] });
+    },
+    onError: (e: any) => {
+      toast({ title: "Delete failed", description: e.message || "Could not delete draft", variant: "destructive" });
+    },
+  });
+
+  const handleDelete = () => {
     if (!deleteDialog) return;
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/drafts?id=${deleteDialog.id}`, { method: "DELETE" });
-      if (res.ok) {
-        toast({ title: "Draft deleted", description: "The draft has been permanently removed." });
-        setDeleteDialog(null);
-        fetchDrafts();
-      } else {
-        const err = await res.json();
-        toast({ title: "Delete failed", description: err.error || "Could not delete draft", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to delete draft", variant: "destructive" });
-    }
-    setDeleting(false);
+    deleteMutation.mutate(deleteDialog.id);
   };
 
-  const handlePublish = async () => {
+  const publishMutation = useMutation({
+    mutationFn: async (body: Record<string, unknown>) =>
+      apiRequest("/api/drafts/publish", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: (data: any) => {
+      toast({ title: "Published", description: data.message || "Draft published to agent." });
+      setPublishDialog(null);
+      setSelectedAgentId(undefined);
+      queryClient.invalidateQueries({ queryKey: ["/api/drafts"] });
+    },
+    onError: (e: any) => {
+      toast({ title: "Publish failed", description: e.message || "Failed to publish", variant: "destructive" });
+    },
+  });
+
+  const handlePublish = () => {
     if (!publishDialog) return;
-    setPublishing(true);
-    try {
-      const res = await fetch("/api/drafts/publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          draftId: publishDialog.id,
-          ...(selectedAgentId ? { agentId: selectedAgentId } : {}),
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        toast({ title: "Published", description: data.message || "Draft published to agent." });
-        setPublishDialog(null);
-        setSelectedAgentId(undefined);
-        fetchDrafts();
-      } else {
-        toast({ title: "Publish failed", description: data.error || "Failed to publish", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to publish draft", variant: "destructive" });
-    }
-    setPublishing(false);
+    publishMutation.mutate({
+      draftId: publishDialog.id,
+      ...(selectedAgentId ? { agentId: selectedAgentId } : {}),
+    });
   };
 
-  const handleBulkFaq = async () => {
-    setBulkGenerating(true);
-    try {
-      const res = await fetch("/api/drafts/bulk-faq", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: bulkCount, tone: bulkTone, language: bulkLanguage }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        toast({ title: "FAQs generated", description: data.message || `Generated ${data.count} FAQ drafts` });
-        setActiveTab("library");
-        setFilterType("faq_answer");
-        fetchDrafts();
-      } else {
-        toast({ title: "Generation failed", description: data.error || "Failed to generate FAQs", variant: "destructive" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to generate FAQs", variant: "destructive" });
-    }
-    setBulkGenerating(false);
+  const bulkFaqMutation = useMutation({
+    mutationFn: async (body: Record<string, unknown>) =>
+      apiRequest("/api/drafts/bulk-faq", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: (data: any) => {
+      toast({ title: "FAQs generated", description: data.message || `Generated ${data.count} FAQ drafts` });
+      setActiveTab("library");
+      setFilterType("faq_answer");
+      queryClient.invalidateQueries({ queryKey: ["/api/drafts"] });
+    },
+    onError: (e: any) => {
+      toast({ title: "Generation failed", description: e.message || "Failed to generate FAQs", variant: "destructive" });
+    },
+  });
+
+  const handleBulkFaq = () => {
+    bulkFaqMutation.mutate({ count: bulkCount, tone: bulkTone, language: bulkLanguage });
   };
 
   const handleTtsPreview = (text: string) => {
@@ -479,6 +423,9 @@ export default function SmartDraftsPage() {
     if (score >= 0.4) return { label: "Medium", className: "text-amber-600 dark:text-amber-400" };
     return { label: "Low", className: "text-red-600 dark:text-red-400" };
   };
+
+  const saving = saveMutation.isPending || updateMutation.isPending;
+  const generating = generateMutation.isPending;
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto" data-testid="page-smart-drafts">
@@ -604,9 +551,9 @@ export default function SmartDraftsPage() {
                       <Textarea
                         value={refineFeedback}
                         onChange={e => setRefineFeedback(e.target.value)}
-                        placeholder="e.g. Make it shorter, add a question at the end, mention the discount..."
+                        placeholder="Tell the AI what to change..."
                         className="min-h-[80px]"
-                        data-testid="input-refine"
+                        data-testid="input-refine-feedback"
                       />
                     </div>
                   )}
@@ -622,15 +569,10 @@ export default function SmartDraftsPage() {
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Generating...
                       </>
-                    ) : showRefine ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refine Draft
-                      </>
                     ) : (
                       <>
                         <Sparkles className="h-4 w-4 mr-2" />
-                        Generate Draft
+                        {showRefine ? "Refine Draft" : "Generate Draft"}
                       </>
                     )}
                   </Button>
@@ -639,94 +581,100 @@ export default function SmartDraftsPage() {
             </div>
 
             <div className="space-y-4">
-              <Card className={generatedContent ? "" : "opacity-60"}>
+              <Card>
                 <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Preview
-                    </CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Preview
                     {qualityScore !== null && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-muted-foreground">Quality:</span>
-                        <span className={`text-xs font-medium ${qualityLabel(qualityScore)?.className}`}>
-                          {Math.round(qualityScore * 100)}% {qualityLabel(qualityScore)?.label}
-                        </span>
-                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`ml-auto no-default-hover-elevate text-xs ${
+                          qualityScore >= 0.7
+                            ? "text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                            : qualityScore >= 0.4
+                              ? "text-amber-600 dark:text-amber-400 border-amber-500/30"
+                              : "text-red-600 dark:text-red-400 border-red-500/30"
+                        }`}
+                        data-testid="badge-quality-score"
+                      >
+                        Quality: {Math.round(qualityScore * 100)}%
+                      </Badge>
                     )}
-                  </div>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {generatedContent ? (
                     <div className="space-y-4">
-                      <div>
-                        <Input
-                          value={generatedTitle}
-                          onChange={e => setGeneratedTitle(e.target.value)}
-                          placeholder="Draft title"
-                          className="font-medium mb-3"
-                          data-testid="input-title"
-                        />
+                      {generatedTitle && (
+                        <div>
+                          <label className="text-xs text-muted-foreground block mb-1">Suggested Title</label>
+                          <Input
+                            value={generatedTitle}
+                            onChange={e => setGeneratedTitle(e.target.value)}
+                            data-testid="input-generated-title"
+                          />
+                        </div>
+                      )}
 
-                        {selectedType === "email_template" ? (
-                          <div className="border rounded-md p-4 bg-muted/30 space-y-2">
-                            {generatedContent.split("\n").filter(l => l.trim()).map((line, i) => {
-                              if (line.startsWith("Subject:")) {
-                                return <div key={i} className="font-medium text-sm">{line}</div>;
-                              }
-                              return <p key={i} className="text-sm">{line}</p>;
-                            })}
+                      {selectedType === "email_template" ? (
+                        <div className="border rounded-md p-4 bg-muted/30 space-y-2">
+                          {generatedContent.split("\n").filter(l => l.trim()).map((line, i) => {
+                            if (line.startsWith("Subject:")) {
+                              return <div key={i} className="font-medium text-sm">{line}</div>;
+                            }
+                            return <p key={i} className="text-sm">{line}</p>;
+                          })}
+                        </div>
+                      ) : selectedType === "sms_template" ? (
+                        <div className="border rounded-md bg-muted/30 max-w-xs mx-auto">
+                          <div className="bg-muted/50 rounded-t-md px-3 py-1.5 flex items-center gap-1.5">
+                            <Smartphone className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground font-medium">SMS Preview</span>
                           </div>
-                        ) : selectedType === "sms_template" ? (
-                          <div className="border rounded-md bg-muted/30 max-w-xs mx-auto">
-                            <div className="bg-muted/50 rounded-t-md px-3 py-1.5 flex items-center gap-1.5">
-                              <Smartphone className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground font-medium">SMS Preview</span>
-                            </div>
-                            <div className="p-3">
-                              <div className="bg-primary/10 rounded-lg p-3 text-sm" data-testid="text-sms-preview">
-                                {generatedContent}
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="border rounded-md p-4 bg-muted/30">
-                            <p className="text-sm whitespace-pre-wrap" data-testid="text-preview-content">
+                          <div className="p-3">
+                            <div className="bg-primary/10 rounded-lg p-3 text-sm" data-testid="text-sms-preview">
                               {generatedContent}
-                            </p>
+                            </div>
                           </div>
-                        )}
+                        </div>
+                      ) : (
+                        <div className="border rounded-md p-4 bg-muted/30">
+                          <p className="text-sm whitespace-pre-wrap" data-testid="text-preview-content">
+                            {generatedContent}
+                          </p>
+                        </div>
+                      )}
 
-                        <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
-                          <span className={`text-xs ${
-                            charCount > TYPE_CHAR_LIMITS[selectedType]
-                              ? "text-red-500"
-                              : "text-muted-foreground"
-                          }`}>
-                            {charCount}/{TYPE_CHAR_LIMITS[selectedType]} characters
-                          </span>
-                          <div className="flex items-center gap-1">
+                      <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
+                        <span className={`text-xs ${
+                          charCount > TYPE_CHAR_LIMITS[selectedType]
+                            ? "text-red-500"
+                            : "text-muted-foreground"
+                        }`}>
+                          {charCount}/{TYPE_CHAR_LIMITS[selectedType]} characters
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyToClipboard(generatedContent)}
+                            data-testid="button-copy-preview"
+                          >
+                            <ClipboardCopy className="h-4 w-4 mr-1" />
+                            Copy
+                          </Button>
+                          {selectedType === "call_script" && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleCopyToClipboard(generatedContent)}
-                              data-testid="button-copy-preview"
+                              onClick={() => handleTtsPreview(generatedContent)}
+                              data-testid="button-tts-preview"
                             >
-                              <ClipboardCopy className="h-4 w-4 mr-1" />
-                              Copy
+                              <Volume2 className="h-4 w-4 mr-1" />
+                              {ttsPlaying ? "Stop" : "Listen"}
                             </Button>
-                            {selectedType === "call_script" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleTtsPreview(generatedContent)}
-                                data-testid="button-tts-preview"
-                              >
-                                <Volume2 className="h-4 w-4 mr-1" />
-                                {ttsPlaying ? "Stop" : "Listen"}
-                              </Button>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
 
@@ -787,7 +735,7 @@ export default function SmartDraftsPage() {
                 data-testid="input-search-drafts"
               />
             </div>
-            <Select value={filterType} onValueChange={v => { setFilterType(v); setPagination(prev => ({ ...prev, page: 1 })); }}>
+            <Select value={filterType} onValueChange={v => { setFilterType(v); setPage(1); }}>
               <SelectTrigger className="w-[150px]" data-testid="select-filter-type">
                 <Filter className="h-4 w-4 mr-1.5" />
                 <SelectValue placeholder="Type" />
@@ -799,7 +747,7 @@ export default function SmartDraftsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={filterStatus} onValueChange={v => { setFilterStatus(v); setPagination(prev => ({ ...prev, page: 1 })); }}>
+            <Select value={filterStatus} onValueChange={v => { setFilterStatus(v); setPage(1); }}>
               <SelectTrigger className="w-[130px]" data-testid="select-filter-status">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -895,7 +843,7 @@ export default function SmartDraftsPage() {
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleDuplicate(draft.id)}
+                                onClick={() => duplicateMutation.mutate(draft.id)}
                                 disabled={isDuplicating}
                               >
                                 {isDuplicating ? (
@@ -946,20 +894,20 @@ export default function SmartDraftsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={pagination.page <= 1}
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                    disabled={page <= 1}
+                    onClick={() => setPage(prev => prev - 1)}
                     data-testid="button-prev-page"
                   >
                     Previous
                   </Button>
                   <span className="text-sm text-muted-foreground">
-                    Page {pagination.page} of {pagination.totalPages}
+                    Page {page} of {pagination.totalPages}
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={pagination.page >= pagination.totalPages}
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                    disabled={page >= pagination.totalPages}
+                    onClick={() => setPage(prev => prev + 1)}
                     data-testid="button-next-page"
                   >
                     Next
@@ -1034,10 +982,10 @@ export default function SmartDraftsPage() {
 
               <Button
                 onClick={handleBulkFaq}
-                disabled={bulkGenerating}
+                disabled={bulkFaqMutation.isPending}
                 data-testid="button-bulk-generate"
               >
-                {bulkGenerating ? (
+                {bulkFaqMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Generating {bulkCount} FAQs...
@@ -1145,10 +1093,10 @@ export default function SmartDraftsPage() {
             <Button variant="outline" onClick={() => { setPublishDialog(null); setSelectedAgentId(undefined); }}>Cancel</Button>
             <Button
               onClick={handlePublish}
-              disabled={publishing || (publishDialog?.qualityScore !== null && publishDialog?.qualityScore !== undefined && publishDialog.qualityScore < 0.2)}
+              disabled={publishMutation.isPending || (publishDialog?.qualityScore !== null && publishDialog?.qualityScore !== undefined && publishDialog.qualityScore < 0.2)}
               data-testid="button-confirm-publish"
             >
-              {publishing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+              {publishMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
               Publish to Agent
             </Button>
           </DialogFooter>
@@ -1165,8 +1113,8 @@ export default function SmartDraftsPage() {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialog(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleting} data-testid="button-confirm-delete">
-              {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+            <Button variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending} data-testid="button-confirm-delete">
+              {deleteMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
               Delete
             </Button>
           </DialogFooter>

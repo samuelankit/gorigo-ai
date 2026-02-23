@@ -58,7 +58,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('gorigo-theme');if(t==='dark'){document.documentElement.classList.add('dark')}else{document.documentElement.classList.add('light')}}catch(e){document.documentElement.classList.add('light')}})()` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var d=document.documentElement;d.classList.remove('light','dark');var t=localStorage.getItem('gorigo-theme');d.classList.add(t==='dark'?'dark':'light')}catch(e){document.documentElement.classList.add('light')}})()` }} />
         <StructuredData />
         <Suspense fallback={null}>
           <VerificationMeta />
@@ -68,7 +68,7 @@ export default function RootLayout({
         <meta name="geo.placename" content="Preston" />
         <meta name="author" content="International Business Exchange Limited" />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <QueryProvider>
         <ThemeProvider>
           <ErrorBoundary>

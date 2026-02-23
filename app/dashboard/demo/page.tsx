@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +49,6 @@ const DEPARTMENTS = [
 export default function DemoPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -94,36 +95,13 @@ export default function DemoPage() {
     }
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || sending) return;
-
-    const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: input.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
-    setSending(true);
-
-    try {
-      const res = await fetch("/api/demo/chat", {
+  const sendMutation = useMutation({
+    mutationFn: (payload: { message: string; department: string | null }) =>
+      apiRequest("/api/demo/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMsg.content,
-          department: selectedDept,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Chat request failed");
-      }
-
-      const data = await res.json();
-
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (data: any) => {
       const assistantMsg: ChatMessage = {
         id: `agent-${Date.now()}`,
         role: "assistant",
@@ -138,7 +116,8 @@ export default function DemoPage() {
       }
 
       setMessages(prev => [...prev, assistantMsg]);
-    } catch (error) {
+    },
+    onError: () => {
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         role: "system",
@@ -146,9 +125,26 @@ export default function DemoPage() {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMsg]);
-    } finally {
-      setSending(false);
-    }
+    },
+  });
+
+  const sendMessage = () => {
+    if (!input.trim() || sendMutation.isPending) return;
+
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMsg]);
+    setInput("");
+
+    sendMutation.mutate({
+      message: userMsg.content,
+      department: selectedDept,
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -304,7 +300,7 @@ export default function DemoPage() {
             </div>
           ))}
 
-          {sending && (
+          {sendMutation.isPending && (
             <div className="flex gap-3">
               <div className={`w-7 h-7 rounded-md bg-${activeDept?.color || "blue"}-500/10 flex items-center justify-center shrink-0`}>
                 <Bot className={`h-3.5 w-3.5 text-${activeDept?.color || "blue"}-500`} />
@@ -330,13 +326,13 @@ export default function DemoPage() {
               placeholder={`Message ${currentAgent || "AI agent"}...`}
               className="resize-none min-h-[44px] max-h-32 text-sm"
               rows={1}
-              disabled={sending}
+              disabled={sendMutation.isPending}
               data-testid="input-demo-message"
             />
             <Button
               size="icon"
               onClick={sendMessage}
-              disabled={!input.trim() || sending}
+              disabled={!input.trim() || sendMutation.isPending}
               data-testid="button-send-demo"
             >
               <Send className="h-4 w-4" />

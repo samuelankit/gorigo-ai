@@ -12,7 +12,18 @@ GoRigo is an AI-powered call center platform designed to automate call center op
 ## System Architecture
 
 ### UI/UX Decisions
-The platform uses Next.js 14 (App Router) with Tailwind CSS and Shadcn/ui for components, and Recharts for data visualization. The dashboard features a collapsible left sidebar, a sticky top command bar, and a content workspace, emphasizing flat design, compact spacing, and table-first data views. The primary model is a React Native/Expo mobile app with AI voice control, complemented by a Web SaaS platform.
+The platform uses Next.js 16 (App Router) with Tailwind CSS and Shadcn/ui for components, and Recharts for data visualization. The dashboard features a collapsible left sidebar, a sticky top command bar, and a content workspace, emphasizing flat design, compact spacing, and table-first data views. The primary model is a React Native/Expo mobile app with AI voice control, complemented by a Web SaaS platform.
+
+### Data Fetching
+All dashboard pages use TanStack Query (React Query) v5 for data fetching and mutations. Key patterns:
+- **QueryProvider** in `components/query-provider.tsx` wraps the app with default fetcher (uses queryKey[0] as URL) and `apiRequest` helper for mutations
+- **useQuery** for all GET data loading, with `isLoading` for loading states
+- **useMutation** with `queryClient.invalidateQueries()` for all POST/PUT/PATCH/DELETE operations, with `isPending` for button states
+- **Custom queryFn** required for parameterized GET queries (with query params) using `apiRequest`
+- **Blob downloads** (CSV export, PDF) kept as raw fetch since they're not JSON
+- **Reusable hooks** in `hooks/use-agents.ts`, `hooks/use-flows.ts`, `hooks/use-knowledge.ts` for shared CRUD patterns
+- **Config**: staleTime 30s, retry 1, refetchOnWindowFocus disabled
+- All mutations must include `onError` with toast notification for consistency
 
 ### Technical Implementations
 GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentication is session-based. AI functionalities leverage OpenAI via Replit AI Integrations, enhanced by a RAG system. A prepaid wallet system with atomic operations and row-level locks manages billing and commissions. Multi-tenancy is enforced via `orgId`, and Role-Based Access Control (`globalRole`) manages permissions. A 7-state Call State Machine handles call flows, integrated with Telnyx (primary) and Vonage (fallback). Background jobs process document chunking, embedding, and audio transcription. Security features include prompt injection detection and input validation. A distribution engine manages commissions and revenue sharing. A multi-agent system supports various AI agent types and visual flow diagram building. Compliance features include TCPA/FCC DNC management, PII auto-redaction, sentiment analysis, and call quality scoring. The system supports AI model fallback, multilingual capabilities, concurrent call limits, business hours, and outgoing webhooks.

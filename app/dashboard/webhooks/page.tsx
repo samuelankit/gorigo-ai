@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,33 +51,47 @@ const AVAILABLE_EVENTS = [
 
 export default function WebhooksPage() {
   const { toast } = useToast();
-  const [webhooks, setWebhooks] = useState<WebhookItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const [url, setUrl] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 
-  const fetchWebhooks = () => {
-    setLoading(true);
-    fetch("/api/webhooks")
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setWebhooks(data);
-        }
-      })
-      .catch(() => {
-        toast({ title: "Error", description: "Failed to load webhooks", variant: "destructive" });
-      })
-      .finally(() => setLoading(false));
-  };
+  const { data: webhooks = [], isLoading } = useQuery<WebhookItem[]>({
+    queryKey: ["/api/webhooks"],
+    select: (data) => (Array.isArray(data) ? data : []),
+  });
 
-  useEffect(() => {
-    fetchWebhooks();
-  }, []);
+  const createMutation = useMutation({
+    mutationFn: (payload: { url: string; events: string[] }) =>
+      apiRequest("/api/webhooks", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      toast({ title: "Webhook Added", description: "Your webhook has been configured successfully." });
+      setDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/webhooks"] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message || "Failed to create webhook", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest(`/api/webhooks?id=${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast({ title: "Webhook Deleted", description: "The webhook has been removed." });
+      setDeletingId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/webhooks"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete webhook", variant: "destructive" });
+      setDeletingId(null);
+    },
+  });
 
   const openDialog = () => {
     setUrl("");
@@ -89,7 +105,7 @@ export default function WebhooksPage() {
     );
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!url.trim()) {
       toast({ title: "Validation Error", description: "Webhook URL is required", variant: "destructive" });
       return;
@@ -99,44 +115,12 @@ export default function WebhooksPage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/webhooks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: url.trim(),
-          events: selectedEvents,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to create webhook");
-      }
-
-      toast({ title: "Webhook Added", description: "Your webhook has been configured successfully." });
-      setDialogOpen(false);
-      fetchWebhooks();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to create webhook", variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
+    createMutation.mutate({ url: url.trim(), events: selectedEvents });
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
     setDeletingId(id);
-    try {
-      const res = await fetch(`/api/webhooks?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete webhook");
-      toast({ title: "Webhook Deleted", description: "The webhook has been removed." });
-      fetchWebhooks();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to delete webhook", variant: "destructive" });
-    } finally {
-      setDeletingId(null);
-    }
+    deleteMutation.mutate(id);
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -163,7 +147,7 @@ export default function WebhooksPage() {
         </Button>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <Card>
           <CardContent className="py-6">
             <div className="space-y-3">
@@ -313,8 +297,8 @@ export default function WebhooksPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)} data-testid="button-cancel-webhook">
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={submitting} data-testid="button-submit-webhook">
-              {submitting ? (
+            <Button onClick={handleSubmit} disabled={createMutation.isPending} data-testid="button-submit-webhook">
+              {createMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Adding...

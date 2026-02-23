@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,24 +79,18 @@ function getActionBadgeClass(action: string) {
 }
 
 export default function ActivityPage() {
-  const [logs, setLogs] = useState<AuditEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
 
-  const fetchLogs = (offset: number) => {
-    setLoading(true);
-    fetch(`/api/audit/client?limit=${PAGE_SIZE}&offset=${offset}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.logs) setLogs(d.logs);
-      })
-      .catch((error) => { console.error("Fetch audit logs failed:", error); })
-      .finally(() => setLoading(false));
-  };
+  const { data, isLoading } = useQuery<{ logs: AuditEntry[] }>({
+    queryKey: ["/api/audit/client", { page }],
+    queryFn: async () => {
+      const res = await fetch(`/api/audit/client?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`);
+      if (!res.ok) throw new Error("Failed to fetch audit logs");
+      return res.json();
+    },
+  });
 
-  useEffect(() => {
-    fetchLogs(page * PAGE_SIZE);
-  }, [page]);
+  const logs = data?.logs || [];
 
   const formatTime = (dateStr: string) => {
     return new Date(dateStr).toLocaleString(undefined, {
@@ -124,7 +119,7 @@ export default function ActivityPage() {
           <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>

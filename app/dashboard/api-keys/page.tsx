@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,10 +60,8 @@ interface ApiKeyItem {
 export default function ApiKeysPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [keys, setKeys] = useState<ApiKeyItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyExpiry, setNewKeyExpiry] = useState("never");
   const [selectedScopes, setSelectedScopes] = useState<string[]>([
@@ -71,73 +71,49 @@ export default function ApiKeysPage() {
   const [revoking, setRevoking] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const fetchKeys = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/api-keys");
-      if (res.status === 401) {
-        router.push("/login");
-        return;
-      }
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setKeys(data.keys || []);
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to load API keys.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: keysData, isLoading: loading } = useQuery<{ keys: ApiKeyItem[] }>({
+    queryKey: ["/api/api-keys"],
+  });
+  const keys = keysData?.keys || [];
 
-  useEffect(() => {
-    fetchKeys();
-  }, []);
+  const createMutation = useMutation({
+    mutationFn: (body: { name: string; scopes: string[]; expiresInDays: number | null }) =>
+      apiRequest("/api/api-keys", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: (data: any) => {
+      setCreatedSecret(data.secretKey);
+      setCopied(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/api-keys"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: (keyId: number) => {
+      setRevoking(keyId);
+      return apiRequest("/api/api-keys/revoke", { method: "PUT", body: JSON.stringify({ keyId }) });
+    },
+    onSuccess: () => {
+      toast({ title: "Revoked", description: "API key has been revoked." });
+      queryClient.invalidateQueries({ queryKey: ["/api/api-keys"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to revoke key.", variant: "destructive" });
+    },
+    onSettled: () => {
+      setRevoking(null);
+    },
+  });
 
   const handleCreate = async () => {
     if (!newKeyName.trim()) return;
-    setCreating(true);
-    try {
-      const expiresInDays = newKeyExpiry === "never" ? null : parseInt(newKeyExpiry);
-      const res = await fetch("/api/api-keys", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newKeyName.trim(),
-          scopes: selectedScopes,
-          expiresInDays,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create key");
-      }
-      const data = await res.json();
-      setCreatedSecret(data.secretKey);
-      setCopied(false);
-      fetchKeys();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setCreating(false);
-    }
+    const expiresInDays = newKeyExpiry === "never" ? null : parseInt(newKeyExpiry);
+    createMutation.mutate({ name: newKeyName.trim(), scopes: selectedScopes, expiresInDays });
   };
 
   const handleRevoke = async (keyId: number) => {
-    setRevoking(keyId);
-    try {
-      const res = await fetch("/api/api-keys/revoke", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyId }),
-      });
-      if (!res.ok) throw new Error();
-      toast({ title: "Revoked", description: "API key has been revoked." });
-      fetchKeys();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to revoke key.", variant: "destructive" });
-    } finally {
-      setRevoking(null);
-    }
+    revokeMutation.mutate(keyId);
   };
 
   const copyToClipboard = async (text: string) => {
@@ -608,8 +584,8 @@ export default function ApiKeysPage() {
                 <Button variant="outline" onClick={() => setCreateOpen(false)} data-testid="button-cancel-create">
                   Cancel
                 </Button>
-                <Button onClick={handleCreate} disabled={creating || !newKeyName.trim()} data-testid="button-confirm-create">
-                  {creating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                <Button onClick={handleCreate} disabled={createMutation.isPending || !newKeyName.trim()} data-testid="button-confirm-create">
+                  {createMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
                   Create
                 </Button>
               </>

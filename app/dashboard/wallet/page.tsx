@@ -58,7 +58,7 @@ export default function WalletPage() {
 
   const { data: transactionsData, isLoading: loadingTransactions, isError: transactionsError } = useQuery<{ transactions: Transaction[] }>({
     queryKey: ["/api/wallet/transactions", { limit: 50, offset: 0 }],
-    queryFn: () => fetch("/api/wallet/transactions?limit=50&offset=0").then((r) => r.json()),
+    queryFn: () => apiRequest("/api/wallet/transactions?limit=50&offset=0", { method: "GET" }),
   });
 
   const transactions = transactionsData?.transactions ?? [];

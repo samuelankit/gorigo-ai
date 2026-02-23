@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,46 +28,38 @@ export default function PhoneNumbersPage() {
   const [numberType, setNumberType] = useState("local");
   const [areaCode, setAreaCode] = useState("");
   const [numbers, setNumbers] = useState<AvailableNumber[]>([]);
-  const [searching, setSearching] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
 
-  const searchNumbers = async () => {
-    setSearching(true);
-    try {
+  const searchMutation = useMutation({
+    mutationFn: async () => {
       const params = new URLSearchParams({ country, type: numberType });
       if (areaCode) params.set("areaCode", areaCode);
-      const res = await fetch(`/api/phone-numbers/available?${params}`);
-      const data = await res.json();
+      return apiRequest(`/api/phone-numbers/available?${params}`, { method: "GET" });
+    },
+    onSuccess: (data) => {
       setNumbers(data.numbers || []);
       setConfigured(data.configured !== false);
       if (!data.configured) {
         toast({ title: "Not configured", description: data.message || "Telephony provider not available.", variant: "destructive" });
       }
-    } catch {
+    },
+    onError: () => {
       toast({ title: "Error", description: "Failed to search for numbers.", variant: "destructive" });
-    } finally {
-      setSearching(false);
-    }
-  };
+    },
+  });
 
   const purchaseNumber = async (phoneNumber: string) => {
     setPurchasing(phoneNumber);
     try {
-      const res = await fetch("/api/phone-numbers/purchase", {
+      const data = await apiRequest("/api/phone-numbers/purchase", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        toast({ title: "Purchase failed", description: data.error || "Could not purchase this number.", variant: "destructive" });
-        return;
-      }
       toast({ title: "Number purchased", description: data.message });
       setNumbers((prev) => prev.filter((n) => n.phoneNumber !== phoneNumber));
-    } catch {
-      toast({ title: "Error", description: "Failed to purchase number.", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "Purchase failed", description: err.message || "Could not purchase this number.", variant: "destructive" });
     } finally {
       setPurchasing(null);
     }
@@ -126,8 +120,8 @@ export default function PhoneNumbersPage() {
                 data-testid="input-area-code"
               />
             </div>
-            <Button onClick={searchNumbers} disabled={searching} data-testid="button-search">
-              {searching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+            <Button onClick={() => searchMutation.mutate()} disabled={searchMutation.isPending} data-testid="button-search">
+              {searchMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
               Search
             </Button>
           </div>
@@ -199,7 +193,7 @@ export default function PhoneNumbersPage() {
         </Card>
       )}
 
-      {!searching && numbers.length === 0 && (
+      {!searchMutation.isPending && numbers.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Globe className="h-12 w-12 text-muted-foreground/30 mb-4" />

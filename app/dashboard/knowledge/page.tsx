@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,72 +47,102 @@ interface KnowledgeStats {
 
 export default function KnowledgePage() {
   const { toast } = useToast();
-  const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
-  const [stats, setStats] = useState<KnowledgeStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [addDocOpen, setAddDocOpen] = useState(false);
   const [importUrlOpen, setImportUrlOpen] = useState(false);
   const [docTitle, setDocTitle] = useState("");
   const [docContent, setDocContent] = useState("");
   const [importUrls, setImportUrls] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const fetchDocuments = () => {
-    setLoading(true);
-    fetch("/api/knowledge")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.documents) setDocuments(d.documents);
-      })
-      .catch((error) => { console.error("Fetch knowledge documents failed:", error); })
-      .finally(() => setLoading(false));
-  };
+  const { data: docsData, isLoading: loading } = useQuery<{ documents: KnowledgeDocument[] }>({
+    queryKey: ["/api/knowledge"],
+  });
+  const documents = docsData?.documents || [];
 
-  const fetchStats = () => {
-    fetch("/api/knowledge/stats")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d && !d.error) setStats(d);
-      })
-      .catch((error) => { console.error("Fetch knowledge stats failed:", error); });
-  };
+  const { data: stats } = useQuery<KnowledgeStats>({
+    queryKey: ["/api/knowledge/stats"],
+  });
 
-  useEffect(() => {
-    fetchDocuments();
-    fetchStats();
-  }, []);
-
-  const handleAddDocument = async () => {
-    if (!docTitle.trim() || !docContent.trim()) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/knowledge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: docTitle.trim(), content: docContent.trim(), sourceType: "manual" }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to add document");
-      }
-      const data = await res.json();
+  const addDocMutation = useMutation({
+    mutationFn: (body: { title: string; content: string; sourceType: string }) =>
+      apiRequest("/api/knowledge", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: (data: any) => {
       toast({ title: "Document added", description: "Now process it to make it searchable by your AI agent." });
       setDocTitle("");
       setDocContent("");
       setAddDocOpen(false);
-      fetchDocuments();
-      fetchStats();
-
-      if (data.document?.id) {
-        handleProcessDocument(data.document.id);
+      queryClient.invalidateQueries({ queryKey: ["/api/knowledge"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/knowledge/stats"] });
+      if (data?.document?.id) {
+        processMutation.mutate(data.document.id);
       }
-    } catch (error) {
-      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to add document", variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message || "Failed to add document", variant: "destructive" });
+    },
+  });
+
+  const importMutation = useMutation({
+    mutationFn: (body: { urls: string[] }) =>
+      apiRequest("/api/knowledge/import-url", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: (data: any) => {
+      toast({
+        title: "Import complete",
+        description: `${data.summary?.success || 0} imported, ${data.summary?.errors || 0} failed.`,
+      });
+      setImportUrls("");
+      setImportUrlOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/knowledge"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/knowledge/stats"] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message || "Import failed", variant: "destructive" });
+    },
+  });
+
+  const processMutation = useMutation({
+    mutationFn: (id: number) => {
+      setProcessingId(id);
+      return apiRequest("/api/knowledge/process", { method: "POST", body: JSON.stringify({ documentId: id }) });
+    },
+    onSuccess: () => {
+      toast({ title: "Processing started", description: "The document is being chunked and embedded for AI search." });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/knowledge"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/knowledge/stats"] });
+      }, 3000);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to process document", variant: "destructive" });
+    },
+    onSettled: () => {
+      setProcessingId(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => {
+      setDeletingId(id);
+      return apiRequest(`/api/knowledge?id=${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast({ title: "Document deleted" });
+      queryClient.invalidateQueries({ queryKey: ["/api/knowledge"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/knowledge/stats"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete document", variant: "destructive" });
+    },
+    onSettled: () => {
+      setDeletingId(null);
+    },
+  });
+
+  const handleAddDocument = async () => {
+    if (!docTitle.trim() || !docContent.trim()) return;
+    addDocMutation.mutate({ title: docTitle.trim(), content: docContent.trim(), sourceType: "manual" });
   };
 
   const handleImportUrls = async () => {
@@ -119,67 +151,7 @@ export default function KnowledgePage() {
       .map((u) => u.trim())
       .filter((u) => u.length > 0);
     if (urlList.length === 0) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/knowledge/import-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ urls: urlList }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Import failed");
-      }
-      const data = await res.json();
-      toast({
-        title: "Import complete",
-        description: `${data.summary?.success || 0} imported, ${data.summary?.errors || 0} failed.`,
-      });
-      setImportUrls("");
-      setImportUrlOpen(false);
-      fetchDocuments();
-      fetchStats();
-    } catch (error) {
-      toast({ title: "Error", description: error instanceof Error ? error.message : "Import failed", variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleProcessDocument = async (id: number) => {
-    setProcessingId(id);
-    try {
-      const res = await fetch("/api/knowledge/process", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId: id }),
-      });
-      if (!res.ok) throw new Error("Processing failed");
-      toast({ title: "Processing started", description: "The document is being chunked and embedded for AI search." });
-      setTimeout(() => {
-        fetchDocuments();
-        fetchStats();
-      }, 3000);
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to process document", variant: "destructive" });
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const handleDeleteDocument = async (id: number) => {
-    setDeletingId(id);
-    try {
-      const res = await fetch(`/api/knowledge?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-      toast({ title: "Document deleted" });
-      fetchDocuments();
-      fetchStats();
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to delete document", variant: "destructive" });
-    } finally {
-      setDeletingId(null);
-    }
+    importMutation.mutate({ urls: urlList });
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -281,7 +253,7 @@ export default function KnowledgePage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
           <CardTitle>Documents</CardTitle>
-          <Button variant="ghost" size="sm" onClick={() => { fetchDocuments(); fetchStats(); }} data-testid="button-refresh-docs">
+          <Button variant="ghost" size="sm" onClick={() => { queryClient.invalidateQueries({ queryKey: ["/api/knowledge"] }); queryClient.invalidateQueries({ queryKey: ["/api/knowledge/stats"] }); }} data-testid="button-refresh-docs">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
@@ -336,7 +308,7 @@ export default function KnowledgePage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleProcessDocument(doc.id)}
+                        onClick={() => processMutation.mutate(doc.id)}
                         disabled={processingId === doc.id}
                         data-testid={`button-process-${doc.id}`}
                       >
@@ -350,7 +322,7 @@ export default function KnowledgePage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDeleteDocument(doc.id)}
+                      onClick={() => deleteMutation.mutate(doc.id)}
                       disabled={deletingId === doc.id}
                       data-testid={`button-delete-${doc.id}`}
                     >
@@ -407,10 +379,10 @@ export default function KnowledgePage() {
             <Button variant="outline" onClick={() => setAddDocOpen(false)}>Cancel</Button>
             <Button
               onClick={handleAddDocument}
-              disabled={submitting || !docTitle.trim() || !docContent.trim()}
+              disabled={addDocMutation.isPending || !docTitle.trim() || !docContent.trim()}
               data-testid="button-submit-document"
             >
-              {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+              {addDocMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
               Add & Process
             </Button>
           </DialogFooter>
@@ -446,10 +418,10 @@ export default function KnowledgePage() {
             <Button variant="outline" onClick={() => setImportUrlOpen(false)}>Cancel</Button>
             <Button
               onClick={handleImportUrls}
-              disabled={submitting || !importUrls.trim()}
+              disabled={importMutation.isPending || !importUrls.trim()}
               data-testid="button-submit-import"
             >
-              {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Link2 className="w-4 h-4 mr-2" />}
+              {importMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Link2 className="w-4 h-4 mr-2" />}
               Import
             </Button>
           </DialogFooter>

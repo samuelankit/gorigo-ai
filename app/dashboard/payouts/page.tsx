@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,32 +48,31 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
 
 export default function PayoutsPage() {
   const { toast } = useToast();
-  const [data, setData] = useState<WithdrawalData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [connectLoading, setConnectLoading] = useState(false);
 
-  const fetchData = () => {
-    setLoading(true);
-    fetch("/api/withdrawals")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) {
-          toast({ title: "Error", description: d.error, variant: "destructive" });
-        } else {
-          setData(d);
-        }
-      })
-      .catch(() => {
-        toast({ title: "Error", description: "Failed to load payout data", variant: "destructive" });
-      })
-      .finally(() => setLoading(false));
-  };
+  const { data, isLoading } = useQuery<WithdrawalData>({
+    queryKey: ["/api/withdrawals"],
+  });
 
-  useEffect(() => { fetchData(); }, []);
+  const withdrawMutation = useMutation({
+    mutationFn: (amount: number) =>
+      apiRequest("/api/withdrawals", {
+        method: "POST",
+        body: JSON.stringify({ amount }),
+      }),
+    onSuccess: (result: any) => {
+      toast({ title: "Success", description: result.message });
+      setWithdrawAmount("");
+      queryClient.invalidateQueries({ queryKey: ["/api/withdrawals"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to submit withdrawal", variant: "destructive" });
+    },
+  });
 
-  const handleWithdraw = async () => {
+  const handleWithdraw = () => {
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < (data?.minimumWithdrawal || 50)) {
       toast({
@@ -81,55 +82,31 @@ export default function PayoutsPage() {
       });
       return;
     }
-
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/withdrawals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        toast({ title: "Error", description: result.error, variant: "destructive" });
-      } else {
-        toast({ title: "Success", description: result.message });
-        setWithdrawAmount("");
-        fetchData();
-      }
-    } catch {
-      toast({ title: "Error", description: "Failed to submit withdrawal", variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
+    withdrawMutation.mutate(amount);
   };
 
   const handleStripeConnect = async (action: string) => {
     setConnectLoading(true);
     try {
-      const res = await fetch("/api/withdrawals/stripe-connect", {
+      const result = await apiRequest("/api/withdrawals/stripe-connect", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       });
-      const result = await res.json();
-      if (!res.ok) {
-        toast({ title: "Error", description: result.error, variant: "destructive" });
-      } else if (result.onboardingUrl) {
+      if (result.onboardingUrl) {
         window.open(result.onboardingUrl, "_blank");
       } else if (result.dashboardUrl) {
         window.open(result.dashboardUrl, "_blank");
       } else {
-        fetchData();
+        queryClient.invalidateQueries({ queryKey: ["/api/withdrawals"] });
       }
-    } catch {
-      toast({ title: "Error", description: "Failed to connect Stripe", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to connect Stripe", variant: "destructive" });
     } finally {
       setConnectLoading(false);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-6 space-y-6">
         <Skeleton className="h-8 w-64" />
@@ -162,7 +139,7 @@ export default function PayoutsPage() {
           <h1 className="text-2xl font-bold" data-testid="text-payouts-title">Payouts</h1>
           <p className="text-muted-foreground text-sm">Manage your commission withdrawals</p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchData} data-testid="button-refresh-payouts">
+        <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/withdrawals"] })} data-testid="button-refresh-payouts">
           <RefreshCw className="h-4 w-4 mr-1.5" />
           Refresh
         </Button>
@@ -321,13 +298,13 @@ export default function PayoutsPage() {
                   className="w-full"
                   onClick={handleWithdraw}
                   disabled={
-                    submitting || !data.canWithdraw ||
+                    withdrawMutation.isPending || !data.canWithdraw ||
                     data.balance.available < data.minimumWithdrawal ||
                     !withdrawAmount || parseFloat(withdrawAmount) < data.minimumWithdrawal
                   }
                   data-testid="button-submit-withdrawal"
                 >
-                  {submitting ? "Processing..." : "Request Withdrawal"}
+                  {withdrawMutation.isPending ? "Processing..." : "Request Withdrawal"}
                 </Button>
                 <Button
                   variant="ghost"

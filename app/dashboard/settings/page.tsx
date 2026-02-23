@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,8 +43,8 @@ const TIMEZONES = [
 ];
 
 const PACKAGE_INFO: Record<string, { name: string; rate: string; description: string; color: string; bgColor: string }> = {
-  managed: { name: "Managed", rate: "£0.15/min", description: "AI + Telephony included", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
-  self_hosted: { name: "Self-Hosted", rate: "£0.03/min", description: "Licence fee only", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10" },
+  managed: { name: "Managed", rate: "\u00a30.15/min", description: "AI + Telephony included", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
+  self_hosted: { name: "Self-Hosted", rate: "\u00a30.03/min", description: "Licence fee only", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10" },
   custom: { name: "Custom", rate: "Custom", description: "Bespoke rates and features", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-500/10" },
 };
 
@@ -74,26 +76,23 @@ const DEFAULT_SCHEDULE: Schedule = {
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
-  const [savingProfile, setSavingProfile] = useState(false);
 
   const [deploymentModel, setDeploymentModel] = useState<string>("managed");
   const [showPackageSwitch, setShowPackageSwitch] = useState(false);
   const [pendingPackage, setPendingPackage] = useState<string>("");
-  const [switchingPackage, setSwitchingPackage] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [savingPassword, setSavingPassword] = useState(false);
 
   const [complianceDisclosure, setComplianceDisclosure] = useState(true);
 
   const [openaiKey, setOpenaiKey] = useState("");
   const [openaiBaseUrl, setOpenaiBaseUrl] = useState("");
-  const [validatingOpenai, setValidatingOpenai] = useState(false);
   const [openaiValid, setOpenaiValid] = useState<boolean | null>(null);
 
   const [businessHoursEnabled, setBusinessHoursEnabled] = useState(false);
@@ -102,14 +101,10 @@ export default function SettingsPage() {
   const [timezone, setTimezone] = useState("America/New_York");
   const [voicemailEnabled, setVoicemailEnabled] = useState(false);
   const [voicemailGreeting, setVoicemailGreeting] = useState("");
-  const [savingBusinessHours, setSavingBusinessHours] = useState(false);
-  const [loadingBusinessHours, setLoadingBusinessHours] = useState(true);
 
   const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(5);
   const [minCallBalance, setMinCallBalance] = useState(1.0);
   const [activeCalls, setActiveCalls] = useState(0);
-  const [savingCallLimits, setSavingCallLimits] = useState(false);
-  const [loadingCallLimits, setLoadingCallLimits] = useState(true);
 
   interface PhoneNumber {
     id: number;
@@ -119,8 +114,6 @@ export default function SettingsPage() {
     isActive: boolean;
     createdAt: string;
   }
-  const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
-  const [loadingPhones, setLoadingPhones] = useState(true);
 
   interface WebhookRecord {
     id: number;
@@ -138,206 +131,121 @@ export default function SettingsPage() {
     "agent.updated", "transcript.ready",
     "wallet.low_balance", "wallet.recharged",
   ];
-  const [webhookList, setWebhookList] = useState<WebhookRecord[]>([]);
-  const [loadingWebhooks, setLoadingWebhooks] = useState(true);
   const [showAddWebhook, setShowAddWebhook] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState("");
   const [webhookEvents, setWebhookEvents] = useState<string[]>([]);
-  const [savingWebhook, setSavingWebhook] = useState(false);
   const [editingWebhook, setEditingWebhook] = useState<WebhookRecord | null>(null);
   const [visibleSecrets, setVisibleSecrets] = useState<Record<number, boolean>>({});
 
-  const fetchWebhooks = () => {
-    setLoadingWebhooks(true);
-    fetch("/api/webhooks")
-      .then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setWebhookList(d); })
-      .catch((error) => { console.error("Fetch webhooks failed:", error); })
-      .finally(() => setLoadingWebhooks(false));
-  };
+  const { data: authData, isLoading: loading } = useQuery<any>({
+    queryKey: ["/api/auth/me"],
+    select: (d: any) => {
+      return d;
+    },
+  });
 
-  const saveWebhook = async () => {
-    if (!webhookUrl.trim()) return;
-    setSavingWebhook(true);
-    try {
-      const method = editingWebhook ? "PATCH" : "POST";
-      const body = editingWebhook
-        ? { id: editingWebhook.id, url: webhookUrl.trim(), events: webhookEvents }
-        : { url: webhookUrl.trim(), events: webhookEvents };
-      const res = await fetch("/api/webhooks", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error("Failed");
-      toast({ title: editingWebhook ? "Webhook updated" : "Webhook created" });
-      setShowAddWebhook(false);
-      setEditingWebhook(null);
-      setWebhookUrl("");
-      setWebhookEvents([]);
-      fetchWebhooks();
-    } catch (error) {
-      toast({ title: "Error saving webhook", variant: "destructive" });
-    } finally {
-      setSavingWebhook(false);
+  const profileLoaded = !!authData?.user;
+  if (profileLoaded && businessName === "" && authData.user.businessName) {
+    setBusinessName(authData.user.businessName || "");
+    setEmail(authData.user.email || "");
+    if (authData.org?.deploymentModel) setDeploymentModel(authData.org.deploymentModel);
+  }
+
+  const { data: agentData } = useQuery<any>({
+    queryKey: ["/api/agents"],
+  });
+  if (agentData?.agent && complianceDisclosure !== (agentData.agent.complianceDisclosure ?? true)) {
+    if (agentData.agent.complianceDisclosure !== undefined) {
+      setComplianceDisclosure(agentData.agent.complianceDisclosure ?? true);
     }
-  };
+  }
 
-  const toggleWebhookActive = async (wh: WebhookRecord) => {
-    try {
-      await fetch("/api/webhooks", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: wh.id, isActive: !wh.isActive }),
-      });
-      fetchWebhooks();
-    } catch (error) {
-      toast({ title: "Error toggling webhook", variant: "destructive" });
-    }
-  };
-
-  const deleteWebhook = async (id: number) => {
-    try {
-      await fetch(`/api/webhooks?id=${id}`, { method: "DELETE" });
-      fetchWebhooks();
-      toast({ title: "Webhook deleted" });
-    } catch (error) {
-      toast({ title: "Error deleting webhook", variant: "destructive" });
-    }
-  };
-
-  const handleSwitchPackage = async () => {
-    setSwitchingPackage(true);
-    try {
-      const res = await fetch("/api/onboarding/deployment-model", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deploymentModel: pendingPackage }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      setDeploymentModel(pendingPackage);
-      setShowPackageSwitch(false);
-      toast({ title: "Package updated", description: "Your deployment package has been changed. Active calls will continue at the previous rate." });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to switch package.", variant: "destructive" });
-    } finally {
-      setSwitchingPackage(false);
-    }
-  };
-
-  const handleValidateOpenai = async () => {
-    if (!openaiKey.trim()) return;
-    setValidatingOpenai(true);
-    try {
-      const res = await fetch("/api/settings/integrations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "validate_openai", apiKey: openaiKey, baseUrl: openaiBaseUrl || undefined }),
-      });
-      const data = await res.json();
-      setOpenaiValid(data.valid);
-      toast({ title: data.valid ? "OpenAI key is valid" : "OpenAI key invalid", description: data.error || `${(data.models || []).length} models available`, variant: data.valid ? "default" : "destructive" });
-    } catch (error) {
-      toast({ title: "Validation failed", variant: "destructive" });
-    } finally {
-      setValidatingOpenai(false);
-    }
-  };
-
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.user) {
-          setBusinessName(d.user.businessName || "");
-          setEmail(d.user.email || "");
-        }
-        if (d?.org?.deploymentModel) setDeploymentModel(d.org.deploymentModel);
-      })
-      .catch((error) => { console.error("Fetch settings user data failed:", error); })
-      .finally(() => setLoading(false));
-
-    fetch("/api/agents")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.agent) {
-          setComplianceDisclosure(d.agent.complianceDisclosure ?? true);
-        }
-      })
-      .catch((error) => { console.error("Fetch agent compliance settings failed:", error); });
-
-    fetch("/api/settings/business-hours")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d) {
-          const bh = d.businessHours as BusinessHoursData | null;
-          if (bh) {
-            setBusinessHoursEnabled(bh.enabled ?? false);
-            if (bh.schedule) {
-              const normalizedSchedule: Schedule = {};
-              const closed: Record<string, boolean> = {};
-              for (const day of DAYS) {
-                const dayData = bh.schedule[day];
-                if (!dayData || (dayData.open === "" && dayData.close === "")) {
-                  closed[day] = true;
-                  normalizedSchedule[day] = { open: "", close: "" };
-                } else {
-                  normalizedSchedule[day] = dayData;
-                }
-              }
-              setSchedule(normalizedSchedule);
-              setClosedDays(closed);
-            }
+  const { data: businessHoursRaw, isLoading: loadingBusinessHours } = useQuery<any>({
+    queryKey: ["/api/settings/business-hours"],
+  });
+  const bhLoaded = !!businessHoursRaw;
+  if (bhLoaded && !loadingBusinessHours) {
+    const bh = businessHoursRaw.businessHours as BusinessHoursData | null;
+    if (bh && businessHoursEnabled === false && bh.enabled) {
+      setBusinessHoursEnabled(bh.enabled);
+      if (bh.schedule) {
+        const normalizedSchedule: Schedule = {};
+        const closed: Record<string, boolean> = {};
+        for (const day of DAYS) {
+          const dayData = bh.schedule[day];
+          if (!dayData || (dayData.open === "" && dayData.close === "")) {
+            closed[day] = true;
+            normalizedSchedule[day] = { open: "", close: "" };
+          } else {
+            normalizedSchedule[day] = dayData;
           }
-          setVoicemailEnabled(d.voicemailEnabled ?? false);
-          setVoicemailGreeting(d.voicemailGreeting ?? "");
-          setTimezone(d.timezone || "America/New_York");
         }
-      })
-      .catch((error) => { console.error("Fetch business hours failed:", error); })
-      .finally(() => setLoadingBusinessHours(false));
-
-    fetch("/api/settings/call-limits")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d) {
-          setMaxConcurrentCalls(d.maxConcurrentCalls ?? 5);
-          setMinCallBalance(parseFloat(d.minCallBalance) || 1.0);
-          setActiveCalls(d.activeCalls ?? 0);
-        }
-      })
-      .catch((error) => { console.error("Fetch call limits failed:", error); })
-      .finally(() => setLoadingCallLimits(false));
-
-    fetch("/api/phone-numbers")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.phoneNumbers) setPhoneNumbers(d.phoneNumbers);
-      })
-      .catch((error) => { console.error("Fetch phone numbers failed:", error); })
-      .finally(() => setLoadingPhones(false));
-
-    fetchWebhooks();
-  }, []);
-
-  const handleUpdateProfile = async () => {
-    setSavingProfile(true);
-    try {
-      const res = await fetch("/api/settings/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessName }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      toast({ title: "Profile updated", description: "Your business profile has been saved." });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
-    } finally {
-      setSavingProfile(false);
+        setSchedule(normalizedSchedule);
+        setClosedDays(closed);
+      }
     }
-  };
+    if (businessHoursRaw.voicemailEnabled !== undefined && voicemailEnabled !== businessHoursRaw.voicemailEnabled) {
+      setVoicemailEnabled(businessHoursRaw.voicemailEnabled ?? false);
+    }
+    if (businessHoursRaw.voicemailGreeting && voicemailGreeting === "") {
+      setVoicemailGreeting(businessHoursRaw.voicemailGreeting);
+    }
+    if (businessHoursRaw.timezone && timezone === "America/New_York" && businessHoursRaw.timezone !== "America/New_York") {
+      setTimezone(businessHoursRaw.timezone);
+    }
+  }
 
-  const handleChangePassword = async () => {
+  const { data: callLimitsRaw, isLoading: loadingCallLimits } = useQuery<any>({
+    queryKey: ["/api/settings/call-limits"],
+  });
+  if (callLimitsRaw && !loadingCallLimits) {
+    if (callLimitsRaw.maxConcurrentCalls !== undefined && maxConcurrentCalls === 5 && callLimitsRaw.maxConcurrentCalls !== 5) {
+      setMaxConcurrentCalls(callLimitsRaw.maxConcurrentCalls ?? 5);
+    }
+    if (callLimitsRaw.minCallBalance !== undefined && minCallBalance === 1.0) {
+      const parsed = parseFloat(callLimitsRaw.minCallBalance) || 1.0;
+      if (parsed !== 1.0) setMinCallBalance(parsed);
+    }
+    if (callLimitsRaw.activeCalls !== undefined && activeCalls === 0 && callLimitsRaw.activeCalls !== 0) {
+      setActiveCalls(callLimitsRaw.activeCalls);
+    }
+  }
+
+  const { data: phonesRaw, isLoading: loadingPhones } = useQuery<any>({
+    queryKey: ["/api/phone-numbers"],
+  });
+  const phoneNumbers: PhoneNumber[] = phonesRaw?.phoneNumbers || [];
+
+  const { data: webhooksRaw, isLoading: loadingWebhooks } = useQuery<any>({
+    queryKey: ["/api/webhooks"],
+  });
+  const webhookList: WebhookRecord[] = Array.isArray(webhooksRaw) ? webhooksRaw : [];
+
+  const updateProfileMutation = useMutation({
+    mutationFn: () => apiRequest("/api/settings/profile", { method: "PUT", body: JSON.stringify({ businessName }) }),
+    onSuccess: () => {
+      toast({ title: "Profile updated", description: "Your business profile has been saved." });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: () => apiRequest("/api/settings/password", { method: "PUT", body: JSON.stringify({ currentPassword, newPassword }) }),
+    onSuccess: () => {
+      toast({ title: "Password updated", description: "Your password has been changed." });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (e: any) => {
+      toast({ title: "Error", description: e.message || "Failed to change password.", variant: "destructive" });
+    },
+  });
+
+  const handleChangePassword = () => {
     if (newPassword !== confirmPassword) {
       toast({ title: "Error", description: "Passwords do not match.", variant: "destructive" });
       return;
@@ -346,42 +254,149 @@ export default function SettingsPage() {
       toast({ title: "Error", description: "Password must be at least 8 characters.", variant: "destructive" });
       return;
     }
-    setSavingPassword(true);
-    try {
-      const res = await fetch("/api/settings/password", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast({ title: "Error", description: data.error || "Failed to change password.", variant: "destructive" });
-        return;
-      }
-      toast({ title: "Password updated", description: "Your password has been changed." });
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to change password.", variant: "destructive" });
-    } finally {
-      setSavingPassword(false);
-    }
+    changePasswordMutation.mutate();
   };
 
-  const handleComplianceToggle = async (checked: boolean) => {
-    setComplianceDisclosure(checked);
-    try {
-      await fetch("/api/agents", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ complianceDisclosure: checked }),
-      });
+  const complianceMutation = useMutation({
+    mutationFn: (checked: boolean) =>
+      apiRequest("/api/agents", { method: "PUT", body: JSON.stringify({ complianceDisclosure: checked }) }),
+    onSuccess: () => {
       toast({ title: "Updated", description: "Compliance setting saved." });
-    } catch (error) {
+    },
+    onError: () => {
       toast({ title: "Error", description: "Failed to update compliance setting.", variant: "destructive" });
-    }
+    },
+  });
+
+  const handleComplianceToggle = (checked: boolean) => {
+    setComplianceDisclosure(checked);
+    complianceMutation.mutate(checked);
   };
+
+  const validateOpenaiMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("/api/settings/integrations", {
+        method: "POST",
+        body: JSON.stringify({ action: "validate_openai", apiKey: openaiKey, baseUrl: openaiBaseUrl || undefined }),
+      }),
+    onSuccess: (data: any) => {
+      setOpenaiValid(data.valid);
+      toast({ title: data.valid ? "OpenAI key is valid" : "OpenAI key invalid", description: data.error || `${(data.models || []).length} models available`, variant: data.valid ? "default" : "destructive" });
+    },
+    onError: () => {
+      toast({ title: "Validation failed", variant: "destructive" });
+    },
+  });
+
+  const switchPackageMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("/api/onboarding/deployment-model", { method: "PUT", body: JSON.stringify({ deploymentModel: pendingPackage }) }),
+    onSuccess: () => {
+      setDeploymentModel(pendingPackage);
+      setShowPackageSwitch(false);
+      toast({ title: "Package updated", description: "Your deployment package has been changed. Active calls will continue at the previous rate." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to switch package.", variant: "destructive" });
+    },
+  });
+
+  const saveBusinessHoursMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("/api/settings/business-hours", {
+        method: "PUT",
+        body: JSON.stringify({
+          businessHours: {
+            enabled: businessHoursEnabled,
+            schedule: Object.fromEntries(
+              Object.entries(schedule).map(([day, times]) =>
+                [day, closedDays[day] ? null : times]
+              )
+            ),
+            timezone,
+            holidayDates: [],
+          },
+          voicemailEnabled,
+          voicemailGreeting,
+          timezone,
+        }),
+      }),
+    onSuccess: () => {
+      toast({ title: "Business hours updated", description: "Your business hours and voicemail settings have been saved." });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings/business-hours"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save business hours.", variant: "destructive" });
+    },
+  });
+
+  const saveCallLimitsMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("/api/settings/call-limits", { method: "PUT", body: JSON.stringify({ maxConcurrentCalls, minCallBalance }) }),
+    onSuccess: () => {
+      toast({ title: "Call limits updated", description: "Your call limit settings have been saved." });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings/call-limits"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save call limits.", variant: "destructive" });
+    },
+  });
+
+  const handleSaveCallLimits = () => {
+    if (maxConcurrentCalls < 1 || maxConcurrentCalls > 100) {
+      toast({ title: "Error", description: "Max concurrent calls must be between 1 and 100.", variant: "destructive" });
+      return;
+    }
+    if (minCallBalance < 0) {
+      toast({ title: "Error", description: "Minimum call balance must be non-negative.", variant: "destructive" });
+      return;
+    }
+    saveCallLimitsMutation.mutate();
+  };
+
+  const saveWebhookMutation = useMutation({
+    mutationFn: () => {
+      const method = editingWebhook ? "PATCH" : "POST";
+      const body = editingWebhook
+        ? { id: editingWebhook.id, url: webhookUrl.trim(), events: webhookEvents }
+        : { url: webhookUrl.trim(), events: webhookEvents };
+      return apiRequest("/api/webhooks", { method, body: JSON.stringify(body) });
+    },
+    onSuccess: () => {
+      toast({ title: editingWebhook ? "Webhook updated" : "Webhook created" });
+      setShowAddWebhook(false);
+      setEditingWebhook(null);
+      setWebhookUrl("");
+      setWebhookEvents([]);
+      queryClient.invalidateQueries({ queryKey: ["/api/webhooks"] });
+    },
+    onError: () => {
+      toast({ title: "Error saving webhook", variant: "destructive" });
+    },
+  });
+
+  const toggleWebhookMutation = useMutation({
+    mutationFn: (wh: WebhookRecord) =>
+      apiRequest("/api/webhooks", { method: "PATCH", body: JSON.stringify({ id: wh.id, isActive: !wh.isActive }) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/webhooks"] });
+    },
+    onError: () => {
+      toast({ title: "Error toggling webhook", variant: "destructive" });
+    },
+  });
+
+  const deleteWebhookMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest(`/api/webhooks?id=${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/webhooks"] });
+      toast({ title: "Webhook deleted" });
+    },
+    onError: () => {
+      toast({ title: "Error deleting webhook", variant: "destructive" });
+    },
+  });
 
   const handleDayScheduleChange = (day: string, field: "open" | "close", value: string) => {
     setSchedule((prev) => ({
@@ -402,62 +417,6 @@ export default function SettingsPage() {
         ...prev,
         [day]: { open: "09:00", close: "17:00" },
       }));
-    }
-  };
-
-  const handleSaveBusinessHours = async () => {
-    setSavingBusinessHours(true);
-    try {
-      const res = await fetch("/api/settings/business-hours", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          businessHours: {
-            enabled: businessHoursEnabled,
-            schedule: Object.fromEntries(
-              Object.entries(schedule).map(([day, times]) =>
-                [day, closedDays[day] ? null : times]
-              )
-            ),
-            timezone,
-            holidayDates: [],
-          },
-          voicemailEnabled,
-          voicemailGreeting,
-          timezone,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      toast({ title: "Business hours updated", description: "Your business hours and voicemail settings have been saved." });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save business hours.", variant: "destructive" });
-    } finally {
-      setSavingBusinessHours(false);
-    }
-  };
-
-  const handleSaveCallLimits = async () => {
-    if (maxConcurrentCalls < 1 || maxConcurrentCalls > 100) {
-      toast({ title: "Error", description: "Max concurrent calls must be between 1 and 100.", variant: "destructive" });
-      return;
-    }
-    if (minCallBalance < 0) {
-      toast({ title: "Error", description: "Minimum call balance must be non-negative.", variant: "destructive" });
-      return;
-    }
-    setSavingCallLimits(true);
-    try {
-      const res = await fetch("/api/settings/call-limits", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ maxConcurrentCalls, minCallBalance }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      toast({ title: "Call limits updated", description: "Your call limit settings have been saved." });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save call limits.", variant: "destructive" });
-    } finally {
-      setSavingCallLimits(false);
     }
   };
 
@@ -514,8 +473,8 @@ export default function SettingsPage() {
             />
             <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
           </div>
-          <Button onClick={handleUpdateProfile} disabled={savingProfile} data-testid="button-update-profile">
-            {savingProfile ? "Saving..." : "Update Profile"}
+          <Button onClick={() => updateProfileMutation.mutate()} disabled={updateProfileMutation.isPending} data-testid="button-update-profile">
+            {updateProfileMutation.isPending ? "Saving..." : "Update Profile"}
           </Button>
         </CardContent>
       </Card>
@@ -598,30 +557,18 @@ export default function SettingsPage() {
               data-testid="input-confirm-password"
             />
           </div>
-          <Button onClick={handleChangePassword} disabled={savingPassword} data-testid="button-change-password">
-            {savingPassword ? "Saving..." : "Change Password"}
+          <Button onClick={handleChangePassword} disabled={changePasswordMutation.isPending} data-testid="button-change-password">
+            {changePasswordMutation.isPending ? "Saving..." : "Change Password"}
           </Button>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Shield className="h-4 w-4 text-muted-foreground" />
-            Compliance
-          </CardTitle>
-          <CardDescription>AI disclosure and data handling settings.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 p-5">
+          <Separator />
+
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <Label>AI Disclosure</Label>
-                {complianceDisclosure && (
-                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">Announce to callers that they are speaking with an AI</p>
+              <Label>AI Disclosure</Label>
+              <p className="text-xs text-muted-foreground">
+                Play an AI disclosure message at the start of each call
+              </p>
             </div>
             <Switch
               checked={complianceDisclosure}
@@ -629,14 +576,7 @@ export default function SettingsPage() {
               data-testid="switch-compliance-disclosure"
             />
           </div>
-          <Separator />
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Data Retention</p>
-            <p className="text-sm text-muted-foreground">
-              Call recordings and transcripts are retained for 90 days. Lead data is retained
-              until you delete it. Contact support for data deletion requests.
-            </p>
-          </div>
+
           <Separator />
           <div className="space-y-2">
             <p className="text-sm font-medium">GDPR Data Export</p>
@@ -783,8 +723,8 @@ export default function SettingsPage() {
               )}
             </div>
 
-            <Button onClick={handleSaveBusinessHours} disabled={savingBusinessHours} data-testid="button-save-business-hours">
-              {savingBusinessHours ? "Saving..." : "Save Business Hours"}
+            <Button onClick={() => saveBusinessHoursMutation.mutate()} disabled={saveBusinessHoursMutation.isPending} data-testid="button-save-business-hours">
+              {saveBusinessHoursMutation.isPending ? "Saving..." : "Save Business Hours"}
             </Button>
           </CardContent>
         </Card>
@@ -848,8 +788,8 @@ export default function SettingsPage() {
               </div>
             )}
 
-            <Button onClick={handleSaveCallLimits} disabled={savingCallLimits} data-testid="button-save-call-limits">
-              {savingCallLimits ? "Saving..." : "Save Call Limits"}
+            <Button onClick={handleSaveCallLimits} disabled={saveCallLimitsMutation.isPending} data-testid="button-save-call-limits">
+              {saveCallLimitsMutation.isPending ? "Saving..." : "Save Call Limits"}
             </Button>
           </CardContent>
         </Card>
@@ -991,7 +931,7 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-1">
                     <Switch
                       checked={wh.isActive}
-                      onCheckedChange={() => toggleWebhookActive(wh)}
+                      onCheckedChange={() => toggleWebhookMutation.mutate(wh)}
                       data-testid={`switch-webhook-active-${wh.id}`}
                     />
                     <Button
@@ -1010,7 +950,7 @@ export default function SettingsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => deleteWebhook(wh.id)}
+                      onClick={() => deleteWebhookMutation.mutate(wh.id)}
                       data-testid={`button-delete-webhook-${wh.id}`}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -1067,8 +1007,8 @@ export default function SettingsPage() {
             <Button variant="outline" onClick={() => setShowAddWebhook(false)} data-testid="button-cancel-webhook">
               Cancel
             </Button>
-            <Button onClick={saveWebhook} disabled={!webhookUrl.trim() || savingWebhook} data-testid="button-save-webhook">
-              {savingWebhook && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+            <Button onClick={() => saveWebhookMutation.mutate()} disabled={!webhookUrl.trim() || saveWebhookMutation.isPending} data-testid="button-save-webhook">
+              {saveWebhookMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
               {editingWebhook ? "Update" : "Create"}
             </Button>
           </DialogFooter>
@@ -1107,8 +1047,8 @@ export default function SettingsPage() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowPackageSwitch(false)} data-testid="button-cancel-package-switch">Cancel</Button>
-            <Button onClick={handleSwitchPackage} disabled={switchingPackage} data-testid="button-confirm-package-switch">
-              {switchingPackage ? "Switching..." : "Confirm Switch"}
+            <Button onClick={() => switchPackageMutation.mutate()} disabled={switchPackageMutation.isPending} data-testid="button-confirm-package-switch">
+              {switchPackageMutation.isPending ? "Switching..." : "Confirm Switch"}
             </Button>
           </DialogFooter>
         </DialogContent>

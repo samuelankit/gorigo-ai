@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,54 +45,52 @@ interface Summary {
 }
 
 export default function FinanceHomePage() {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWsId, setActiveWsId] = useState<string>("");
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/finance/workspaces")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.workspaces?.length) {
-          setWorkspaces(data.workspaces);
-          setActiveWsId(String(data.workspaces[0].id));
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  const { data: wsData, isLoading: wsLoading } = useQuery<{ workspaces: Workspace[] }>({
+    queryKey: ["/api/finance/workspaces"],
+  });
 
-  const fetchSummary = useCallback(() => {
-    if (!activeWsId) return;
-    fetch(`/api/finance/summary?workspaceId=${activeWsId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) return;
-        setSummary({
-          totalReceivable: data.totalReceivable || 0,
-          totalPayable: data.totalPayable || 0,
-          cashPosition: data.cashPosition || 0,
-          incomeThisMonth: data.incomeThisMonth || 0,
-          expensesThisMonth: data.expensesThisMonth || 0,
-          overdueInvoices: data.overdueInvoicesCount || 0,
-          overdueBills: data.overdueBillsCount || 0,
-        });
-      })
-      .catch((error) => { console.error("Fetch finance summary failed:", error); });
-  }, [activeWsId]);
+  const workspaces = wsData?.workspaces || [];
 
-  useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
+  const resolvedWsId = activeWsId || (workspaces.length > 0 ? String(workspaces[0].id) : "");
 
-  const activeWs = workspaces.find((w) => String(w.id) === activeWsId);
+  const { data: summaryData } = useQuery<{
+    totalReceivable?: number;
+    totalPayable?: number;
+    cashPosition?: number;
+    incomeThisMonth?: number;
+    expensesThisMonth?: number;
+    overdueInvoicesCount?: number;
+    overdueBillsCount?: number;
+    error?: string;
+  }>({
+    queryKey: ["/api/finance/summary", { workspaceId: resolvedWsId }],
+    queryFn: async () => {
+      const res = await fetch(`/api/finance/summary?workspaceId=${resolvedWsId}`);
+      if (!res.ok) throw new Error("Failed to fetch summary");
+      return res.json();
+    },
+    enabled: !!resolvedWsId,
+  });
+
+  const summary: Summary | null = summaryData && !summaryData.error ? {
+    totalReceivable: summaryData.totalReceivable || 0,
+    totalPayable: summaryData.totalPayable || 0,
+    cashPosition: summaryData.cashPosition || 0,
+    incomeThisMonth: summaryData.incomeThisMonth || 0,
+    expensesThisMonth: summaryData.expensesThisMonth || 0,
+    overdueInvoices: summaryData.overdueInvoicesCount || 0,
+    overdueBills: summaryData.overdueBillsCount || 0,
+  } : null;
+
+  const activeWs = workspaces.find((w) => String(w.id) === resolvedWsId);
   const currency = activeWs?.currency || "GBP";
   const symbol = currency === "GBP" ? "\u00a3" : currency === "USD" ? "$" : currency === "EUR" ? "\u20ac" : currency;
 
   const fmt = (val: number) => `${symbol}${Math.abs(val).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  if (loading) {
+  if (wsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -121,7 +120,7 @@ export default function FinanceHomePage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={activeWsId} onValueChange={setActiveWsId}>
+          <Select value={resolvedWsId} onValueChange={setActiveWsId}>
             <SelectTrigger className="h-8 w-[180px] text-xs" data-testid="select-workspace">
               <SelectValue placeholder="Select workspace" />
             </SelectTrigger>
@@ -196,25 +195,25 @@ export default function FinanceHomePage() {
             <CardTitle className="text-sm font-semibold">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
-            <Link href={`/dashboard/finance/sales?ws=${activeWsId}&action=new-invoice`}>
+            <Link href={`/dashboard/finance/sales?ws=${resolvedWsId}&action=new-invoice`}>
               <Button variant="outline" className="w-full justify-start gap-2 text-xs" data-testid="button-new-invoice">
                 <Plus className="h-3.5 w-3.5" />
                 Create Invoice
               </Button>
             </Link>
-            <Link href={`/dashboard/finance/purchases?ws=${activeWsId}&action=new-bill`}>
+            <Link href={`/dashboard/finance/purchases?ws=${resolvedWsId}&action=new-bill`}>
               <Button variant="outline" className="w-full justify-start gap-2 text-xs" data-testid="button-new-bill">
                 <Plus className="h-3.5 w-3.5" />
                 Record Expense / Bill
               </Button>
             </Link>
-            <Link href={`/dashboard/finance/sales?ws=${activeWsId}&tab=customers`}>
+            <Link href={`/dashboard/finance/sales?ws=${resolvedWsId}&tab=customers`}>
               <Button variant="outline" className="w-full justify-start gap-2 text-xs" data-testid="button-view-customers">
                 <Receipt className="h-3.5 w-3.5" />
                 View Customers
               </Button>
             </Link>
-            <Link href={`/dashboard/finance/reports?ws=${activeWsId}`}>
+            <Link href={`/dashboard/finance/reports?ws=${resolvedWsId}`}>
               <Button variant="outline" className="w-full justify-start gap-2 text-xs" data-testid="button-view-reports">
                 <FileText className="h-3.5 w-3.5" />
                 View Reports
@@ -239,7 +238,7 @@ export default function FinanceHomePage() {
                       <Badge variant="destructive" className="text-[10px]">Overdue</Badge>
                       <span className="text-xs">{summary?.overdueInvoices} invoice{(summary?.overdueInvoices || 0) > 1 ? "s" : ""} past due</span>
                     </div>
-                    <Link href={`/dashboard/finance/sales?ws=${activeWsId}&filter=overdue`}>
+                    <Link href={`/dashboard/finance/sales?ws=${resolvedWsId}&filter=overdue`}>
                       <Button size="sm" variant="ghost" className="text-xs h-7" data-testid="link-overdue-invoices">Chase</Button>
                     </Link>
                   </div>
@@ -250,7 +249,7 @@ export default function FinanceHomePage() {
                       <Badge variant="destructive" className="text-[10px]">Overdue</Badge>
                       <span className="text-xs">{summary?.overdueBills} bill{(summary?.overdueBills || 0) > 1 ? "s" : ""} to pay</span>
                     </div>
-                    <Link href={`/dashboard/finance/purchases?ws=${activeWsId}&filter=overdue`}>
+                    <Link href={`/dashboard/finance/purchases?ws=${resolvedWsId}&filter=overdue`}>
                       <Button size="sm" variant="ghost" className="text-xs h-7" data-testid="link-overdue-bills">Pay</Button>
                     </Link>
                   </div>
@@ -261,7 +260,7 @@ export default function FinanceHomePage() {
                       <Badge variant="secondary" className="text-[10px]">Pending</Badge>
                       <span className="text-xs">{fmt(summary?.totalReceivable || 0)} owed to you</span>
                     </div>
-                    <Link href={`/dashboard/finance/sales?ws=${activeWsId}`}>
+                    <Link href={`/dashboard/finance/sales?ws=${resolvedWsId}`}>
                       <Button size="sm" variant="ghost" className="text-xs h-7" data-testid="link-receivable">View</Button>
                     </Link>
                   </div>

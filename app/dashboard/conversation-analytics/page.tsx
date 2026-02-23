@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext } from "react";
+import { useState, createContext, useContext } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -76,17 +77,16 @@ function ChangeIndicator({ value, inverse }: { value: number; inverse?: boolean 
 
 function KPIsTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/conversation-analytics?tab=kpis&days=${days}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d && !d.error) setData(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading } = useQuery<any>({
+    queryKey: ["/api/conversation-analytics", { tab: "kpis", days }],
+    queryFn: async () => {
+      const res = await fetch(`/api/conversation-analytics?tab=kpis&days=${days}`);
+      if (!res.ok) return null;
+      const d = await res.json();
+      return d && !d.error ? d : null;
+    },
+  });
 
   if (loading) {
     return (
@@ -182,17 +182,16 @@ function KPIsTab() {
 
 function SentimentTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/conversation-analytics?tab=sentiment&days=${days}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d && !d.error) setData(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading } = useQuery<any>({
+    queryKey: ["/api/conversation-analytics", { tab: "sentiment", days }],
+    queryFn: async () => {
+      const res = await fetch(`/api/conversation-analytics?tab=sentiment&days=${days}`);
+      if (!res.ok) return null;
+      const d = await res.json();
+      return d && !d.error ? d : null;
+    },
+  });
 
   if (loading) {
     return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{[1, 2, 3, 4, 5].map((i) => <StatCardSkeleton key={i} />)}</div><ChartSkeleton /><ChartSkeleton /></div>;
@@ -329,7 +328,7 @@ function SentimentTab() {
                     <p className="text-xs text-muted-foreground line-clamp-2">{call.summary || "No summary available"}</p>
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span>{call.callerNumber || "Unknown"}</span>
-                      <span>{call.duration ? formatDuration(call.duration) : "—"}</span>
+                      <span>{call.duration ? formatDuration(call.duration) : "\u2014"}</span>
                       <span>{call.createdAt ? new Date(call.createdAt).toLocaleDateString() : ""}</span>
                     </div>
                   </div>
@@ -345,17 +344,16 @@ function SentimentTab() {
 
 function QualityTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/conversation-analytics?tab=quality&days=${days}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d && !d.error) setData(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading } = useQuery<any>({
+    queryKey: ["/api/conversation-analytics", { tab: "quality", days }],
+    queryFn: async () => {
+      const res = await fetch(`/api/conversation-analytics?tab=quality&days=${days}`);
+      if (!res.ok) return null;
+      const d = await res.json();
+      return d && !d.error ? d : null;
+    },
+  });
 
   if (loading) {
     return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2"><StatCardSkeleton /><StatCardSkeleton /></div><ChartSkeleton /><ChartSkeleton /></div>;
@@ -564,11 +562,11 @@ function QualityTab() {
                           {Number(call.qualityScore).toFixed(0)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">{call.csatPrediction ? Number(call.csatPrediction).toFixed(1) : "—"}</TableCell>
+                      <TableCell className="text-right">{call.csatPrediction ? Number(call.csatPrediction).toFixed(1) : "\u2014"}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="no-default-hover-elevate text-xs capitalize">{call.resolutionStatus || "unknown"}</Badge>
                       </TableCell>
-                      <TableCell>{call.duration ? formatDuration(call.duration) : "—"}</TableCell>
+                      <TableCell>{call.duration ? formatDuration(call.duration) : "\u2014"}</TableCell>
                       <TableCell className="text-muted-foreground">{call.createdAt ? new Date(call.createdAt).toLocaleDateString() : ""}</TableCell>
                     </TableRow>
                   ))}
@@ -584,17 +582,16 @@ function QualityTab() {
 
 function ScorecardsTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/conversation-analytics?tab=scorecards&days=${days}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d && !d.error) setData(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading } = useQuery<any>({
+    queryKey: ["/api/conversation-analytics", { tab: "scorecards", days }],
+    queryFn: async () => {
+      const res = await fetch(`/api/conversation-analytics?tab=scorecards&days=${days}`);
+      if (!res.ok) return null;
+      const d = await res.json();
+      return d && !d.error ? d : null;
+    },
+  });
 
   if (loading) {
     return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[1, 2, 3].map((i) => <ChartSkeleton key={i} />)}</div></div>;
@@ -710,17 +707,16 @@ function ScorecardsTab() {
 
 function TopicsTab() {
   const { days } = useContext(DateRangeContext);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/conversation-analytics?tab=topics&days=${days}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d && !d.error) setData(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [days]);
+  const { data, isLoading: loading } = useQuery<any>({
+    queryKey: ["/api/conversation-analytics", { tab: "topics", days }],
+    queryFn: async () => {
+      const res = await fetch(`/api/conversation-analytics?tab=topics&days=${days}`);
+      if (!res.ok) return null;
+      const d = await res.json();
+      return d && !d.error ? d : null;
+    },
+  });
 
   if (loading) {
     return <div className="space-y-6"><ChartSkeleton /><ChartSkeleton /></div>;

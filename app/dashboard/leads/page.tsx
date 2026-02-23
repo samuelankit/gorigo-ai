@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
+import { useToast } from "@/lib/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -107,66 +110,53 @@ function stageBadge(stage: string | null) {
 }
 
 export default function CustomerLeadsPage() {
-  const [loading, setLoading] = useState(true);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [total, setTotal] = useState(0);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [activeStage, setActiveStage] = useState("all");
-  const [stageCounts, setStageCounts] = useState<Record<string, number>>({});
 
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [stageUpdating, setStageUpdating] = useState(false);
 
-  const fetchLeads = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: leadsData, isLoading: loading } = useQuery<{
+    leads: Lead[];
+    total: number;
+    totalPages: number;
+    stageCounts: Record<string, number>;
+  }>({
+    queryKey: ["/api/leads", { page, search, stage: activeStage }],
+    queryFn: async () => {
       const params = new URLSearchParams({
         page: String(page),
         search,
         stage: activeStage,
       });
       const res = await fetch(`/api/leads?${params}`);
-      const data = await res.json();
-      if (data && !data.error) {
-        setLeads(data.leads || []);
-        setTotal(data.total || 0);
-        setTotalPages(data.totalPages || 1);
-        setStageCounts(data.stageCounts || {});
-      }
-    } catch (error) {
-      console.error("Fetch leads failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, activeStage]);
+      if (!res.ok) throw new Error("Failed to fetch leads");
+      return res.json();
+    },
+  });
 
-  useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads]);
+  const leads = leadsData?.leads || [];
+  const total = leadsData?.total || 0;
+  const totalPages = leadsData?.totalPages || 1;
+  const stageCounts = leadsData?.stageCounts || {};
 
-  const updateStage = async (leadId: number, newStage: string) => {
-    setStageUpdating(true);
-    try {
-      const res = await fetch("/api/leads", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId, pipelineStage: newStage }),
-      });
-      if (res.ok) {
-        fetchLeads();
-        if (selectedLead && selectedLead.id === leadId) {
-          setSelectedLead({ ...selectedLead, pipelineStage: newStage });
-        }
+  const updateStageMutation = useMutation({
+    mutationFn: ({ leadId, pipelineStage }: { leadId: number; pipelineStage: string }) =>
+      apiRequest("/api/leads", { method: "PATCH", body: JSON.stringify({ leadId, pipelineStage }) }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      if (selectedLead && selectedLead.id === variables.leadId) {
+        setSelectedLead({ ...selectedLead, pipelineStage: variables.pipelineStage });
       }
-    } catch (error) {
-      console.error("Update stage failed:", error);
-    } finally {
-      setStageUpdating(false);
-    }
-  };
+      toast({ title: "Lead updated", description: "Pipeline stage changed successfully." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update lead stage.", variant: "destructive" });
+    },
+  });
 
   const openLeadDetail = (lead: Lead) => {
     setSelectedLead(lead);
@@ -187,7 +177,7 @@ export default function CustomerLeadsPage() {
             Manage and track your captured leads from chatbot interactions
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => fetchLeads()} data-testid="btn-refresh-leads">
+        <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/leads"] })} data-testid="btn-refresh-leads">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
@@ -436,8 +426,8 @@ export default function CustomerLeadsPage() {
                 <span className="text-sm text-muted-foreground">Stage:</span>
                 <Select
                   value={selectedLead.pipelineStage || "new"}
-                  onValueChange={(val) => updateStage(selectedLead.id, val)}
-                  disabled={stageUpdating}
+                  onValueChange={(val) => updateStageMutation.mutate({ leadId: selectedLead.id, pipelineStage: val })}
+                  disabled={updateStageMutation.isPending}
                 >
                   <SelectTrigger className="w-40" data-testid="select-stage">
                     <SelectValue />

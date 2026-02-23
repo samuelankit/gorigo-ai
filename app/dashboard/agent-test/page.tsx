@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,37 +49,33 @@ export default function AgentTestPage() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
-  const [agent, setAgent] = useState<AgentInfo | null>(null);
-  const [loadingAgent, setLoadingAgent] = useState(true);
   const [currentState, setCurrentState] = useState("GREETING");
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { data: agentData, isLoading: loadingAgent } = useQuery<{ agent?: { name: string; roles: string; greeting?: string; agentType?: string } }>({
+    queryKey: ["/api/agents"],
+  });
+
+  const agent: AgentInfo | null = agentData?.agent ? {
+    name: agentData.agent.name,
+    roles: agentData.agent.roles,
+    greeting: agentData.agent.greeting || "",
+    agentType: agentData.agent.agentType || "general",
+  } : null;
+
   useEffect(() => {
-    fetch("/api/agents")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.agent) {
-          setAgent({
-            name: d.agent.name,
-            roles: d.agent.roles,
-            greeting: d.agent.greeting || "",
-            agentType: d.agent.agentType || "general",
-          });
-          setMessages([
-            {
-              id: "greeting",
-              role: "assistant",
-              content: d.agent.greeting || `Hello! I'm ${d.agent.name}. How can I help you today?`,
-              timestamp: new Date(),
-              meta: { currentState: "GREETING", turnCount: 0 },
-            },
-          ]);
-        }
-      })
-      .catch(() => toast({ title: "Error", description: "Failed to load agent", variant: "destructive" }))
-      .finally(() => setLoadingAgent(false));
-  }, []);
+    if (agent && messages.length === 0) {
+      setMessages([
+        {
+          id: "greeting",
+          role: "assistant",
+          content: agent.greeting || `Hello! I'm ${agent.name}. How can I help you today?`,
+          timestamp: new Date(),
+          meta: { currentState: "GREETING", turnCount: 0 },
+        },
+      ]);
+    }
+  }, [agent]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -85,47 +83,16 @@ export default function AgentTestPage() {
     }
   }, [messages]);
 
-  const handleSend = async () => {
-    const text = input.trim();
-    if (!text || sending) return;
-
-    const userMsg: Message = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: text,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    setSending(true);
-
-    try {
-      const conversationHistory = messages
-        .filter((m) => m.role !== "system")
-        .map((m) => ({
-          role: m.role as "user" | "assistant",
-          content: m.content,
-        }));
-
-      const res = await fetch("/api/ai/chat", {
+  const chatMutation = useMutation({
+    mutationFn: (payload: { message: string; conversationHistory: { role: string; content: string }[]; currentState: string }) =>
+      apiRequest("/api/ai/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: text,
-          conversationHistory,
-          currentState,
+          ...payload,
           stream: false,
         }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to get response");
-      }
-
-      const data = await res.json();
-
+      }),
+    onSuccess: (data: any) => {
       const assistantMsg: Message = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
@@ -155,15 +122,42 @@ export default function AgentTestPage() {
         };
         setMessages((prev) => [...prev, sysMsg]);
       }
-    } catch (error) {
+    },
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to get response",
+        description: error.message || "Failed to get response",
         variant: "destructive",
       });
-    } finally {
-      setSending(false);
-    }
+    },
+  });
+
+  const handleSend = () => {
+    const text = input.trim();
+    if (!text || chatMutation.isPending) return;
+
+    const userMsg: Message = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: text,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+
+    const conversationHistory = messages
+      .filter((m) => m.role !== "system")
+      .map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
+
+    chatMutation.mutate({
+      message: text,
+      conversationHistory,
+      currentState,
+    });
   };
 
   const handleReset = () => {
@@ -315,7 +309,7 @@ export default function AgentTestPage() {
                       )}
                     </div>
                   ))}
-                  {sending && (
+                  {chatMutation.isPending && (
                     <div className="flex gap-3 justify-start">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0 mt-1">
                         <Bot className="w-4 h-4 text-white" />
@@ -335,15 +329,15 @@ export default function AgentTestPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    disabled={sending}
+                    disabled={chatMutation.isPending}
                     data-testid="input-test-message"
                   />
                   <Button
                     onClick={handleSend}
-                    disabled={sending || !input.trim()}
+                    disabled={chatMutation.isPending || !input.trim()}
                     data-testid="button-send-test"
                   >
-                    {sending ? (
+                    {chatMutation.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <Send className="w-4 h-4" />

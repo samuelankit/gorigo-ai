@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,38 +39,43 @@ interface Stats {
 
 export default function AffiliatesPage() {
   const { toast } = useToast();
-  const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
-  const [stats, setStats] = useState<Stats>({ totalClicks: 0, totalSignups: 0, totalEarnings: 0 });
-  const [canCreate, setCanCreate] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formRate, setFormRate] = useState(10);
   const [formNotes, setFormNotes] = useState("");
 
-  const fetchAffiliates = () => {
-    setLoading(true);
-    fetch("/api/affiliates")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.affiliates) setAffiliates(d.affiliates);
-        if (d?.stats) setStats(d.stats);
-        if (d?.canCreate !== undefined) setCanCreate(d.canCreate);
-      })
-      .catch(() => {
-        toast({ title: "Error", description: "Failed to load affiliates.", variant: "destructive" });
-      })
-      .finally(() => setLoading(false));
-  };
+  const { data, isLoading } = useQuery<{ affiliates: Affiliate[]; stats: Stats; canCreate: boolean }>({
+    queryKey: ["/api/affiliates"],
+  });
 
-  useEffect(() => {
-    fetchAffiliates();
-  }, []);
+  const affiliates = data?.affiliates || [];
+  const stats = data?.stats || { totalClicks: 0, totalSignups: 0, totalEarnings: 0 };
+  const canCreate = data?.canCreate || false;
 
-  const handleCreate = async () => {
+  const createMutation = useMutation({
+    mutationFn: (payload: { name: string; email: string; commissionRate: number; notes?: string }) =>
+      apiRequest("/api/affiliates", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      toast({ title: "Affiliate created", description: "New affiliate link has been created successfully." });
+      setDialogOpen(false);
+      setFormName("");
+      setFormEmail("");
+      setFormRate(10);
+      setFormNotes("");
+      queryClient.invalidateQueries({ queryKey: ["/api/affiliates"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Failed to create affiliate.", variant: "destructive" });
+    },
+  });
+
+  const handleCreate = () => {
     if (!formName.trim() || !formEmail.trim()) {
       toast({ title: "Validation error", description: "Name and email are required.", variant: "destructive" });
       return;
@@ -78,35 +85,12 @@ export default function AffiliatesPage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/affiliates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formName.trim(),
-          email: formEmail.trim(),
-          commissionRate: formRate,
-          notes: formNotes.trim() || undefined,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create affiliate");
-      }
-      toast({ title: "Affiliate created", description: "New affiliate link has been created successfully." });
-      setDialogOpen(false);
-      setFormName("");
-      setFormEmail("");
-      setFormRate(10);
-      setFormNotes("");
-      fetchAffiliates();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create affiliate.";
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
+    createMutation.mutate({
+      name: formName.trim(),
+      email: formEmail.trim(),
+      commissionRate: formRate,
+      notes: formNotes.trim() || undefined,
+    });
   };
 
   const copyReferralUrl = (code: string) => {
@@ -148,7 +132,7 @@ export default function AffiliatesPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        {loading ? (
+        {isLoading ? (
           <>
             <Skeleton className="h-32 w-full rounded-md" data-testid="skeleton-stat-clicks" />
             <Skeleton className="h-32 w-full rounded-md" data-testid="skeleton-stat-signups" />
@@ -267,10 +251,10 @@ export default function AffiliatesPage() {
                 <Button
                   className="w-full"
                   onClick={handleCreate}
-                  disabled={submitting}
+                  disabled={createMutation.isPending}
                   data-testid="button-submit-affiliate"
                 >
-                  {submitting ? "Creating..." : "Create Affiliate"}
+                  {createMutation.isPending ? "Creating..." : "Create Affiliate"}
                 </Button>
               </div>
             </DialogContent>
@@ -283,7 +267,7 @@ export default function AffiliatesPage() {
           <CardTitle>Affiliate Links</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Skeleton key={i} className="h-10 w-full" data-testid={`skeleton-table-row-${i}`} />

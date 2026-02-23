@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/components/query-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,97 +85,88 @@ function formatTxDate(dateStr: string) {
 
 export default function BillingPage() {
   const { toast } = useToast();
-  const [usage, setUsage] = useState<Usage | null>(null);
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [loadingUsage, setLoadingUsage] = useState(true);
-  const [loadingPlans, setLoadingPlans] = useState(true);
-  const [error, setError] = useState(false);
+  const queryClient = useQueryClient();
   const [spendingCap, setSpendingCap] = useState("");
-  const [savingCap, setSavingCap] = useState(false);
   const [switchingPlan, setSwitchingPlan] = useState<number | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loadingTx, setLoadingTx] = useState(true);
   const [txFilter, setTxFilter] = useState("all");
-  const [deploymentModel, setDeploymentModel] = useState<string>("managed");
-  const [rates, setRates] = useState<RateInfo[]>([]);
   const [statementMonth, setStatementMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
 
-  useEffect(() => {
-    fetch("/api/usage")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.usage) {
-          setUsage(d.usage);
-          setSpendingCap(d.usage.spendingCap?.toString() ?? "");
-        }
-        if (d?.deploymentModel) setDeploymentModel(d.deploymentModel);
-        if (d?.rates) setRates(d.rates);
-      })
-      .catch(() => { setError(true); })
-      .finally(() => setLoadingUsage(false));
+  const { data: usageData, isLoading: loadingUsage, isError: usageError } = useQuery<{
+    usage: Usage;
+    deploymentModel: string;
+    rates: RateInfo[];
+  }>({
+    queryKey: ["/api/usage"],
+  });
 
-    fetch("/api/billing/plans")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.plans) setPlans(d.plans);
-      })
-      .catch(() => { setError(true); })
-      .finally(() => setLoadingPlans(false));
+  const usage = usageData?.usage || null;
+  const deploymentModel = usageData?.deploymentModel || "managed";
+  const rates = usageData?.rates || [];
 
-    fetch("/api/billing/subscription")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.subscription) setSubscription(d.subscription);
-      })
-      .catch(() => { setError(true); });
+  if (usage && spendingCap === "" && usage.spendingCap !== null && usage.spendingCap !== undefined) {
+    setSpendingCap(usage.spendingCap.toString());
+  }
 
-    fetch("/api/wallet/transactions?limit=500&offset=0")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.transactions) setTransactions(d.transactions);
-      })
-      .catch((error) => { console.error("Fetch wallet transactions failed:", error); })
-      .finally(() => setLoadingTx(false));
-  }, []);
+  const { data: plansData, isLoading: loadingPlans, isError: plansError } = useQuery<{ plans: Plan[] }>({
+    queryKey: ["/api/billing/plans"],
+  });
+  const plans = plansData?.plans || [];
+
+  const { data: subData } = useQuery<{ subscription: Subscription }>({
+    queryKey: ["/api/billing/subscription"],
+  });
+  const subscription = subData?.subscription || null;
+
+  const { data: txData, isLoading: loadingTx } = useQuery<{ transactions: Transaction[] }>({
+    queryKey: ["/api/wallet/transactions", { limit: 500, offset: 0 }],
+    queryFn: async () => {
+      const res = await fetch("/api/wallet/transactions?limit=500&offset=0");
+      if (!res.ok) throw new Error("Failed to fetch transactions");
+      return res.json();
+    },
+  });
+  const transactions = txData?.transactions || [];
+
+  const error = usageError || plansError;
+
+  const saveCapMutation = useMutation({
+    mutationFn: (cap: number | null) =>
+      apiRequest("/api/usage/spending-cap", { method: "PUT", body: JSON.stringify({ spendingCap: cap }) }),
+    onSuccess: () => {
+      toast({ title: "Spending cap saved", description: spendingCap ? `Cap set to $${spendingCap}.` : "Spending cap removed." });
+      queryClient.invalidateQueries({ queryKey: ["/api/usage"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save spending cap.", variant: "destructive" });
+    },
+  });
+
+  const switchPlanMutation = useMutation({
+    mutationFn: (planId: number) => {
+      setSwitchingPlan(planId);
+      return apiRequest("/api/billing/subscription", { method: "POST", body: JSON.stringify({ planId, status: "active" }) });
+    },
+    onSuccess: () => {
+      toast({ title: "Plan updated", description: "Your subscription has been updated." });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing/subscription"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to switch plan.", variant: "destructive" });
+    },
+    onSettled: () => {
+      setSwitchingPlan(null);
+    },
+  });
 
   const handleSaveSpendingCap = async () => {
-    setSavingCap(true);
-    try {
-      const res = await fetch("/api/usage/spending-cap", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ spendingCap: spendingCap ? parseFloat(spendingCap) : null }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      toast({ title: "Spending cap saved", description: spendingCap ? `Cap set to $${spendingCap}.` : "Spending cap removed." });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to save spending cap.", variant: "destructive" });
-    } finally {
-      setSavingCap(false);
-    }
+    saveCapMutation.mutate(spendingCap ? parseFloat(spendingCap) : null);
   };
 
   const handleSwitchPlan = async (planId: number) => {
-    setSwitchingPlan(planId);
-    try {
-      const res = await fetch("/api/billing/subscription", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, status: "active" }),
-      });
-      if (!res.ok) throw new Error("Failed to switch plan");
-      const data = await res.json();
-      if (data?.subscription) setSubscription(data.subscription);
-      toast({ title: "Plan updated", description: "Your subscription has been updated." });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to switch plan.", variant: "destructive" });
-    } finally {
-      setSwitchingPlan(null);
-    }
+    switchPlanMutation.mutate(planId);
   };
 
   const minutePercent = usage ? Math.min((usage.minutesUsed / (usage.minuteLimit || 1)) * 100, 100) : 0;
@@ -229,9 +222,9 @@ export default function BillingPage() {
       [`Generated: ${new Date().toLocaleDateString("en-GB")}`],
       [],
       ["Summary"],
-      [`Total Credits,£${totalCredits.toFixed(2)}`],
-      [`Total Debits,£${totalDebits.toFixed(2)}`],
-      [`Net Change,${netChange >= 0 ? "+" : ""}£${netChange.toFixed(2)}`],
+      [`Total Credits,\u00A3${totalCredits.toFixed(2)}`],
+      [`Total Debits,\u00A3${totalDebits.toFixed(2)}`],
+      [`Net Change,${netChange >= 0 ? "+" : ""}\u00A3${netChange.toFixed(2)}`],
       [`Transactions,${monthTx.length}`],
       [],
       ["Date", "Type", "Amount", "Balance After", "Description", "Reference"],
@@ -241,8 +234,8 @@ export default function BillingPage() {
       rows.push([
         formatTxDate(tx.createdAt),
         tx.type,
-        `${tx.amount >= 0 ? "+" : ""}£${Math.abs(tx.amount).toFixed(2)}`,
-        `£${Number(tx.balanceAfter).toFixed(2)}`,
+        `${tx.amount >= 0 ? "+" : ""}\u00A3${Math.abs(tx.amount).toFixed(2)}`,
+        `\u00A3${Number(tx.balanceAfter).toFixed(2)}`,
         tx.description || "",
         tx.referenceType || "",
       ]);
@@ -431,8 +424,8 @@ export default function BillingPage() {
                 data-testid="input-spending-cap"
               />
             </div>
-            <Button onClick={handleSaveSpendingCap} disabled={savingCap} data-testid="button-save-cap">
-              {savingCap ? "Saving..." : "Save"}
+            <Button onClick={handleSaveSpendingCap} disabled={saveCapMutation.isPending} data-testid="button-save-cap">
+              {saveCapMutation.isPending ? "Saving..." : "Save"}
             </Button>
           </div>
         </CardContent>
@@ -575,11 +568,11 @@ export default function BillingPage() {
                         tx.amount >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
                       }`}>
                         {tx.amount >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                        {tx.amount >= 0 ? "+" : ""}£{Math.abs(tx.amount).toFixed(2)}
+                        {tx.amount >= 0 ? "+" : ""}{"\u00A3"}{Math.abs(tx.amount).toFixed(2)}
                       </span>
                     </TableCell>
                     <TableCell className="text-right text-sm text-muted-foreground">
-                      £{Number(tx.balanceAfter).toFixed(2)}
+                      {"\u00A3"}{Number(tx.balanceAfter).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 ))}

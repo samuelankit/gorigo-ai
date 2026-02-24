@@ -20,6 +20,8 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import { CustomIcon } from "@/components/ui/custom-icon";
+import { SetupWizard, SetupGuideButton } from "@/components/dashboard/setup-wizard";
+import type { OnboardingData as WizardOnboardingData, WizardState } from "@/components/dashboard/setup-wizard";
 
 interface Usage {
   minutesUsed: number;
@@ -47,14 +49,6 @@ interface AgentStat {
   totalMinutes: number;
 }
 
-interface OnboardingStep {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  link: string;
-}
-
 interface AgentStatsData {
   totalAgents: number;
   agentBreakdown: AgentStat[];
@@ -63,12 +57,6 @@ interface AgentStatsData {
   hasActiveFlow: boolean;
 }
 
-interface OnboardingData {
-  steps: OnboardingStep[];
-  completedCount: number;
-  totalSteps: number;
-  allComplete: boolean;
-}
 
 interface TodayStatsData {
   totalToday: number;
@@ -164,12 +152,16 @@ const demoChartData = [
 export default function DashboardPage() {
   const router = useRouter();
 
-  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [wizardDismissed, setWizardDismissed] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem("gorigo_onboarding_dismissed") === "true") {
-      setOnboardingDismissed(true);
-    }
+    try {
+      const stored = localStorage.getItem("gorigo_wizard_state");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.state === "dismissed") setWizardDismissed(true);
+      }
+    } catch {}
   }, []);
 
   const { data: meData } = useQuery<{ user?: { businessName?: string; isDemo?: boolean }; org?: { deploymentModel?: string } }>({
@@ -208,9 +200,20 @@ export default function DashboardPage() {
     queryKey: ["/api/agents/stats"],
   });
 
-  const { data: onboarding } = useQuery<OnboardingData>({
+  const { data: onboarding } = useQuery<WizardOnboardingData>({
     queryKey: ["/api/onboarding"],
   });
+
+  const { data: wizardStateData } = useQuery<WizardState>({
+    queryKey: ["/api/onboarding/wizard-state"],
+  });
+
+  useEffect(() => {
+    if (wizardStateData) {
+      setWizardDismissed(wizardStateData.state === "dismissed");
+      localStorage.setItem("gorigo_wizard_state", JSON.stringify(wizardStateData));
+    }
+  }, [wizardStateData]);
 
   const { data: internationalData, isLoading: loadingInternational } = useQuery<InternationalSummary>({
     queryKey: ["/api/international/summary"],
@@ -234,6 +237,26 @@ export default function DashboardPage() {
   const serviceHealth = healthData ? (healthData.status === "healthy" ? "healthy" : "unhealthy") as "healthy" | "unhealthy" : null;
 
   const error = usageError || callsError;
+
+  const handleWizardStateChange = (newState: WizardState) => {
+    setWizardDismissed(newState.state === "dismissed");
+    fetch("/api/onboarding/wizard-state", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newState),
+    }).catch(() => {});
+  };
+
+  const handleRestoreWizard = () => {
+    const payload: WizardState = { state: "visible", skippedSteps: wizardStateData?.skippedSteps || [] };
+    localStorage.setItem("gorigo_wizard_state", JSON.stringify(payload));
+    setWizardDismissed(false);
+    fetch("/api/onboarding/wizard-state", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state: "visible" }),
+    }).catch(() => {});
+  };
 
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -286,6 +309,9 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          {wizardDismissed && onboarding && !onboarding.allComplete && (
+            <SetupGuideButton onClick={handleRestoreWizard} />
+          )}
           <Button asChild variant="outline" size="sm" data-testid="button-try-demo">
             <Link href="/dashboard/demo">
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
@@ -365,47 +391,12 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {onboarding && !onboarding.allComplete && !onboardingDismissed && (
-        <Card data-testid="card-onboarding-checklist">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Getting Started</span>
-                <Badge variant="secondary" className="text-xs no-default-hover-elevate">{onboarding.completedCount}/{onboarding.totalSteps}</Badge>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => { setOnboardingDismissed(true); localStorage.setItem("gorigo_onboarding_dismissed", "true"); }} data-testid="button-dismiss-onboarding">
-                Dismiss
-              </Button>
-            </div>
-            <Progress value={(onboarding.completedCount / onboarding.totalSteps) * 100} className="h-1 mb-3" data-testid="progress-onboarding" />
-            <div className="grid gap-1.5 sm:grid-cols-2">
-              {onboarding.steps.map((step) => (
-                <Link
-                  key={step.id}
-                  href={step.link}
-                  className="flex items-center gap-2.5 px-2.5 py-2 rounded hover-elevate text-sm"
-                  data-testid={`link-onboarding-${step.id}`}
-                >
-                  {step.completed ? (
-                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                  ) : (
-                    <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
-                  )}
-                  <div className="min-w-0">
-                    <span className={step.completed ? "text-muted-foreground line-through" : "text-foreground"}>
-                      {step.title}
-                    </span>
-                    {step.description && !step.completed && (
-                      <p className="text-[11px] text-muted-foreground truncate">{step.description}</p>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <SetupWizard
+        onboardingData={onboarding}
+        wizardState={wizardStateData}
+        businessName={businessName}
+        onWizardStateChange={handleWizardStateChange}
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card>

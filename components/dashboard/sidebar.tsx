@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Bot, PhoneCall, Phone, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Banknote, AudioLines, UserPlus, Plug, Users } from "lucide-react";
+import { LayoutDashboard, Bot, PhoneCall, Phone, CreditCard, Settings, Headphones, Wallet, Link2, BarChart3, Shield, Send, Webhook, BookOpen, MessageSquare, ClipboardList, Key, Sparkles, Landmark, Receipt, ShoppingCart, FileText, Cloud, Banknote, AudioLines, UserPlus, Plug, Users, Megaphone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CustomIcon } from "@/components/ui/custom-icon";
 import type { ReactNode } from "react";
@@ -38,6 +38,7 @@ const manageMenuItems: MenuItemDef[] = [
   { title: "Knowledge Base", url: "/dashboard/knowledge", customIcon: "ai-voice-chip" },
   { title: "Smart Drafts", url: "/dashboard/drafts", icon: FileText },
   { title: "Campaigns", url: "/dashboard/campaigns", icon: Send },
+  { title: "Social Marketing", url: "/dashboard/social-marketing", icon: Megaphone },
   { title: "Call History", url: "/dashboard/calls", customIcon: "vr-phone-mic" },
   { title: "Analytics", url: "/dashboard/analytics", customIcon: "vr-waveform-scan" },
   { title: "Conversations", url: "/dashboard/conversation-analytics", icon: AudioLines },

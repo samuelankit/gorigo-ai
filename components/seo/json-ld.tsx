@@ -211,20 +211,20 @@ export function SoftwareApplicationJsonLd() {
   const data = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "GoRigo AI Call Centre",
+    name: "GoRigo AI Voice Platform",
     applicationCategory: "BusinessApplication",
-    operatingSystem: "Web",
+    operatingSystem: "Web, iOS, Android",
     offers: {
       "@type": "Offer",
       priceCurrency: "GBP",
-      description: "Pay-per-talk-time pricing, no subscriptions",
+      description: "Pay-per-talk-time pricing, no subscriptions, no seat fees",
     },
     provider: {
       "@type": "Organization",
       name: "International Business Exchange Limited",
     },
     description:
-      "AI-powered call centre platform with 24/7 voice agents, analytics, compliance, and multi-language support.",
+      "AI voice platform. Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — run from your phone. Pay only for what you use.",
   };
 
   return (

@@ -2747,8 +2747,31 @@ export const connectorTypeEnum = z.enum([
   "pipedrive",
   "airtable",
   "manual",
+  "facebook_instagram",
+  "linkedin",
+  "twitter",
+  "tiktok",
+  "youtube",
+  "canva",
+  "figma",
+  "adobe_creative",
+  "creatopy",
+  "snappa",
+  "visme",
+  "capcut",
+  "invideo",
+  "lumen5",
+  "descript",
+  "animoto",
+  "synthesia",
+  "mailchimp",
+  "buffer",
+  "hootsuite",
 ]);
 export type ConnectorType = z.infer<typeof connectorTypeEnum>;
+
+export const connectorSegmentEnum = z.enum(["data", "social", "design", "video", "marketing"]);
+export type ConnectorSegment = z.infer<typeof connectorSegmentEnum>;
 
 export const connectorAuthTypeEnum = z.enum(["none", "api_key", "oauth"]);
 export type ConnectorAuthType = z.infer<typeof connectorAuthTypeEnum>;
@@ -2801,5 +2824,110 @@ export const teamActivityLog = pgTable("team_activity_log", {
 export const insertTeamActivityLogSchema = createInsertSchema(teamActivityLog).omit({ id: true, createdAt: true });
 export type InsertTeamActivityLog = z.infer<typeof insertTeamActivityLogSchema>;
 export type TeamActivityLog = typeof teamActivityLog.$inferSelect;
+
+// ═══════════════════════════════════════════════════
+// SOCIAL MARKETING
+// ═══════════════════════════════════════════════════
+
+export const socialStrategies = pgTable("social_strategies", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  businessType: text("business_type").notNull(),
+  goals: text("goals").notNull(),
+  platforms: text("platforms").array().notNull(),
+  budget: text("budget"),
+  timeframe: text("timeframe"),
+  tone: text("tone").default("professional"),
+  strategyContent: jsonb("strategy_content"),
+  estimatedCost: numeric("estimated_cost", { precision: 10, scale: 4 }),
+  status: text("status").default("draft").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_social_strategies_org").on(table.orgId),
+  index("idx_social_strategies_user").on(table.userId),
+  index("idx_social_strategies_status").on(table.status),
+]);
+
+export const insertSocialStrategySchema = createInsertSchema(socialStrategies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSocialStrategy = z.infer<typeof insertSocialStrategySchema>;
+export type SocialStrategy = typeof socialStrategies.$inferSelect;
+
+export const socialStrategyStatusEnum = z.enum(["draft", "active", "completed", "archived"]);
+export type SocialStrategyStatus = z.infer<typeof socialStrategyStatusEnum>;
+
+export const socialPosts = pgTable("social_posts", {
+  id: serial("id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  strategyId: integer("strategy_id").references(() => socialStrategies.id),
+  content: text("content").notNull(),
+  platforms: text("platforms").array().notNull(),
+  mediaUrls: text("media_urls").array(),
+  mediaThumbnails: text("media_thumbnails").array(),
+  platformPostIds: jsonb("platform_post_ids"),
+  scheduledAt: timestamp("scheduled_at"),
+  publishedAt: timestamp("published_at"),
+  status: text("status").default("draft").notNull(),
+  retryCount: integer("retry_count").default(0),
+  lastError: text("last_error"),
+  utmParams: jsonb("utm_params"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_social_posts_org").on(table.orgId),
+  index("idx_social_posts_strategy").on(table.strategyId),
+  index("idx_social_posts_status").on(table.status),
+  index("idx_social_posts_scheduled").on(table.scheduledAt),
+]);
+
+export const insertSocialPostSchema = createInsertSchema(socialPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  publishedAt: true,
+  retryCount: true,
+  lastError: true,
+  platformPostIds: true,
+});
+export type InsertSocialPost = z.infer<typeof insertSocialPostSchema>;
+export type SocialPost = typeof socialPosts.$inferSelect;
+
+export const socialPostStatusEnum = z.enum(["draft", "scheduled", "publishing", "published", "failed", "cancelled"]);
+export type SocialPostStatus = z.infer<typeof socialPostStatusEnum>;
+
+export const socialAnalytics = pgTable("social_analytics", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => socialPosts.id),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  platform: text("platform").notNull(),
+  reach: integer("reach").default(0),
+  impressions: integer("impressions").default(0),
+  engagement: integer("engagement").default(0),
+  clicks: integer("clicks").default(0),
+  shares: integer("shares").default(0),
+  comments: integer("comments").default(0),
+  likes: integer("likes").default(0),
+  followers: integer("followers").default(0),
+  fetchedAt: timestamp("fetched_at").defaultNow(),
+}, (table) => [
+  index("idx_social_analytics_post").on(table.postId),
+  index("idx_social_analytics_org").on(table.orgId),
+  index("idx_social_analytics_platform").on(table.platform),
+  index("idx_social_analytics_fetched").on(table.fetchedAt),
+]);
+
+export const insertSocialAnalyticsSchema = createInsertSchema(socialAnalytics).omit({
+  id: true,
+  fetchedAt: true,
+});
+export type InsertSocialAnalytics = z.infer<typeof insertSocialAnalyticsSchema>;
+export type SocialAnalytics = typeof socialAnalytics.$inferSelect;
 
 export * from "./models/chat";

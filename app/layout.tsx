@@ -46,9 +46,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "GoRigo - AI Business Platform",
+    title: "GoRigo - AI Voice Platform",
     description:
-      "AI-powered business platform. Pay only for what you use. UK compliant.",
+      "AI voice platform. Intelligent voice agents, outbound campaigns, team tools — run from your phone. Pay only for what you use.",
     images: ["https://gorigo.ai/logo.png"],
   },
   other: {

@@ -108,6 +108,32 @@ const features = [
     iconColor: "text-violet-600 dark:text-violet-400",
     borderAccent: "border-violet-500/20",
   },
+  {
+    customIcon: "vr-phone-mic",
+    title: "Social Media Marketing",
+    href: "/features/social-media-marketing",
+    description:
+      "Create posts, schedule across Facebook, Instagram, LinkedIn, X, TikTok, and YouTube. AI writes your captions. Pull images straight from your website or cloud storage — no uploads needed.",
+    stat: "6+",
+    statLabel: "platforms",
+    accentColor: "from-pink-500/20 to-rose-500/20",
+    iconBg: "bg-pink-500/10",
+    iconColor: "text-pink-600 dark:text-pink-400",
+    borderAccent: "border-pink-500/20",
+  },
+  {
+    customIcon: "vr-voice-chat",
+    title: "Omnichannel Messaging",
+    href: "/features/omnichannel",
+    description:
+      "Reach customers on WhatsApp, SMS, email, and web chat — all from one inbox. AI handles replies, routes conversations, and keeps every channel in sync automatically.",
+    stat: "4",
+    statLabel: "channels",
+    accentColor: "from-cyan-500/20 to-sky-500/20",
+    iconBg: "bg-cyan-500/10",
+    iconColor: "text-cyan-600 dark:text-cyan-400",
+    borderAccent: "border-cyan-500/20",
+  },
 ];
 
 const steps = [
@@ -123,7 +149,7 @@ const steps = [
     number: "02",
     title: "Connect & Go Live",
     description:
-      "Link phone numbers across 20 countries, launch outbound campaigns, and activate your knowledge base. Your AI agents start handling calls, your team gets dashboard access, and your business runs from your phone.",
+      "Link phone numbers across 20 countries, connect social media accounts, set up WhatsApp and SMS, and launch campaigns. Your AI handles calls, posts content, and replies to messages — all from your phone.",
     customIcon: "vr-voice-signal",
     gradient: "from-blue-500 to-violet-500",
   },
@@ -131,7 +157,7 @@ const steps = [
     number: "03",
     title: "Monitor & Grow",
     description:
-      "Track calls, campaigns, and team activity in real time. Review analytics, manage department budgets, generate reports, and optimise performance. Your platform gets smarter with every interaction.",
+      "Track calls, social media performance, messaging conversations, and team activity in real time. Review analytics, manage budgets, and optimise performance. Your platform gets smarter with every interaction.",
     customIcon: "ai-voice-record",
     gradient: "from-violet-500 to-rose-500",
   },
@@ -179,6 +205,13 @@ const industries = [
     description: "Client intake forms, appointment scheduling, after-hours reception, follow-up calls, and billing enquiries for law firms, agencies, and consultancies.",
     gradient: "from-teal-500/10 to-cyan-500/10",
     iconColor: "text-teal-600 dark:text-teal-400",
+  },
+  {
+    customIcon: "industry-retail",
+    title: "Real Estate & Lettings",
+    description: "Property viewing bookings, tenant enquiries, valuation callbacks, social media listing posts, and automated follow-ups for estate agents and letting agencies.",
+    gradient: "from-sky-500/10 to-blue-500/10",
+    iconColor: "text-sky-600 dark:text-sky-400",
   },
 ];
 
@@ -283,13 +316,12 @@ export function HomeBelowFold() {
               Capabilities
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" data-testid="text-features-title">
-              Six pillars that run
+              One platform that runs
               <br />
               <span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">your entire business</span>
             </h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-              From AI voice agents to team collaboration, campaigns to compliance — GoRigo gives you a complete
-              business platform that runs itself.
+              AI voice agents, social media marketing, omnichannel messaging, campaigns, team tools, compliance, and billing — everything you need in one place.
             </p>
           </div>
 
@@ -467,13 +499,12 @@ export function HomeBelowFold() {
                 <h3 className="text-lg font-semibold mb-1" data-testid="text-talk-time-includes-title">What does &ldquo;talk time&rdquo; cover?</h3>
                 <p className="text-sm text-muted-foreground">One simple metric powers your entire platform. No separate charges.</p>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {[
                   { icon: Phone, label: "Inbound & outbound calls", sublabel: "AI voice conversations" },
-                  { icon: Bot, label: "AI content generation", sublabel: "Scripts, emails, SMS drafts" },
-                  { icon: MessageSquare, label: "Assistant queries", sublabel: "Rigo AI commands" },
+                  { icon: Bot, label: "AI content generation", sublabel: "Captions, scripts, emails" },
+                  { icon: MessageSquare, label: "Messaging & social posts", sublabel: "WhatsApp, SMS, social media" },
                   { icon: BookOpen, label: "Knowledge processing", sublabel: "Document chunking & search" },
-                  { icon: Mic, label: "Voice transcription", sublabel: "Call recordings to text" },
                 ].map((item) => (
                   <div key={item.label} className="flex flex-col items-center text-center p-4 rounded-md bg-muted/40" data-testid={`item-talk-time-${item.label.toLowerCase().replace(/\s+/g, "-").substring(0, 20)}`}>
                     <item.icon className="h-5 w-5 text-teal-500 mb-2" />
@@ -622,7 +653,7 @@ export function HomeBelowFold() {
                       <Phone className="h-8 w-8 text-white" />
                     </div>
                     <p className="text-lg font-semibold tracking-tight">GoRigo<span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">.ai</span></p>
-                    <p className="text-xs text-muted-foreground mt-1 text-center">AI Call Centre Engine</p>
+                    <p className="text-xs text-muted-foreground mt-1 text-center">AI Voice Platform</p>
                     <div className="mt-6 w-full space-y-2">
                       <div className="h-2 rounded-full bg-gradient-to-r from-[#E8604C]/30 to-[#F5A623]/20 w-full" />
                       <div className="h-2 rounded-full bg-gradient-to-r from-blue-500/20 to-violet-500/15 w-4/5" />
@@ -656,13 +687,12 @@ export function HomeBelowFold() {
             Get Started Today
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" data-testid="text-cta-title">
-            Ready to transform your
+            Ready to put AI
             <br />
-            <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">customer experience?</span>
+            <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">to work for you?</span>
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
-            Join businesses across 20 countries using GoRigo to deliver exceptional
-            customer experiences at a fraction of the cost. Go live in under 5 minutes.
+            AI voice agents, social media marketing, omnichannel messaging, and a complete business platform — used by businesses across 20 countries. Go live in under 5 minutes.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link href="/register">

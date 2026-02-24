@@ -18,8 +18,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-background" data-testid="page-home">
       <OrganizationJsonLd />
       <WebPageJsonLd 
-        title="GoRigo - AI Voice. Real Business. | Voice Agents, Campaigns, Teams" 
-        description="AI voice platform. Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — run from your phone. Pay only for what you use." 
+        title="GoRigo - AI Voice. Real Business. | Voice Agents, Social Media, Omnichannel" 
+        description="AI voice platform with social media marketing, omnichannel messaging, campaigns, team tools, and compliance — run from your phone. Pay only for what you use." 
         url="/" 
       />
       <SoftwareApplicationJsonLd />
@@ -53,7 +53,7 @@ export default function HomePage() {
               className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed"
               data-testid="text-hero-subtitle"
             >
-              Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — one platform.
+              AI voice agents, social media marketing, omnichannel messaging, campaigns, team tools, and compliance — one platform.
               No subscriptions, no seat fees.
             </p>
 

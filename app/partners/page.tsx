@@ -45,17 +45,17 @@ export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Partner with GoRigo | Grow Your Business with AI",
   description:
-    "Explore partnership opportunities with GoRigo.ai. Resell, whitelabel, or refer clients to the AI call centre engine and grow your revenue with dedicated support, training, and transparent commissions.",
+    "Explore partnership opportunities with GoRigo.ai. Resell, whitelabel, or refer clients to the AI voice platform and grow your revenue with dedicated support, training, and transparent commissions.",
   openGraph: {
     title: "Partner with GoRigo | Grow Your Business with AI",
     description:
-      "Explore partnership opportunities with GoRigo.ai. Resell, whitelabel, or refer clients to the AI call centre engine and grow your revenue with dedicated support, training, and transparent commissions.",
+      "Explore partnership opportunities with GoRigo.ai. Resell, whitelabel, or refer clients to the AI voice platform and grow your revenue with dedicated support, training, and transparent commissions.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Partner with GoRigo | Grow Your Business with AI",
     description:
-      "Explore partnership opportunities with GoRigo.ai. Resell, whitelabel, or refer clients to the AI call centre engine and grow your revenue with dedicated support, training, and transparent commissions.",
+      "Explore partnership opportunities with GoRigo.ai. Resell, whitelabel, or refer clients to the AI voice platform and grow your revenue with dedicated support, training, and transparent commissions.",
   },
   alternates: {
     canonical: "/partners",
@@ -91,7 +91,7 @@ const partnershipModels = [
     icon: Building2,
     title: "Business Partner / Whitelabel",
     description:
-      "Rebrand GoRigo as your own product. Offer all GoRigo packages — Individual, Team, and Custom — under your brand with full feature parity.",
+      "Rebrand GoRigo as your own product. Offer all GoRigo packages — Individual, Team, and Custom — under your brand with full feature parity. AI voice agents, social media, omnichannel, campaigns, and more.",
     href: "/partners/whitelabel",
     bullets: [
       "Your brand, your pricing, your clients",
@@ -372,7 +372,7 @@ export default function PartnersPage() {
     <div className="min-h-screen bg-background" data-testid="page-partners">
       <WebPageJsonLd
         title="Partner with GoRigo | Grow Your Business with AI"
-        description="Explore partnership opportunities with GoRigo.ai. Resell, whitelabel, or refer clients to the AI call centre engine and grow your revenue with dedicated support, training, and transparent commissions."
+        description="Explore partnership opportunities with GoRigo.ai. Resell, whitelabel, or refer clients to the AI voice platform and grow your revenue with dedicated support, training, and transparent commissions."
         url="/partners"
       />
       <BreadcrumbJsonLd
@@ -411,14 +411,14 @@ export default function PartnersPage() {
             className="mt-4 text-xl text-muted-foreground font-light"
             data-testid="text-hero-subtitle"
           >
-            Build, Grow, and Earn with the AI Call Centre Engine
+            Build, Grow, and Earn with the AI Voice Platform
           </p>
           <p
             className="mt-6 text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed"
             data-testid="text-hero-intro"
           >
             GoRigo offers multiple ways to collaborate and grow your business.
-            Whether you want to resell our AI call centre platform under your own
+            Whether you want to resell our AI voice platform under your own
             brand, earn commissions by referring clients, or integrate our
             technology into your existing workflow, we have a partnership model
             designed for you.
@@ -427,7 +427,7 @@ export default function PartnersPage() {
             className="mt-4 text-base font-medium max-w-2xl mx-auto leading-relaxed"
             data-testid="text-hero-parity"
           >
-            Partners can offer every GoRigo package &mdash; Individual, Team, and Custom &mdash; under their own brand with full feature parity. Whatever GoRigo sells directly, you can resell.
+            Partners can offer every GoRigo package &mdash; Individual, Team, and Custom &mdash; under their own brand with full feature parity. AI voice agents, social media marketing, omnichannel messaging, campaigns, team tools, compliance, and analytics &mdash; whatever GoRigo sells directly, you can resell.
           </p>
         </div>
       </section>

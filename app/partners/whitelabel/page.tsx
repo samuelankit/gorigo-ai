@@ -387,7 +387,7 @@ export default function WhitelabelPage() {
             className="mt-4 text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed"
             data-testid="text-hero-packages"
           >
-            Your clients get every feature GoRigo offers &mdash; AI voice agents, outbound campaigns, team tools, compliance, and analytics. Offer all packages (Individual, Team, or Custom) under your brand with complete feature parity. Whatever GoRigo sells directly, you can resell.
+            Your clients get every feature GoRigo offers &mdash; AI voice agents, social media marketing, omnichannel messaging, campaigns, team tools, compliance, and analytics. Offer all packages (Individual, Team, or Custom) under your brand with complete feature parity. Whatever GoRigo sells directly, you can resell.
           </p>
         </div>
       </section>

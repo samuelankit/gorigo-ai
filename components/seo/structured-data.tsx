@@ -21,7 +21,7 @@ export function StructuredData() {
     },
     sameAs: [],
     description:
-      "AI voice platform. Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — run from your phone. Pay only for what you use.",
+      "AI voice platform. AI voice agents, social media marketing, omnichannel messaging, campaigns, team tools, and compliance — run from your phone. Pay only for what you use.",
   };
 
   const websiteSchema = {
@@ -71,6 +71,8 @@ export function StructuredData() {
     },
     featureList: [
       "AI Voice Agents",
+      "Social Media Marketing",
+      "Omnichannel Messaging",
       "Inbound Call Handling",
       "Outbound Campaigns",
       "Multi-Language Support",

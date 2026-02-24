@@ -16,8 +16,8 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "GoRigo - AI Voice Platform | International Business Exchange Limited",
   description:
-    "AI voice platform by International Business Exchange Limited. Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — run from your phone. Pay only for what you use. UK compliant with GDPR, DNC registry, and consent management.",
-  keywords: "AI voice agents, AI voice platform, outbound campaigns, team management, automated calls, pay per talk time",
+    "AI voice platform by International Business Exchange Limited. AI voice agents, social media marketing, omnichannel messaging, campaigns, team tools, and compliance — run from your phone. Pay only for what you use. UK compliant with GDPR, DNC registry, and consent management.",
+  keywords: "AI voice agents, AI voice platform, social media marketing, omnichannel messaging, outbound campaigns, team management, automated calls, pay per talk time",
   alternates: {
     canonical: "/",
   },
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "GoRigo - AI Voice Platform",
     description:
-      "AI voice platform. Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — run from your phone. Pay only for what you use.",
+      "AI voice platform. AI voice agents, social media marketing, omnichannel messaging, campaigns, and team tools — run from your phone. Pay only for what you use.",
     siteName: "GoRigo",
     type: "website",
     images: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "GoRigo - AI Voice Platform",
     description:
-      "AI voice platform. Intelligent voice agents, outbound campaigns, team tools — run from your phone. Pay only for what you use.",
+      "AI voice platform. AI voice agents, social media marketing, omnichannel messaging, campaigns, and team tools — run from your phone. Pay only for what you use.",
     images: ["https://gorigo.ai/logo.png"],
   },
   other: {

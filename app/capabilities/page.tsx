@@ -20,28 +20,30 @@ import {
   Phone,
   TrendingUp,
   Users,
+  Share2,
+  MessageCircle,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Capabilities | GoRigo.ai",
+  title: "Capabilities | GoRigo.ai — AI Voice, Social Media, Omnichannel & More",
   description:
-    "Explore GoRigo's platform capabilities. AI voice agents, campaigns, team collaboration, finance, knowledge management, and compliance across 20 countries. No subscriptions, no seat licences.",
+    "Explore GoRigo's platform capabilities: AI voice agents, social media marketing, omnichannel messaging, campaigns, team collaboration, compliance, and billing across 20 countries. No subscriptions, no seat licences.",
   alternates: {
     canonical: "/capabilities",
   },
   openGraph: {
-    title: "Capabilities | GoRigo.ai",
+    title: "Capabilities | GoRigo.ai — AI Voice, Social Media, Omnichannel & More",
     description:
-      "Explore GoRigo's platform capabilities. AI voice agents, campaigns, team collaboration, finance, knowledge management, and compliance across 20 countries. No subscriptions, no seat licences.",
+      "Explore GoRigo's platform capabilities: AI voice agents, social media marketing, omnichannel messaging, campaigns, team collaboration, compliance, and billing across 20 countries. No subscriptions, no seat licences.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Capabilities | GoRigo.ai",
+    title: "Capabilities | GoRigo.ai — AI Voice, Social Media, Omnichannel & More",
     description:
-      "Explore GoRigo's platform capabilities. AI voice agents, campaigns, team collaboration, finance, knowledge management, and compliance across 20 countries. No subscriptions, no seat licences.",
+      "Explore GoRigo's platform capabilities: AI voice agents, social media marketing, omnichannel messaging, campaigns, team collaboration, compliance, and billing across 20 countries. No subscriptions, no seat licences.",
   },
 };
 
@@ -165,6 +167,40 @@ const capabilities = [
       "Per-department budgets and activity tracking",
     ],
   },
+  {
+    slug: "social-media-marketing",
+    title: "Social Media Marketing",
+    tagline: "Post everywhere, from one place",
+    description:
+      "Create and schedule posts across Facebook, Instagram, LinkedIn, X, TikTok, and YouTube — all from one dashboard. AI writes your captions, pulls images from your website or cloud storage (Google Drive, Dropbox, OneDrive), and publishes at the best time. No uploads needed — your files stay in your cloud.",
+    video: "/features/social-media-intro.mp4",
+    icon: Share2,
+    color: "text-pink-600 dark:text-pink-400",
+    bgAccent: "bg-pink-500/10",
+    borderAccent: "border-pink-500/30",
+    highlights: [
+      "6+ social platforms from one dashboard",
+      "AI-generated captions with hashtags and CTAs",
+      "Zero media storage — files stay in your cloud",
+    ],
+  },
+  {
+    slug: "omnichannel",
+    title: "Omnichannel Messaging",
+    tagline: "Every conversation, one inbox",
+    description:
+      "Reach your customers on WhatsApp, SMS, email, and web chat — all managed from a single unified inbox. AI handles replies, routes conversations to the right team member, and keeps every channel perfectly in sync. No more switching between apps.",
+    video: "/features/omnichannel-intro.mp4",
+    icon: MessageCircle,
+    color: "text-cyan-600 dark:text-cyan-400",
+    bgAccent: "bg-cyan-500/10",
+    borderAccent: "border-cyan-500/30",
+    highlights: [
+      "WhatsApp, SMS, email, and web chat in one inbox",
+      "AI-powered auto-replies and smart routing",
+      "Full conversation history across every channel",
+    ],
+  },
 ];
 
 const platformStats = [
@@ -218,8 +254,7 @@ export default function CapabilitiesPage() {
             className="mt-5 text-lg sm:text-xl text-muted-foreground font-light max-w-3xl mx-auto leading-relaxed"
             data-testid="text-hero-subtitle"
           >
-            Seven powerful capabilities working together to automate your operations,
-            protect your business, and grow your revenue — all powered by AI.
+            AI voice agents, social media marketing, omnichannel messaging, campaigns, team tools, compliance, and billing — nine powerful capabilities working together to run your business.
           </p>
         </div>
       </section>

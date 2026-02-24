@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
-import { ErrorBoundary } from "@/components/error-boundary";
-import { CookieConsent } from "@/components/cookie-consent";
-import { QueryProvider } from "@/components/query-provider";
 import { Suspense } from "react";
-import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { StructuredData } from "@/components/seo/structured-data";
 import { VerificationMeta } from "@/components/seo/verification-meta";
+import { ClientShell } from "@/components/client-shell";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -74,6 +69,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){if(typeof window!=='undefined'&&window.reportError){var o=window.reportError;window.reportError=function(e){var m=e&&e.message||'';if(m.indexOf('Hydration')>-1||m.indexOf('hydrat')>-1||m.indexOf('did not match')>-1||m.indexOf('server rendered')>-1)return;o.call(window,e)}}})()` }} />
         <StructuredData />
         <Suspense fallback={null}>
           <VerificationMeta />
@@ -86,18 +82,9 @@ export default function RootLayout({
         <meta name="author" content="International Business Exchange Limited" />
       </head>
       <body className={inter.className} suppressHydrationWarning>
-        <QueryProvider>
-        <ThemeProvider>
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
-          <Suspense fallback={null}>
-            <AnalyticsTracker />
-          </Suspense>
-          <Toaster />
-          <CookieConsent />
-        </ThemeProvider>
-        </QueryProvider>
+        <ClientShell>
+          {children}
+        </ClientShell>
       </body>
     </html>
   );

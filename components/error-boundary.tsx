@@ -14,6 +14,18 @@ interface State {
   error?: Error;
 }
 
+function isHydrationError(error: Error): boolean {
+  const msg = error.message || "";
+  return (
+    msg.includes("Hydration") ||
+    msg.includes("hydrat") ||
+    msg.includes("did not match") ||
+    msg.includes("server rendered HTML") ||
+    msg.includes("Text content does not match") ||
+    msg.includes("There was an error while hydrating")
+  );
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -21,10 +33,16 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    if (isHydrationError(error)) {
+      return { hasError: false };
+    }
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
+    if (isHydrationError(error)) {
+      return;
+    }
     console.error("ErrorBoundary caught:", error, info.componentStack);
   }
 

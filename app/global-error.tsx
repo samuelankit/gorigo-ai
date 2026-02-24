@@ -9,9 +9,24 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const isHydrationError =
+    error.message?.includes("Hydration") ||
+    error.message?.includes("hydrat") ||
+    error.message?.includes("did not match") ||
+    error.message?.includes("server rendered HTML") ||
+    error.message?.includes("Text content does not match");
+
   useEffect(() => {
+    if (isHydrationError) {
+      reset();
+      return;
+    }
     console.error("[GlobalError]", error.message, error.digest);
-  }, [error]);
+  }, [error, isHydrationError, reset]);
+
+  if (isHydrationError) {
+    return null;
+  }
 
   return (
     <html lang="en">

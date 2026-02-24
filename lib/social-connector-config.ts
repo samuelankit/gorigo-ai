@@ -208,6 +208,36 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     icon: "hootsuite",
     available: false,
   },
+  google_drive: {
+    type: "google_drive",
+    name: "Google Drive",
+    description: "Browse and pick photos and videos from your Google Drive",
+    segment: "storage",
+    authType: "oauth",
+    icon: "google_drive",
+    available: true,
+    oauthScopes: ["https://www.googleapis.com/auth/drive.readonly"],
+  },
+  dropbox: {
+    type: "dropbox",
+    name: "Dropbox",
+    description: "Access your Dropbox files — photos, videos, and documents",
+    segment: "storage",
+    authType: "oauth",
+    icon: "dropbox",
+    available: true,
+    oauthScopes: ["files.metadata.read", "files.content.read"],
+  },
+  onedrive: {
+    type: "onedrive",
+    name: "OneDrive",
+    description: "Browse photos and videos from your Microsoft OneDrive",
+    segment: "storage",
+    authType: "oauth",
+    icon: "onedrive",
+    available: true,
+    oauthScopes: ["Files.Read"],
+  },
 };
 
 export const CONNECTOR_SEGMENTS = {
@@ -230,6 +260,11 @@ export const CONNECTOR_SEGMENTS = {
     label: "Marketing & Distribution",
     description: "Email campaigns and social scheduling",
     order: 4,
+  },
+  storage: {
+    label: "Cloud Storage",
+    description: "Your photos and videos, in your cloud — we never store them",
+    order: 5,
   },
 } as const;
 

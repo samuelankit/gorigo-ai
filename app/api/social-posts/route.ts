@@ -12,6 +12,7 @@ const createPostSchema = z.object({
   platforms: z.array(z.string()).min(1),
   mediaUrls: z.array(z.string().url()).optional(),
   mediaThumbnails: z.array(z.string().url()).optional(),
+  mediaSource: z.enum(["url", "website", "cloud_storage", "design_tool"]).optional(),
   scheduledAt: z.string().datetime().optional(),
   strategyId: z.number().int().positive().optional(),
   utmParams: z.object({
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { content, platforms, mediaUrls, mediaThumbnails, scheduledAt, strategyId, utmParams } = parsed.data;
+    const { content, platforms, mediaUrls, mediaThumbnails, mediaSource, scheduledAt, strategyId, utmParams } = parsed.data;
 
     const status = scheduledAt ? "scheduled" : "draft";
 
@@ -112,6 +113,7 @@ export async function POST(request: NextRequest) {
       platforms,
       mediaUrls: mediaUrls || null,
       mediaThumbnails: mediaThumbnails || null,
+      mediaSource: mediaSource || null,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
       status,
       utmParams: utmParams || null,

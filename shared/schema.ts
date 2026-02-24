@@ -2767,10 +2767,13 @@ export const connectorTypeEnum = z.enum([
   "mailchimp",
   "buffer",
   "hootsuite",
+  "google_drive",
+  "dropbox",
+  "onedrive",
 ]);
 export type ConnectorType = z.infer<typeof connectorTypeEnum>;
 
-export const connectorSegmentEnum = z.enum(["data", "social", "design", "video", "marketing"]);
+export const connectorSegmentEnum = z.enum(["data", "social", "design", "video", "marketing", "storage"]);
 export type ConnectorSegment = z.infer<typeof connectorSegmentEnum>;
 
 export const connectorAuthTypeEnum = z.enum(["none", "api_key", "oauth"]);
@@ -2871,6 +2874,7 @@ export const socialPosts = pgTable("social_posts", {
   platforms: text("platforms").array().notNull(),
   mediaUrls: text("media_urls").array(),
   mediaThumbnails: text("media_thumbnails").array(),
+  mediaSource: text("media_source"),
   platformPostIds: jsonb("platform_post_ids"),
   scheduledAt: timestamp("scheduled_at"),
   publishedAt: timestamp("published_at"),

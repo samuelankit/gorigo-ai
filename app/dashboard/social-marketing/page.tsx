@@ -54,6 +54,13 @@ import {
   ArrowRight,
   Wand2,
   ThumbsUp,
+  Link2,
+  CloudUpload,
+  Image,
+  X,
+  AlertTriangle,
+  HardDrive,
+  Search,
 } from "lucide-react";
 import { useToast } from "@/lib/use-toast";
 import {
@@ -1145,6 +1152,13 @@ function CreatePostDialog({ open, onOpenChange, queryClient, toast }: {
   const [content, setContent] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [scheduledAt, setScheduledAt] = useState("");
+  const [mediaTab, setMediaTab] = useState("website");
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const [mediaSource, setMediaSource] = useState<string>("url");
+
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [extractedData, setExtractedData] = useState<any>(null);
+  const [directUrl, setDirectUrl] = useState("");
 
   const createMutation = useMutation({
     mutationFn: (data: any) => apiRequest("/api/social-posts", { method: "POST", body: JSON.stringify(data) }),
@@ -1153,14 +1167,51 @@ function CreatePostDialog({ open, onOpenChange, queryClient, toast }: {
       toast({ title: "Post created" });
       onOpenChange(false);
       setContent(""); setSelectedPlatforms([]); setScheduledAt("");
+      setMediaUrls([]); setExtractedData(null); setWebsiteUrl(""); setDirectUrl("");
     },
     onError: (err: any) => toast({ title: err.message || "Failed to create post", variant: "destructive" }),
+  });
+
+  const extractMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("/api/social-media/extract-url", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: (data: any) => {
+      setExtractedData(data);
+      if (data.title && !content) {
+        setContent(data.title + (data.description ? `\n\n${data.description}` : ""));
+      }
+      setMediaSource("website");
+    },
+    onError: (err: any) => toast({ title: err.message || "Could not extract content from URL", variant: "destructive" }),
   });
 
   const togglePlatform = (p: string) => {
     setSelectedPlatforms(prev =>
       prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]
     );
+  };
+
+  const toggleExtractedImage = (url: string) => {
+    setMediaUrls(prev =>
+      prev.includes(url) ? prev.filter(u => u !== url) : [...prev, url]
+    );
+  };
+
+  const addDirectUrl = () => {
+    if (!directUrl.trim()) return;
+    try {
+      new URL(directUrl);
+      if (!mediaUrls.includes(directUrl)) {
+        setMediaUrls(prev => [...prev, directUrl]);
+      }
+      setDirectUrl("");
+      setMediaSource("url");
+    } catch {
+      toast({ title: "Please enter a valid URL", variant: "destructive" });
+    }
+  };
+
+  const removeMedia = (url: string) => {
+    setMediaUrls(prev => prev.filter(u => u !== url));
   };
 
   const CHAR_LIMITS: Record<string, number> = {
@@ -1180,10 +1231,10 @@ function CreatePostDialog({ open, onOpenChange, queryClient, toast }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Compose Post</DialogTitle>
-          <DialogDescription>Write your post and select platforms</DialogDescription>
+          <DialogDescription>Write your post, add media, and select platforms</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -1193,7 +1244,7 @@ function CreatePostDialog({ open, onOpenChange, queryClient, toast }: {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write your post caption..."
-              rows={5}
+              rows={4}
               data-testid="input-post-content"
             />
             <div className="flex justify-between mt-1">
@@ -1205,6 +1256,171 @@ function CreatePostDialog({ open, onOpenChange, queryClient, toast }: {
                 <p className="text-xs text-red-500">Exceeds character limit for selected platform</p>
               )}
             </div>
+          </div>
+
+          <div>
+            <Label className="mb-2 block">Media</Label>
+            <Tabs value={mediaTab} onValueChange={setMediaTab}>
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="website" className="gap-1.5 text-xs" data-testid="tab-media-website">
+                  <Globe className="h-3.5 w-3.5" /> From Website
+                </TabsTrigger>
+                <TabsTrigger value="cloud" className="gap-1.5 text-xs" data-testid="tab-media-cloud">
+                  <HardDrive className="h-3.5 w-3.5" /> Cloud Storage
+                </TabsTrigger>
+                <TabsTrigger value="url" className="gap-1.5 text-xs" data-testid="tab-media-url">
+                  <Link2 className="h-3.5 w-3.5" /> Direct URL
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="website" className="space-y-3 mt-3">
+                <div className="flex gap-2">
+                  <Input
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    placeholder="Paste your property listing or website URL..."
+                    data-testid="input-website-url"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => extractMutation.mutate({ url: websiteUrl })}
+                    disabled={!websiteUrl || extractMutation.isPending}
+                    data-testid="button-extract-url"
+                  >
+                    {extractMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Paste any URL and we will pull images, title, and description. Your files stay on your website — we just reference them.
+                </p>
+
+                {extractedData && (
+                  <div className="space-y-2">
+                    {extractedData.title && (
+                      <div className="p-2 rounded border bg-muted/30">
+                        <p className="text-xs font-medium">{extractedData.title}</p>
+                        {extractedData.price && <Badge variant="outline" className="mt-1 text-xs">{extractedData.price}</Badge>}
+                      </div>
+                    )}
+                    {extractedData.images?.length > 0 && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Click images to select ({mediaUrls.length} selected)</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          {extractedData.images.slice(0, 12).map((img: string, i: number) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => toggleExtractedImage(img)}
+                              className={`relative aspect-square rounded border-2 overflow-hidden transition-all ${
+                                mediaUrls.includes(img)
+                                  ? "border-primary ring-2 ring-primary/20"
+                                  : "border-transparent hover:border-muted-foreground/30"
+                              }`}
+                              data-testid={`button-extracted-image-${i}`}
+                            >
+                              <img
+                                src={img}
+                                alt={`Extracted ${i + 1}`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                              />
+                              {mediaUrls.includes(img) && (
+                                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {extractedData.images?.length === 0 && (
+                      <p className="text-xs text-muted-foreground">No images found on this page.</p>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="cloud" className="space-y-3 mt-3">
+                <div className="p-4 rounded border border-dashed text-center">
+                  <CloudUpload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm font-medium">Connect your cloud storage</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Link Google Drive, Dropbox, or OneDrive to browse photos and videos directly.
+                    Your files stay in your cloud — GoRigo never stores them.
+                  </p>
+                  <div className="flex justify-center gap-2 mt-3">
+                    {(["google_drive", "dropbox", "onedrive"] as const).map((type) => {
+                      const config = SOCIAL_CONNECTOR_REGISTRY[type];
+                      if (!config) return null;
+                      return (
+                        <Badge
+                          key={type}
+                          variant="outline"
+                          className="cursor-pointer hover:bg-muted"
+                          data-testid={`badge-cloud-${type}`}
+                        >
+                          {config.name}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Connect via <span className="font-medium">Social Marketing &gt; Overview &gt; Cloud Storage</span> to browse files here.
+                  </p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="url" className="space-y-3 mt-3">
+                <div className="flex gap-2">
+                  <Input
+                    value={directUrl}
+                    onChange={(e) => setDirectUrl(e.target.value)}
+                    placeholder="Paste image or video URL (e.g. from Canva export)..."
+                    onKeyDown={(e) => e.key === "Enter" && addDirectUrl()}
+                    data-testid="input-direct-media-url"
+                  />
+                  <Button size="sm" onClick={addDirectUrl} disabled={!directUrl} data-testid="button-add-media-url">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Paste a direct link to an image or video. Works with Canva export links, Google Drive share links, or any public URL.
+                </p>
+              </TabsContent>
+            </Tabs>
+
+            {mediaUrls.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs text-muted-foreground mb-1">{mediaUrls.length} media file{mediaUrls.length > 1 ? "s" : ""} attached</p>
+                <div className="flex flex-wrap gap-2">
+                  {mediaUrls.map((url, i) => (
+                    <div key={i} className="relative group">
+                      <div className="w-16 h-16 rounded border overflow-hidden bg-muted">
+                        <img
+                          src={url}
+                          alt={`Media ${i + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const el = e.target as HTMLImageElement;
+                            el.style.display = "none";
+                            el.parentElement!.innerHTML = `<div class="flex items-center justify-center h-full"><span class="text-xs text-muted-foreground">Media</span></div>`;
+                          }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeMedia(url)}
+                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        data-testid={`button-remove-media-${i}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -1242,6 +1458,8 @@ function CreatePostDialog({ open, onOpenChange, queryClient, toast }: {
             onClick={() => createMutation.mutate({
               content,
               platforms: selectedPlatforms,
+              mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+              mediaSource: mediaUrls.length > 0 ? mediaSource : undefined,
               scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
             })}
             disabled={createMutation.isPending || !content || selectedPlatforms.length === 0 || isOverLimit}

@@ -74,7 +74,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var d=document.documentElement;d.classList.remove('light','dark');var t=localStorage.getItem('gorigo-theme');d.classList.add(t==='dark'?'dark':'light')}catch(e){d.classList.add('light')}})()` }} />
         <StructuredData />
         <Suspense fallback={null}>
           <VerificationMeta />

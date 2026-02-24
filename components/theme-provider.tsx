@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 
 type Theme = "dark" | "light";
 
@@ -14,34 +14,38 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function applyThemeClass(t: Theme) {
+  const root = document.documentElement;
+  root.classList.remove("light", "dark");
+  root.classList.add(t);
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
   const [forceLightMode, setForceLightMode] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const initialized = useRef(false);
 
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
     const stored = localStorage.getItem("gorigo-theme");
     if (stored === "dark" || stored === "light") {
       setThemeState(stored);
+      applyThemeClass(stored);
+    } else {
+      applyThemeClass("light");
     }
-    setMounted(true);
   }, []);
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
     localStorage.setItem("gorigo-theme", t);
-  }, []);
+    applyThemeClass(forceLightMode ? "light" : t);
+  }, [forceLightMode]);
 
   useEffect(() => {
-    if (!mounted) return;
-    const root = document.documentElement;
-    root.classList.remove("light", "dark");
-    if (forceLightMode) {
-      root.classList.add("light");
-    } else {
-      root.classList.add(theme);
-    }
-  }, [theme, forceLightMode, mounted]);
+    applyThemeClass(forceLightMode ? "light" : theme);
+  }, [forceLightMode, theme]);
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");

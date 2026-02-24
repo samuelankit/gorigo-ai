@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  reactStrictMode: true,
+  reactStrictMode: false,
+  devIndicators: false,
   allowedDevOrigins: [
     '*.picard.replit.dev',
     '*.kirk.replit.dev',

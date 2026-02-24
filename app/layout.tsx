@@ -69,7 +69,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){if(typeof window!=='undefined'&&window.reportError){var o=window.reportError;window.reportError=function(e){var m=e&&e.message||'';if(m.indexOf('Hydration')>-1||m.indexOf('hydrat')>-1||m.indexOf('did not match')>-1||m.indexOf('server rendered')>-1)return;o.call(window,e)}}})()` }} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){if(typeof window==='undefined')return;function isH(m){return m&&(m.indexOf('Hydration')>-1||m.indexOf('hydrat')>-1||m.indexOf('did not match')>-1||m.indexOf('server rendered')>-1||m.indexOf('Text content does not match')>-1)}if(window.reportError){var o=window.reportError;window.reportError=function(e){if(isH(e&&e.message||''))return;o.call(window,e)}}window.addEventListener('error',function(e){if(isH(e.message||'')||(e.error&&isH(e.error.message||''))){e.stopImmediatePropagation();e.preventDefault()}},true);window.addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&isH(r.message||String(r)||'')){e.stopImmediatePropagation();e.preventDefault()}},true)})()` }} />
         <StructuredData />
         <Suspense fallback={null}>
           <VerificationMeta />

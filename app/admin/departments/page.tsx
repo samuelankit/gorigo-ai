@@ -107,7 +107,7 @@ function DepartmentsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [deploymentModel, setDeploymentModel] = useState<string>("managed");
+  const [deploymentModel, setDeploymentModel] = useState<string>("individual");
   const [userRole, setUserRole] = useState<string>("");
 
   const [createEditOpen, setCreateEditOpen] = useState(false);

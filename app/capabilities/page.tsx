@@ -28,20 +28,20 @@ export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Capabilities | GoRigo.ai",
   description:
-    "Explore GoRigo's AI call centre capabilities across 20 countries. Intelligent agents, 24/7 call handling, per-country compliance, real-time analytics, 12+ languages, and pay-per-talk-time billing. No subscriptions, no seat licences.",
+    "Explore GoRigo's platform capabilities. AI voice agents, campaigns, team collaboration, finance, knowledge management, and compliance across 20 countries. No subscriptions, no seat licences.",
   alternates: {
     canonical: "/capabilities",
   },
   openGraph: {
     title: "Capabilities | GoRigo.ai",
     description:
-      "Explore GoRigo's AI call centre capabilities across 20 countries. Intelligent agents, 24/7 call handling, per-country compliance, real-time analytics, 12+ languages, and pay-per-talk-time billing. No subscriptions, no seat licences.",
+      "Explore GoRigo's platform capabilities. AI voice agents, campaigns, team collaboration, finance, knowledge management, and compliance across 20 countries. No subscriptions, no seat licences.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Capabilities | GoRigo.ai",
     description:
-      "Explore GoRigo's AI call centre capabilities across 20 countries. Intelligent agents, 24/7 call handling, per-country compliance, real-time analytics, 12+ languages, and pay-per-talk-time billing. No subscriptions, no seat licences.",
+      "Explore GoRigo's platform capabilities. AI voice agents, campaigns, team collaboration, finance, knowledge management, and compliance across 20 countries. No subscriptions, no seat licences.",
   },
 };
 
@@ -179,8 +179,8 @@ export default function CapabilitiesPage() {
     <PublicLayout>
     <div className="min-h-screen bg-background" data-testid="page-capabilities">
       <WebPageJsonLd
-        title="GoRigo AI Call Centre Capabilities"
-        description="Explore GoRigo's AI call centre capabilities in the UK. Intelligent agents, 24/7 call handling, GDPR compliance, real-time analytics, multi-language support, and pay-per-talk-time billing."
+        title="GoRigo Platform Capabilities"
+        description="Explore GoRigo's platform capabilities. AI voice agents, campaigns, team collaboration, finance, knowledge management, and compliance across 20 countries."
         url="/capabilities"
       />
       <BreadcrumbJsonLd
@@ -210,7 +210,7 @@ export default function CapabilitiesPage() {
             className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
             data-testid="text-hero-title"
           >
-            Everything Your Call Centre
+            Everything Your Business
             <br />
             <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">Needs</span>
           </h1>
@@ -218,7 +218,7 @@ export default function CapabilitiesPage() {
             className="mt-5 text-lg sm:text-xl text-muted-foreground font-light max-w-3xl mx-auto leading-relaxed"
             data-testid="text-hero-subtitle"
           >
-            Seven powerful capabilities working together to automate your calls,
+            Seven powerful capabilities working together to automate your operations,
             protect your business, and grow your revenue — all powered by AI.
           </p>
         </div>
@@ -339,7 +339,7 @@ export default function CapabilitiesPage() {
 
       <ConversionCta
         headline="See What GoRigo Can Do for Your Business"
-        subheadline="From AI agents to real-time analytics, GoRigo handles your calls so you can focus on growth. No subscriptions, no seat licences."
+        subheadline="From AI agents to team management, GoRigo handles your operations so you can focus on growth. No subscriptions, no seat licences."
         talkToAiMessage="Talk to AI to explore our Capabilities"
       />
 

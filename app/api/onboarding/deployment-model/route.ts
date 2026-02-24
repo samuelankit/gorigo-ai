@@ -12,7 +12,7 @@ import { checkEntryBarrier, TIER_ENTRY_BARRIERS, type DeploymentTier } from "@/l
 import { isDeploymentPackageEnabled } from "@/lib/feature-flags";
 
 const deploymentModelSchema = z.object({
-  deploymentModel: z.enum(["managed", "self_hosted", "custom"]),
+  deploymentModel: z.enum(["individual", "self_hosted", "custom"]),
 }).strict();
 
 const PLAN_SWITCH_COOLDOWN_HOURS = 24;
@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest) {
       .where(eq(orgs.id, auth.orgId))
       .limit(1);
 
-    const oldModel = currentOrg?.deploymentModel || "managed";
+    const oldModel = currentOrg?.deploymentModel || "individual";
 
     if (oldModel === deploymentModel) {
       return NextResponse.json({ success: true, deploymentModel, previousModel: oldModel, unchanged: true }, { status: 200 });

@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 
 const DEFAULTS: Record<string, boolean> = {
   deployment_package_self_hosted_enabled: false,
-  deployment_package_managed_enabled: true,
+  deployment_package_individual_enabled: true,
 };
 
 export async function isDeploymentPackageEnabled(model: string): Promise<boolean> {

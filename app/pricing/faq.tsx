@@ -54,9 +54,9 @@ const faqs = [
       "The Team package is designed for companies that need shared access for employees and board members. It includes unlimited team members, shared AI agents across the whole company, a team dashboard, per-department budgets, bulk CSV invites, and a team activity log. There are no per-seat fees — billing is purely based on talk-time at 18p/min. A minimum usage of £50/month applies.",
   },
   {
-    question: "Can I upgrade from Managed to Team?",
+    question: "Can I upgrade from Individual to Team?",
     answer:
-      "Yes, upgrading from Managed to Team is seamless. Your rate changes from your next call, and all your existing agents and data are preserved. After upgrading, an admin can set visibility for existing agents — choosing whether each agent is private, visible to a department, or shared across the whole company.",
+      "Yes, upgrading from Individual to Team is seamless. Your rate changes from your next call, and all your existing agents and data are preserved. After upgrading, an admin can set visibility for existing agents — choosing whether each agent is private, visible to a department, or shared across the whole company.",
   },
   {
     question: "Is there a limit on team members?",

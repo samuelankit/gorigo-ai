@@ -32,12 +32,12 @@ import {
 const features = [
   {
     customIcon: "ai-voice-head",
-    title: "AI-Powered Agents",
+    title: "AI Voice Agents",
     href: "/features/ai-agents",
     description:
-      "Deploy intelligent voice agents that understand context, remember caller history, and handle complex multi-turn conversations with human-like empathy and precision.",
-    stat: "10,000+",
-    statLabel: "concurrent calls",
+      "Deploy intelligent voice agents that handle inbound and outbound calls 24/7. Context-aware conversations, caller history, and human-like empathy — every call answered in under 2 seconds.",
+    stat: "24/7",
+    statLabel: "always on",
     accentColor: "from-emerald-500/20 to-teal-500/20",
     iconBg: "bg-emerald-500/10",
     iconColor: "text-emerald-600 dark:text-emerald-400",
@@ -45,62 +45,36 @@ const features = [
   },
   {
     customIcon: "vr-phone-mic",
-    title: "24/7 Call Handling",
+    title: "Campaigns & Leads",
     href: "/features/call-handling",
     description:
-      "Your AI agents never sleep, never take breaks, and never call in sick. Every call answered in under 2 seconds, around the clock, 365 days a year.",
-    stat: "<2s",
-    statLabel: "answer time",
+      "Run outbound campaigns at scale. Connect data sources like Google Sheets, HubSpot, and CSV imports. Manage leads, track conversions, and let AI handle the conversations.",
+    stat: "5+",
+    statLabel: "data sources",
     accentColor: "from-blue-500/20 to-cyan-500/20",
     iconBg: "bg-blue-500/10",
     iconColor: "text-blue-600 dark:text-blue-400",
     borderAccent: "border-blue-500/20",
   },
   {
-    customIcon: "vr-voice-lock",
-    title: "Globally Compliant",
-    href: "/features/compliance",
-    description:
-      "Per-country DNC registries, calling hours enforcement, AI disclosure in 12 languages, PII auto-redaction, and GDPR-ready data handling. Compliant from day one.",
-    stat: "20",
-    statLabel: "countries",
-    accentColor: "from-violet-500/20 to-purple-500/20",
-    iconBg: "bg-violet-500/10",
-    iconColor: "text-violet-600 dark:text-violet-400",
-    borderAccent: "border-violet-500/20",
-  },
-  {
-    customIcon: "vr-waveform-scan",
-    title: "Real-Time Analytics",
-    href: "/features/analytics",
-    description:
-      "Live dashboards with call quality scoring, sentiment analysis, topic extraction, agent scorecards, and actionable insights to optimise every interaction.",
-    stat: "6",
-    statLabel: "analytics tabs",
-    accentColor: "from-amber-500/20 to-orange-500/20",
-    iconBg: "bg-amber-500/10",
-    iconColor: "text-amber-600 dark:text-amber-400",
-    borderAccent: "border-amber-500/20",
-  },
-  {
     customIcon: "vr-voice-chat",
-    title: "12+ Languages",
-    href: "/features/multi-language",
+    title: "Team Collaboration",
+    href: "/features/team-collaboration",
     description:
-      "AI agents detect caller language automatically, adapt to regional accents, and handle multilingual conversations without manual switching. True global reach.",
-    stat: "12+",
-    statLabel: "languages",
-    accentColor: "from-rose-500/20 to-pink-500/20",
-    iconBg: "bg-rose-500/10",
-    iconColor: "text-rose-600 dark:text-rose-400",
-    borderAccent: "border-rose-500/20",
+      "Bring your whole company onto one platform. Shared AI agents, department budgets with colour-coded tracking, team dashboard, and activity feeds. No per-seat fees.",
+    stat: "0",
+    statLabel: "seat fees",
+    accentColor: "from-indigo-500/20 to-violet-500/20",
+    iconBg: "bg-indigo-500/10",
+    iconColor: "text-indigo-600 dark:text-indigo-400",
+    borderAccent: "border-indigo-500/20",
   },
   {
     customIcon: "vr-speaking",
-    title: "Pay Per Talk Time",
+    title: "Finance & Billing",
     href: "/features/pay-per-talk-time",
     description:
-      "No seat licences. No monthly subscriptions. No hidden fees. You only pay for the minutes your AI agents spend on actual conversations. Simple, transparent pricing.",
+      "Prepaid wallet with real-time deductions. Sales invoices, purchase bills, spending caps, and department budgets. Transparent talk-time billing — no subscriptions, no hidden fees.",
     stat: "0",
     statLabel: "subscriptions",
     accentColor: "from-teal-500/20 to-green-500/20",
@@ -108,30 +82,56 @@ const features = [
     iconColor: "text-teal-600 dark:text-teal-400",
     borderAccent: "border-teal-500/20",
   },
+  {
+    customIcon: "vr-waveform-scan",
+    title: "Knowledge & AI",
+    href: "/features/analytics",
+    description:
+      "Upload documents, build knowledge bases, and generate content with Smart Drafts. Your AI agents are grounded in your business data through RAG — no hallucinations.",
+    stat: "RAG",
+    statLabel: "powered",
+    accentColor: "from-amber-500/20 to-orange-500/20",
+    iconBg: "bg-amber-500/10",
+    iconColor: "text-amber-600 dark:text-amber-400",
+    borderAccent: "border-amber-500/20",
+  },
+  {
+    customIcon: "vr-voice-lock",
+    title: "Compliance & Analytics",
+    href: "/features/compliance",
+    description:
+      "Per-country DNC registries, calling hours enforcement, AI disclosure in 12 languages, PII auto-redaction, and real-time analytics with sentiment tracking across 20 countries.",
+    stat: "20",
+    statLabel: "countries",
+    accentColor: "from-violet-500/20 to-purple-500/20",
+    iconBg: "bg-violet-500/10",
+    iconColor: "text-violet-600 dark:text-violet-400",
+    borderAccent: "border-violet-500/20",
+  },
 ];
 
 const steps = [
   {
     number: "01",
-    title: "Configure Your Agent",
+    title: "Set Up Your Platform",
     description:
-      "Set up your AI agent's persona, tone, knowledge base, and call handling rules through our intuitive dashboard. Upload documents, define FAQs, and customise responses. No coding required — just describe how you want your agent to behave.",
+      "Configure AI agents, connect data sources like Google Sheets or HubSpot, upload your knowledge base, and invite your team. No coding required — describe how you want your business to run and GoRigo handles the rest.",
     customIcon: "ai-voice-setting",
     gradient: "from-[#E8604C] to-[#F5A623]",
   },
   {
     number: "02",
-    title: "Connect Your Number",
+    title: "Connect & Go Live",
     description:
-      "Link your existing business phone number or provision a new one in any of our 20 supported countries. Your AI agent starts handling calls within minutes. Port existing numbers with zero downtime.",
+      "Link phone numbers across 20 countries, launch outbound campaigns, and activate your knowledge base. Your AI agents start handling calls, your team gets dashboard access, and your business runs from your phone.",
     customIcon: "vr-voice-signal",
     gradient: "from-blue-500 to-violet-500",
   },
   {
     number: "03",
-    title: "Monitor & Optimise",
+    title: "Monitor & Grow",
     description:
-      "Track every call in real time from your phone or web dashboard. Review full transcripts, quality scores, sentiment analysis, and performance trends. Your AI agent gets smarter with every conversation.",
+      "Track calls, campaigns, and team activity in real time. Review analytics, manage department budgets, generate reports, and optimise performance. Your platform gets smarter with every interaction.",
     customIcon: "ai-voice-record",
     gradient: "from-violet-500 to-rose-500",
   },
@@ -191,20 +191,20 @@ const painPoints = [
   },
   {
     icon: Clock,
-    problem: "Night & weekend calls lost",
-    detail: "traditional teams only cover business hours",
+    problem: "Scattered tools, no unified view",
+    detail: "separate systems for calls, CRM, billing, and team management",
     color: "text-amber-500",
   },
   {
     icon: TrendingDown,
-    problem: "Rising staff costs",
-    detail: "average call centre agent costs increase 8% year on year",
+    problem: "Rising operational costs",
+    detail: "per-seat fees, platform subscriptions, and hidden charges add up fast",
     color: "text-violet-500",
   },
   {
     icon: Users,
-    problem: "High agent turnover",
-    detail: "call centre turnover rates average 30-45% annually",
+    problem: "No team oversight",
+    detail: "no department budgets, no shared agents, no activity tracking",
     color: "text-blue-500",
   },
 ];
@@ -242,12 +242,12 @@ export function HomeBelowFold() {
               The Problem
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" data-testid="text-problem-title">
-              Traditional call centres are
+              Traditional business tools are
               <span className="bg-gradient-to-r from-rose-500 to-amber-500 bg-clip-text text-transparent"> broken</span>
             </h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-              Businesses lose revenue, customers, and reputation every day because of outdated call centre models.
-              GoRigo fixes this with AI that works around the clock.
+              Businesses juggle separate tools for calls, campaigns, team management, and billing — losing time, money, and oversight every day.
+              GoRigo brings it all into one AI-powered platform.
             </p>
           </div>
 
@@ -283,13 +283,13 @@ export function HomeBelowFold() {
               Capabilities
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" data-testid="text-features-title">
-              Everything you need to run
+              Six pillars that run
               <br />
-              <span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">an AI call centre</span>
+              <span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">your entire business</span>
             </h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-              From intelligent voice agents to enterprise-grade compliance, GoRigo gives you a complete
-              call centre platform that runs itself.
+              From AI voice agents to team collaboration, campaigns to compliance — GoRigo gives you a complete
+              business platform that runs itself.
             </p>
           </div>
 
@@ -398,7 +398,7 @@ export function HomeBelowFold() {
                     <XCircle className="h-5 w-5 text-rose-500" />
                   </div>
                   <div>
-                    <h3 className="font-semibold" data-testid="text-traditional-title">Traditional Call Centre Software</h3>
+                    <h3 className="font-semibold" data-testid="text-traditional-title">Traditional Business Tools</h3>
                     <p className="text-xs text-muted-foreground">What everyone else charges</p>
                   </div>
                 </div>
@@ -554,19 +554,19 @@ export function HomeBelowFold() {
                   Mobile App
                 </Badge>
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" data-testid="text-download-title">
-                  Your call centre
+                  Your business
                   <br />
                   <span className="bg-gradient-to-r from-[#E8604C] to-[#F5A623] bg-clip-text text-transparent">in your pocket</span>
                 </h2>
                 <p className="text-muted-foreground mb-8 max-w-md">
-                  Manage agents, monitor live calls, check revenue, and control everything by voice or tap. 
+                  Manage agents, run campaigns, track finances, monitor your team, and control everything by voice or tap. 
                   Biometric security, offline support, and push notifications keep you in control anywhere.
                 </p>
 
                 <div className="flex flex-col gap-4 mb-8">
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-4 w-4 text-[#E8604C] shrink-0" />
-                    <span className="text-sm">Voice commands to manage your call centre hands-free</span>
+                    <span className="text-sm">Voice commands to manage your business hands-free</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-4 w-4 text-[#E8604C] shrink-0" />

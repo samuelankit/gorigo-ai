@@ -3,7 +3,7 @@ import { rateCards, orgs } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { safeParseNumeric } from "@/lib/money";
 
-export type DeploymentModel = "managed" | "team" | "self_hosted" | "custom";
+export type DeploymentModel = "individual" | "team" | "self_hosted" | "custom";
 export type UsageCategory = "voice_inbound" | "voice_outbound" | "ai_chat";
 
 export interface ResolvedRate {
@@ -17,10 +17,10 @@ export interface ResolvedRate {
 }
 
 const DEFAULT_RATES: Record<DeploymentModel, Record<UsageCategory, ResolvedRate>> = {
-  managed: {
-    voice_inbound: { deploymentModel: "managed", category: "voice_inbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Direct/Managed - Inbound Voice" },
-    voice_outbound: { deploymentModel: "managed", category: "voice_outbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Direct/Managed - Outbound Voice" },
-    ai_chat: { deploymentModel: "managed", category: "ai_chat", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: false, label: "Direct/Managed - AI Chat" },
+  individual: {
+    voice_inbound: { deploymentModel: "individual", category: "voice_inbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Individual - Inbound Voice" },
+    voice_outbound: { deploymentModel: "individual", category: "voice_outbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Individual - Outbound Voice" },
+    ai_chat: { deploymentModel: "individual", category: "ai_chat", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: false, label: "Individual - AI Chat" },
   },
   team: {
     voice_inbound: { deploymentModel: "team", category: "voice_inbound", ratePerMinute: 0.18, platformFeePerMinute: 0.18, includesAiCost: true, includesTelephonyCost: true, label: "Team - Inbound Voice" },
@@ -46,9 +46,9 @@ export async function getOrgDeploymentModel(orgId: number): Promise<DeploymentMo
     .where(eq(orgs.id, orgId))
     .limit(1);
 
-  if (!org || !org.deploymentModel) return "managed";
+  if (!org || !org.deploymentModel) return "individual";
   const model = org.deploymentModel as DeploymentModel;
-  if (!["managed", "team", "self_hosted", "custom"].includes(model)) return "managed";
+  if (!["individual", "team", "self_hosted", "custom"].includes(model)) return "individual";
   return model;
 }
 
@@ -67,7 +67,7 @@ export async function resolveRate(orgId: number, category: UsageCategory): Promi
     )
     .limit(1);
 
-  const modelDefaults = DEFAULT_RATES[model]?.[category] ?? DEFAULT_RATES.managed[category];
+  const modelDefaults = DEFAULT_RATES[model]?.[category] ?? DEFAULT_RATES.individual[category];
 
   if (card) {
     return {
@@ -81,7 +81,7 @@ export async function resolveRate(orgId: number, category: UsageCategory): Promi
     };
   }
 
-  return DEFAULT_RATES[model]?.[category] ?? DEFAULT_RATES.managed[category];
+  return DEFAULT_RATES[model]?.[category] ?? DEFAULT_RATES.individual[category];
 }
 
 export async function getAllRatesForModel(model: DeploymentModel): Promise<ResolvedRate[]> {
@@ -98,7 +98,7 @@ export async function getAllRatesForModel(model: DeploymentModel): Promise<Resol
   if (cards.length > 0) {
     return cards.map((card) => {
       const catKey = card.category as UsageCategory;
-      const catDefaults = DEFAULT_RATES[model]?.[catKey] ?? DEFAULT_RATES.managed[catKey];
+      const catDefaults = DEFAULT_RATES[model]?.[catKey] ?? DEFAULT_RATES.individual[catKey];
       return {
         deploymentModel: model,
         category: catKey,
@@ -111,7 +111,7 @@ export async function getAllRatesForModel(model: DeploymentModel): Promise<Resol
     });
   }
 
-  return Object.values(DEFAULT_RATES[model] ?? DEFAULT_RATES.managed);
+  return Object.values(DEFAULT_RATES[model] ?? DEFAULT_RATES.individual);
 }
 
 export async function getAllRateCards(): Promise<ResolvedRate[]> {
@@ -124,7 +124,7 @@ export async function getAllRateCards(): Promise<ResolvedRate[]> {
     return cards.map((card) => {
       const dm = card.deploymentModel as DeploymentModel;
       const catKey = card.category as UsageCategory;
-      const catDefaults = DEFAULT_RATES[dm]?.[catKey] ?? DEFAULT_RATES.managed[catKey];
+      const catDefaults = DEFAULT_RATES[dm]?.[catKey] ?? DEFAULT_RATES.individual[catKey];
       return {
         deploymentModel: dm,
         category: catKey,
@@ -138,7 +138,7 @@ export async function getAllRateCards(): Promise<ResolvedRate[]> {
   }
 
   return [
-    ...Object.values(DEFAULT_RATES.managed),
+    ...Object.values(DEFAULT_RATES.individual),
     ...Object.values(DEFAULT_RATES.self_hosted),
     ...Object.values(DEFAULT_RATES.custom),
   ];
@@ -146,16 +146,18 @@ export async function getAllRateCards(): Promise<ResolvedRate[]> {
 
 export function getDeploymentModelLabel(model: DeploymentModel): string {
   switch (model) {
-    case "managed": return "Direct / Managed (20p/min)";
+    case "individual": return "Individual (20p/min)";
+    case "team": return "Team (18p/min)";
     case "self_hosted": return "White-Label / Reseller (12p/min)";
     case "custom": return "Custom Plan";
-    default: return "Direct / Managed (20p/min)";
+    default: return "Individual (20p/min)";
   }
 }
 
 export function getDeploymentModelDescription(model: DeploymentModel): string {
   switch (model) {
-    case "managed": return "Fully managed AI agents. AI, telephony, and platform costs included at 20p/min.";
+    case "individual": return "Everything you need to run your business with AI. All costs included at 20p/min.";
+    case "team": return "Whole-company collaboration with shared agents, departments, and team dashboard at 18p/min.";
     case "self_hosted": return "Wholesale rate for partners to resell under their own brand at 12p/min.";
     case "custom": return "Bespoke package with custom rates, features, and SLAs configured by our sales team.";
     default: return "";

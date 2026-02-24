@@ -162,7 +162,7 @@ async function handleIncomingCall(
       return NextResponse.json({ status: "ok" });
     }
 
-    let capturedRate: { deploymentModel: string; ratePerMinute: number } = { deploymentModel: "managed", ratePerMinute: 0.20 };
+    let capturedRate: { deploymentModel: string; ratePerMinute: number } = { deploymentModel: "individual", ratePerMinute: 0.20 };
     try {
       const resolved = await resolveRate(orgId, "voice_inbound" as UsageCategory);
       capturedRate = { deploymentModel: resolved.deploymentModel, ratePerMinute: resolved.ratePerMinute };

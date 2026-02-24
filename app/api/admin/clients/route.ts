@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
           partnerName,
           partnerId,
           channelType: org.channelType,
-          deploymentModel: org.deploymentModel ?? "managed",
+          deploymentModel: org.deploymentModel ?? "individual",
           totalCalls: Number(callStats.total),
           totalRevenue: Number(revenueStats.total),
           walletBalance: wallet ? Number(wallet.balance) : 0,

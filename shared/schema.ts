@@ -53,7 +53,7 @@ export const orgs = pgTable("orgs", {
   businessHours: jsonb("business_hours"),
   voicemailEnabled: boolean("voicemail_enabled").default(false),
   voicemailGreeting: text("voicemail_greeting"),
-  deploymentModel: text("deployment_model").default("managed"),
+  deploymentModel: text("deployment_model").default("individual"),
   webhookSecret: text("webhook_secret"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

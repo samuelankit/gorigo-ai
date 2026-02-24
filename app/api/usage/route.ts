@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       .where(eq(orgs.id, auth.orgId))
       .limit(1);
 
-    const deploymentModel = org?.deploymentModel || "managed";
+    const deploymentModel = org?.deploymentModel || "individual";
 
     const rates = await db
       .select({

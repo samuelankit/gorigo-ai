@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { PublicLayout } from "@/components/public-layout";
@@ -16,30 +16,30 @@ import { CheckCircle2, Minus, ArrowRight, MessageSquare, Users } from "lucide-re
 import { PricingFaq } from "./faq";
 
 interface PackageVisibility {
-  managed: boolean;
+  individual: boolean;
   team: boolean;
   selfHosted: boolean;
 }
 
 const allPackages = [
   {
-    key: "managed" as const,
-    name: "Managed",
+    key: "individual" as const,
+    name: "Individual",
     rate: "From 20p",
     rateUnit: "/min",
-    description: "We run everything. You focus on your business while our team handles the entire AI call centre stack.",
+    description: "Everything you need to run your own AI-powered operation. One person, full control, zero complexity.",
     features: [
       "Fully managed AI agents",
-      "Dedicated account manager",
       "Custom voice configuration",
       "Priority support",
       "SLA guarantees",
       "Custom integrations",
+      "Analytics dashboards",
       "Mobile app included",
     ],
-    bestFor: "Businesses that want zero technical overhead.",
-    cta: "Book a Demo",
-    href: "/contact",
+    bestFor: "Individual operators who want a complete AI solution.",
+    cta: "Get Started",
+    href: "/register",
     featured: false,
     mobileApp: true,
     themeColor: "blue",
@@ -105,31 +105,71 @@ const allPackages = [
   },
 ];
 
-const comparisonFeatures = [
-  { name: "AI Agent Management", managed: true, team: true, selfHosted: true, custom: true },
-  { name: "Knowledge Base", managed: true, team: true, selfHosted: true, custom: true },
-  { name: "Real-Time Analytics", managed: true, team: true, selfHosted: true, custom: true },
-  { name: "Call Recording", managed: true, team: true, selfHosted: true, custom: true },
-  { name: "Multi-Language", managed: true, team: true, selfHosted: true, custom: true },
-  { name: "DNC Management", managed: true, team: true, selfHosted: true, custom: true },
-  { name: "API Access", managed: true, team: true, selfHosted: true, custom: true },
-  { name: "Custom Integrations", managed: true, team: true, selfHosted: true, custom: true },
-  { name: "Unlimited Team Members", managed: false, team: true, selfHosted: false, custom: true },
-  { name: "Shared Agents (Whole Company)", managed: false, team: true, selfHosted: false, custom: true },
-  { name: "Per-Department Budgets", managed: false, team: true, selfHosted: false, custom: true },
-  { name: "Team Dashboard", managed: false, team: true, selfHosted: false, custom: true },
-  { name: "Bulk CSV Invites", managed: false, team: true, selfHosted: false, custom: true },
-  { name: "Team Activity Log", managed: false, team: true, selfHosted: false, custom: true },
-  { name: "Dedicated Account Manager", managed: true, team: true, selfHosted: false, custom: true },
-  { name: "SLA Guarantee", managed: true, team: true, selfHosted: true, custom: true },
-  { name: "30-Min Critical Response", managed: false, team: true, selfHosted: false, custom: true },
-  { name: "White Label", managed: false, team: false, selfHosted: true, custom: true },
-  { name: "On-Premise Deployment", managed: false, team: false, selfHosted: true, custom: true },
-  { name: "Source Code Access", managed: false, team: false, selfHosted: true, custom: true },
-  { name: "Mobile App", managed: "Included", team: "Included", selfHosted: "Available", custom: "Available" },
-  { name: "Custom Billing Rates", managed: false, team: false, selfHosted: false, custom: true },
-  { name: "Bespoke Feature Selection", managed: false, team: false, selfHosted: false, custom: true },
-  { name: "Dedicated Onboarding", managed: false, team: false, selfHosted: false, custom: true },
+type ComparisonRow = {
+  name: string;
+  individual: boolean | string;
+  team: boolean | string;
+  custom: boolean | string;
+};
+
+type ComparisonSection = {
+  title: string;
+  subtitle: string;
+  rows: ComparisonRow[];
+};
+
+const comparisonSections: ComparisonSection[] = [
+  {
+    title: "Free for Everyone",
+    subtitle: "Included with every account, no matter which tier you choose",
+    rows: [
+      { name: "£5 welcome credit", individual: true, team: true, custom: true },
+      { name: "Rigo productivity tools (reminders, notes, follow-ups, briefings)", individual: true, team: true, custom: true },
+      { name: "No setup or onboarding costs", individual: true, team: true, custom: true },
+      { name: "No credit card to start", individual: true, team: true, custom: true },
+      { name: "Go live in under 5 minutes", individual: true, team: true, custom: true },
+      { name: "Analytics dashboards", individual: true, team: true, custom: true },
+      { name: "Compliance tools", individual: true, team: true, custom: true },
+      { name: "Server infrastructure included", individual: true, team: true, custom: true },
+      { name: "Mobile app", individual: true, team: true, custom: true },
+      { name: "Multi-language support", individual: true, team: true, custom: true },
+    ],
+  },
+  {
+    title: "What's Included",
+    subtitle: "Features and support levels per tier",
+    rows: [
+      { name: "Talk-time rate", individual: "20p/min", team: "18p/min", custom: "Negotiated" },
+      { name: "Minimum monthly spend", individual: "None", team: "£50", custom: "Custom" },
+      { name: "Team members", individual: "1", team: "Unlimited (no seat fees)", custom: "Unlimited" },
+      { name: "Departments", individual: false, team: true, custom: true },
+      { name: "Department budget caps", individual: false, team: true, custom: true },
+      { name: "Shared agents", individual: false, team: true, custom: true },
+      { name: "Agent visibility", individual: "Private only", team: "Private / Dept / Company", custom: "Custom" },
+      { name: "Board member role", individual: false, team: true, custom: true },
+      { name: "Bulk CSV invites", individual: false, team: true, custom: true },
+      { name: "Team activity log", individual: false, team: "90-day retention", custom: "Custom" },
+      { name: "Team dashboard", individual: false, team: true, custom: true },
+      { name: "SLA critical response", individual: "1 hour", team: "30 min", custom: "15 min" },
+      { name: "Service credits", individual: "10–50%", team: "15–100%", custom: "Custom" },
+      { name: "Dedicated escalation path", individual: false, team: true, custom: true },
+      { name: "48hr post-mortems", individual: false, team: true, custom: true },
+      { name: "White label", individual: false, team: false, custom: true },
+      { name: "Custom billing rates", individual: false, team: false, custom: true },
+      { name: "Dedicated onboarding", individual: false, team: false, custom: true },
+    ],
+  },
+  {
+    title: "Limits",
+    subtitle: "Usage caps per tier",
+    rows: [
+      { name: "Concurrent calls", individual: "5", team: "25", custom: "Custom" },
+      { name: "AI agents", individual: "3", team: "Unlimited", custom: "Unlimited" },
+      { name: "Knowledge documents", individual: "10", team: "Unlimited", custom: "Unlimited" },
+      { name: "Active campaigns", individual: "3", team: "Unlimited", custom: "Unlimited" },
+      { name: "Data connectors", individual: "2", team: "Unlimited", custom: "Unlimited" },
+    ],
+  },
 ];
 
 function FeatureIcon({ included }: { included: boolean | string }) {
@@ -144,7 +184,7 @@ function FeatureIcon({ included }: { included: boolean | string }) {
 
 export function PricingContent() {
   const [visibility, setVisibility] = useState<PackageVisibility>({
-    managed: true,
+    individual: true,
     team: true,
     selfHosted: false,
   });
@@ -157,13 +197,6 @@ export function PricingContent() {
   }, []);
 
   const visiblePackages = allPackages.filter((pkg) => visibility[pkg.key]);
-
-  const columnKeys = (["managed", "team", "selfHosted"] as const).filter((k) => visibility[k]);
-  const columnLabels: Record<string, string> = {
-    managed: "Managed",
-    team: "Team",
-    selfHosted: "Self-Hosted",
-  };
 
   const gridCols = visiblePackages.length + 1;
   const gridClass =
@@ -360,11 +393,14 @@ export function PricingContent() {
           <div className="relative max-w-4xl mx-auto px-6">
             <div className="mb-12">
               <Badge variant="outline" className="mb-4 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 no-default-hover-elevate no-default-active-elevate" data-testid="badge-comparison">
-                Comparison
+                Full Comparison
               </Badge>
               <h2 className="text-3xl font-bold tracking-tight" data-testid="text-comparison-title">
-                <span className="bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent">Feature</span> comparison
+                Everything at a <span className="bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent">glance</span>
               </h2>
+              <p className="mt-3 text-muted-foreground max-w-xl">
+                Freebies, features, and limits — side by side so you can pick the right tier in seconds.
+              </p>
             </div>
             <Card data-testid="card-comparison-table">
               <CardContent className="p-0">
@@ -372,32 +408,40 @@ export function PricingContent() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/50 bg-muted/30">
-                        <th className="text-left p-4 font-medium text-muted-foreground">Feature</th>
-                        {columnKeys.map((k) => (
-                          <th key={k} className={`text-center p-4 font-medium ${k === "team" ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground"}`}>
-                            {columnLabels[k]}
-                          </th>
-                        ))}
-                        <th className="text-center p-4 font-medium text-amber-600 dark:text-amber-400">Custom</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground min-w-[200px]"></th>
+                        <th className="text-center p-4 font-medium text-blue-600 dark:text-blue-400 min-w-[120px]">Individual</th>
+                        <th className="text-center p-4 font-medium text-indigo-600 dark:text-indigo-400 min-w-[140px]">Team</th>
+                        <th className="text-center p-4 font-medium text-amber-600 dark:text-amber-400 min-w-[120px]">Custom</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {comparisonFeatures.map((feature, index) => (
-                        <tr
-                          key={feature.name}
-                          className={`${index < comparisonFeatures.length - 1 ? "border-b border-border/50" : ""} ${index % 2 === 0 ? "bg-muted/10" : ""}`}
-                          data-testid={`row-feature-${feature.name.toLowerCase().replace(/\s+/g, "-")}`}
-                        >
-                          <td className="p-4 text-foreground">{feature.name}</td>
-                          {columnKeys.map((k) => (
-                            <td key={k} className="p-4">
-                              <FeatureIcon included={feature[k]} />
+                      {comparisonSections.map((section) => (
+                        <Fragment key={`section-${section.title}`}>
+                          <tr className="bg-muted/40 border-y border-border/50">
+                            <td colSpan={4} className="p-4" data-testid={`section-header-${section.title.toLowerCase().replace(/\s+/g, "-")}`}>
+                              <span className="font-semibold text-foreground">{section.title}</span>
+                              <span className="ml-2 text-xs text-muted-foreground">{section.subtitle}</span>
                             </td>
+                          </tr>
+                          {section.rows.map((row, idx) => (
+                            <tr
+                              key={row.name}
+                              className={`${idx < section.rows.length - 1 ? "border-b border-border/30" : ""} ${idx % 2 === 0 ? "bg-muted/10" : ""}`}
+                              data-testid={`row-compare-${row.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").substring(0, 30)}`}
+                            >
+                              <td className="p-3 pl-4 text-foreground">{row.name}</td>
+                              <td className="p-3 text-center">
+                                <FeatureIcon included={row.individual} />
+                              </td>
+                              <td className="p-3 text-center">
+                                <FeatureIcon included={row.team} />
+                              </td>
+                              <td className="p-3 text-center">
+                                <FeatureIcon included={row.custom} />
+                              </td>
+                            </tr>
                           ))}
-                          <td className="p-4">
-                            <FeatureIcon included={feature.custom} />
-                          </td>
-                        </tr>
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>

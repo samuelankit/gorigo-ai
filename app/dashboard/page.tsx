@@ -262,7 +262,7 @@ export default function DashboardPage() {
           </h1>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <p className="text-sm text-muted-foreground">Overview of your AI call center</p>
-            {serviceHealth && deploymentModel === "managed" && (
+            {serviceHealth && deploymentModel === "individual" && (
               <div className="flex items-center gap-1" data-testid="indicator-service-health">
                 <span className={cn(
                   "relative flex h-2 w-2",
@@ -307,9 +307,9 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
-                deploymentModel === "managed" ? "bg-blue-500/10" : deploymentModel === "custom" ? "bg-violet-500/10" : "bg-emerald-500/10"
+                deploymentModel === "individual" ? "bg-blue-500/10" : deploymentModel === "custom" ? "bg-violet-500/10" : "bg-emerald-500/10"
               )}>
-                {deploymentModel === "managed" ? (
+                {deploymentModel === "individual" ? (
                   <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 ) : deploymentModel === "custom" ? (
                   <MessageSquare className="w-4 h-4 text-violet-600 dark:text-violet-400" />
@@ -320,15 +320,15 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium" data-testid="text-deployment-label">
-                    {deploymentModel === "managed" ? "Managed Package" : deploymentModel === "custom" ? "Custom Package" : "Self-Hosted Package"}
+                    {deploymentModel === "individual" ? "Individual Package" : deploymentModel === "custom" ? "Custom Package" : "Self-Hosted Package"}
                   </span>
                   <Badge variant="secondary" className="no-default-hover-elevate text-[11px]" data-testid="badge-rate">
-                    {deploymentModel === "managed" ? "\u00A30.20/min" : deploymentModel === "custom" ? "Custom" : "\u00A30.12/min"}
+                    {deploymentModel === "individual" ? "\u00A30.20/min" : deploymentModel === "custom" ? "Custom" : "\u00A30.12/min"}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {deploymentModel === "managed"
-                    ? "AI + Telephony included \u2022 Fully managed"
+                  {deploymentModel === "individual"
+                    ? "AI + Telephony included \u2022 Everything included"
                     : deploymentModel === "custom"
                       ? "Tailored solution \u2022 Custom rates"
                       : "Licence fee only \u2022 Your infrastructure"}
@@ -336,7 +336,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              {deploymentModel === "managed" && (
+              {deploymentModel === "individual" && (
                 <>
                   <Badge variant="outline" className="no-default-hover-elevate text-[11px]" data-testid="badge-ai-included">
                     <Shield className="h-3 w-3 mr-1" />

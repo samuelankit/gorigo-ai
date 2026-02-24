@@ -21,7 +21,7 @@ const GORIGO_KNOWLEDGE: Array<{ category: string; content: string }> = [
   },
   {
     category: "deployment",
-    content: "GoRigo offers three deployment packages: Managed (GoRigo handles everything at £0.20/min, mobile app included), White-Label (deploy under your own brand at £0.12/min, for partners), and Custom (tailored enterprise solutions with bespoke pricing). Each package has different levels of control and support.",
+    content: "GoRigo offers three deployment packages: Individual (GoRigo handles everything at £0.20/min, mobile app included), White-Label (deploy under your own brand at £0.12/min, for partners), and Custom (tailored enterprise solutions with bespoke pricing). Each package has different levels of control and support.",
   },
   {
     category: "features",

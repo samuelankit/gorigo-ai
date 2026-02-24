@@ -25,17 +25,17 @@ export const revalidate = 0;
 export const metadata: Metadata = {
   title: "About GoRigo | International Business Exchange Limited",
   description:
-    "GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine the call centre with AI-powered voice agents.",
+    "GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine business operations with AI.",
   openGraph: {
     title: "About GoRigo | International Business Exchange Limited",
     description:
-      "GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine the call centre with AI-powered voice agents.",
+      "GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine business operations with AI.",
   },
   twitter: {
     card: "summary_large_image",
     title: "About GoRigo | International Business Exchange Limited",
     description:
-      "GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine the call centre with AI-powered voice agents.",
+      "GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine business operations with AI.",
   },
   alternates: {
     canonical: "/about",
@@ -47,7 +47,7 @@ const values = [
     icon: Zap,
     title: "Automation First",
     description:
-      "We believe the best call centre is one that runs itself. Every feature is designed to reduce manual work.",
+      "We believe the best business platform is one that runs itself. Every feature is designed to reduce manual work.",
     iconBg: "bg-amber-500/10 dark:bg-amber-500/15",
     iconColor: "text-amber-500",
   },
@@ -74,7 +74,7 @@ const partners = [
     icon: Building2,
     title: "Business Partners",
     description:
-      "White-label GoRigo under your own brand. Resell AI call centre capabilities to your clients with full platform access and dedicated support.",
+      "White-label GoRigo under your own brand. Resell AI business platform capabilities to your clients with full platform access and dedicated support.",
     iconBg: "bg-blue-500/10 dark:bg-blue-500/15",
     iconColor: "text-blue-500",
     href: "/partners/whitelabel",
@@ -84,7 +84,7 @@ const partners = [
     icon: Users,
     title: "Direct-to-Consumer",
     description:
-      "Sign up directly and deploy your own AI agents. Ideal for businesses that want to manage their call centre operations in-house.",
+      "Sign up directly and deploy your own AI agents. Ideal for businesses that want to manage their operations from one platform.",
     iconBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
     iconColor: "text-emerald-500",
     href: "/register",
@@ -108,7 +108,7 @@ export default function AboutPage() {
     <div className="min-h-screen bg-background" data-testid="page-about">
       <WebPageJsonLd
         title="About GoRigo | International Business Exchange Limited"
-        description="GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine the call centre with AI-powered voice agents."
+        description="GoRigo is built by International Business Exchange Limited, a UK-registered company. Learn about our mission to reimagine business operations with AI."
         url="/about"
       />
       <BreadcrumbJsonLd
@@ -140,7 +140,7 @@ export default function AboutPage() {
             className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
             data-testid="text-about-hero-title"
           >
-            Reimagining the call centre
+            Reimagining business operations
             <br />
             <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">for the AI era</span>
           </h1>
@@ -153,15 +153,15 @@ export default function AboutPage() {
             className="text-lg leading-relaxed text-muted-foreground"
             data-testid="text-mission"
           >
-            GoRigo was built to solve a real problem &mdash; traditional call
-            centres cost businesses thousands per month in staffing, training,
-            and infrastructure, yet still deliver inconsistent customer
-            experiences with limited availability. We believe AI can do better.
-            GoRigo eliminates these barriers by giving businesses of any size
-            the power to deploy intelligent voice agents that handle inbound
-            and outbound calls with human-like understanding &mdash; 24/7,
-            across multiple languages, at a fraction of the cost. No more
-            missed calls, no more scaling headaches, no more compliance gaps.
+            GoRigo started with a simple idea &mdash; what if AI could answer
+            every call your business receives, 24/7, in any language? That
+            idea quickly grew into something bigger. Today, GoRigo is a
+            complete AI business platform that handles voice agents, outbound
+            campaigns, team management, finance, knowledge bases, and
+            compliance &mdash; all from your phone. We believe businesses
+            shouldn&rsquo;t need five different tools to operate. One platform,
+            one wallet, one dashboard. No more missed calls, no more scattered
+            tools, no more compliance gaps.
           </p>
           <Badge variant="outline" className="mt-10 px-4 py-1.5 text-xs font-medium tracking-wide border-emerald-500/30 text-emerald-600 dark:text-emerald-400" data-testid="text-social-proof">
             <span className="relative flex h-2 w-2 mr-2">

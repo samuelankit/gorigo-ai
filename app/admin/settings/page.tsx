@@ -59,7 +59,7 @@ interface RateCard {
 }
 
 const DEPLOYMENT_LABELS: Record<string, string> = {
-  managed: "Managed",
+  individual: "Individual",
   self_hosted: "Self-Hosted",
 };
 
@@ -286,7 +286,7 @@ export default function PlatformSettingsPage() {
     setNewCard(true);
     setEditingCard(null);
     setCardForm({
-      deploymentModel: "managed",
+      deploymentModel: "individual",
       category: "voice_inbound",
       label: "",
       ratePerMinute: "0.15",
@@ -862,15 +862,15 @@ export default function PlatformSettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Managed</CardTitle>
+                <CardTitle className="text-base">Individual</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">Fully managed AI call centre. You handle everything for the client.</p>
+                <p className="text-sm text-muted-foreground mb-4">Everything included for a single operator. The fastest way to get started.</p>
                 <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor="pkg-managed" className="text-sm">Visible on site</Label>
+                  <Label htmlFor="pkg-individual" className="text-sm">Visible on site</Label>
                   <Switch
-                    id="pkg-managed"
-                    data-testid="switch-package-managed"
+                    id="pkg-individual"
+                    data-testid="switch-package-individual"
                     checked={settings.deployment_package_managed_enabled === "true"}
                     onCheckedChange={(checked) => updateSetting("deployment_package_managed_enabled", checked ? "true" : "false")}
                   />
@@ -913,12 +913,12 @@ function RateCardForm({ form, onChange }: { form: Partial<RateCard>; onChange: (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div className="space-y-1.5">
         <Label>Deployment Model</Label>
-        <Select value={form.deploymentModel || "managed"} onValueChange={(v) => onChange({ ...form, deploymentModel: v })}>
+        <Select value={form.deploymentModel || "individual"} onValueChange={(v) => onChange({ ...form, deploymentModel: v })}>
           <SelectTrigger data-testid="select-card-model">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="managed">Managed</SelectItem>
+            <SelectItem value="individual">Individual</SelectItem>
             <SelectItem value="self_hosted">Self-Hosted</SelectItem>
           </SelectContent>
         </Select>

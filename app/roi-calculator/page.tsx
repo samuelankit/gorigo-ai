@@ -66,7 +66,7 @@ const PERSONAS = [
     label: "I'm exploring AI for my business",
     shortLabel: "Exploring AI",
     icon: Building2,
-    tier: "direct" as TierKey,
+    tier: "individual" as TierKey,
     description: "See how much you could save — no technical knowledge needed",
   },
   {
@@ -186,13 +186,13 @@ function PersonaExplorer({
   avgDuration: number;
   automationRate: number;
 }) {
-  const tier = CUSTOMER_TIERS.direct;
+  const tier = CUSTOMER_TIERS.individual;
   const totalMinutes = callsPerMonth * avgDuration;
   const aiMinutes = totalMinutes * (automationRate / 100);
 
   const agentCount = Math.max(1, Math.ceil(callsPerMonth / 600));
   const humanCost = calculateFullHumanCost(agentCount);
-  const aiCost = calculateAICost(aiMinutes, "direct");
+  const aiCost = calculateAICost(aiMinutes, "individual");
   const reducedAgents = Math.max(1, Math.ceil(agentCount * (1 - automationRate / 100)));
   const reducedHumanCost = calculateFullHumanCost(reducedAgents);
   const totalAICost = aiCost + reducedHumanCost;
@@ -362,7 +362,7 @@ function PersonaPartner({
   const totalMonthlyCost = monthlyCostPerClient * numberOfClients;
   const totalMonthlyProfit = monthlyMarginPerClient * numberOfClients;
 
-  const affiliateClientSpend = aiMinutes * CUSTOMER_TIERS.direct.ratePerMinute;
+  const affiliateClientSpend = aiMinutes * CUSTOMER_TIERS.individual.ratePerMinute;
   const affiliateEarnings = calculateAffiliateEarnings(affiliateClientSpend);
   const affiliateAnnual = affiliateEarnings * 12;
 

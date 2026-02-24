@@ -60,7 +60,7 @@ interface RateInfo {
 }
 
 const DEPLOYMENT_MODEL_INFO: Record<string, { label: string; icon: typeof Cloud; description: string; color: string }> = {
-  managed: { label: "Managed", icon: Cloud, description: "Full-service: AI, telephony & platform costs included in rate", color: "text-blue-600 dark:text-blue-400" },
+  individual: { label: "Individual", icon: Cloud, description: "Full-service: AI, telephony & platform costs included in rate", color: "text-blue-600 dark:text-blue-400" },
   self_hosted: { label: "Self-Hosted", icon: Server, description: "License fee per usage. You run your own infrastructure", color: "text-emerald-600 dark:text-emerald-400" },
 };
 
@@ -103,7 +103,7 @@ export default function BillingPage() {
   });
 
   const usage = usageData?.usage || null;
-  const deploymentModel = usageData?.deploymentModel || "managed";
+  const deploymentModel = usageData?.deploymentModel || "individual";
   const rates = usageData?.rates || [];
 
   if (usage && spendingCap === "" && usage.spendingCap !== null && usage.spendingCap !== undefined) {
@@ -279,11 +279,11 @@ export default function BillingPage() {
         <Card data-testid="card-deployment-model">
           <CardContent className="flex items-center gap-4 py-4">
             {(() => {
-              const info = DEPLOYMENT_MODEL_INFO[deploymentModel] || DEPLOYMENT_MODEL_INFO.managed;
+              const info = DEPLOYMENT_MODEL_INFO[deploymentModel] || DEPLOYMENT_MODEL_INFO.individual;
               const ModelIcon = info.icon;
               return (
                 <>
-                  <div className={cn("flex items-center justify-center w-10 h-10 rounded-lg shrink-0", deploymentModel === "managed" ? "bg-blue-500/10" : "bg-emerald-500/10")}>
+                  <div className={cn("flex items-center justify-center w-10 h-10 rounded-lg shrink-0", deploymentModel === "individual" ? "bg-blue-500/10" : "bg-emerald-500/10")}>
                     <ModelIcon className={cn("w-5 h-5", info.color)} />
                   </div>
                   <div className="flex-1 min-w-0">

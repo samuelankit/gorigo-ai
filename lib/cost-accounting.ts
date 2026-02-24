@@ -218,13 +218,13 @@ export function generatePricingRecommendations(params: {
 
   return [
     {
-      customerType: "Direct / D2C (Managed)",
-      key: "direct",
-      currentRatePerMin: CUSTOMER_TIERS.direct.ratePerMinute,
+      customerType: "Direct / D2C (Individual)",
+      key: "individual",
+      currentRatePerMin: CUSTOMER_TIERS.individual.ratePerMinute,
       recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.direct, 0, fullyLoadedCost),
       costPerMin: round(fullyLoadedCost, 4),
-      grossMarginPercent: safeMargin(CUSTOMER_TIERS.direct.ratePerMinute, fullyLoadedCost),
-      netMarginPercent: safeMargin(CUSTOMER_TIERS.direct.ratePerMinute, fullyLoadedCost),
+      grossMarginPercent: safeMargin(CUSTOMER_TIERS.individual.ratePerMinute, fullyLoadedCost),
+      netMarginPercent: safeMargin(CUSTOMER_TIERS.individual.ratePerMinute, fullyLoadedCost),
       rationale: "Premium rate for fully managed service. Highest margin tier. Customer gets dedicated support, setup assistance, and all API costs included. Target 75% gross margin.",
       marketBenchmark: "UK AI call centre market: £0.15-£0.35/min. Traditional call centres: £3.50-£5.50/min.",
       minimumViableRate: round(fullyLoadedCost * 2, 2),
@@ -246,11 +246,11 @@ export function generatePricingRecommendations(params: {
     {
       customerType: "Affiliate-Referred D2C",
       key: "affiliate",
-      currentRatePerMin: CUSTOMER_TIERS.direct.ratePerMinute,
+      currentRatePerMin: CUSTOMER_TIERS.individual.ratePerMinute,
       recommendedRatePerMin: calcRecommendedRate(targetGrossMargin.affiliate, affiliateCommissionRate, fullyLoadedCost),
       costPerMin: round(fullyLoadedCost, 4),
-      grossMarginPercent: safeMargin(CUSTOMER_TIERS.direct.ratePerMinute, fullyLoadedCost),
-      netMarginPercent: safeMargin(CUSTOMER_TIERS.direct.ratePerMinute, fullyLoadedCost + CUSTOMER_TIERS.direct.ratePerMinute * affiliateCommissionRate),
+      grossMarginPercent: safeMargin(CUSTOMER_TIERS.individual.ratePerMinute, fullyLoadedCost),
+      netMarginPercent: safeMargin(CUSTOMER_TIERS.individual.ratePerMinute, fullyLoadedCost + CUSTOMER_TIERS.individual.ratePerMinute * affiliateCommissionRate),
       rationale: `Same D2C rate but ${round(affiliateCommissionRate * 100)}% goes to referring affiliate. Net margin is lower. Affiliate brings the customer so acquisition cost is zero.`,
       marketBenchmark: "Affiliate commissions: 10-25% of customer spend. Industry standard is 20%.",
       minimumViableRate: round(fullyLoadedCost / Math.max(1 - affiliateCommissionRate, 0.1) * 1.4, 2),

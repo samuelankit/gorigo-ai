@@ -60,9 +60,9 @@ export function Footer() {
                 </span>
               </Link>
               <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                AI-powered call centre engine.
+                AI-powered business engine.
                 <br />
-                Run your call centre from your phone.
+                Run your business from your phone.
               </p>
               <div className="mt-2">
                 <p className="text-xs text-muted-foreground">

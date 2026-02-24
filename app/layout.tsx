@@ -14,10 +14,10 @@ import { VerificationMeta } from "@/components/seo/verification-meta";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GoRigo - AI Call Centre Platform | International Business Exchange Limited",
+  title: "GoRigo - AI Business Platform | International Business Exchange Limited",
   description:
-    "AI-powered call centre platform by International Business Exchange Limited. Deploy intelligent voice agents that handle inbound and outbound calls 24/7. Pay only for talk time. UK compliant with GDPR, DNC registry, and consent management.",
-  keywords: "AI call centre, AI voice agents, UK call centre, automated calls, call centre platform, pay per talk time",
+    "AI-powered business platform by International Business Exchange Limited. Voice agents, campaigns, team management, finance, and compliance — all from your phone. Pay only for what you use. UK compliant with GDPR, DNC registry, and consent management.",
+  keywords: "AI business platform, AI voice agents, campaigns, team management, automated calls, pay per talk time",
   alternates: {
     canonical: "/",
   },
@@ -30,9 +30,9 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
   openGraph: {
-    title: "GoRigo - AI Call Centre Platform",
+    title: "GoRigo - AI Business Platform",
     description:
-      "AI-powered call centre platform. Inbound receptionist, outbound sales, and seamless human handoff. Pay only for talk time.",
+      "AI-powered business platform. Voice agents, campaigns, team management, finance, and compliance. Pay only for what you use.",
     siteName: "GoRigo",
     type: "website",
     images: [
@@ -40,15 +40,15 @@ export const metadata: Metadata = {
         url: "https://gorigo.ai/logo.png",
         width: 512,
         height: 512,
-        alt: "GoRigo AI Call Centre Platform",
+        alt: "GoRigo AI Business Platform",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "GoRigo - AI Call Centre Platform",
+    title: "GoRigo - AI Business Platform",
     description:
-      "AI-powered call centre platform. Pay only for talk time. UK compliant.",
+      "AI-powered business platform. Pay only for what you use. UK compliant.",
     images: ["https://gorigo.ai/logo.png"],
   },
   other: {

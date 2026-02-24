@@ -43,14 +43,14 @@ const TIMEZONES = [
 ];
 
 const PACKAGE_INFO: Record<string, { name: string; rate: string; description: string; color: string; bgColor: string }> = {
-  managed: { name: "Managed", rate: "\u00a30.15/min", description: "AI + Telephony included", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
+  individual: { name: "Individual", rate: "\u00a30.20/min", description: "AI + Telephony included", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
   team: { name: "Team", rate: "\u00a30.18/min", description: "For your whole company", color: "text-indigo-600 dark:text-indigo-400", bgColor: "bg-indigo-500/10" },
   self_hosted: { name: "Self-Hosted", rate: "\u00a30.03/min", description: "Licence fee only", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10" },
   custom: { name: "Custom", rate: "Custom", description: "Bespoke rates and features", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-500/10" },
 };
 
 const PACKAGE_ICONS: Record<string, typeof Cloud> = {
-  managed: Cloud,
+  individual: Cloud,
   team: Key,
   self_hosted: Server,
   custom: Cloud,
@@ -83,7 +83,7 @@ export default function SettingsPage() {
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
 
-  const [deploymentModel, setDeploymentModel] = useState<string>("managed");
+  const [deploymentModel, setDeploymentModel] = useState<string>("individual");
   const [showPackageSwitch, setShowPackageSwitch] = useState(false);
   const [pendingPackage, setPendingPackage] = useState<string>("");
 
@@ -548,7 +548,7 @@ export default function SettingsPage() {
               Change Package
             </Button>
           </div>
-          {deploymentModel === "managed" && (
+          {deploymentModel === "individual" && (
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary" className="no-default-hover-elevate" data-testid="badge-ai-included">AI Included</Badge>
               <Badge variant="secondary" className="no-default-hover-elevate" data-testid="badge-telephony-included">Telephony Included</Badge>

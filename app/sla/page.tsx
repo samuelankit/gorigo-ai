@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 
 const uptimeCommitments = [
   {
-    plan: "Managed",
+    plan: "Individual",
     uptime: "99.9%",
     monthlyDowntime: "~43 minutes",
     description: "Enterprise-grade reliability with proactive monitoring and automatic failover.",
@@ -53,7 +53,7 @@ const uptimeCommitments = [
     plan: "Team",
     uptime: "99.9%",
     monthlyDowntime: "~43 minutes",
-    description: "Same enterprise-grade reliability as Managed, with faster response times, dedicated escalation, and stronger accountability.",
+    description: "Same enterprise-grade reliability as Individual, with faster response times, dedicated escalation, and stronger accountability.",
     accentColor: "from-indigo-500 to-violet-500",
     badgeBg: "bg-indigo-500/10",
     badgeText: "text-indigo-600 dark:text-indigo-400",
@@ -80,7 +80,7 @@ const uptimeCommitments = [
 
 const supportTiers = [
   {
-    plan: "Managed",
+    plan: "Individual",
     critical: "1 hour",
     high: "4 hours",
     medium: "1 business day",
@@ -114,10 +114,10 @@ const supportTiers = [
 ];
 
 const creditTiers = [
-  { downtime: "Less than target but above 99.0%", managedCredit: "10%", teamCredit: "15%" },
-  { downtime: "Between 98.0% and 99.0%", managedCredit: "25%", teamCredit: "35%" },
-  { downtime: "Between 95.0% and 98.0%", managedCredit: "50%", teamCredit: "60%" },
-  { downtime: "Below 95.0%", managedCredit: "100%", teamCredit: "100%" },
+  { downtime: "Less than target but above 99.0%", individualCredit: "10%", teamCredit: "15%" },
+  { downtime: "Between 98.0% and 99.0%", individualCredit: "25%", teamCredit: "35%" },
+  { downtime: "Between 95.0% and 98.0%", individualCredit: "50%", teamCredit: "60%" },
+  { downtime: "Below 95.0%", individualCredit: "100%", teamCredit: "100%" },
 ];
 
 const sectionIcons = [
@@ -338,7 +338,7 @@ export default function SlaPage() {
                     <thead>
                       <tr className="border-b border-border/50">
                         <th className="text-left p-4 font-medium text-muted-foreground">Monthly Uptime</th>
-                        <th className="text-center p-4 font-medium text-muted-foreground">Managed Credit</th>
+                        <th className="text-center p-4 font-medium text-muted-foreground">Individual Credit</th>
                         <th className="text-center p-4 font-medium text-indigo-600 dark:text-indigo-400">Team Credit</th>
                       </tr>
                     </thead>
@@ -350,7 +350,7 @@ export default function SlaPage() {
                           data-testid={`row-credit-${i}`}
                         >
                           <td className="p-4">{tier.downtime}</td>
-                          <td className="p-4 text-center font-medium">{tier.managedCredit}</td>
+                          <td className="p-4 text-center font-medium">{tier.individualCredit}</td>
                           <td className="p-4 text-center font-medium text-indigo-600 dark:text-indigo-400">{tier.teamCredit}</td>
                         </tr>
                       ))}
@@ -408,7 +408,7 @@ export default function SlaPage() {
                 { step: 2, title: "Acknowledgement", description: "We acknowledge the issue publicly on our status page and send notifications to affected customers via email and dashboard alerts.", color: "text-blue-500", bg: "bg-blue-500/10" },
                 { step: 3, title: "Updates", description: "We post updates every 30 minutes for critical incidents and every 2 hours for high-priority issues until resolved. You will never be left wondering what is happening.", color: "text-violet-500", bg: "bg-violet-500/10" },
                 { step: 4, title: "Resolution", description: "Once the issue is fixed, we confirm resolution and monitor closely for 24 hours to ensure stability.", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-                { step: 5, title: "Post-Incident Review", description: "Within 5 business days, we publish a Root Cause Analysis explaining what happened, why, and what we are doing to prevent it from happening again. Managed and Custom clients receive a private, detailed report. Team clients receive their post-mortem within 48 hours via their dedicated escalation contact.", color: "text-rose-500", bg: "bg-rose-500/10" },
+                { step: 5, title: "Post-Incident Review", description: "Within 5 business days, we publish a Root Cause Analysis explaining what happened, why, and what we are doing to prevent it from happening again. Individual and Custom clients receive a private, detailed report. Team clients receive their post-mortem within 48 hours via their dedicated escalation contact.", color: "text-rose-500", bg: "bg-rose-500/10" },
               ].map((item) => (
                 <Card key={item.step}>
                   <CardContent className="p-6">
@@ -444,7 +444,7 @@ export default function SlaPage() {
             </div>
             <p className="text-muted-foreground mb-8 max-w-2xl">
               Team package customers receive these additional SLA commitments
-              beyond the standard Managed package, providing stronger accountability
+              beyond the standard Individual package, providing stronger accountability
               and faster resolution for your entire organisation.
             </p>
 
@@ -462,7 +462,7 @@ export default function SlaPage() {
                 },
                 {
                   title: "48-Hour Incident Post-Mortem",
-                  description: "Receive a detailed post-mortem within 48 hours of any incident, compared to 5 business days for Managed clients.",
+                  description: "Receive a detailed post-mortem within 48 hours of any incident, compared to 5 business days for Individual clients.",
                   icon: Clock,
                 },
                 {
@@ -472,12 +472,12 @@ export default function SlaPage() {
                 },
                 {
                   title: "Priority Incident Resolution",
-                  description: "Team incidents are prioritised and resolved before the Managed queue, ensuring your organisation gets back online faster.",
+                  description: "Team incidents are prioritised and resolved before the Individual queue, ensuring your organisation gets back online faster.",
                   icon: AlertTriangle,
                 },
                 {
                   title: "Enhanced Data Recovery",
-                  description: "Recovery Time Objective (RTO): 2 hours (vs Managed's 4 hours). Recovery Point Objective (RPO): 30 minutes (vs Managed's 1 hour).",
+                  description: "Recovery Time Objective (RTO): 2 hours (vs Individual's 4 hours). Recovery Point Objective (RPO): 30 minutes (vs Individual's 1 hour).",
                   icon: Shield,
                 },
                 {
@@ -527,11 +527,11 @@ export default function SlaPage() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>Automated daily backups with 30-day retention (Managed).</span>
+                      <span>Automated daily backups with 30-day retention (Individual).</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>Point-in-time recovery available for Managed clients (last 7 days).</span>
+                      <span>Point-in-time recovery available for Individual clients (last 7 days).</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -546,11 +546,11 @@ export default function SlaPage() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span><span className="font-medium text-foreground">Recovery Time (RTO):</span> Team: 2 hours. Managed: 4 hours. Self-Hosted: your responsibility.</span>
+                      <span><span className="font-medium text-foreground">Recovery Time (RTO):</span> Team: 2 hours. Individual: 4 hours. Self-Hosted: your responsibility.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span><span className="font-medium text-foreground">Recovery Point (RPO):</span> Team: 30 minutes. Managed: 1 hour. Self-Hosted: your configuration.</span>
+                      <span><span className="font-medium text-foreground">Recovery Point (RPO):</span> Team: 30 minutes. Individual: 1 hour. Self-Hosted: your configuration.</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -576,7 +576,7 @@ export default function SlaPage() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Database className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />
-                      <span>Managed data hosted in the UK (London region) by default.</span>
+                      <span>Platform data hosted in the UK (London region) by default.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Database className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />

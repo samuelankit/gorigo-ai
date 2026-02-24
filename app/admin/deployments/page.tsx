@@ -25,7 +25,7 @@ import {
   Clock, Phone, Search, ChevronRight, History, ShieldAlert,
 } from "lucide-react";
 
-type DeploymentModel = "managed" | "self_hosted" | "custom";
+type DeploymentModel = "individual" | "self_hosted" | "custom";
 
 interface OrgItem {
   id: number;
@@ -75,8 +75,8 @@ interface SwitchDetails {
 }
 
 const MODEL_CONFIG: Record<DeploymentModel, { label: string; icon: typeof Cloud; color: string; bgColor: string; badgeClass: string; description: string }> = {
-  managed: {
-    label: "Managed",
+  individual: {
+    label: "Individual",
     icon: Cloud,
     color: "text-blue-600 dark:text-blue-400",
     bgColor: "bg-blue-500/10",
@@ -102,7 +102,7 @@ const MODEL_CONFIG: Record<DeploymentModel, { label: string; icon: typeof Cloud;
 };
 
 function ModelBadge({ model }: { model: string }) {
-  const config = MODEL_CONFIG[model as DeploymentModel] || MODEL_CONFIG.managed;
+  const config = MODEL_CONFIG[model as DeploymentModel] || MODEL_CONFIG.individual;
   const Icon = config.icon;
   return (
     <Badge variant="default" className={cn("no-default-hover-elevate gap-1", config.badgeClass)}>
@@ -224,7 +224,7 @@ export default function DeploymentsPage() {
 
   const modelCounts = orgList.reduce(
     (acc, org) => {
-      const m = (org.deploymentModel || "managed") as string;
+      const m = (org.deploymentModel || "individual") as string;
       acc[m] = (acc[m] || 0) + 1;
       return acc;
     },
@@ -247,7 +247,7 @@ export default function DeploymentsPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {(["managed", "self_hosted", "custom"] as DeploymentModel[]).map((model) => {
+        {(["individual", "self_hosted", "custom"] as DeploymentModel[]).map((model) => {
           const config = MODEL_CONFIG[model];
           const Icon = config.icon;
           const count = modelCounts[model] || 0;
@@ -288,7 +288,7 @@ export default function DeploymentsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Models</SelectItem>
-                  <SelectItem value="managed">Managed</SelectItem>
+                  <SelectItem value="individual">Individual</SelectItem>
                   <SelectItem value="self_hosted">Self-Hosted</SelectItem>
                   <SelectItem value="custom">Custom</SelectItem>
                 </SelectContent>
@@ -328,7 +328,7 @@ export default function DeploymentsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <ModelBadge model={org.deploymentModel || "managed"} />
+                      <ModelBadge model={org.deploymentModel || "individual"} />
                     </TableCell>
                     <TableCell className="text-right text-sm font-mono">{formatCurrency(org.balance)}</TableCell>
                     <TableCell className="text-right text-sm">{org.totalCalls}</TableCell>
@@ -381,7 +381,7 @@ export default function DeploymentsPage() {
               Switch Deployment Model
             </DialogTitle>
             <DialogDescription>
-              {selectedOrg?.name} - Currently on <strong>{MODEL_CONFIG[(selectedOrg?.deploymentModel || "managed") as DeploymentModel]?.label}</strong>
+              {selectedOrg?.name} - Currently on <strong>{MODEL_CONFIG[(selectedOrg?.deploymentModel || "individual") as DeploymentModel]?.label}</strong>
             </DialogDescription>
           </DialogHeader>
 

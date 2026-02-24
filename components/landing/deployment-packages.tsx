@@ -8,15 +8,15 @@ import Link from "next/link";
 import { CheckCircle2, ArrowRight, Smartphone, Crown } from "lucide-react";
 
 interface PackageVisibility {
-  managed: boolean;
+  individual: boolean;
   selfHosted: boolean;
 }
 
 const allPackages = [
   {
-    key: "managed" as const,
-    name: "Managed",
-    description: "We handle everything. You focus on your business. The fastest way to launch your AI call centre.",
+    key: "individual" as const,
+    name: "Individual",
+    description: "We handle everything. You focus on your business. The fastest way to get started.",
     highlights: [
       "Fully managed AI agents",
       "Dedicated account manager",
@@ -65,7 +65,7 @@ const allPackages = [
 
 export function DeploymentPackages() {
   const [visibility, setVisibility] = useState<PackageVisibility>({
-    managed: true,
+    individual: true,
     selfHosted: false,
   });
 

@@ -73,11 +73,11 @@ export interface RevenueImpactResult {
 }
 
 export const CUSTOMER_TIERS = {
-  direct: {
-    name: "Direct / Managed",
-    key: "direct",
+  individual: {
+    name: "Individual",
+    key: "individual",
     ratePerMinute: 0.20,
-    description: "Fully managed AI agents with dedicated support",
+    description: "Everything you need to run your business with AI",
     customerPaysApiCosts: false,
   },
   team: {

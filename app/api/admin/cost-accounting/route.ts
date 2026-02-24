@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       const breakEven = generateBreakEvenAnalysis({
         fixedCostsMonthly: fixed.totalMonthly,
         variableCostPerMinute,
-        ratePerMinute: CUSTOMER_TIERS.direct.ratePerMinute,
+        ratePerMinute: CUSTOMER_TIERS.individual.ratePerMinute,
         partnerCommissionRate: 0,
       });
 

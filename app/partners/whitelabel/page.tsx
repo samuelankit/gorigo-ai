@@ -387,7 +387,7 @@ export default function WhitelabelPage() {
             className="mt-4 text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed"
             data-testid="text-hero-packages"
           >
-            Your whitelabel clients can use any package: Managed, Team, or Custom.
+            Your whitelabel clients can use any package: Individual, Team, or Custom.
             Offer the full range of GoRigo deployment options under your brand.
           </p>
         </div>
@@ -494,7 +494,7 @@ export default function WhitelabelPage() {
             <p className="mt-4 text-muted-foreground max-w-2xl leading-relaxed">
               Every whitelabel partner receives a complete platform with all
               the tools needed to manage and grow a successful AI call centre
-              business. Your clients can choose from Managed, Team, or Custom
+              business. Your clients can choose from Individual, Team, or Custom
               deployment packages — giving them the flexibility to scale from
               solo use to full company-wide collaboration.
             </p>

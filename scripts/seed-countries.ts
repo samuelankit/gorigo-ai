@@ -227,7 +227,7 @@ const COMPLIANCE_PROFILES: Record<string, Partial<typeof countryComplianceProfil
   },
 };
 
-const DEPLOYMENT_MODELS = ["managed", "self_hosted", "custom"];
+const DEPLOYMENT_MODELS = ["individual", "self_hosted", "custom"];
 const DIRECTIONS = ["inbound", "outbound"] as const;
 const NUMBER_TYPES = ["mobile", "landline"] as const;
 
@@ -269,7 +269,7 @@ async function seed() {
         for (const numberType of NUMBER_TYPES) {
           const key = `${direction}_${numberType}`;
           const surcharge: number = tierRates[key] ?? 0.03;
-          const modelMultiplier: number = model === "managed" ? 1 : model === "custom" ? 1 : 0.5;
+          const modelMultiplier: number = model === "individual" ? 1 : model === "custom" ? 1 : 0.5;
           const finalRate = Math.round(surcharge * modelMultiplier * 10000) / 10000;
           const twilioCost = Math.round(surcharge * 0.6 * 10000) / 10000;
           await db.insert(countryRateCards).values({

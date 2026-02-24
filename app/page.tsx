@@ -18,8 +18,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-background" data-testid="page-home">
       <OrganizationJsonLd />
       <WebPageJsonLd 
-        title="GoRigo - Run Your AI Call Center From Your Phone | 24/7 Voice Agents" 
-        description="Run and manage your entire AI call center from your phone. Deploy intelligent voice agents, monitor calls, and control everything by voice. Pay only for talk time." 
+        title="GoRigo - AI That Runs Your Business | Voice Agents, Campaigns, Teams" 
+        description="AI-powered business platform. Voice agents, campaigns, team management, finance, and compliance — all from your phone. Pay only for what you use." 
         url="/" 
       />
       <SoftwareApplicationJsonLd />
@@ -37,24 +37,24 @@ export default function HomePage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8604C] opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[#E8604C]" />
               </span>
-              AI-Powered Call Centre Engine
+              AI-Powered Business Engine
             </Badge>
 
             <h1
               className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
               data-testid="text-hero-title"
             >
-              Run Your AI Call Center
+              AI That Runs Your Business.
               <br />
-              <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">From Your Phone</span>
+              <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">You Run It From Your Phone.</span>
             </h1>
 
             <p
               className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed"
               data-testid="text-hero-subtitle"
             >
-              Deploy intelligent AI voice agents that answer every call naturally, 24/7.
-              Manage your entire call centre from anywhere — by voice, tap, or text.
+              Voice agents, campaigns, team management, finance, and compliance — one platform.
+              Manage everything by voice, tap, or text.
             </p>
 
             <p
@@ -62,7 +62,7 @@ export default function HomePage() {
               data-testid="callout-no-subscriptions"
             >
               <span className="bg-gradient-to-r from-teal-500 to-emerald-400 dark:from-teal-400 dark:to-emerald-300 bg-clip-text text-transparent" data-testid="text-hero-no-subscriptions">
-                No subscriptions. No seat fees. Pay only for talk time
+                No subscriptions. No seat fees. Pay only for what you use
               </span>
               <span className="text-lg sm:text-xl font-bold text-teal-500 dark:text-teal-400 ml-0.5" data-testid="text-hero-pound-symbol">£</span>
               <TalkTimeInfo />

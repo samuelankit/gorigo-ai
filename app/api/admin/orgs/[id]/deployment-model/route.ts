@@ -9,9 +9,9 @@ import { adminLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
 import { isDeploymentPackageEnabled } from "@/lib/feature-flags";
 
-type DeploymentModel = "managed" | "self_hosted" | "custom";
+type DeploymentModel = "individual" | "self_hosted" | "custom";
 
-const VALID_MODELS: DeploymentModel[] = ["managed", "self_hosted", "custom"];
+const VALID_MODELS: DeploymentModel[] = ["individual", "self_hosted", "custom"];
 
 async function getActiveCalls(orgId: number): Promise<number> {
   const [result] = await db
@@ -57,7 +57,7 @@ export async function GET(
       return NextResponse.json({ error: "Org not found" }, { status: 404 });
     }
 
-    const currentModel = (org.deploymentModel || "managed") as DeploymentModel;
+    const currentModel = (org.deploymentModel || "individual") as DeploymentModel;
     const rateCards = await getAllRatesForModel(currentModel);
     const activeCalls = await getActiveCalls(orgId);
 
@@ -124,7 +124,7 @@ export async function PUT(
 
     if (!VALID_MODELS.includes(deploymentModel)) {
       return NextResponse.json(
-        { error: 'deploymentModel must be "managed", "self_hosted", or "custom"' },
+        { error: 'deploymentModel must be "individual", "self_hosted", or "custom"' },
         { status: 400 }
       );
     }
@@ -139,7 +139,7 @@ export async function PUT(
       return NextResponse.json({ error: "Org not found" }, { status: 404 });
     }
 
-    const oldModel = (existingOrg.deploymentModel || "managed") as DeploymentModel;
+    const oldModel = (existingOrg.deploymentModel || "individual") as DeploymentModel;
 
     if (oldModel === deploymentModel) {
       return NextResponse.json(

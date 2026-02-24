@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         )),
 
       db.select({
-        deploymentModel: sql<string>`COALESCE(${callLogs.billedDeploymentModel}, ${orgs.deploymentModel}, 'managed')`,
+        deploymentModel: sql<string>`COALESCE(${callLogs.billedDeploymentModel}, ${orgs.deploymentModel}, 'individual')`,
         revenue: sql<number>`COALESCE(SUM(CAST(${billingLedger.cost} AS numeric)), 0)`,
         calls: sql<number>`COUNT(*)`,
         minutes: sql<number>`COALESCE(SUM(${billingLedger.billableSeconds}), 0) / 60.0`,
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
           gte(billingLedger.createdAt, since),
           sql`${billingLedger.status} IN ('completed', 'billed', 'settled')`
         ))
-        .groupBy(sql`COALESCE(${callLogs.billedDeploymentModel}, ${orgs.deploymentModel}, 'managed')`),
+        .groupBy(sql`COALESCE(${callLogs.billedDeploymentModel}, ${orgs.deploymentModel}, 'individual')`),
 
       db.select({
         month: sql<string>`to_char(${billingLedger.createdAt}, 'YYYY-MM')`,
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
         mrrGrowth: Math.round(mrrGrowth * 10) / 10,
       },
       packageBreakdown: packageBreakdown.map(p => ({
-        deploymentModel: p.deploymentModel || "managed",
+        deploymentModel: p.deploymentModel || "individual",
         revenue: Math.round(parseFloat(String(p.revenue)) * 100) / 100,
         calls: Number(p.calls),
         minutes: Math.round(parseFloat(String(p.minutes)) * 10) / 10,
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
       topClients: topClients.map(c => ({
         orgId: c.orgId,
         orgName: c.orgName || "Unknown",
-        deploymentModel: c.deploymentModel || "managed",
+        deploymentModel: c.deploymentModel || "individual",
         revenue: Math.round(parseFloat(String(c.revenue)) * 100) / 100,
         calls: Number(c.calls),
         minutes: Math.round(parseFloat(String(c.minutes)) * 10) / 10,

@@ -1,8 +1,8 @@
 import { getWalletBalance } from "@/lib/wallet";
 
 export const TIER_ENTRY_BARRIERS = {
-  managed: {
-    label: "Managed",
+  individual: {
+    label: "Individual",
     minimumDeposit: 500,
     ratePerMinute: 0.20,
     description: "GoRigo manages everything. Full infrastructure provided.",

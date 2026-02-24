@@ -55,7 +55,7 @@ interface ClientDetail {
 }
 
 const PACKAGE_CONFIG: Record<string, { label: string; color: string; rate: string; icon: typeof Cloud }> = {
-  managed: { label: "Managed", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400", rate: "0.15/min", icon: Cloud },
+  individual: { label: "Individual", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400", rate: "0.20/min", icon: Cloud },
   self_hosted: { label: "Self-Hosted", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", rate: "0.03/min", icon: Server },
   custom: { label: "Custom", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400", rate: "Custom", icon: Cloud },
 };
@@ -167,7 +167,7 @@ export default function ClientDetailPage() {
   }
 
   const { client, owner, wallet, partner, usage, usageLast30Days, agentCount, memberCount } = data;
-  const pkg = PACKAGE_CONFIG[client.deploymentModel] || PACKAGE_CONFIG.managed;
+  const pkg = PACKAGE_CONFIG[client.deploymentModel] || PACKAGE_CONFIG.individual;
   const PkgIcon = pkg.icon;
   const isSuspended = client.channelType === "suspended";
   const walletBalance = Number(wallet?.balance ?? 0);

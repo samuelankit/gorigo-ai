@@ -18,11 +18,11 @@ export default function ClientsGuidePage() {
         {
           title: "Add a New Client",
           description: "Click the 'Add Client' button. Fill in the company name, contact email, and phone number. Choose the deployment package that fits their needs.",
-          detail: "Managed (you handle everything) or Self-Hosted (they run it themselves).",
+          detail: "Individual (single operator, full control) or Self-Hosted (they run it themselves).",
         },
         {
           title: "Select the Deployment Package",
-          description: "Each package has a different pricing model: Managed at 20p/min, Self-Hosted at 12p/min. Choose based on the client's technical capability and budget.",
+          description: "Each package has a different pricing model: Individual at 20p/min, Self-Hosted at 12p/min. Choose based on the client's technical capability and budget.",
         },
         {
           title: "Set Up Partner Relationships",
@@ -43,7 +43,7 @@ export default function ClientsGuidePage() {
         },
       ]}
       tips={[
-        { text: "Start new clients on the Managed package - it's the easiest to get started with." },
+        { text: "Start new clients on the Individual package - it's the easiest to get started with." },
         { text: "Set up spending caps for clients to prevent unexpected bills." },
         { text: "Use the automation settings to auto-suspend clients who exceed their spending limits." },
         { text: "Review client activity weekly to catch any issues early." },
@@ -64,7 +64,7 @@ export default function ClientsGuidePage() {
         },
       ]}
       keyTerms={[
-        { term: "Deployment Package", definition: "The service tier a client is on - Managed or Self-Hosted." },
+        { term: "Deployment Package", definition: "The service tier a client is on - Individual, Team, or Self-Hosted." },
         { term: "Business Partner", definition: "A reseller who can bring in their own clients and earn commissions." },
         { term: "D2C", definition: "Direct-to-Consumer - clients who work directly with you, no middleman." },
         { term: "Affiliate", definition: "Someone who refers new clients via a tracking link and earns commission per signup." },

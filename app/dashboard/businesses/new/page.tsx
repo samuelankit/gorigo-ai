@@ -10,11 +10,11 @@ import { ArrowLeft, Building2, Check, Loader2 } from "lucide-react";
 
 const allDeploymentOptions = [
   {
-    value: "managed",
-    key: "managed" as const,
-    title: "Managed",
+    value: "individual",
+    key: "individual" as const,
+    title: "Individual",
     description: "We run everything. You focus on your business.",
-    rate: "From 12p/min",
+    rate: "From 20p/min",
   },
   {
     value: "self-hosted",
@@ -45,7 +45,7 @@ export default function NewBusinessPage() {
       })
       .catch(() => {
         setDeploymentOptions(allDeploymentOptions);
-        if (!deploymentModel) setDeploymentModel("managed");
+        if (!deploymentModel) setDeploymentModel("individual");
       });
   }, []);
 

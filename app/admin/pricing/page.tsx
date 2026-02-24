@@ -66,7 +66,7 @@ interface RateCardData {
 }
 
 const DEPLOYMENT_MODELS = [
-  { value: "managed", label: "Managed", icon: Cloud, description: "Full-service: AI + telephony + platform included" },
+  { value: "individual", label: "Individual", icon: Cloud, description: "Full-service: AI + telephony + platform included" },
   { value: "self_hosted", label: "Self-Hosted", icon: Server, description: "License fee only, customer runs infrastructure" },
   { value: "custom", label: "Custom", icon: Calculator, description: "Bespoke rates and features configured per client" },
 ];

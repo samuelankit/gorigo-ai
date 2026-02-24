@@ -18,7 +18,7 @@ import {
   Cloud, Key, Server, Shield, Zap, Phone, Bot, Globe, Lock, MessageSquare,
 } from "lucide-react";
 
-type DeploymentModel = "managed" | "self_hosted" | "custom";
+type DeploymentModel = "individual" | "self_hosted" | "custom";
 
 interface FaqEntry {
   question: string;
@@ -41,10 +41,10 @@ const PACKAGES: {
   notIncluded?: string[];
 }[] = [
   {
-    id: "managed",
-    name: "Managed",
+    id: "individual",
+    name: "Individual",
     tagline: "We handle everything",
-    price: "\u00A30.15",
+    price: "\u00A30.20",
     priceUnit: "/min",
     icon: Cloud,
     color: "text-blue-600 dark:text-blue-400",
@@ -99,7 +99,7 @@ const PACKAGES: {
 ];
 
 interface PackageVisibility {
-  managed: boolean;
+  individual: boolean;
   selfHosted: boolean;
 }
 
@@ -110,7 +110,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [selectedPackage, setSelectedPackage] = useState<DeploymentModel>("managed");
+  const [selectedPackage, setSelectedPackage] = useState<DeploymentModel>("individual");
   const [businessName, setBusinessName] = useState("");
   const [industry, setIndustry] = useState("");
   const [handoffNumber, setHandoffNumber] = useState("");
@@ -127,7 +127,7 @@ export default function OnboardingPage() {
 
   const [selectedCountries, setSelectedCountries] = useState<string[]>(["GB"]);
   const [availableCountries, setAvailableCountries] = useState<{ code: string; name: string }[]>([]);
-  const [packageVisibility, setPackageVisibility] = useState<PackageVisibility>({ managed: true, selfHosted: false });
+  const [packageVisibility, setPackageVisibility] = useState<PackageVisibility>({ individual: true, selfHosted: false });
 
   useEffect(() => {
     fetch("/api/auth/me")

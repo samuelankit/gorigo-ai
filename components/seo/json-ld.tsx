@@ -7,7 +7,7 @@ export function OrganizationJsonLd() {
     url: "https://gorigo.ai",
     logo: "https://gorigo.ai/logo.png",
     description:
-      "AI-powered call centre platform. Deploy intelligent voice agents that handle inbound and outbound calls 24/7 with natural conversation. Pay only for talk time.",
+      "AI-powered business platform. Voice agents, campaigns, team management, finance, and compliance — all from your phone. Pay only for what you use.",
     foundingDate: "2024",
     address: {
       "@type": "PostalAddress",

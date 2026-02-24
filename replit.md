@@ -1,7 +1,7 @@
 # GoRigo - AI Business Platform
 
 ## Overview
-GoRigo is an AI-powered business platform built around six product pillars: AI Voice Agents, Campaigns & Leads, Team Collaboration, Finance & Billing, Knowledge & AI, and Compliance & Analytics. The platform manages a three-tier business hierarchy (Business Partners, Direct-to-Consumer, Affiliate Partners), streamlines partner management, automates commission processing, and offers capabilities like multi-agent management, visual automation flow building, knowledge management, and robust call management with real-time monitoring. Its ambition is to be a fully automated, scalable solution for AI-driven business operations, with a strategic mobile-first approach. Positioning: "AI That Runs Your Business. You Run It From Your Phone."
+GoRigo is an AI voice platform built around six product pillars: AI Voice Agents, Campaigns & Leads, Team Collaboration, Finance & Billing, Knowledge & AI, and Compliance & Analytics. The platform manages a three-tier business hierarchy (Business Partners, Direct-to-Consumer, Affiliate Partners), streamlines partner management, automates commission processing, and offers capabilities like multi-agent management, visual automation flow building, knowledge management, and robust call management with real-time monitoring. Its ambition is to be a fully automated, scalable solution for AI-driven business operations, with a strategic mobile-first approach. Positioning: "AI Voice. Real Business. Run From Your Phone."
 
 ## User Preferences
 - Default to light mode (day vision), with dark mode (night vision) toggle available.
@@ -31,7 +31,7 @@ GoRigo uses PostgreSQL with Drizzle ORM and `pgvector` for embeddings. Authentic
 The platform includes a Unit Economics System for real-time cost tracking and margin analysis, with a pricing simulator. An optional Rigo Voice Assistant provides AI voice control over the SaaS dashboard. Security hardening includes audit logging, robust session management, database-backed rate limiting, CSRF protection, email verification, account lockout, and comprehensive input validation using Zod schemas. Deployment utilizes Docker containers on Azure Container Apps with Azure PostgreSQL Flexible Server and Azure Key Vault. CI/CD is managed via GitHub Actions.
 
 Key features include:
-- **Deployment Packages**: Four commercial packages (Individual £0.20/min, Team £0.18/min, White-Label £0.12/min, Custom Enterprise). Team package targets 5-50 person companies with whole-company collaboration, no per-seat fees, £50/month minimum usage.
+- **Deployment Packages**: Three commercial packages (Individual £0.20/min, Team £0.18/min, Custom Enterprise). Team package targets 5-50 person companies with whole-company collaboration, no per-seat fees, £50/month minimum usage. White-label is an add-on available on any tier. Partners can resell all packages with full feature parity.
 - **Agent Configuration**: Customizable AI agents with roles, FAQs, knowledge bases, and language/voice selection.
 - **Knowledge Management**: Supports document upload, chunking, embedding, and audio transcription.
 - **Multi-Tier Partner Management**: Business Partners can create resellers, D2C clients, and affiliate partners.

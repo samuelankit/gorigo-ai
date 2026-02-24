@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/lib/use-toast";
-import { Wallet, TrendingUp, TrendingDown, Hash, AlertTriangle, Cloud, Key, Server, Bell, FileText, Lock, Send } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, Hash, AlertTriangle, Cloud, Key, Bell, FileText, Lock, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TalkTimeInfo } from "@/components/talk-time-info";
 import { apiRequest } from "@/components/query-provider";
@@ -273,27 +273,29 @@ export default function WalletPage() {
             <div className="flex items-center gap-3">
               <div className={cn(
                 "flex items-center justify-center w-9 h-9 rounded-lg shrink-0",
-                deploymentModel === "individual" ? "bg-blue-500/10" : "bg-emerald-500/10"
+                deploymentModel === "individual" ? "bg-blue-500/10" : deploymentModel === "custom" ? "bg-violet-500/10" : "bg-indigo-500/10"
               )}>
                 {deploymentModel === "individual" ? (
                   <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 ) : (
-                  <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <Key className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 )}
               </div>
               <div>
                 <p className="text-sm font-medium" data-testid="text-wallet-package">
-                  {deploymentModel === "individual" ? "Individual Package" : "Self-Hosted Package"}
+                  {deploymentModel === "individual" ? "Individual Package" : deploymentModel === "custom" ? "Custom Package" : "Team Package"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {deploymentModel === "individual"
                     ? "All costs included in your talk-time rate"
-                    : "Licence fee deducted per unit of talk time"}
+                    : deploymentModel === "custom"
+                      ? "Tailored solution with custom rates"
+                      : "For your whole company"}
                 </p>
               </div>
             </div>
             <Badge variant="secondary" className="no-default-hover-elevate text-sm" data-testid="badge-wallet-rate">
-              {deploymentModel === "individual" ? "£0.20/min" : "£0.12/min"}
+              {deploymentModel === "individual" ? "£0.20/min" : deploymentModel === "custom" ? "Custom" : "£0.18/min"}
             </Badge>
           </CardContent>
         </Card>

@@ -8,7 +8,7 @@ import { adminLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { handleRouteError } from "@/lib/api-error";
 
-const VALID_DEPLOYMENT_MODELS = ["individual", "self_hosted", "custom"] as const;
+const VALID_DEPLOYMENT_MODELS = ["individual", "team", "custom"] as const;
 const VALID_CATEGORIES = ["voice_inbound", "voice_outbound", "ai_chat"] as const;
 
 async function requireSuperAdmin() {

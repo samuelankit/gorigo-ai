@@ -14,10 +14,10 @@ import { VerificationMeta } from "@/components/seo/verification-meta";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GoRigo - AI Business Platform | International Business Exchange Limited",
+  title: "GoRigo - AI Voice Platform | International Business Exchange Limited",
   description:
-    "AI-powered business platform by International Business Exchange Limited. Voice agents, campaigns, team management, finance, and compliance — all from your phone. Pay only for what you use. UK compliant with GDPR, DNC registry, and consent management.",
-  keywords: "AI business platform, AI voice agents, campaigns, team management, automated calls, pay per talk time",
+    "AI voice platform by International Business Exchange Limited. Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — run from your phone. Pay only for what you use. UK compliant with GDPR, DNC registry, and consent management.",
+  keywords: "AI voice agents, AI voice platform, outbound campaigns, team management, automated calls, pay per talk time",
   alternates: {
     canonical: "/",
   },
@@ -30,9 +30,9 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
   openGraph: {
-    title: "GoRigo - AI Business Platform",
+    title: "GoRigo - AI Voice Platform",
     description:
-      "AI-powered business platform. Voice agents, campaigns, team management, finance, and compliance. Pay only for what you use.",
+      "AI voice platform. Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — run from your phone. Pay only for what you use.",
     siteName: "GoRigo",
     type: "website",
     images: [

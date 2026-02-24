@@ -7,12 +7,6 @@ export const TIER_ENTRY_BARRIERS = {
     ratePerMinute: 0.20,
     description: "GoRigo manages everything. Full infrastructure provided.",
   },
-  self_hosted: {
-    label: "White-Label",
-    minimumDeposit: 1000,
-    ratePerMinute: 0.12,
-    description: "Your brand, our platform. Requires admin approval.",
-  },
   custom: {
     label: "Custom Enterprise",
     minimumDeposit: 2000,

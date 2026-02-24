@@ -9,7 +9,7 @@ import { handleRouteError } from "@/lib/api-error";
 
 const createBusinessSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters").max(100),
-  deploymentModel: z.enum(["individual", "self-hosted", "custom"]).default("individual"),
+  deploymentModel: z.enum(["individual", "custom"]).default("individual"),
 });
 
 export async function GET(request: NextRequest) {

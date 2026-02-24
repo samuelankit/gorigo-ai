@@ -18,7 +18,7 @@ import {
   Cloud, Key, Server, Shield, Zap, Phone, Bot, Globe, Lock, MessageSquare,
 } from "lucide-react";
 
-type DeploymentModel = "individual" | "self_hosted" | "custom";
+type DeploymentModel = "individual" | "custom";
 
 interface FaqEntry {
   question: string;
@@ -60,25 +60,6 @@ const PACKAGES: {
     included: ["AI Models", "Telephony", "Platform", "Support"],
   },
   {
-    id: "self_hosted",
-    name: "Self-Hosted",
-    tagline: "Run on your infrastructure",
-    price: "\u00A30.03",
-    priceUnit: "/min",
-    icon: Server,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bgColor: "bg-emerald-500/10",
-    borderColor: "border-emerald-500/30",
-    features: [
-      "Licence fee only",
-      "Your infrastructure",
-      "Full data sovereignty",
-      "Enterprise compliance",
-    ],
-    included: ["Licence"],
-    notIncluded: ["AI Models", "Telephony", "Hosting"],
-  },
-  {
     id: "custom",
     name: "Custom Plan",
     tagline: "Tailored to your needs",
@@ -100,7 +81,6 @@ const PACKAGES: {
 
 interface PackageVisibility {
   individual: boolean;
-  selfHosted: boolean;
 }
 
 export default function OnboardingPage() {
@@ -127,7 +107,7 @@ export default function OnboardingPage() {
 
   const [selectedCountries, setSelectedCountries] = useState<string[]>(["GB"]);
   const [availableCountries, setAvailableCountries] = useState<{ code: string; name: string }[]>([]);
-  const [packageVisibility, setPackageVisibility] = useState<PackageVisibility>({ individual: true, selfHosted: false });
+  const [packageVisibility, setPackageVisibility] = useState<PackageVisibility>({ individual: true });
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -309,10 +289,7 @@ export default function OnboardingPage() {
         {step === 1 && (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {PACKAGES.filter((pkg) => {
-                if (pkg.id === "self_hosted") return packageVisibility.selfHosted;
-                return true;
-              }).map((pkg) => {
+              {PACKAGES.map((pkg) => {
                 const Icon = pkg.icon;
                 const isSelected = selectedPackage === pkg.id;
                 return (
@@ -388,20 +365,6 @@ export default function OnboardingPage() {
               })}
             </div>
 
-
-            {selectedPackage === "self_hosted" && (
-              <Card className="border-emerald-500/20 bg-emerald-500/5">
-                <CardContent className="flex items-start gap-3 p-4">
-                  <Server className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-medium text-foreground">Infrastructure Required</p>
-                    <p className="text-muted-foreground mt-0.5">
-                      Self-hosted requires your own server infrastructure. You will receive deployment documentation and a licence key after setup.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {selectedPackage === "custom" && (
               <Card className="border-violet-500/20 bg-violet-500/5">

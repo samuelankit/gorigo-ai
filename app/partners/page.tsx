@@ -91,10 +91,12 @@ const partnershipModels = [
     icon: Building2,
     title: "Business Partner / Whitelabel",
     description:
-      "Rebrand GoRigo as your own product. Full whitelabel solution with your branding, your clients, our technology.",
+      "Rebrand GoRigo as your own product. Offer all GoRigo packages — Individual, Team, and Custom — under your brand with full feature parity.",
     href: "/partners/whitelabel",
     bullets: [
       "Your brand, your pricing, your clients",
+      "Sell Individual, Team, and Custom packages",
+      "Full feature parity — every feature GoRigo offers",
       "Full platform access with custom domain",
       "Dedicated account manager and priority support",
       "Revenue share model with no upfront fees",
@@ -420,6 +422,12 @@ export default function PartnersPage() {
             brand, earn commissions by referring clients, or integrate our
             technology into your existing workflow, we have a partnership model
             designed for you.
+          </p>
+          <p
+            className="mt-4 text-base font-medium max-w-2xl mx-auto leading-relaxed"
+            data-testid="text-hero-parity"
+          >
+            Partners can offer every GoRigo package &mdash; Individual, Team, and Custom &mdash; under their own brand with full feature parity. Whatever GoRigo sells directly, you can resell.
           </p>
         </div>
       </section>

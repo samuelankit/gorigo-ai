@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator, Plus, Pencil, TrendingUp, Layers, DollarSign, Server, Key, Cloud } from "lucide-react";
+import { Calculator, Plus, Pencil, TrendingUp, Layers, DollarSign, Key, Cloud } from "lucide-react";
 
 interface CostConfigData {
   id: number;
@@ -67,7 +67,6 @@ interface RateCardData {
 
 const DEPLOYMENT_MODELS = [
   { value: "individual", label: "Individual", icon: Cloud, description: "Full-service: AI + telephony + platform included" },
-  { value: "self_hosted", label: "Self-Hosted", icon: Server, description: "License fee only, customer runs infrastructure" },
   { value: "custom", label: "Custom", icon: Calculator, description: "Bespoke rates and features configured per client" },
 ];
 
@@ -660,7 +659,7 @@ export default function AdminPricingPage() {
 
       <div className="flex items-start gap-3 pt-4">
         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/10">
-          <Server className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <Layers className="w-5 h-5 text-blue-600 dark:text-blue-400" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-foreground" data-testid="text-rate-cards-title">

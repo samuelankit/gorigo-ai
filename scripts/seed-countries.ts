@@ -227,7 +227,7 @@ const COMPLIANCE_PROFILES: Record<string, Partial<typeof countryComplianceProfil
   },
 };
 
-const DEPLOYMENT_MODELS = ["individual", "self_hosted", "custom"];
+const DEPLOYMENT_MODELS = ["individual", "team", "custom"];
 const DIRECTIONS = ["inbound", "outbound"] as const;
 const NUMBER_TYPES = ["mobile", "landline"] as const;
 

@@ -387,8 +387,7 @@ export default function WhitelabelPage() {
             className="mt-4 text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed"
             data-testid="text-hero-packages"
           >
-            Your whitelabel clients can use any package: Individual, Team, or Custom.
-            Offer the full range of GoRigo deployment options under your brand.
+            Your clients get every feature GoRigo offers &mdash; AI voice agents, outbound campaigns, team tools, compliance, and analytics. Offer all packages (Individual, Team, or Custom) under your brand with complete feature parity. Whatever GoRigo sells directly, you can resell.
           </p>
         </div>
       </section>
@@ -495,8 +494,9 @@ export default function WhitelabelPage() {
               Every whitelabel partner receives a complete platform with all
               the tools needed to manage and grow a successful AI call centre
               business. Your clients can choose from Individual, Team, or Custom
-              deployment packages — giving them the flexibility to scale from
-              solo use to full company-wide collaboration.
+              packages &mdash; the same packages GoRigo sells directly, with full
+              feature parity. AI voice agents, outbound campaigns, team tools,
+              compliance, analytics &mdash; everything is included.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

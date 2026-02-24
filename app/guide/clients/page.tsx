@@ -18,11 +18,11 @@ export default function ClientsGuidePage() {
         {
           title: "Add a New Client",
           description: "Click the 'Add Client' button. Fill in the company name, contact email, and phone number. Choose the deployment package that fits their needs.",
-          detail: "Individual (single operator, full control) or Self-Hosted (they run it themselves).",
+          detail: "Individual (single operator, full control), Team (multi-user with shared tools), or Custom (enterprise with bespoke setup).",
         },
         {
           title: "Select the Deployment Package",
-          description: "Each package has a different pricing model: Individual at 20p/min, Self-Hosted at 12p/min. Choose based on the client's technical capability and budget.",
+          description: "Each package has a different pricing model and feature set. Choose based on the client's needs, team size, and budget.",
         },
         {
           title: "Set Up Partner Relationships",
@@ -64,7 +64,7 @@ export default function ClientsGuidePage() {
         },
       ]}
       keyTerms={[
-        { term: "Deployment Package", definition: "The service tier a client is on - Individual, Team, or Self-Hosted." },
+        { term: "Deployment Package", definition: "The service tier a client is on - Individual, Team, or Custom." },
         { term: "Business Partner", definition: "A reseller who can bring in their own clients and earn commissions." },
         { term: "D2C", definition: "Direct-to-Consumer - clients who work directly with you, no middleman." },
         { term: "Affiliate", definition: "Someone who refers new clients via a tracking link and earns commission per signup." },

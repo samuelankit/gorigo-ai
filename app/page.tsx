@@ -18,8 +18,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-background" data-testid="page-home">
       <OrganizationJsonLd />
       <WebPageJsonLd 
-        title="GoRigo - AI That Runs Your Business | Voice Agents, Campaigns, Teams" 
-        description="AI-powered business platform. Voice agents, campaigns, team management, finance, and compliance — all from your phone. Pay only for what you use." 
+        title="GoRigo - AI Voice. Real Business. | Voice Agents, Campaigns, Teams" 
+        description="AI voice platform. Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — run from your phone. Pay only for what you use." 
         url="/" 
       />
       <SoftwareApplicationJsonLd />
@@ -37,24 +37,24 @@ export default function HomePage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8604C] opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[#E8604C]" />
               </span>
-              AI-Powered Business Engine
+              AI Voice Platform
             </Badge>
 
             <h1
               className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
               data-testid="text-hero-title"
             >
-              AI That Runs Your Business.
+              AI Voice. Real Business.
               <br />
-              <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">You Run It From Your Phone.</span>
+              <span className="bg-gradient-to-r from-[#E8604C] via-[#F09040] to-[#F5A623] bg-clip-text text-transparent">Run From Your Phone.</span>
             </h1>
 
             <p
               className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed"
               data-testid="text-hero-subtitle"
             >
-              Voice agents, campaigns, team management, finance, and compliance — one platform.
-              Manage everything by voice, tap, or text.
+              Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — one platform.
+              No subscriptions, no seat fees.
             </p>
 
             <p

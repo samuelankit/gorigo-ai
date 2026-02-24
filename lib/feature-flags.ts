@@ -3,7 +3,6 @@ import { platformSettings } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 
 const DEFAULTS: Record<string, boolean> = {
-  deployment_package_self_hosted_enabled: false,
   deployment_package_individual_enabled: true,
 };
 

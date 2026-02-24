@@ -9,9 +9,9 @@ import { adminLimiter } from "@/lib/rate-limit";
 import { handleRouteError } from "@/lib/api-error";
 import { isDeploymentPackageEnabled } from "@/lib/feature-flags";
 
-type DeploymentModel = "individual" | "self_hosted" | "custom";
+type DeploymentModel = "individual" | "team" | "custom";
 
-const VALID_MODELS: DeploymentModel[] = ["individual", "self_hosted", "custom"];
+const VALID_MODELS: DeploymentModel[] = ["individual", "team", "custom"];
 
 async function getActiveCalls(orgId: number): Promise<number> {
   const [result] = await db
@@ -124,7 +124,7 @@ export async function PUT(
 
     if (!VALID_MODELS.includes(deploymentModel)) {
       return NextResponse.json(
-        { error: 'deploymentModel must be "individual", "self_hosted", or "custom"' },
+        { error: 'deploymentModel must be "individual", "team", or "custom"' },
         { status: 400 }
       );
     }

@@ -9,7 +9,7 @@ import { CheckCircle2, ArrowRight, Smartphone, Crown } from "lucide-react";
 
 interface PackageVisibility {
   individual: boolean;
-  selfHosted: boolean;
+  team: boolean;
 }
 
 const allPackages = [
@@ -32,16 +32,16 @@ const allPackages = [
     borderColor: "border-[#E8604C]/30",
   },
   {
-    key: "selfHosted" as const,
-    name: "Self-Hosted",
-    description: "Deploy on your own infrastructure with complete data sovereignty and custom SLAs.",
+    key: "team" as const,
+    name: "Team",
+    description: "Whole-company collaboration with shared agents, departments, and team dashboard.",
     highlights: [
-      "On-premise deployment",
-      "Complete data sovereignty",
-      "Custom SLAs",
-      "Enterprise support",
+      "Multi-user collaboration",
+      "Shared AI agents",
+      "Department management",
+      "Team analytics",
     ],
-    cta: "Contact Sales",
+    cta: "Book a Demo",
     href: "/contact",
     gradient: "from-violet-500/10 to-purple-500/10",
     borderColor: "border-violet-500/20",
@@ -66,7 +66,7 @@ const allPackages = [
 export function DeploymentPackages() {
   const [visibility, setVisibility] = useState<PackageVisibility>({
     individual: true,
-    selfHosted: false,
+    team: true,
   });
 
   useEffect(() => {
@@ -101,7 +101,7 @@ export function DeploymentPackages() {
             <span className="bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent"> you deploy</span>
           </h2>
           <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-            From fully managed to self-hosted, pick the deployment model that fits your business. All options include talk-time-only billing.
+            From individual to enterprise, pick the deployment model that fits your business. All options include talk-time-only billing.
           </p>
         </div>
         <div className={`grid ${gridCols} gap-5`}>

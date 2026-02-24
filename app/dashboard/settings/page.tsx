@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/lib/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Settings, Building2, Lock, Shield, User, Clock, Phone, AlertTriangle, Webhook, Plus, Trash2, Edit, Eye, EyeOff, Copy, Loader2, Cloud, Key, Server, Users } from "lucide-react";
+import { Settings, Building2, Lock, Shield, User, Clock, Phone, AlertTriangle, Webhook, Plus, Trash2, Edit, Eye, EyeOff, Copy, Loader2, Cloud, Key, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
@@ -45,14 +45,12 @@ const TIMEZONES = [
 const PACKAGE_INFO: Record<string, { name: string; rate: string; description: string; color: string; bgColor: string }> = {
   individual: { name: "Individual", rate: "\u00a30.20/min", description: "AI + Telephony included", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10" },
   team: { name: "Team", rate: "\u00a30.18/min", description: "For your whole company", color: "text-indigo-600 dark:text-indigo-400", bgColor: "bg-indigo-500/10" },
-  self_hosted: { name: "Self-Hosted", rate: "\u00a30.03/min", description: "Licence fee only", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10" },
   custom: { name: "Custom", rate: "Custom", description: "Bespoke rates and features", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-500/10" },
 };
 
 const PACKAGE_ICONS: Record<string, typeof Cloud> = {
   individual: Cloud,
   team: Key,
-  self_hosted: Server,
   custom: Cloud,
 };
 

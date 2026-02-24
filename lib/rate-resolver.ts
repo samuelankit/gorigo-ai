@@ -3,7 +3,7 @@ import { rateCards, orgs } from "@/shared/schema";
 import { eq, and } from "drizzle-orm";
 import { safeParseNumeric } from "@/lib/money";
 
-export type DeploymentModel = "individual" | "team" | "self_hosted" | "custom";
+export type DeploymentModel = "individual" | "team" | "custom";
 export type UsageCategory = "voice_inbound" | "voice_outbound" | "ai_chat";
 
 export interface ResolvedRate {
@@ -27,11 +27,6 @@ const DEFAULT_RATES: Record<DeploymentModel, Record<UsageCategory, ResolvedRate>
     voice_outbound: { deploymentModel: "team", category: "voice_outbound", ratePerMinute: 0.18, platformFeePerMinute: 0.18, includesAiCost: true, includesTelephonyCost: true, label: "Team - Outbound Voice" },
     ai_chat: { deploymentModel: "team", category: "ai_chat", ratePerMinute: 0.18, platformFeePerMinute: 0.18, includesAiCost: true, includesTelephonyCost: false, label: "Team - AI Chat" },
   },
-  self_hosted: {
-    voice_inbound: { deploymentModel: "self_hosted", category: "voice_inbound", ratePerMinute: 0.12, platformFeePerMinute: 0.12, includesAiCost: false, includesTelephonyCost: false, label: "White-Label - Inbound Voice" },
-    voice_outbound: { deploymentModel: "self_hosted", category: "voice_outbound", ratePerMinute: 0.12, platformFeePerMinute: 0.12, includesAiCost: false, includesTelephonyCost: false, label: "White-Label - Outbound Voice" },
-    ai_chat: { deploymentModel: "self_hosted", category: "ai_chat", ratePerMinute: 0.12, platformFeePerMinute: 0.12, includesAiCost: false, includesTelephonyCost: false, label: "White-Label - AI Chat" },
-  },
   custom: {
     voice_inbound: { deploymentModel: "custom", category: "voice_inbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Custom - Inbound Voice" },
     voice_outbound: { deploymentModel: "custom", category: "voice_outbound", ratePerMinute: 0.20, platformFeePerMinute: 0.20, includesAiCost: true, includesTelephonyCost: true, label: "Custom - Outbound Voice" },
@@ -48,7 +43,7 @@ export async function getOrgDeploymentModel(orgId: number): Promise<DeploymentMo
 
   if (!org || !org.deploymentModel) return "individual";
   const model = org.deploymentModel as DeploymentModel;
-  if (!["individual", "team", "self_hosted", "custom"].includes(model)) return "individual";
+  if (!["individual", "team", "custom"].includes(model)) return "individual";
   return model;
 }
 
@@ -139,7 +134,7 @@ export async function getAllRateCards(): Promise<ResolvedRate[]> {
 
   return [
     ...Object.values(DEFAULT_RATES.individual),
-    ...Object.values(DEFAULT_RATES.self_hosted),
+    ...Object.values(DEFAULT_RATES.team),
     ...Object.values(DEFAULT_RATES.custom),
   ];
 }
@@ -148,7 +143,7 @@ export function getDeploymentModelLabel(model: DeploymentModel): string {
   switch (model) {
     case "individual": return "Individual (20p/min)";
     case "team": return "Team (18p/min)";
-    case "self_hosted": return "White-Label / Reseller (12p/min)";
+
     case "custom": return "Custom Plan";
     default: return "Individual (20p/min)";
   }
@@ -158,7 +153,7 @@ export function getDeploymentModelDescription(model: DeploymentModel): string {
   switch (model) {
     case "individual": return "Everything you need to run your business with AI. All costs included at 20p/min.";
     case "team": return "Whole-company collaboration with shared agents, departments, and team dashboard at 18p/min.";
-    case "self_hosted": return "Wholesale rate for partners to resell under their own brand at 12p/min.";
+
     case "custom": return "Bespoke package with custom rates, features, and SLAs configured by our sales team.";
     default: return "";
   }

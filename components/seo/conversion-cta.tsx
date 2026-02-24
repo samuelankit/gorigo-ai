@@ -12,8 +12,8 @@ interface ConversionCtaProps {
 }
 
 export function ConversionCta({
-  headline = "Ready to Transform Your Call Centre?",
-  subheadline = "Join businesses across the UK using AI voice agents to handle calls 24/7. No subscriptions, no seat licences — just pay for talk time.*",
+  headline = "Ready to Put AI Voice to Work?",
+  subheadline = "Join businesses across the UK using AI voice agents to handle calls, run campaigns, and manage teams — 24/7. No subscriptions, no seat fees — just pay for talk time.*",
   primaryAction = { label: "Get Started", href: "/contact" },
   secondaryAction = { label: "View Pricing", href: "/pricing" },
   talkToAiMessage = "Talk to Our AI",

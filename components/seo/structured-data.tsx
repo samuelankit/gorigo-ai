@@ -21,7 +21,7 @@ export function StructuredData() {
     },
     sameAs: [],
     description:
-      "AI-powered business platform. Voice agents, campaigns, team management, finance, and compliance — all from your phone. Pay only for what you use.",
+      "AI voice platform. Intelligent voice agents, outbound campaigns, team tools, billing, and compliance — run from your phone. Pay only for what you use.",
   };
 
   const websiteSchema = {
@@ -60,7 +60,7 @@ export function StructuredData() {
   const softwareSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "GoRigo AI Business Platform",
+    name: "GoRigo AI Voice Platform",
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web, iOS, Android",
     offers: {

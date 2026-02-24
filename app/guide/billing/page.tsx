@@ -30,7 +30,7 @@ export default function BillingGuidePage() {
         },
         {
           title: "Understand the Pricing Tiers",
-          description: "Go to the Pricing page to see and manage rate cards. Individual clients pay 20p/min and Self-Hosted pays 12p/min. These rates determine real-time deductions.",
+          description: "Go to the Pricing page to see and manage rate cards. Rates vary by package tier and determine real-time deductions from client wallets.",
         },
         {
           title: "Monitor Revenue",

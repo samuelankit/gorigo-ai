@@ -14,7 +14,7 @@ import {
   PhoneCall, Clock, Users, Bot, CreditCard,
   PhoneIncoming, PhoneOutgoing, ArrowRight, Activity,
   ChevronRight, GitBranch, Zap, CheckCircle2, Circle, Sparkles,
-  Radio, PhoneOff, Target, Headphones, Cloud, Key, Server, Shield,
+  Radio, PhoneOff, Target, Headphones, Cloud, Key, Shield,
   Check, MessageSquare, Globe, MapPin,
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -314,16 +314,16 @@ export default function DashboardPage() {
                 ) : deploymentModel === "custom" ? (
                   <MessageSquare className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                 ) : (
-                  <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium" data-testid="text-deployment-label">
-                    {deploymentModel === "individual" ? "Individual Package" : deploymentModel === "custom" ? "Custom Package" : "Self-Hosted Package"}
+                    {deploymentModel === "individual" ? "Individual Package" : deploymentModel === "custom" ? "Custom Package" : "Team Package"}
                   </span>
                   <Badge variant="secondary" className="no-default-hover-elevate text-[11px]" data-testid="badge-rate">
-                    {deploymentModel === "individual" ? "\u00A30.20/min" : deploymentModel === "custom" ? "Custom" : "\u00A30.12/min"}
+                    {deploymentModel === "individual" ? "\u00A30.20/min" : deploymentModel === "custom" ? "Custom" : "\u00A30.18/min"}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -331,7 +331,7 @@ export default function DashboardPage() {
                     ? "AI + Telephony included \u2022 Everything included"
                     : deploymentModel === "custom"
                       ? "Tailored solution \u2022 Custom rates"
-                      : "Licence fee only \u2022 Your infrastructure"}
+                      : "For your whole company"}
                 </p>
               </div>
             </div>
@@ -347,12 +347,6 @@ export default function DashboardPage() {
                     Telephony Included
                   </Badge>
                 </>
-              )}
-              {deploymentModel === "self_hosted" && (
-                <Badge variant="outline" className="no-default-hover-elevate text-[11px]" data-testid="badge-self-hosted-infra">
-                  <Server className="h-3 w-3 mr-1" />
-                  Your Infrastructure
-                </Badge>
               )}
               {deploymentModel === "custom" && (
                 <Badge variant="outline" className="no-default-hover-elevate text-[11px]" data-testid="badge-custom-bespoke">

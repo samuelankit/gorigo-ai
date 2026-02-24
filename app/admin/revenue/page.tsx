@@ -115,26 +115,22 @@ interface RevenueData {
 
 const PACKAGE_COLORS: Record<string, string> = {
   individual: "hsl(262, 83%, 58%)",
-  "self-hosted": "hsl(142, 71%, 45%)",
+  custom: "hsl(215, 16%, 47%)",
 };
 
 const PACKAGE_LABELS: Record<string, string> = {
   individual: "Individual",
-  "self-hosted": "Self-Hosted",
+  custom: "Custom",
 };
 
 const PACKAGE_RATES: Record<string, string> = {
   individual: "0.20/min",
-  "self-hosted": "0.03/min",
 };
 
 function PackageBadge({ model }: { model: string }) {
   const label = PACKAGE_LABELS[model] || model;
   if (model === "individual") {
     return <Badge className="no-default-hover-elevate bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20">{label}</Badge>;
-  }
-  if (model === "self-hosted") {
-    return <Badge className="no-default-hover-elevate bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">{label}</Badge>;
   }
   return <Badge variant="outline" className="no-default-hover-elevate">{label}</Badge>;
 }

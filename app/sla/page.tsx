@@ -59,15 +59,6 @@ const uptimeCommitments = [
     badgeText: "text-indigo-600 dark:text-indigo-400",
   },
   {
-    plan: "Self-Hosted",
-    uptime: "Varies",
-    monthlyDowntime: "Depends on your infrastructure",
-    description: "You control the hosting. We provide the software updates, patches, and guidance.",
-    accentColor: "from-blue-500 to-violet-500",
-    badgeBg: "bg-blue-500/10",
-    badgeText: "text-blue-600 dark:text-blue-400",
-  },
-  {
     plan: "Custom / Enterprise",
     uptime: "Negotiated",
     monthlyDowntime: "Per agreement",
@@ -94,14 +85,6 @@ const supportTiers = [
     medium: "4 hours",
     low: "1 business day",
     channels: "Phone, Email, Live Chat, Dedicated Slack, Video Call Escalation",
-  },
-  {
-    plan: "Self-Hosted",
-    critical: "4 hours",
-    high: "1 business day",
-    medium: "2 business days",
-    low: "5 business days",
-    channels: "Email, Support Portal",
   },
   {
     plan: "Custom",
@@ -535,7 +518,7 @@ export default function SlaPage() {
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>Self-Hosted clients manage their own backup schedule with our guidance.</span>
+                      <span>Custom clients receive tailored backup schedules based on their agreement.</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -546,11 +529,11 @@ export default function SlaPage() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span><span className="font-medium text-foreground">Recovery Time (RTO):</span> Team: 2 hours. Individual: 4 hours. Self-Hosted: your responsibility.</span>
+                      <span><span className="font-medium text-foreground">Recovery Time (RTO):</span> Team: 2 hours. Individual: 4 hours. Custom: per agreement.</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span><span className="font-medium text-foreground">Recovery Point (RPO):</span> Team: 30 minutes. Individual: 1 hour. Self-Hosted: your configuration.</span>
+                      <span><span className="font-medium text-foreground">Recovery Point (RPO):</span> Team: 30 minutes. Individual: 1 hour. Custom: per agreement.</span>
                     </li>
                   </ul>
                 </CardContent>
@@ -647,7 +630,7 @@ export default function SlaPage() {
                     </li>
                     <li className="flex items-start gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span>For Self-Hosted customers: maintain your hosting infrastructure according to our minimum requirements.</span>
+                      <span>For Custom customers: adhere to any additional requirements outlined in your bespoke agreement.</span>
                     </li>
                   </ul>
                 </CardContent>

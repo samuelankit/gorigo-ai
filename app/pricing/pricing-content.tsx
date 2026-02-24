@@ -18,7 +18,6 @@ import { PricingFaq } from "./faq";
 interface PackageVisibility {
   individual: boolean;
   team: boolean;
-  selfHosted: boolean;
 }
 
 const allPackages = [
@@ -79,30 +78,6 @@ const allPackages = [
     accentBg: "bg-indigo-500/10",
     minimumSpend: true,
   },
-  {
-    key: "selfHosted" as const,
-    name: "Self-Hosted",
-    rate: "From 12p",
-    rateUnit: "/min",
-    description: "Deploy on your own infrastructure with complete control over data and operations.",
-    features: [
-      "On-premise or private cloud",
-      "Complete data sovereignty",
-      "Custom SLAs",
-      "White-label option",
-      "Enterprise support",
-      "Full source access",
-    ],
-    bestFor: "Enterprises with strict data requirements.",
-    cta: "Contact Sales",
-    href: "/contact",
-    featured: false,
-    themeColor: "violet",
-    borderClass: "border-t-4 border-t-violet-500",
-    badgeClass: "text-violet-600 dark:text-violet-400",
-    checkClass: "text-violet-500 dark:text-violet-400",
-    accentBg: "bg-violet-500/10",
-  },
 ];
 
 type ComparisonRow = {
@@ -154,7 +129,7 @@ const comparisonSections: ComparisonSection[] = [
       { name: "Service credits", individual: "10–50%", team: "15–100%", custom: "Custom" },
       { name: "Dedicated escalation path", individual: false, team: true, custom: true },
       { name: "48hr post-mortems", individual: false, team: true, custom: true },
-      { name: "White label", individual: false, team: false, custom: true },
+      { name: "White-label (add-on)", individual: true, team: true, custom: true },
       { name: "Custom billing rates", individual: false, team: false, custom: true },
       { name: "Dedicated onboarding", individual: false, team: false, custom: true },
     ],
@@ -186,7 +161,6 @@ export function PricingContent() {
   const [visibility, setVisibility] = useState<PackageVisibility>({
     individual: true,
     team: true,
-    selfHosted: false,
   });
 
   useEffect(() => {
@@ -375,12 +349,21 @@ export function PricingContent() {
               </Card>
             </div>
 
-            <div className="mt-8 text-center" data-testid="text-team-vs-partner">
+            <div className="mt-8 flex flex-col items-center gap-3" data-testid="text-team-vs-partner">
               <Card className="inline-block overflow-visible">
                 <CardContent className="p-4 flex items-center gap-3 flex-wrap justify-center">
                   <Users className="h-5 w-5 text-indigo-500 dark:text-indigo-400 shrink-0" />
                   <p className="text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">Team vs Partner:</span> Partners manage external clients. Team manages your internal company.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="inline-block overflow-visible border-violet-500/20" data-testid="card-whitelabel-addon">
+                <CardContent className="p-4 flex items-center gap-3 flex-wrap justify-center">
+                  <Badge variant="outline" className="border-violet-500/30 text-violet-600 dark:text-violet-400 text-xs no-default-hover-elevate no-default-active-elevate">Add-on</Badge>
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">White-label available</span> — Brand the platform as your own. Available on Individual and Team tiers.{" "}
+                    <Link href="/partners/whitelabel" className="text-primary underline underline-offset-4" data-testid="link-whitelabel-addon">Learn more</Link>
                   </p>
                 </CardContent>
               </Card>

@@ -9,13 +9,11 @@ import { cache, CACHE_TTL } from "@/lib/cache";
 const PACKAGE_KEYS = [
   "deployment_package_individual_enabled",
   "deployment_package_team_enabled",
-  "deployment_package_self_hosted_enabled",
 ];
 
 const DEFAULTS: Record<string, boolean> = {
   deployment_package_individual_enabled: true,
   deployment_package_team_enabled: true,
-  deployment_package_self_hosted_enabled: false,
 };
 
 const CACHE_KEY = "public:deployment-packages";
@@ -27,7 +25,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    const cached = cache.get<{ individual: boolean; team: boolean; selfHosted: boolean }>(CACHE_KEY);
+    const cached = cache.get<{ individual: boolean; team: boolean }>(CACHE_KEY);
     if (cached) {
       return NextResponse.json(cached, {
         headers: { "Cache-Control": "public, max-age=300, s-maxage=300" },
@@ -47,7 +45,6 @@ export async function GET(request: NextRequest) {
     const data = {
       individual: result.deployment_package_individual_enabled,
       team: result.deployment_package_team_enabled,
-      selfHosted: result.deployment_package_self_hosted_enabled,
     };
 
     cache.set(CACHE_KEY, data, CACHE_TTL.PUBLIC_DATA);

@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import {
   Users, Download, Search, Eye, ChevronLeft, ChevronRight,
-  Cloud, Key, Server, Phone, DollarSign, Building2,
+  Cloud, Key, Phone, DollarSign, Building2,
 } from "lucide-react";
 
 interface Client {
@@ -52,13 +52,11 @@ const PAGE_SIZE = 25;
 
 const PACKAGE_LABELS: Record<string, { label: string; color: string }> = {
   individual: { label: "Individual", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
-  self_hosted: { label: "Self-Hosted", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
   custom: { label: "Custom", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
 };
 
 const PACKAGE_ICONS: Record<string, typeof Cloud> = {
   individual: Cloud,
-  self_hosted: Server,
   custom: Building2,
 };
 
@@ -256,7 +254,6 @@ export default function ClientsPage() {
           <SelectContent>
             <SelectItem value="all">All Packages</SelectItem>
             <SelectItem value="individual">Individual</SelectItem>
-            <SelectItem value="self_hosted">Self-Hosted</SelectItem>
             <SelectItem value="custom">Custom</SelectItem>
           </SelectContent>
         </Select>

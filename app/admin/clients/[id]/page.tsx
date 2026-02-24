@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  ArrowLeft, Building2, Mail, Phone, Cloud, Key, Server, DollarSign,
+  ArrowLeft, Building2, Mail, Phone, Cloud, Key, DollarSign,
   Users, Bot, TrendingUp, Shield, ShieldOff, Flag, Clock, PhoneCall,
   Wallet, Activity, BarChart3, AlertTriangle,
 } from "lucide-react";
@@ -56,7 +56,6 @@ interface ClientDetail {
 
 const PACKAGE_CONFIG: Record<string, { label: string; color: string; rate: string; icon: typeof Cloud }> = {
   individual: { label: "Individual", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400", rate: "0.20/min", icon: Cloud },
-  self_hosted: { label: "Self-Hosted", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400", rate: "0.03/min", icon: Server },
   custom: { label: "Custom", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400", rate: "Custom", icon: Cloud },
 };
 

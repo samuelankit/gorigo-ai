@@ -12,7 +12,7 @@ import { checkEntryBarrier, TIER_ENTRY_BARRIERS, type DeploymentTier } from "@/l
 import { isDeploymentPackageEnabled } from "@/lib/feature-flags";
 
 const deploymentModelSchema = z.object({
-  deploymentModel: z.enum(["individual", "self_hosted", "custom"]),
+  deploymentModel: z.enum(["individual", "custom"]),
 }).strict();
 
 const PLAN_SWITCH_COOLDOWN_HOURS = 24;
@@ -92,7 +92,7 @@ export async function PUT(request: NextRequest) {
       }, { status: 422 });
     }
 
-    if (deploymentModel === "self_hosted" || deploymentModel === "custom") {
+    if (deploymentModel === "custom") {
       return NextResponse.json({
         error: "White-Label and Custom plans require admin approval. Please contact our team to discuss your requirements.",
         code: "REQUIRES_ADMIN_APPROVAL",

@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/lib/use-toast";
 import { cn } from "@/lib/utils";
-import { Check, CreditCard, DollarSign, PhoneCall, Users, Clock, Crown, ArrowUpRight, ArrowDownRight, Download, Wallet, ExternalLink, FileText, CalendarDays, Cloud, Key, Server } from "lucide-react";
+import { Check, CreditCard, DollarSign, PhoneCall, Users, Clock, Crown, ArrowUpRight, ArrowDownRight, Download, Wallet, ExternalLink, FileText, CalendarDays, Cloud, Key } from "lucide-react";
 import { TalkTimeInfo } from "@/components/talk-time-info";
 
 interface Usage {
@@ -61,7 +61,6 @@ interface RateInfo {
 
 const DEPLOYMENT_MODEL_INFO: Record<string, { label: string; icon: typeof Cloud; description: string; color: string }> = {
   individual: { label: "Individual", icon: Cloud, description: "Full-service: AI, telephony & platform costs included in rate", color: "text-blue-600 dark:text-blue-400" },
-  self_hosted: { label: "Self-Hosted", icon: Server, description: "License fee per usage. You run your own infrastructure", color: "text-emerald-600 dark:text-emerald-400" },
 };
 
 function getTypeBadge(type: string) {

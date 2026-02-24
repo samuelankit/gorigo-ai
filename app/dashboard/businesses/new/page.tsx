@@ -16,13 +16,6 @@ const allDeploymentOptions = [
     description: "We run everything. You focus on your business.",
     rate: "From 20p/min",
   },
-  {
-    value: "self-hosted",
-    key: "selfHosted" as const,
-    title: "Self-Hosted",
-    description: "Deploy on your own infrastructure with full control.",
-    rate: "From 8p/min",
-  },
 ];
 
 export default function NewBusinessPage() {

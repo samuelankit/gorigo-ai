@@ -63,3 +63,12 @@ All dashboard pages use TanStack Query (React Query) v5 for data fetching and mu
 - **Payments**: Stripe.
 - **Email**: SendGrid.
 - **Mobile Development**: Expo SDK 54, expo-router, expo-speech, expo-av, expo-haptics.
+
+## Mobile App (`/mobile`)
+The React Native/Expo mobile app is feature-complete in code. Located in `/mobile` directory.
+- **Screens**: Rigo AI Assistant (voice commands), Dashboard, Calls, Agents, Wallet, Activity, Settings, Login, Call Detail, Business Switcher
+- **Features**: Bearer token auth, biometric lock, push notifications, speech recognition, offline caching, white-label branding, haptic feedback
+- **Backend**: All mobile API endpoints exist and work (`/api/mobile/stats`, `/api/mobile/agents`, `/api/mobile/calls`, `/api/rigo`, `/api/wallet`, `/api/notifications`, `/api/calls/today`, `/api/settings/*`, `/api/businesses/*`, `/api/branding/[code]`)
+- **Auth**: Mobile login sends `X-Client-Type: mobile` header, receives Bearer token in response body. All subsequent requests use `Authorization: Bearer <token>`. Middleware bypasses CSRF origin check for mobile clients with Bearer tokens.
+- **Build**: EAS Build configured for dev, preview, and production profiles. See `mobile/QUICK_START.md` for setup.
+- **Status**: Code complete. Needs `npm install`, Expo account linking (`eas init`), and build submission to Play Store/App Store.

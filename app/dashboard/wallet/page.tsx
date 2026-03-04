@@ -51,6 +51,21 @@ export default function WalletPage() {
   const [alertThreshold, setAlertThreshold] = useState("10");
   const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const topupStatus = params.get("topup");
+    const topupAmount = params.get("amount");
+    if (topupStatus === "success") {
+      toast({ title: "Payment successful", description: `Your wallet top-up of £${topupAmount || ""} is being processed. Balance will update shortly.` });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallet/transactions"] });
+      window.history.replaceState({}, "", "/dashboard/wallet");
+    } else if (topupStatus === "cancelled") {
+      toast({ title: "Payment cancelled", description: "Your wallet top-up was cancelled. No charge was made.", variant: "destructive" });
+      window.history.replaceState({}, "", "/dashboard/wallet");
+    }
+  }, []);
+
   const { data: walletData, isLoading: loadingWallet, isError: walletError } = useQuery<{ wallet: WalletData; stats: WalletStats }>({
     queryKey: ["/api/wallet"],
   });
@@ -59,7 +74,7 @@ export default function WalletPage() {
   const stats = walletData?.stats ?? null;
 
   const { data: transactionsData, isLoading: loadingTransactions, isError: transactionsError } = useQuery<{ transactions: Transaction[] }>({
-    queryKey: ["/api/wallet/transactions", { limit: 50, offset: 0 }],
+    queryKey: ["/api/wallet/transactions"],
     queryFn: () => apiRequest("/api/wallet/transactions?limit=50&offset=0", { method: "GET" }),
   });
 
@@ -89,19 +104,20 @@ export default function WalletPage() {
 
   const topUpMutation = useMutation({
     mutationFn: async (amount: number) => {
-      return apiRequest("/api/wallet/topup", {
+      return apiRequest("/api/billing/topup", {
         method: "POST",
         body: JSON.stringify({ amount }),
       });
     },
     onSuccess: (data: any) => {
-      toast({ title: "Top-up successful", description: `Your new balance is £${Number(data.newBalance).toFixed(2)}.` });
-      setTopUpAmount("");
-      queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/wallet/transactions"] });
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast({ title: "Top-up initiated", description: "Redirecting to payment..." });
+      }
     },
     onError: (err: Error) => {
-      toast({ title: "Error", description: err.message || "Failed to top up wallet.", variant: "destructive" });
+      toast({ title: "Error", description: err.message || "Failed to initiate top-up.", variant: "destructive" });
     },
   });
 

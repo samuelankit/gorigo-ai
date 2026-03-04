@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         }],
         mode: "payment",
-        success_url: `${baseUrl}/dashboard/billing?topup=success&amount=${amount}`,
-        cancel_url: `${baseUrl}/dashboard/billing?topup=cancelled`,
+        success_url: `${baseUrl}/dashboard/wallet?topup=success&amount=${amount}`,
+        cancel_url: `${baseUrl}/dashboard/wallet?topup=cancelled`,
         metadata: {
           orgId: auth.orgId.toString(),
           userId: auth.user.id.toString(),

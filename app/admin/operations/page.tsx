@@ -353,17 +353,17 @@ export default function AdminOperationsPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Voice Provider</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Voice Provider (Telnyx)</p>
                     <div className="flex items-center gap-2 mt-2">
-                      {infraData?.twilio?.healthy === true ? (
+                      {(infraData?.telnyx?.healthy || infraData?.twilio?.healthy) === true ? (
                         <>
                           <CheckCircle className="h-5 w-5 text-green-500" />
                           <span className="font-semibold text-green-600 dark:text-green-400" data-testid="text-voice-provider-status">Connected</span>
                         </>
-                      ) : infraData?.twilio?.healthy === false ? (
+                      ) : (infraData?.telnyx?.healthy || infraData?.twilio?.healthy) === false ? (
                         <>
                           <XCircle className="h-5 w-5 text-red-500" />
-                          <span className="font-semibold text-red-600 dark:text-red-400" data-testid="text-voice-provider-status">Disconnected</span>
+                          <span className="font-semibold text-red-600 dark:text-red-400" data-testid="text-voice-provider-status">Not Configured</span>
                         </>
                       ) : (
                         <>

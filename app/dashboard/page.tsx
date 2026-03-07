@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -151,6 +151,9 @@ const demoChartData = [
 
 export default function DashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromOnboarding = searchParams.get("onboarding") === "complete";
+  const [showWalletBanner, setShowWalletBanner] = useState(false);
 
   const [wizardDismissed, setWizardDismissed] = useState(false);
 
@@ -195,6 +198,15 @@ export default function DashboardPage() {
   });
 
   const walletBalance = walletData?.wallet?.balance ?? null;
+
+  useEffect(() => {
+    if (fromOnboarding && walletBalance !== null && Number(walletBalance) <= 0) {
+      const dismissed = sessionStorage.getItem("gorigo_wallet_banner_dismissed");
+      if (!dismissed) {
+        setShowWalletBanner(true);
+      }
+    }
+  }, [fromOnboarding, walletBalance]);
 
   const { data: agentStats, isLoading: loadingAgentStats } = useQuery<AgentStatsData>({
     queryKey: ["/api/agents/stats"],
@@ -326,6 +338,33 @@ export default function DashboardPage() {
           </Button>
         </div>
       </div>
+
+      {showWalletBanner && (
+        <Card className="border-primary/30 bg-primary/5" data-testid="card-wallet-welcome-banner">
+          <CardContent className="flex items-center justify-between gap-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <CreditCard className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Your agent is ready — fund your wallet to go live</p>
+                <p className="text-xs text-muted-foreground">Top up your prepaid wallet to start receiving and making AI calls.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button asChild size="sm" data-testid="button-wallet-topup-banner">
+                <Link href="/dashboard/wallet">
+                  <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                  Top Up Wallet
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => { setShowWalletBanner(false); sessionStorage.setItem("gorigo_wallet_banner_dismissed", "1"); }} data-testid="button-dismiss-wallet-banner">
+                Dismiss
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {deploymentModel && (
         <Card data-testid="card-deployment-model">

@@ -18,13 +18,8 @@ const OPENAPI_SPEC = {
   },
   servers: [
     {
-      url: "{server_url}",
+      url: process.env.NEXT_PUBLIC_APP_URL || "https://gorigo.ai",
       description: "GoRigo API Server",
-      variables: {
-        server_url: {
-          default: "https://gorigo.replit.app",
-        },
-      },
     },
   ],
   security: [{ ApiKeyAuth: [] }],

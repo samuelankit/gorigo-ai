@@ -211,8 +211,11 @@ export default function OnboardingPage() {
         }).catch((error) => { console.error("Save international countries failed:", error); });
       }
 
-      toast({ title: "Agent launched successfully", description: "Your AI agent is ready to go." });
-      router.push("/dashboard");
+      toast({
+        title: "Agent launched successfully",
+        description: "Your AI agent is ready! Top up your wallet to start making calls.",
+      });
+      router.push("/dashboard?onboarding=complete");
     } catch (error) {
       toast({ title: "Error", description: "Failed to save configuration. Please try again.", variant: "destructive" });
     } finally {

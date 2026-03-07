@@ -46,10 +46,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: verifiedCheck.error }, { status: verifiedCheck.status || 403 });
     }
 
-    if (!isAnyProviderConfigured()) {
-      return NextResponse.json({ error: "Telephony is not configured. Please set up voice provider credentials in Settings > Integrations." }, { status: 503 });
-    }
-
     const body = await request.json();
     const { phoneNumber, agentId, countryCode: bodyCountryCode } = outboundCallSchema.parse(body);
 
@@ -57,6 +53,10 @@ export async function POST(request: NextRequest) {
     const sanitizedPhone = phoneNumber.replace(/[\s\-().]/g, "");
     if (!e164Regex.test(sanitizedPhone)) {
       return NextResponse.json({ error: "Invalid phone number. Use E.164 format (e.g. +14155551234)" }, { status: 400 });
+    }
+
+    if (!isAnyProviderConfigured()) {
+      return NextResponse.json({ error: "Telephony is not configured. Please set up voice provider credentials in Settings > Integrations." }, { status: 503 });
     }
 
     const isDNC = await isOnDNCList(auth.orgId, sanitizedPhone);

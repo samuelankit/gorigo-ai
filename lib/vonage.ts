@@ -85,16 +85,16 @@ export async function makeOutboundCallVonage(
 
   ncco.push({
     action: "talk",
-    text: "This call is being recorded for quality and training purposes. You are now connected to an AI assistant.",
+    text: "Just so you know, I'm an AI assistant and this call may be recorded. How can I help you?",
     voiceName: "Amy",
     language: "en-GB",
-    bargeIn: false,
+    bargeIn: true,
   });
 
   ncco.push({
     action: "input",
     type: ["speech", "dtmf"],
-    speech: { language: "en-GB", endOnSilence: 2 },
+    speech: { language: "en-GB", endOnSilence: 1 },
     dtmf: { maxDigits: 10, timeOut: 10 },
     eventUrl: [webhookUrl],
   });

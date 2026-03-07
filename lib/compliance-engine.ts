@@ -189,18 +189,18 @@ export async function getDisclosureText(
   if (!data?.compliance?.aiDisclosureRequired) return null;
 
   const disclosures: Record<string, string> = {
-    en: "Please be advised that this call uses artificial intelligence technology and may be recorded for quality assurance.",
-    fr: "Veuillez noter que cet appel utilise l'intelligence artificielle et peut être enregistré pour l'assurance qualité.",
-    de: "Bitte beachten Sie, dass dieses Gespräch künstliche Intelligenz nutzt und zur Qualitätssicherung aufgezeichnet werden kann.",
-    es: "Por favor, tenga en cuenta que esta llamada utiliza inteligencia artificial y puede ser grabada para garantía de calidad.",
-    it: "Si prega di notare che questa chiamata utilizza l'intelligenza artificiale e potrebbe essere registrata per la garanzia della qualità.",
-    pt: "Por favor, esteja ciente de que esta chamada usa inteligência artificial e pode ser gravada para garantia de qualidade.",
-    nl: "Houd er rekening mee dat dit gesprek gebruik maakt van kunstmatige intelligentie en kan worden opgenomen voor kwaliteitsborging.",
-    ja: "このコールは人工知能技術を使用しており、品質保証のために録音される場合があります。",
-    ar: "يرجى العلم أن هذه المكالمة تستخدم تقنية الذكاء الاصطناعي وقد يتم تسجيلها لضمان الجودة.",
-    hi: "कृपया ध्यान दें कि यह कॉल कृत्रिम बुद्धिमत्ता तकनीक का उपयोग करती है और गुणवत्ता आश्वासन के लिए रिकॉर्ड की जा सकती है।",
-    sv: "Observera att detta samtal använder artificiell intelligens och kan spelas in för kvalitetssäkring.",
-    pl: "Prosimy o uwagę, że ta rozmowa wykorzystuje sztuczną inteligencję i może być nagrywana w celach zapewnienia jakości.",
+    en: "Just so you know, I'm an AI assistant and this call may be recorded.",
+    fr: "Pour information, je suis un assistant IA et cet appel peut être enregistré.",
+    de: "Kurz zur Info, ich bin ein KI-Assistent und dieses Gespräch kann aufgezeichnet werden.",
+    es: "Solo para que lo sepas, soy un asistente de IA y esta llamada puede ser grabada.",
+    it: "Solo per informarti, sono un assistente AI e questa chiamata potrebbe essere registrata.",
+    pt: "Só para você saber, sou um assistente de IA e esta chamada pode ser gravada.",
+    nl: "Even ter informatie, ik ben een AI-assistent en dit gesprek kan worden opgenomen.",
+    ja: "ご参考までに、私はAIアシスタントです。この通話は録音される場合があります。",
+    ar: "للعلم، أنا مساعد ذكاء اصطناعي وقد يتم تسجيل هذه المكالمة.",
+    hi: "बस आपको बता दूं, मैं एक AI सहायक हूं और यह कॉल रिकॉर्ड की जा सकती है।",
+    sv: "Bara så du vet, jag är en AI-assistent och samtalet kan spelas in.",
+    pl: "Tylko dla informacji, jestem asystentem AI, a ta rozmowa może być nagrywana.",
   };
 
   const customText = data.compliance.aiDisclosureScript;

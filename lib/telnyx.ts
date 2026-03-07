@@ -133,6 +133,30 @@ export async function gatherInput(
   });
 }
 
+export async function speakAndGather(
+  callControlId: string,
+  text: string,
+  options?: {
+    voice?: string;
+    language?: string;
+    timeoutMillis?: number;
+    interDigitTimeoutMillis?: number;
+  }
+): Promise<void> {
+  const config = getTelnyxConfig();
+  if (!config) throw new Error("Telnyx is not configured.");
+
+  await config.client.calls.actions.gatherUsingSpeak(callControlId, {
+    payload: text,
+    voice: (options?.voice || "female") as any,
+    language: (options?.language || "en-GB") as any,
+    minimum_digits: 1,
+    maximum_digits: 10,
+    timeout_millis: options?.timeoutMillis || 10000,
+    inter_digit_timeout_millis: options?.interDigitTimeoutMillis || 2000,
+  } as any);
+}
+
 export async function transferCall(
   callControlId: string,
   to: string,

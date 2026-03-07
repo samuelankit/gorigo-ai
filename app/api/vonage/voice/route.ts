@@ -169,13 +169,13 @@ async function handleIncomingCall(
     let disclosureText: string;
     if (phoneCountryCode) {
       const countryDisclosure = await getDisclosureText(phoneCountryCode, agentLanguage);
-      disclosureText = countryDisclosure || `I'm ${activeAgent.name}, an AI assistant. This call may be recorded.`;
+      disclosureText = countryDisclosure || `Just so you know, I'm an AI assistant and this call may be recorded.`;
     } else {
-      disclosureText = `This call is being recorded for quality and training purposes. By continuing, you consent to being recorded. I'm ${activeAgent.name}, an AI assistant.`;
+      disclosureText = `Just so you know, I'm an AI assistant and this call may be recorded.`;
     }
 
-    const greeting = activeAgent.greeting || "Hello, thank you for calling. How can I help you today?";
-    const fullMessage = `${disclosureText} ${greeting}`;
+    const greeting = activeAgent.greeting || "How can I help you today?";
+    const fullMessage = `Hi, I'm ${activeAgent.name}. ${disclosureText} ${greeting}`;
 
     await db
       .update(callLogs)
@@ -194,7 +194,7 @@ async function handleIncomingCall(
       inputAction({
         type: ["dtmf", "speech"],
         dtmf: { maxDigits: 10, timeOut: 10, submitOnHash: true },
-        speech: { language: agentLanguage, endOnSilence: 2 },
+        speech: { language: agentLanguage, endOnSilence: 1 },
       }),
     ]));
   } catch (err) {
@@ -218,10 +218,10 @@ async function handleInput(
 
   if (!userInput) {
     return NextResponse.json(buildNCCO([
-      talkAction("I didn't catch that. Could you please repeat?", { voiceName: "Amy", language: "en-GB", bargeIn: true }),
+      talkAction("Sorry, I didn't quite catch that. Could you say that again?", { voiceName: "Amy", language: "en-GB", bargeIn: true }),
       inputAction({
         type: ["speech", "dtmf"],
-        speech: { language: "en-GB", endOnSilence: 2 },
+        speech: { language: "en-GB", endOnSilence: 1 },
         dtmf: { maxDigits: 10, timeOut: 10 },
       }),
     ]));
@@ -255,17 +255,17 @@ async function handleInput(
       talkAction(responseText, { voiceName, language, bargeIn: true }),
       inputAction({
         type: ["speech", "dtmf"],
-        speech: { language, endOnSilence: 2 },
+        speech: { language, endOnSilence: 1 },
         dtmf: { maxDigits: 10, timeOut: 10 },
       }),
     ]));
   } catch (err) {
     logger.error("Failed to handle Vonage input", err instanceof Error ? err : undefined);
     return NextResponse.json(buildNCCO([
-      talkAction("I'm sorry, I encountered an issue. Please try again.", { voiceName: "Amy" }),
+      talkAction("Sorry about that, could you say that again?", { voiceName: "Amy", bargeIn: true }),
       inputAction({
         type: ["speech", "dtmf"],
-        speech: { language: "en-GB", endOnSilence: 2 },
+        speech: { language: "en-GB", endOnSilence: 1 },
         dtmf: { maxDigits: 10, timeOut: 10 },
       }),
     ]));

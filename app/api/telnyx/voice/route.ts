@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { agents, callLogs, orgs, phoneNumbers } from "@/shared/schema";
 import { resolveRate, type UsageCategory } from "@/lib/rate-resolver";
 import { eq, and } from "drizzle-orm";
-import { validateTelnyxWebhook, speakText, gatherInput, hangupCall, answerCall } from "@/lib/telnyx";
+import { validateTelnyxWebhook, speakText, speakAndGather, gatherInput, hangupCall, answerCall } from "@/lib/telnyx";
 import { isWithinBusinessHours, getNextOpenTime, type BusinessHoursConfig } from "@/lib/business-hours";
 import { recordConsent } from "@/lib/dnc";
 import { getCountryVoiceConfig, getDisclosureText } from "@/lib/compliance-engine";
@@ -72,11 +72,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (eventType === "call.speak.ended") {
-      await gatherInput(callControlId, {
-        maxDigits: 10,
-        timeoutMillis: 15000,
-        interDigitTimeoutMillis: 5000,
-      });
       return NextResponse.json({ status: "ok" });
     }
 
@@ -89,7 +84,7 @@ export async function POST(request: NextRequest) {
         return await handleUserInput(callControlId, userInput);
       }
 
-      await speakText(callControlId, "I didn't catch that. Could you please repeat?");
+      await speakAndGather(callControlId, "Sorry, I didn't quite catch that. Could you say that again?");
       return NextResponse.json({ status: "ok" });
     }
 
@@ -197,15 +192,15 @@ async function handleIncomingCall(
     let disclosureText: string;
     if (phoneCountryCode) {
       const countryDisclosure = await getDisclosureText(phoneCountryCode, agentLanguage);
-      disclosureText = countryDisclosure || `I'm ${activeAgent.name}, an AI assistant. This call may be recorded.`;
+      disclosureText = countryDisclosure || `Just so you know, I'm an AI assistant and this call may be recorded.`;
     } else {
-      disclosureText = `This call is being recorded for quality and training purposes. By continuing, you consent to being recorded. I'm ${activeAgent.name}, an AI assistant.`;
+      disclosureText = `Just so you know, I'm an AI assistant and this call may be recorded.`;
     }
 
-    const greeting = activeAgent.greeting || "Hello, thank you for calling. How can I help you today?";
-    const fullMessage = `${disclosureText} ${greeting}`;
+    const greeting = activeAgent.greeting || "How can I help you today?";
+    const fullMessage = `Hi, I'm ${activeAgent.name}. ${disclosureText} ${greeting}`;
 
-    await speakText(callControlId, fullMessage, {
+    await speakAndGather(callControlId, fullMessage, {
       voice: activeAgent.voiceName || "female",
       language: agentLanguage,
     });
@@ -254,7 +249,7 @@ async function handleUserInput(
       callLog.orgId
     );
 
-    await speakText(callControlId, responseText, {
+    await speakAndGather(callControlId, responseText, {
       voice: agent?.voiceName || "female",
       language: agent?.language || "en-GB",
     });
@@ -263,7 +258,7 @@ async function handleUserInput(
   } catch (err) {
     logger.error("Failed to handle Telnyx user input", err instanceof Error ? err : undefined);
     try {
-      await speakText(callControlId, "I'm sorry, I encountered an issue. Could you please repeat that?");
+      await speakAndGather(callControlId, "Sorry about that, could you say that again?");
     } catch {}
     return NextResponse.json({ status: "ok" });
   }

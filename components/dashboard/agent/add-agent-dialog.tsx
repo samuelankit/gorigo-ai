@@ -201,7 +201,7 @@ export function AddAgentDialog({
                   .filter(v => v.language === agentLanguage)
                   .map(voice => (
                     <SelectItem key={voice.id} value={voice.id}>
-                      {voice.name} ({voice.gender})
+                      {voice.name} ({voice.gender}){(voice as any).quality === "neural" ? " ✦ Neural" : ""}
                     </SelectItem>
                   ))}
               </SelectContent>

@@ -408,11 +408,9 @@ export default function WalletPage() {
                   {topUpMutation.isPending ? "Processing..." : "Top Up"}
                 </Button>
               </div>
-              {wallet && wallet.balance < 50 && (
-                <p className="text-xs text-muted-foreground mt-2" data-testid="text-minimum-topup-hint">
-                  Minimum recharge: £50.00. Top up to restore your account above the £50.00 minimum required for services.
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground mt-2" data-testid="text-topup-nonrefundable">
+                Minimum recharge: £50.00. All top-ups are non-refundable. Platform-error credits are refunded automatically.
+              </p>
             </>
           )}
         </CardContent>

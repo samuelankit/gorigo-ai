@@ -144,11 +144,23 @@ export default function TermsOfServicePage() {
               balance in real time based on usage. You may top up your wallet at
               any time through the dashboard.
             </p>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed mb-3">
               All fees are quoted exclusive of VAT unless stated otherwise. We
               reserve the right to modify our pricing with reasonable notice.
               Continued use of the Service after a pricing change constitutes
               acceptance of the new pricing.
+            </p>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              Wallet top-ups are non-refundable. As a prepaid platform, all
+              credits purchased are final. Prepaid credits do not expire but
+              are not redeemable for cash or transferable to another account.
+              The minimum wallet top-up is £50.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              In the event of a platform error — such as a call failure caused
+              by a system fault — the affected amount will be automatically
+              refunded to your wallet balance. This is the sole circumstance
+              under which credits may be returned.
             </p>
           </section>
 
@@ -233,10 +245,9 @@ export default function TermsOfServicePage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Upon termination, your right to use the Service will cease
-              immediately. Any outstanding balance in your wallet may be
-              refunded at our discretion, less any amounts owed for usage. We
-              may retain certain data as required by law or for legitimate
-              business purposes.
+              immediately. Any remaining wallet balance is non-refundable and
+              will be forfeited. We may retain certain data as required by law
+              or for legitimate business purposes.
             </p>
           </section>
 

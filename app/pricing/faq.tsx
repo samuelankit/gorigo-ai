@@ -68,6 +68,11 @@ const faqs = [
     answer:
       "Team is for managing your internal company — employees, departments, and board members all sharing AI agents and resources. Partner is for managing external clients that you sell to, with separate billing, white-labelling, and reseller capabilities. Think of it this way: Team manages inward, Partner manages outward.",
   },
+  {
+    question: "What is your refund policy?",
+    answer:
+      "Wallet top-ups are non-refundable. As a prepaid platform, all credits purchased are final and cannot be redeemed for cash. Your credits never expire, so you can use them at any time. The only exception is platform errors — if a call fails due to a system fault on our side, the affected amount is automatically refunded to your wallet. This is standard practice for prepaid services.",
+  },
 ];
 
 export function PricingFaq() {

@@ -209,7 +209,7 @@ function RegisterForm() {
               />
               <Label htmlFor="terms" className="text-sm text-muted-foreground leading-snug cursor-pointer" data-testid="label-terms-accept">
                 I agree to the{" "}
-                <Link href="/terms" target="_blank" className="text-primary font-medium hover:underline" data-testid="link-terms">
+                <Link href="/policies/terms" target="_blank" className="text-primary font-medium hover:underline" data-testid="link-terms">
                   Terms &amp; Conditions
                 </Link>
                 {" "}and{" "}

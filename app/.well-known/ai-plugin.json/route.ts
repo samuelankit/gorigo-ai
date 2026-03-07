@@ -25,7 +25,7 @@ export async function GET() {
     },
     logo_url: `${baseUrl}/favicon.ico`,
     contact_email: "support@gorigo.ai",
-    legal_info_url: `${baseUrl}/terms`,
+    legal_info_url: `${baseUrl}/policies/terms`,
   };
 
   return NextResponse.json(manifest, {

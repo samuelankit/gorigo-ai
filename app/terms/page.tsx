@@ -603,7 +603,7 @@ export default function TermsPage() {
                   </li>
                   <li className="flex items-start gap-2 text-sm text-muted-foreground">
                     <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <span>Any active wallet balance will be refunded minus any pending partner commissions or outstanding charges.</span>
+                    <span>Any remaining wallet balance is non-refundable and will be forfeited upon termination. Wallet top-ups are prepaid credits and are not redeemable for cash.</span>
                   </li>
                 </ul>
               </CardContent>

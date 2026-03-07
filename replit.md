@@ -5,7 +5,7 @@ GoRigo is an AI voice platform designed to streamline AI-driven business operati
 
 ## User Preferences
 - Default to light mode (day vision), with dark mode (night vision) toggle available.
-- Talk-time only billing model. Talk time = ALL platform usage (calls, AI content generation, assistant queries, knowledge processing). Server infrastructure is GoRigo's cost, not the customer's. Customer's prepaid wallet is deducted per operation. Margin is built into every transaction rate. Minimum wallet recharge: £50. No free trials, no free credits.
+- Talk-time only billing model. Talk time = ALL platform usage (calls, AI content generation, assistant queries, knowledge processing). Server infrastructure is GoRigo's cost, not the customer's. Customer's prepaid wallet is deducted per operation. Margin is built into every transaction rate. Minimum wallet recharge: £50. No free trials, no free credits. Wallet top-ups are non-refundable (standard prepaid). Only platform-error refunds (e.g. call failures from system faults) are auto-refunded.
 - AI disclosure on calls (compliance).
 - Solo founder - automate everything, SuperAdmin Console for all analytics and operations.
 

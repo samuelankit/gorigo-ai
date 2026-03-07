@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { callLogs, billingLedger } from "@/shared/schema";
-import { eq, sql } from "drizzle-orm";
+import { callLogs, walletTransactions } from "@/shared/schema";
+import { eq, sql, and, like } from "drizzle-orm";
 import { getWalletBalance, deductFromWallet, getUsableBalance, MINIMUM_WALLET_BALANCE } from "@/lib/wallet";
 import { hangupCall, speakText } from "@/lib/telnyx";
 import { createLogger } from "@/lib/logger";
@@ -88,17 +88,22 @@ export async function reconcileCallBilling(
   orgId: number
 ): Promise<void> {
   try {
-    const [ledgerTotal] = await db
-      .select({ total: sql<number>`COALESCE(SUM(${billingLedger.cost}), 0)` })
-      .from(billingLedger)
-      .where(eq(billingLedger.providerCallId, callControlId));
+    const [walletTxnTotal] = await db
+      .select({ total: sql<number>`COALESCE(SUM(ABS(${walletTransactions.amount})), 0)` })
+      .from(walletTransactions)
+      .where(
+        and(
+          eq(walletTransactions.orgId, orgId),
+          eq(walletTransactions.referenceType, "call"),
+          like(walletTransactions.referenceId, `call_billing_%${callControlId}%`)
+        )
+      );
 
-    const alreadyBilled = Number(ledgerTotal?.total ?? 0);
+    const alreadyBilled = Number(walletTxnTotal?.total ?? 0);
 
     const [callLog] = await db
       .select({
         billedRate: callLogs.billedRatePerMinute,
-        deploymentModel: callLogs.billedDeploymentModel,
       })
       .from(callLogs)
       .where(eq(callLogs.providerCallId, callControlId))
@@ -120,6 +125,19 @@ export async function reconcileCallBilling(
         deficit,
       });
 
+      const idempotencyKey = `call_billing_reconcile_${callControlId}`;
+
+      const [existing] = await db
+        .select({ id: walletTransactions.id })
+        .from(walletTransactions)
+        .where(eq(walletTransactions.referenceId, idempotencyKey))
+        .limit(1);
+
+      if (existing) {
+        logger.info("Reconciliation already applied, skipping", { callControlId });
+        return;
+      }
+
       try {
         const rawBalance = await getWalletBalance(orgId);
         const usable = getUsableBalance(rawBalance);
@@ -130,7 +148,7 @@ export async function reconcileCallBilling(
             cappedDeficit,
             `Call billing reconciliation: ${deficit.toFixed(2)} deficit for ${providerDurationSecs}s call`,
             "call",
-            `call_billing_reconcile_${callControlId}`
+            idempotencyKey
           );
           logger.info("Billing reconciliation charge applied", { callControlId, orgId, cappedDeficit });
         }

@@ -22,10 +22,10 @@ The platform includes a Unit Economics System for real-time cost tracking and ma
 Key features include:
 - **Deployment Packages**: Three commercial packages (Individual, Team, Custom Enterprise) with a white-label add-on.
 - **Agent Configuration**: Customizable AI agents with roles, FAQs, knowledge bases, and language/voice selection. Neural voice quality tier available (AWS Polly Neural voices) with quality labels in UI.
-- **Seamless Voice Experience**: Natural AI disclosure ("Just so you know, I'm an AI assistant..."), barge-in support (Telnyx `speakAndGather`, Vonage `bargeIn: true`), 1-2s silence detection, enhanced conversational LLM prompt with warm filler phrases and caller energy mirroring. Files: `lib/voice-ai.ts`, `lib/telnyx.ts`, `app/api/telnyx/voice/route.ts`, `app/api/vonage/voice/route.ts`, `lib/compliance-engine.ts`.
+- **Seamless Voice Experience**: Natural AI disclosure ("Just so you know, I'm an AI assistant..."), barge-in support (Telnyx `speakAndGather`, Vonage `bargeIn: true`), 1-2s silence detection, enhanced conversational LLM prompt with warm filler phrases and caller energy mirroring, prompt injection detection on all voice inputs. Files: `lib/voice-ai.ts`, `lib/telnyx.ts`, `app/api/telnyx/voice/route.ts`, `app/api/vonage/voice/route.ts`, `lib/compliance-engine.ts`.
 - **Knowledge Management**: Document upload, chunking, embedding, and audio transcription.
 - **Partner Management**: Multi-tier system for Business Partners, resellers, D2C clients, and affiliate partners, including full CRUD for affiliate links and commission calculation.
-- **Billing & Usage**: Talk-time pricing, real-time wallet deductions, mid-call balance enforcement, spending caps, Stripe for top-ups, and automated refunds.
+- **Billing & Usage**: Talk-time pricing, real-time wallet deductions, mid-call balance enforcement, spending caps, Stripe for top-ups, automated refunds, and call-end billing reconciliation (catches missed charges from server restarts). Files: `lib/mid-call-billing.ts`.
 - **Analytics Deep-Dive**: A 6-tab dashboard with a global date range picker.
 - **Web Traffic Intelligence**: Custom analytics with PII auto-redaction.
 - **International Calling System**: Country management, per-org telephony isolation, compliance engine, fraud detection, and currency conversion.

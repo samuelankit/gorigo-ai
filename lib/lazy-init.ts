@@ -40,6 +40,34 @@ export async function ensureServicesStarted() {
   }
 
   try {
+    const jobInterval = isProduction ? 30_000 : 60_000;
+    const { startJobProcessor } = await import("@/lib/jobs");
+    startJobProcessor(jobInterval);
+    console.log(`[GoRigo] Job processor started (${jobInterval / 1000}s interval)`);
+  } catch (e) {
+    console.error("[GoRigo] Job processor init failed:", e);
+  }
+
+  try {
+    const campaignInterval = isProduction ? 15_000 : 30_000;
+    const { startCampaignEngine } = await import("@/lib/campaign-executor");
+    startCampaignEngine(campaignInterval);
+    console.log(`[GoRigo] Campaign engine started (${campaignInterval / 1000}s interval)`);
+  } catch (e) {
+    console.error("[GoRigo] Campaign engine init failed:", e);
+  }
+
+  try {
+    const { restoreCallBilling } = await import("@/lib/mid-call-billing");
+    const restored = await restoreCallBilling();
+    if (restored > 0) {
+      console.log(`[GoRigo] Restored ${restored} active call billing sessions`);
+    }
+  } catch (e) {
+    console.error("[GoRigo] Billing restore failed:", e);
+  }
+
+  try {
     const { setupGracefulShutdown } = await import("@/lib/shutdown");
     setupGracefulShutdown([
       () => console.info("[Shutdown] Stopping background services..."),
@@ -75,10 +103,14 @@ export async function ensureServicesStarted() {
 
       const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
       if (domain) {
-        const { webhook } = await stripeSync.findOrCreateManagedWebhook(
+        const result = await stripeSync.findOrCreateManagedWebhook(
           `https://${domain}/api/billing/stripe-webhook`
         );
-        console.log(`[GoRigo] Stripe webhook configured: ${webhook.url}`);
+        if (result?.webhook?.url) {
+          console.log(`[GoRigo] Stripe webhook configured: ${result.webhook.url}`);
+        } else {
+          console.log("[GoRigo] Stripe webhook setup returned no URL - skipping");
+        }
       }
 
       stripeSync.syncBackfill()

@@ -5,7 +5,11 @@ import { calculateCallCost } from "@/lib/billing";
 import { generateCallSummary } from "@/lib/ai";
 import { deductFromWallet } from "@/lib/wallet";
 
-export type JobType = "POST_CALL_SUMMARY" | "LEDGER_POST" | "RETENTION_PURGE" | "AI_RETRY" | "DOCUMENT_PROCESS";
+import { createLogger } from "@/lib/logger";
+
+const jobLogger = createLogger("JobProcessor");
+
+export type JobType = "POST_CALL_SUMMARY" | "LEDGER_POST" | "RETENTION_PURGE" | "AI_RETRY" | "DOCUMENT_PROCESS" | "CAMPAIGN_DIAL";
 
 export async function createJob(type: JobType, payload: Record<string, unknown>, runAt?: Date) {
   const [job] = await db
@@ -141,10 +145,13 @@ export async function processPendingJobs() {
       continue;
     }
 
-    await db
+    const [claimed] = await db
       .update(jobs)
       .set({ status: "running", attempts: (job.attempts ?? 0) + 1 })
-      .where(eq(jobs.id, job.id));
+      .where(and(eq(jobs.id, job.id), eq(jobs.status, "pending")))
+      .returning({ id: jobs.id });
+
+    if (!claimed) continue;
 
     try {
       let result: Record<string, unknown> = {};
@@ -174,6 +181,11 @@ export async function processPendingJobs() {
           await processDocument(docPayload.documentId, docPayload.orgId);
           result = { success: true, documentId: docPayload.documentId };
           break;
+        case "CAMPAIGN_DIAL":
+          const { dialCampaignContact } = await import("@/lib/campaign-executor");
+          const dialPayload = p as { campaignId: number; contactId: number; orgId: number };
+          result = await dialCampaignContact(dialPayload.campaignId, dialPayload.contactId, dialPayload.orgId);
+          break;
         default:
           result = { success: false, reason: "Unknown job type" };
       }
@@ -196,4 +208,32 @@ export async function processPendingJobs() {
   }
 
   return results;
+}
+
+let jobProcessorRunning = false;
+let jobProcessorIntervalId: ReturnType<typeof setInterval> | null = null;
+
+export function startJobProcessor(intervalMs: number): void {
+  if ((globalThis as any).__jobProcessorStarted) return;
+  (globalThis as any).__jobProcessorStarted = true;
+
+  const guardedRun = () => {
+    if (jobProcessorRunning) return;
+    jobProcessorRunning = true;
+    processPendingJobs()
+      .then((results) => {
+        if (results.length > 0) {
+          jobLogger.info(`Processed ${results.length} jobs`, { results: results.map(r => ({ id: r.jobId, status: r.status })) });
+        }
+      })
+      .catch((err) => {
+        jobLogger.error("Job processor cycle failed", err instanceof Error ? err : undefined);
+      })
+      .finally(() => {
+        jobProcessorRunning = false;
+      });
+  };
+
+  setTimeout(guardedRun, 10_000);
+  jobProcessorIntervalId = setInterval(guardedRun, intervalMs);
 }

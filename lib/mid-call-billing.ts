@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { callLogs, walletTransactions } from "@/shared/schema";
+import { callLogs, walletTransactions, activeCallBillingState } from "@/shared/schema";
 import { eq, sql, and, like } from "drizzle-orm";
 import { getWalletBalance, deductFromWallet, getUsableBalance, MINIMUM_WALLET_BALANCE } from "@/lib/wallet";
 import { hangupCall, speakText } from "@/lib/telnyx";
@@ -29,16 +29,43 @@ let billingRunning = false;
 let billingIntervalId: ReturnType<typeof setInterval> | null = null;
 
 export function startCallBilling(callControlId: string, orgId: number, ratePerMinute: number): void {
+  const startTime = Date.now();
   activeCallBilling.set(callControlId, {
     orgId,
     callControlId,
     ratePerMinute,
-    startTime: Date.now(),
+    startTime,
     lastBilledSecs: 0,
     lowBalanceWarned: false,
     lowBalanceWarnedAt: null,
     terminated: false,
   });
+
+  db.insert(activeCallBillingState)
+    .values({
+      callControlId,
+      orgId,
+      ratePerMinute: String(ratePerMinute),
+      startTime: String(startTime),
+      lastBilledSecs: 0,
+      lowBalanceWarned: false,
+      lowBalanceWarnedAt: null,
+      terminated: false,
+    })
+    .onConflictDoUpdate({
+      target: activeCallBillingState.callControlId,
+      set: {
+        orgId,
+        ratePerMinute: String(ratePerMinute),
+        startTime: String(startTime),
+        lastBilledSecs: 0,
+        lowBalanceWarned: false,
+        terminated: false,
+      },
+    })
+    .catch((err) => {
+      logger.error("Failed to persist billing state", err instanceof Error ? err : undefined);
+    });
 
   if (!billingIntervalId) {
     billingIntervalId = setInterval(guardedBillingCycle, BILLING_INTERVAL_MS);
@@ -75,6 +102,12 @@ export function stopCallBilling(callControlId: string): void {
     }
   }
   activeCallBilling.delete(callControlId);
+
+  db.delete(activeCallBillingState)
+    .where(eq(activeCallBillingState.callControlId, callControlId))
+    .catch((err) => {
+      logger.error("Failed to remove persisted billing state", err instanceof Error ? err : undefined);
+    });
 
   if (activeCallBilling.size === 0 && billingIntervalId) {
     clearInterval(billingIntervalId);
@@ -228,6 +261,10 @@ async function processBillingCycle(): Promise<void> {
             `call_billing_${callControlId}_${totalSecs}`
           );
           billing.lastBilledSecs = totalSecs;
+          db.update(activeCallBillingState)
+            .set({ lastBilledSecs: totalSecs })
+            .where(eq(activeCallBillingState.callControlId, callControlId))
+            .catch(() => {});
         } catch (deductErr) {
           if (deductErr instanceof Error && deductErr.message.includes("Insufficient balance")) {
             await terminateCallForBilling(callControlId, billing, "insufficient");
@@ -248,6 +285,10 @@ async function terminateCallForBilling(
   reason: "depleted" | "insufficient"
 ): Promise<void> {
   billing.terminated = true;
+
+  db.delete(activeCallBillingState)
+    .where(eq(activeCallBillingState.callControlId, callControlId))
+    .catch(() => {});
 
   logger.warn("Terminating call due to billing", { callControlId, orgId: billing.orgId, reason });
 
@@ -304,6 +345,10 @@ export async function terminateAllCallsForOrg(orgId: number, reason: string = "o
     billing.terminated = true;
     terminated++;
 
+    db.delete(activeCallBillingState)
+      .where(eq(activeCallBillingState.callControlId, callControlId))
+      .catch(() => {});
+
     logger.warn("Force-terminating call due to org suspension", { callControlId, orgId, reason });
 
     try {
@@ -329,4 +374,50 @@ export async function terminateAllCallsForOrg(orgId: number, reason: string = "o
   }
 
   return terminated;
+}
+
+export async function restoreCallBilling(): Promise<number> {
+  try {
+    const rows = await db
+      .select()
+      .from(activeCallBillingState)
+      .where(eq(activeCallBillingState.terminated, false));
+
+    if (rows.length === 0) return 0;
+
+    let restored = 0;
+    for (const row of rows) {
+      const startTime = parseInt(row.startTime, 10);
+      const elapsed = Date.now() - startTime;
+
+      if (elapsed > 3600_000) {
+        logger.warn("Stale billing state found (>1hr), cleaning up", { callControlId: row.callControlId });
+        await db.delete(activeCallBillingState)
+          .where(eq(activeCallBillingState.callControlId, row.callControlId));
+        continue;
+      }
+
+      activeCallBilling.set(row.callControlId, {
+        orgId: row.orgId,
+        callControlId: row.callControlId,
+        ratePerMinute: parseFloat(String(row.ratePerMinute)),
+        startTime,
+        lastBilledSecs: row.lastBilledSecs ?? 0,
+        lowBalanceWarned: row.lowBalanceWarned ?? false,
+        lowBalanceWarnedAt: row.lowBalanceWarnedAt ? parseInt(row.lowBalanceWarnedAt, 10) : null,
+        terminated: false,
+      });
+      restored++;
+    }
+
+    if (restored > 0 && !billingIntervalId) {
+      billingIntervalId = setInterval(guardedBillingCycle, BILLING_INTERVAL_MS);
+    }
+
+    logger.info(`Restored ${restored} active billing sessions from database`);
+    return restored;
+  } catch (err) {
+    logger.error("Failed to restore billing state", err instanceof Error ? err : undefined);
+    return 0;
+  }
 }

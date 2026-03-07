@@ -2974,4 +2974,33 @@ export const insertEmailEventSchema = createInsertSchema(emailEvents).omit({ id:
 export type InsertEmailEvent = z.infer<typeof insertEmailEventSchema>;
 export type EmailEvent = typeof emailEvents.$inferSelect;
 
+export const activeCallBillingState = pgTable("active_call_billing_state", {
+  callControlId: text("call_control_id").primaryKey(),
+  orgId: integer("org_id").notNull().references(() => orgs.id),
+  ratePerMinute: numeric("rate_per_minute", { precision: 12, scale: 6 }).notNull(),
+  startTime: text("start_time").notNull(),
+  lastBilledSecs: integer("last_billed_secs").default(0),
+  lowBalanceWarned: boolean("low_balance_warned").default(false),
+  lowBalanceWarnedAt: text("low_balance_warned_at"),
+  terminated: boolean("terminated").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_active_billing_org").on(table.orgId),
+  index("idx_active_billing_terminated").on(table.terminated),
+]);
+
+export const tpsCheckResults = pgTable("tps_check_results", {
+  id: serial("id").primaryKey(),
+  phoneHash: text("phone_hash").notNull(),
+  phonePrefix: text("phone_prefix"),
+  isRegistered: boolean("is_registered").notNull(),
+  registryType: text("registry_type"),
+  checkedAt: timestamp("checked_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  source: text("source").default("cache"),
+}, (table) => [
+  uniqueIndex("uq_tps_phone_hash").on(table.phoneHash),
+  index("idx_tps_expires").on(table.expiresAt),
+]);
+
 export * from "./models/chat";

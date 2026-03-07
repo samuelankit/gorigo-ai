@@ -167,6 +167,21 @@ export async function runFullComplianceCheck(
     return result;
   }
 
+  if (data.compliance?.dncCheckMethod === "api" && countryCode.toUpperCase() === "GB") {
+    try {
+      const { checkTPS } = await import("@/lib/tps-checker");
+      const tpsResult = await checkTPS(phoneNumber);
+      if (tpsResult.isRegistered) {
+        result.allowed = false;
+        result.checks.dncClear = false;
+        result.reason = `Phone number is registered on the UK ${tpsResult.registryType || "TPS"} (Telephone Preference Service)`;
+        return result;
+      }
+    } catch (tpsErr) {
+      console.warn("[Compliance] TPS check failed (fail-open):", tpsErr instanceof Error ? tpsErr.message : tpsErr);
+    }
+  }
+
   const hoursCheck = await isWithinCountryCallingHours(countryCode);
   if (!hoursCheck.allowed) {
     result.allowed = false;

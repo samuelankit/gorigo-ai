@@ -157,12 +157,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No AI agent configured for your organization" }, { status: 400 });
     }
 
-    let capturedRate: { deploymentModel: string; ratePerMinute: number } = { deploymentModel: "individual", ratePerMinute: 0.20 };
+    let capturedRate: { deploymentModel: string; ratePerMinute: number };
     try {
       const resolved = await resolveRate(auth.orgId, "voice_outbound");
       capturedRate = { deploymentModel: resolved.deploymentModel, ratePerMinute: resolved.ratePerMinute };
     } catch (rateErr) {
-      logger.error("Rate capture failed, using default", rateErr);
+      logger.error("Rate resolution failed — blocking call to prevent incorrect billing", rateErr);
+      return NextResponse.json({ error: "Unable to determine call rate. Please try again." }, { status: 503 });
     }
 
     const [callLog] = await db

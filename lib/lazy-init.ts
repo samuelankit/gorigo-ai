@@ -103,13 +103,17 @@ export async function ensureServicesStarted() {
 
       const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
       if (domain) {
-        const result = await stripeSync.findOrCreateManagedWebhook(
-          `https://${domain}/api/billing/stripe-webhook`
-        );
-        if (result?.webhook?.url) {
-          console.log(`[GoRigo] Stripe webhook configured: ${result.webhook.url}`);
-        } else {
-          console.log("[GoRigo] Stripe webhook setup returned no URL - skipping");
+        try {
+          const result = await stripeSync.findOrCreateManagedWebhook(
+            `https://${domain}/api/billing/stripe-webhook`
+          );
+          if (result?.webhook?.url) {
+            console.log(`[GoRigo] Stripe webhook configured: ${result.webhook.url}`);
+          } else {
+            console.log("[GoRigo] Stripe webhook: auto-setup unavailable — configure manually in Stripe Dashboard");
+          }
+        } catch (whErr) {
+          console.warn("[GoRigo] Stripe webhook auto-setup failed — configure manually in Stripe Dashboard:", whErr instanceof Error ? whErr.message : whErr);
         }
       }
 

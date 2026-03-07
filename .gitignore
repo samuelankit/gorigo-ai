@@ -7,3 +7,4 @@ vite.config.ts.*
 .next
 attached_assets
 .cache
+.local/state

@@ -249,12 +249,13 @@ async function initiateContactCall(
     throw new Error("No active phone number for campaign org");
   }
 
-  let capturedRate = { deploymentModel: "individual", ratePerMinute: 0.20 };
+  let capturedRate: { deploymentModel: string; ratePerMinute: number };
   try {
     const resolved = await resolveRate(campaign.orgId, "voice_outbound");
     capturedRate = { deploymentModel: resolved.deploymentModel, ratePerMinute: resolved.ratePerMinute };
-  } catch {
-    logger.warn("Rate resolution failed, using default", { campaignId: campaign.id });
+  } catch (rateErr) {
+    logger.error("Rate resolution failed — skipping contact to prevent incorrect billing", rateErr instanceof Error ? rateErr : undefined, { campaignId: campaign.id, contactId: contact.id });
+    throw new Error("Rate resolution failed");
   }
 
   const [orgRecord] = await db.select({ id: orgs.id }).from(orgs).where(eq(orgs.id, campaign.orgId)).limit(1);

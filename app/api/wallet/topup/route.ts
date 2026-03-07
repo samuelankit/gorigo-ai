@@ -9,7 +9,7 @@ import { handleRouteError } from "@/lib/api-error";
 import { logTeamActivity } from "@/lib/team-activity";
 
 const topupSchema = z.object({
-  amount: z.number().positive("Amount must be positive").finite().max(10000, "Maximum top-up amount is 10,000"),
+  amount: z.number().positive("Amount must be positive").min(50, "Minimum top-up is £50").finite().max(10000, "Maximum top-up amount is 10,000"),
 });
 
 export async function POST(request: NextRequest) {

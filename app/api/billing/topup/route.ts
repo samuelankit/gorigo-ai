@@ -10,7 +10,7 @@ import { getUncachableStripeClient, isStripeConnectorConfigured } from "@/lib/st
 const logger = createLogger("BillingTopup");
 
 const topupSchema = z.object({
-  amount: z.number().positive().min(5).max(10000),
+  amount: z.number().positive().min(50).max(10000),
 }).strict();
 
 export async function POST(request: NextRequest) {

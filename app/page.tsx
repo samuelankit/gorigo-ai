@@ -96,7 +96,7 @@ export default function HomePage() {
             <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
               <Link href="/register">
                 <Button size="lg" data-testid="button-hero-start">
-                  Start Free
+                  Get Started
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -108,7 +108,7 @@ export default function HomePage() {
             </div>
 
             <p className="mt-4 text-xs text-muted-foreground">
-              No credit card required. Go live in under 5 minutes.
+              Prepaid wallet from £50. Go live in under 5 minutes.
             </p>
           </div>
         </div>

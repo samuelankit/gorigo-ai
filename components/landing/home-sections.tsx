@@ -475,7 +475,7 @@ export function HomeBelowFold() {
                   {[
                     { text: "No monthly subscription", detail: "ever" },
                     { text: "No per-seat or per-agent fees", detail: "unlimited agents" },
-                    { text: "No setup or onboarding costs", detail: "go live free" },
+                    { text: "No setup or onboarding costs", detail: "included with every account" },
                     { text: "No annual contracts", detail: "cancel anytime" },
                     { text: "No hidden overage charges", detail: "transparent rates" },
                     { text: "Support included at every tier", detail: "always" },
@@ -523,7 +523,7 @@ export function HomeBelowFold() {
           <div className="text-center mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
             <Link href="/register">
               <Button size="lg" data-testid="button-no-sub-start">
-                Start Free — No Card Required
+                Get Started — Pay As You Go
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
@@ -697,7 +697,7 @@ export function HomeBelowFold() {
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link href="/register">
               <Button size="lg" data-testid="button-cta-start">
-                Start Free
+                Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
@@ -708,7 +708,7 @@ export function HomeBelowFold() {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground mt-6">
-            No credit card required. No long-term contracts. Cancel anytime.
+            Prepaid wallet. No long-term contracts. Cancel anytime.
           </p>
         </div>
       </section>

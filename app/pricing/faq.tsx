@@ -26,7 +26,7 @@ const faqs = [
   {
     question: "Is there a minimum commitment?",
     answer:
-      "No long-term contracts required. Pay as you go with complete flexibility. You can scale up or down based on your call volume.",
+      "No long-term contracts required. The minimum wallet recharge is £50, and you only pay for what you use on a prepaid basis. There are no free trials or free credits — you top up your wallet and start using the platform immediately. You can scale up or down based on your call volume.",
   },
   {
     question: "What payment methods do you accept?",

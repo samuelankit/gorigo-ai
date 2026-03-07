@@ -140,8 +140,8 @@ export default function WalletPage() {
 
   const handleTopUp = () => {
     const amount = parseFloat(topUpAmount);
-    if (!amount || amount <= 0 || amount > 10000) {
-      toast({ title: "Invalid amount", description: "Please enter an amount between 0.01 and 10,000.", variant: "destructive" });
+    if (!amount || amount < 50 || amount > 10000) {
+      toast({ title: "Invalid amount", description: "Minimum top-up is £50. Please enter an amount between £50 and £10,000.", variant: "destructive" });
       return;
     }
     topUpMutation.mutate(amount);
@@ -207,7 +207,7 @@ export default function WalletPage() {
         </div>
       )}
 
-      {!loadingWallet && wallet && wallet.balance <= 5 && (
+      {!loadingWallet && wallet && wallet.balance <= 50 && (
         <Card className="border-red-200 dark:border-red-800/40" data-testid="card-minimum-balance-warning">
           <CardContent className="p-5">
             <div className="flex items-center gap-3">
@@ -217,7 +217,7 @@ export default function WalletPage() {
               <div>
                 <p className="text-sm font-medium text-foreground">Below Minimum Balance</p>
                 <p className="text-sm text-muted-foreground">
-                  Your balance (£{Number(wallet.balance).toFixed(2)}) is at or below the required £5.00 minimum. All services (calls, AI features) are blocked until you top up above £5.00.
+                  Your balance (£{Number(wallet.balance).toFixed(2)}) is at or below the required £50.00 minimum. All services (calls, AI features) are blocked until you top up above £50.00.
                 </p>
               </div>
             </div>
@@ -225,7 +225,7 @@ export default function WalletPage() {
         </Card>
       )}
 
-      {!loadingWallet && wallet?.lowBalance && wallet.balance > 5 && (
+      {!loadingWallet && wallet?.lowBalance && wallet.balance > 50 && (
         <Card className="border-amber-200 dark:border-amber-800/40" data-testid="card-low-balance-warning">
           <CardContent className="p-5">
             <div className="flex items-center gap-3">
@@ -398,7 +398,7 @@ export default function WalletPage() {
                     value={topUpAmount}
                     onChange={(e) => setTopUpAmount(e.target.value)}
                     placeholder="50.00"
-                    min="0.01"
+                    min="50"
                     max="10000"
                     step="0.01"
                     data-testid="input-topup-amount"
@@ -408,9 +408,9 @@ export default function WalletPage() {
                   {topUpMutation.isPending ? "Processing..." : "Top Up"}
                 </Button>
               </div>
-              {wallet && wallet.balance < 5 && (
+              {wallet && wallet.balance < 50 && (
                 <p className="text-xs text-muted-foreground mt-2" data-testid="text-minimum-topup-hint">
-                  Suggested minimum top-up: £{(5 - wallet.balance).toFixed(2)} to restore your account above the £5.00 minimum required for services.
+                  Minimum recharge: £50.00. Top up to restore your account above the £50.00 minimum required for services.
                 </p>
               )}
             </>

@@ -95,8 +95,8 @@ type ComparisonSection = {
 
 const comparisonSections: ComparisonSection[] = [
   {
-    title: "Free for Everyone",
-    subtitle: "Included with every account, no matter which tier you choose",
+    title: "Included with Every Account",
+    subtitle: "Core platform features included with every tier — no hidden extras",
     rows: [
       { name: "Rigo productivity tools (reminders, notes, follow-ups, briefings)", individual: true, team: true, custom: true },
       { name: "No setup or onboarding costs", individual: true, team: true, custom: true },
@@ -114,7 +114,7 @@ const comparisonSections: ComparisonSection[] = [
     subtitle: "Features and support levels per tier",
     rows: [
       { name: "Talk-time rate", individual: "20p/min", team: "18p/min", custom: "Negotiated" },
-      { name: "Minimum monthly spend", individual: "None", team: "£50", custom: "Custom" },
+      { name: "Minimum wallet recharge", individual: "£50", team: "£50", custom: "Custom" },
       { name: "Team members", individual: "1", team: "Unlimited (no seat fees)", custom: "Unlimited" },
       { name: "Departments", individual: false, team: true, custom: true },
       { name: "Department budget caps", individual: false, team: true, custom: true },

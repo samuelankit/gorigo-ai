@@ -8,7 +8,7 @@ import { getBaseUrl } from "@/lib/email";
 export const MINIMUM_WALLET_BALANCE = 5.00;
 
 export type TransactionType = "top_up" | "deduction" | "refund" | "adjustment" | "bonus" | "commission" | "revenue_share" | "payout";
-export type ReferenceType = "call" | "ai_chat" | "rigo_assistant" | "ai_drafts" | "transcription" | "knowledge" | "manual" | "system" | "signup_bonus" | "affiliate_commission" | "partner_revenue_share" | "reseller_revenue_share" | "affiliate_payout";
+export type ReferenceType = "call" | "ai_chat" | "rigo_assistant" | "ai_drafts" | "transcription" | "knowledge" | "manual" | "system" | "affiliate_commission" | "partner_revenue_share" | "reseller_revenue_share" | "affiliate_payout";
 
 export async function getOrCreateWallet(orgId: number) {
   try {

@@ -59,7 +59,7 @@ All plans include:
 - Real-time call monitoring
 - Prepaid wallet system
 
-Free trial: Every new account starts with a £5.00 credit to test the platform. No credit card required to sign up.
+Billing: Pay-as-you-go prepaid wallet. Top up and start making calls immediately. No credit card required to sign up.
 
 For partners and resellers, wholesale rates start at £0.04 per minute with volume discounts available. Contact our sales team for custom enterprise pricing.`,
   },
@@ -105,7 +105,7 @@ Access your GoRigo data from any LLM platform. The REST API at /api/v1/ supports
     content: `Getting started with GoRigo is simple:
 
 Step 1: Create Your Account
-Visit gorigo.ai and click "Get Started". Enter your business name, email, and create a password. You'll receive a £5.00 free credit to test the platform.
+Visit gorigo.ai and click "Get Started". Enter your business name, email, and create a password. Top up your prepaid wallet and you're ready to make calls.
 
 Step 2: Configure Your First AI Agent
 Go to Dashboard > Agent Configuration. Give your agent a name, write a greeting message, and describe your business. The AI uses this information to have natural conversations with your callers.
@@ -293,7 +293,7 @@ Onboarding flow:
 2. Ask about their business and what they hope to automate
 3. Guide them through creating their first AI agent
 4. Help them add FAQ entries and a business description
-5. Explain the wallet system and their £5 free credit
+5. Explain the prepaid wallet system and how to top up
 6. Show them how to monitor calls and review analytics
 7. Mention the knowledge base feature for advanced users
 8. Invite them to explore the partner program if relevant
@@ -350,7 +350,7 @@ async function seedGoRigoCallCenter() {
     roles: "sales",
     faqEntries: [
       { question: "How much does GoRigo cost?", answer: "We use a simple talk-time-only billing model. Plans start at £29/month for 100 minutes. You only pay for actual call time — no hidden fees." },
-      { question: "Can I try it for free?", answer: "Every new account gets £5 free credit to test the platform. No credit card required to sign up." },
+      { question: "Can I try it for free?", answer: "GoRigo uses a pay-as-you-go prepaid wallet. Top up any amount and you only pay for actual call time. No credit card required to sign up." },
       { question: "What makes GoRigo different?", answer: "Three things: talk-time-only billing so you only pay for what you use, a fully managed AI infrastructure so you don't need to worry about API keys, and a multi-agent system that lets you create specialised agents for different departments." },
       { question: "Do you support multiple languages?", answer: "Yes! GoRigo supports English, Spanish, French, German, Italian, Portuguese, Dutch, and more. You can configure the language and voice for each agent." },
     ],
@@ -412,7 +412,7 @@ async function seedGoRigoCallCenter() {
     faqEntries: [
       { question: "How do I create my first agent?", answer: "Go to Dashboard > Agent Configuration. Give your agent a name, write a greeting, and describe your business. It's that simple!" },
       { question: "What's the knowledge base?", answer: "The knowledge base lets you upload documents and FAQs that your AI agent can reference during calls. It makes your agent an expert on your business." },
-      { question: "How does billing work?", answer: "GoRigo uses a prepaid wallet. You add funds, and we deduct based on actual call time. Your new account comes with £5 free credit to get started." },
+      { question: "How does billing work?", answer: "GoRigo uses a prepaid wallet. You add funds, and we deduct based on actual call time. Top up any amount and start making calls immediately." },
       { question: "Can I have multiple agents?", answer: "Yes! You can create specialised agents for different departments and use our flow builder to route calls between them." },
     ],
     complianceDisclosure: true,

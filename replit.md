@@ -39,8 +39,9 @@ Key features include:
 - **Content Studio**: Admin dashboard for Industry Templates, Voice Profiles, and Case Studies.
 - **Rigo Jarvis Features**: Free voice assistant with personal productivity tools.
 - **Low Balance Alerts**: Configurable wallet threshold alerts via email.
+- **Email Deliverability Monitoring**: SendGrid event webhook (`/api/webhooks/sendgrid`) tracks bounces, spam complaints, and delivery events in the `email_events` table. SuperAdmin email health dashboard at `/api/admin/email-health` shows bounce/spam rates with warning thresholds.
 - **Invoice/Receipt Generation**: Downloadable HTML receipts with VAT breakdown.
-- **Public Status Page**: Real-time system health monitoring for core services.
+- **Public Status Page**: Real-time system health monitoring for core services. Health endpoints: `/api/health` (detailed), `/api/health/live` (liveness), `/api/health/ready` (readiness).
 - **Self-Service Phone Numbers**: Browse and purchase Telnyx numbers.
 - **Multi-Currency Support**: GBP/EUR/USD conversion API.
 - **GDPR Data Export**: Full Article 15 compliant data export.

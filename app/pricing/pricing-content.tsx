@@ -98,10 +98,9 @@ const comparisonSections: ComparisonSection[] = [
     title: "Free for Everyone",
     subtitle: "Included with every account, no matter which tier you choose",
     rows: [
-      { name: "£5 welcome credit", individual: true, team: true, custom: true },
       { name: "Rigo productivity tools (reminders, notes, follow-ups, briefings)", individual: true, team: true, custom: true },
       { name: "No setup or onboarding costs", individual: true, team: true, custom: true },
-      { name: "No credit card to start", individual: true, team: true, custom: true },
+      { name: "Pay-as-you-go prepaid wallet", individual: true, team: true, custom: true },
       { name: "Go live in under 5 minutes", individual: true, team: true, custom: true },
       { name: "Analytics dashboards", individual: true, team: true, custom: true },
       { name: "Compliance tools", individual: true, team: true, custom: true },

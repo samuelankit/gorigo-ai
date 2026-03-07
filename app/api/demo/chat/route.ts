@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       const genericReplies: Record<string, string[]> = {
         Sales: [
           "Great question! GoRigo offers AI-powered call centre automation with talk-time-only billing starting at just £29/month. Would you like to know more about our plans or features?",
-          "Thanks for your interest in GoRigo! We help businesses automate their call centres with intelligent AI agents. Every new account comes with £5 free credit to test the platform. Shall I walk you through the key features?",
+          "Thanks for your interest in GoRigo! We help businesses automate their call centres with intelligent AI agents. You only pay for actual talk time — no hidden fees or monthly minimums on Individual plans. Shall I walk you through the key features?",
           "GoRigo stands out with our multi-agent system, flexible deployment options, and knowledge base RAG. You only pay for actual call minutes — no hidden fees. What aspect are you most interested in?",
         ],
         Support: [
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
         Onboarding: [
           "Welcome to GoRigo! I'm thrilled to help you get started. The first step is to configure your AI agent — just go to Dashboard > Agent Configuration. Have you had a chance to explore your dashboard yet?",
           "Congratulations on joining GoRigo! Setting up is straightforward: create your agent, add some FAQ entries, fund your wallet, and you're ready for calls. Which step would you like help with?",
-          "Welcome aboard! Your account comes with £5 free credit to get started. Let's set up your first AI agent — it only takes a few minutes. What kind of business are you running?",
+          "Welcome aboard! Let's set up your first AI agent — it only takes a few minutes. Top up your prepaid wallet and you're ready to go. What kind of business are you running?",
         ],
       };
 

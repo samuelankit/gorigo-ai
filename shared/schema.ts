@@ -2946,4 +2946,24 @@ export const insertSocialAnalyticsSchema = createInsertSchema(socialAnalytics).o
 export type InsertSocialAnalytics = z.infer<typeof insertSocialAnalyticsSchema>;
 export type SocialAnalytics = typeof socialAnalytics.$inferSelect;
 
+export const emailEvents = pgTable("email_events", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  eventType: text("event_type").notNull(),
+  reason: text("reason"),
+  sgMessageId: text("sg_message_id"),
+  sgEventId: text("sg_event_id"),
+  bounceType: text("bounce_type"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_email_events_email").on(table.email),
+  index("idx_email_events_type").on(table.eventType),
+  index("idx_email_events_created").on(table.createdAt),
+  uniqueIndex("uq_email_events_sg_event").on(table.sgEventId),
+]);
+
+export const insertEmailEventSchema = createInsertSchema(emailEvents).omit({ id: true, createdAt: true });
+export type InsertEmailEvent = z.infer<typeof insertEmailEventSchema>;
+export type EmailEvent = typeof emailEvents.$inferSelect;
+
 export * from "./models/chat";

@@ -69,18 +69,24 @@ export async function POST(request: NextRequest) {
     }
 
     let event;
-    if (webhookSecret) {
+    if (!webhookSecret) {
+      if (process.env.NODE_ENV === "development") {
+        logger.warn("STRIPE_WEBHOOK_SECRET not set — accepting unverified payload in development mode only");
+        try {
+          event = JSON.parse(body);
+        } catch {
+          return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+        }
+      } else {
+        logger.error("STRIPE_WEBHOOK_SECRET not configured — rejecting webhook in production");
+        return NextResponse.json({ error: "Webhook secret not configured" }, { status: 503 });
+      }
+    } else {
       try {
         event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
       } catch (err: any) {
         logger.error("Stripe webhook signature verification failed", err);
         return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-      }
-    } else {
-      try {
-        event = JSON.parse(body);
-      } catch {
-        return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
       }
     }
 

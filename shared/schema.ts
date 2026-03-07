@@ -712,6 +712,7 @@ export const walletTransactions = pgTable("wallet_transactions", {
   index("idx_wallet_txn_created_at").on(table.createdAt),
   index("idx_wallet_txn_org_type").on(table.orgId, table.type),
   index("idx_wallet_txn_ref").on(table.referenceType, table.referenceId),
+  index("idx_wallet_txn_org_created").on(table.orgId, table.createdAt),
   uniqueIndex("uq_wallet_txn_idempotency").on(table.idempotencyKey),
 ]);
 
@@ -1271,7 +1272,12 @@ export const finAuditLog = pgTable("fin_audit_log", {
   changes: jsonb("changes"),
   ipAddress: text("ip_address"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_fin_audit_workspace").on(table.workspaceId),
+  index("idx_fin_audit_entity").on(table.entityType, table.entityId),
+  index("idx_fin_audit_created").on(table.createdAt),
+  index("idx_fin_audit_action").on(table.action),
+]);
 
 export const insertFinWorkspaceSchema = createInsertSchema(finWorkspaces).omit({ id: true, createdAt: true });
 export type InsertFinWorkspace = z.infer<typeof insertFinWorkspaceSchema>;
@@ -1376,7 +1382,12 @@ export const chatLeads = pgTable("chat_leads", {
   lastContactedAt: timestamp("last_contacted_at"),
   orgId: integer("org_id"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_chat_leads_org_id").on(table.orgId),
+  index("idx_chat_leads_status").on(table.status),
+  index("idx_chat_leads_pipeline").on(table.pipelineStage),
+  index("idx_chat_leads_created").on(table.createdAt),
+]);
 
 export const publicConversations = pgTable("public_conversations", {
   id: serial("id").primaryKey(),
@@ -1407,6 +1418,7 @@ export const chatMessages = pgTable("chat_messages", {
 }, (table) => [
   index("idx_chat_messages_lead_id").on(table.leadId),
   index("idx_chat_messages_conversation_id").on(table.conversationId),
+  index("idx_chat_messages_created").on(table.createdAt),
 ]);
 
 export const insertChatLeadSchema = createInsertSchema(chatLeads).omit({ id: true, createdAt: true, totalMessages: true, lastMessageAt: true, leadScore: true, enrichedAt: true, enrichmentData: true });

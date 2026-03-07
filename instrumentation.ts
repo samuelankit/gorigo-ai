@@ -8,6 +8,10 @@ export async function register() {
       console.error("[process] Uncaught exception:", err.message, err.stack);
     });
 
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      console.warn("[GoRigo] ⚠ STRIPE_WEBHOOK_SECRET is not set. Stripe webhooks will be rejected in production. Set this secret before going live.");
+    }
+
     if (process.env.NODE_ENV === "production") {
       const { ensureServicesStarted } = await import("@/lib/lazy-init");
       ensureServicesStarted().catch((err) => {

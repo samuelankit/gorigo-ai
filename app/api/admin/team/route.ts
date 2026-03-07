@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { orgMembers, users, departmentMembers, departments } from "@/shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getAuthenticatedUser } from "@/lib/get-user";
 import { requireOrgRole } from "@/lib/permissions";
 import { generalLimiter } from "@/lib/rate-limit";
@@ -30,18 +30,30 @@ export async function GET(request: NextRequest) {
       .innerJoin(users, eq(orgMembers.userId, users.id))
       .where(eq(orgMembers.orgId, auth!.orgId!));
 
-    const enriched = await Promise.all(members.map(async (member) => {
-      const depts = await db
-        .select({
-          departmentId: departmentMembers.departmentId,
-          departmentRole: departmentMembers.departmentRole,
-          departmentName: departments.name,
-        })
-        .from(departmentMembers)
-        .innerJoin(departments, eq(departmentMembers.departmentId, departments.id))
-        .where(eq(departmentMembers.userId, member.userId));
+    const memberUserIds = members.map(m => m.userId);
+    const allDepts = memberUserIds.length > 0
+      ? await db
+          .select({
+            userId: departmentMembers.userId,
+            departmentId: departmentMembers.departmentId,
+            departmentRole: departmentMembers.departmentRole,
+            departmentName: departments.name,
+          })
+          .from(departmentMembers)
+          .innerJoin(departments, eq(departmentMembers.departmentId, departments.id))
+          .where(inArray(departmentMembers.userId, memberUserIds))
+      : [];
 
-      return { ...member, departments: depts };
+    const deptsByUser = new Map<number, typeof allDepts>();
+    for (const dept of allDepts) {
+      const existing = deptsByUser.get(dept.userId) || [];
+      existing.push(dept);
+      deptsByUser.set(dept.userId, existing);
+    }
+
+    const enriched = members.map(member => ({
+      ...member,
+      departments: deptsByUser.get(member.userId) || [],
     }));
 
     return NextResponse.json({ members: enriched });

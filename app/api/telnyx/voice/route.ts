@@ -10,7 +10,7 @@ import { getCountryVoiceConfig, getDisclosureText } from "@/lib/compliance-engin
 import { callLimiter } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { initCallConversation, generateVoiceResponse, cleanupCallConversation } from "@/lib/voice-ai";
-import { startCallBilling, stopCallBilling } from "@/lib/mid-call-billing";
+import { startCallBilling, stopCallBilling, reconcileCallBilling } from "@/lib/mid-call-billing";
 import { hasInsufficientBalance } from "@/lib/wallet";
 import { processCallRefund } from "@/lib/call-refund";
 
@@ -302,6 +302,19 @@ async function handleCallHangup(
   processCallRefund(callControlId, hangupCause, durationSecs).catch(err => {
     logger.error("Auto-refund check failed", err instanceof Error ? err : undefined);
   });
+
+  if (durationSecs > 0) {
+    (async () => {
+      try {
+        const [cl] = await db.select({ orgId: callLogs.orgId }).from(callLogs).where(eq(callLogs.providerCallId, callControlId)).limit(1);
+        if (cl) {
+          await reconcileCallBilling(callControlId, durationSecs, cl.orgId);
+        }
+      } catch (reconcileErr) {
+        logger.error("Billing reconciliation failed", reconcileErr instanceof Error ? reconcileErr : undefined);
+      }
+    })();
+  }
 
   (async () => {
     try {

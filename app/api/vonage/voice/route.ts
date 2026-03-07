@@ -10,6 +10,7 @@ import { getCountryVoiceConfig, getDisclosureText } from "@/lib/compliance-engin
 import { callLimiter } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { initCallConversation, generateVoiceResponse, cleanupCallConversation } from "@/lib/voice-ai";
+import { stopCallBilling, reconcileCallBilling } from "@/lib/mid-call-billing";
 
 const logger = createLogger("VonageVoice");
 
@@ -291,6 +292,7 @@ async function handleCallCompleted(
 
   logger.info("Vonage call completed", { callUuid, duration });
 
+  stopCallBilling(callUuid);
   cleanupCallConversation(callUuid);
 
   try {
@@ -305,6 +307,19 @@ async function handleCallCompleted(
       .where(eq(callLogs.providerCallId, callUuid));
   } catch (err) {
     logger.error("Failed to update call log on completion", err instanceof Error ? err : undefined);
+  }
+
+  if (duration > 0) {
+    (async () => {
+      try {
+        const [cl] = await db.select({ orgId: callLogs.orgId }).from(callLogs).where(eq(callLogs.providerCallId, callUuid)).limit(1);
+        if (cl) {
+          await reconcileCallBilling(callUuid, duration, cl.orgId);
+        }
+      } catch (reconcileErr) {
+        logger.error("Billing reconciliation failed", reconcileErr instanceof Error ? reconcileErr : undefined);
+      }
+    })();
   }
 
   (async () => {

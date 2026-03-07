@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { orgs, partnerClients, partners, callLogs, billingLedger, orgMembers, users, wallets, agents } from "@/shared/schema";
-import { eq, sql, and, ilike, or } from "drizzle-orm";
+import { eq, sql, and, ilike, inArray } from "drizzle-orm";
 import { getAuthenticatedUser, requireSuperAdmin } from "@/lib/get-user";
 import { NextRequest, NextResponse } from "next/server";
 import { adminLimiter } from "@/lib/rate-limit";
@@ -44,7 +44,6 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(orgs.deploymentModel, packageFilter));
     }
 
-    let orgList;
     if (partnerIdParam && partnerIdParam !== "all") {
       if (partnerIdParam === "d2c") {
         const linkedOrgIds = await db
@@ -73,73 +72,140 @@ export async function GET(request: NextRequest) {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    orgList = await db.select().from(orgs).where(whereClause).limit(limit).offset(offset);
+    const orgList = await db.select().from(orgs).where(whereClause).limit(limit).offset(offset);
 
-    const clients = await Promise.all(
-      orgList.map(async (org) => {
-        const [pc] = await db
-          .select({ partnerId: partnerClients.partnerId })
-          .from(partnerClients)
-          .where(eq(partnerClients.orgId, org.id))
-          .limit(1);
+    if (orgList.length === 0) {
+      const [totalResult] = await db
+        .select({ total: sql<number>`count(*)` })
+        .from(orgs)
+        .where(whereClause);
+      return NextResponse.json({
+        clients: [],
+        pagination: { total: Number(totalResult.total), limit, offset },
+      });
+    }
 
-        let partnerName = "D2C";
-        let partnerId: number | null = null;
-        if (pc) {
-          const [p] = await db
-            .select({ name: partners.name })
-            .from(partners)
-            .where(eq(partners.id, pc.partnerId))
-            .limit(1);
-          if (p) partnerName = p.name;
-          partnerId = pc.partnerId;
-        }
+    const orgIds = orgList.map((o) => o.id);
 
-        const [callStats] = await db
-          .select({ total: sql<number>`count(*)` })
-          .from(callLogs)
-          .where(eq(callLogs.orgId, org.id));
+    const [
+      partnerAssociations,
+      callCountRows,
+      revenueRows,
+      ownerRows,
+      walletRows,
+      agentCountRows,
+    ] = await Promise.all([
+      db
+        .select({
+          orgId: partnerClients.orgId,
+          partnerId: partnerClients.partnerId,
+          partnerName: partners.name,
+        })
+        .from(partnerClients)
+        .leftJoin(partners, eq(partnerClients.partnerId, partners.id))
+        .where(inArray(partnerClients.orgId, orgIds)),
 
-        const [revenueStats] = await db
-          .select({ total: sql<number>`COALESCE(SUM(${billingLedger.cost}), 0)` })
-          .from(billingLedger)
-          .where(eq(billingLedger.orgId, org.id));
+      db
+        .select({
+          orgId: callLogs.orgId,
+          total: sql<number>`count(*)`,
+        })
+        .from(callLogs)
+        .where(inArray(callLogs.orgId, orgIds))
+        .groupBy(callLogs.orgId),
 
-        const [owner] = await db
-          .select({ email: users.email })
-          .from(orgMembers)
-          .leftJoin(users, eq(orgMembers.userId, users.id))
-          .where(and(eq(orgMembers.orgId, org.id), eq(orgMembers.role, "OWNER")))
-          .limit(1);
+      db
+        .select({
+          orgId: billingLedger.orgId,
+          total: sql<number>`COALESCE(SUM(${billingLedger.cost}), 0)`,
+        })
+        .from(billingLedger)
+        .where(inArray(billingLedger.orgId, orgIds))
+        .groupBy(billingLedger.orgId),
 
-        const [wallet] = await db
-          .select({ balance: wallets.balance, isActive: wallets.isActive })
-          .from(wallets)
-          .where(eq(wallets.orgId, org.id))
-          .limit(1);
+      db
+        .select({
+          orgId: orgMembers.orgId,
+          email: users.email,
+        })
+        .from(orgMembers)
+        .leftJoin(users, eq(orgMembers.userId, users.id))
+        .where(and(inArray(orgMembers.orgId, orgIds), eq(orgMembers.role, "OWNER"))),
 
-        const [agentCount] = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(agents)
-          .where(eq(agents.orgId, org.id));
+      db
+        .select({
+          orgId: wallets.orgId,
+          balance: wallets.balance,
+          isActive: wallets.isActive,
+        })
+        .from(wallets)
+        .where(inArray(wallets.orgId, orgIds)),
 
-        return {
-          id: org.id,
-          businessName: org.name,
-          ownerEmail: owner?.email ?? null,
-          partnerName,
-          partnerId,
-          channelType: org.channelType,
-          deploymentModel: org.deploymentModel ?? "individual",
-          totalCalls: Number(callStats.total),
-          totalRevenue: Number(revenueStats.total),
-          walletBalance: wallet ? Number(wallet.balance) : 0,
-          walletActive: wallet?.isActive ?? true,
-          agentCount: Number(agentCount?.count ?? 0),
-          joinedAt: org.createdAt,
-        };
-      })
-    );
+      db
+        .select({
+          orgId: agents.orgId,
+          count: sql<number>`count(*)`,
+        })
+        .from(agents)
+        .where(inArray(agents.orgId, orgIds))
+        .groupBy(agents.orgId),
+    ]);
+
+    const partnerMap = new Map<number, { partnerId: number; partnerName: string }>();
+    for (const pa of partnerAssociations) {
+      partnerMap.set(pa.orgId, {
+        partnerId: pa.partnerId,
+        partnerName: pa.partnerName ?? "Unknown Partner",
+      });
+    }
+
+    const callCountMap = new Map<number, number>();
+    for (const r of callCountRows) {
+      callCountMap.set(r.orgId, Number(r.total));
+    }
+
+    const revenueMap = new Map<number, number>();
+    for (const r of revenueRows) {
+      revenueMap.set(r.orgId, Number(r.total));
+    }
+
+    const ownerMap = new Map<number, string>();
+    for (const r of ownerRows) {
+      if (r.email) ownerMap.set(r.orgId, r.email);
+    }
+
+    const walletMap = new Map<number, { balance: number; isActive: boolean }>();
+    for (const r of walletRows) {
+      walletMap.set(r.orgId, {
+        balance: Number(r.balance),
+        isActive: r.isActive ?? true,
+      });
+    }
+
+    const agentCountMap = new Map<number, number>();
+    for (const r of agentCountRows) {
+      agentCountMap.set(r.orgId, Number(r.count));
+    }
+
+    const clients = orgList.map((org) => {
+      const partner = partnerMap.get(org.id);
+      const wallet = walletMap.get(org.id);
+      return {
+        id: org.id,
+        businessName: org.name,
+        ownerEmail: ownerMap.get(org.id) ?? null,
+        partnerName: partner?.partnerName ?? "D2C",
+        partnerId: partner?.partnerId ?? null,
+        channelType: org.channelType,
+        deploymentModel: org.deploymentModel ?? "individual",
+        totalCalls: callCountMap.get(org.id) ?? 0,
+        totalRevenue: revenueMap.get(org.id) ?? 0,
+        walletBalance: wallet?.balance ?? 0,
+        walletActive: wallet?.isActive ?? true,
+        agentCount: agentCountMap.get(org.id) ?? 0,
+        joinedAt: org.createdAt,
+      };
+    });
 
     const [totalResult] = await db
       .select({ total: sql<number>`count(*)` })

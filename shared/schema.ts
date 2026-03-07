@@ -197,6 +197,7 @@ export const callLogs = pgTable("call_logs", {
   index("idx_call_logs_org_agent").on(table.orgId, table.agentId),
   index("idx_call_logs_org_created").on(table.orgId, table.createdAt),
   index("idx_call_logs_started_at").on(table.startedAt),
+  index("idx_call_logs_user_id").on(table.userId),
 ]);
 
 export const usageRecords = pgTable("usage_records", {
@@ -257,6 +258,7 @@ export const billingLedger = pgTable("billing_ledger", {
   index("idx_billing_ledger_org_id").on(table.orgId),
   index("idx_billing_ledger_org_status").on(table.orgId, table.status),
   index("idx_billing_ledger_created").on(table.createdAt),
+  index("idx_billing_ledger_provider_call_id").on(table.providerCallId),
 ]);
 
 export const jobs = pgTable("jobs", {
@@ -1024,7 +1026,10 @@ export const apiKeys = pgTable("api_keys", {
   revokedAt: timestamp("revoked_at"),
   scopes: text("scopes").array().default([]),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  uniqueIndex("idx_api_keys_key_hash").on(table.keyHash),
+  index("idx_api_keys_org_id").on(table.orgId),
+]);
 
 export const insertApiKeySchema = createInsertSchema(apiKeys).omit({ id: true, createdAt: true, lastUsedAt: true, isRevoked: true, revokedAt: true });
 export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
@@ -1227,7 +1232,10 @@ export const finPayments = pgTable("fin_payments", {
   accountId: integer("account_id"),
   journalEntryId: integer("journal_entry_id"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_fin_payments_workspace_id").on(table.workspaceId),
+  index("idx_fin_payments_type").on(table.type),
+]);
 
 export const finJournalEntries = pgTable("fin_journal_entries", {
   id: serial("id").primaryKey(),

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { callLogs } from "@/shared/schema";
-import { eq } from "drizzle-orm";
+import { callLogs, billingLedger } from "@/shared/schema";
+import { eq, sql } from "drizzle-orm";
 import { getWalletBalance, deductFromWallet, getUsableBalance, MINIMUM_WALLET_BALANCE } from "@/lib/wallet";
 import { hangupCall, speakText } from "@/lib/telnyx";
 import { createLogger } from "@/lib/logger";
@@ -79,6 +79,67 @@ export function stopCallBilling(callControlId: string): void {
   if (activeCallBilling.size === 0 && billingIntervalId) {
     clearInterval(billingIntervalId);
     billingIntervalId = null;
+  }
+}
+
+export async function reconcileCallBilling(
+  callControlId: string,
+  providerDurationSecs: number,
+  orgId: number
+): Promise<void> {
+  try {
+    const [ledgerTotal] = await db
+      .select({ total: sql<number>`COALESCE(SUM(${billingLedger.cost}), 0)` })
+      .from(billingLedger)
+      .where(eq(billingLedger.providerCallId, callControlId));
+
+    const alreadyBilled = Number(ledgerTotal?.total ?? 0);
+
+    const [callLog] = await db
+      .select({
+        billedRate: callLogs.billedRatePerMinute,
+        deploymentModel: callLogs.billedDeploymentModel,
+      })
+      .from(callLogs)
+      .where(eq(callLogs.providerCallId, callControlId))
+      .limit(1);
+
+    const ratePerMinute = callLog?.billedRate ? parseFloat(String(callLog.billedRate)) : 0;
+    if (ratePerMinute <= 0 || providerDurationSecs <= 0) return;
+
+    const expectedCharge = roundMoney((providerDurationSecs / 60) * ratePerMinute);
+    const deficit = roundMoney(expectedCharge - alreadyBilled);
+
+    if (deficit > 0.01) {
+      logger.warn("Billing reconciliation deficit detected", {
+        callControlId,
+        orgId,
+        providerDurationSecs,
+        expectedCharge,
+        alreadyBilled,
+        deficit,
+      });
+
+      try {
+        const rawBalance = await getWalletBalance(orgId);
+        const usable = getUsableBalance(rawBalance);
+        const cappedDeficit = roundMoney(Math.min(deficit, usable));
+        if (cappedDeficit > 0) {
+          await deductFromWallet(
+            orgId,
+            cappedDeficit,
+            `Call billing reconciliation: ${deficit.toFixed(2)} deficit for ${providerDurationSecs}s call`,
+            "call",
+            `call_billing_reconcile_${callControlId}`
+          );
+          logger.info("Billing reconciliation charge applied", { callControlId, orgId, cappedDeficit });
+        }
+      } catch (deductErr) {
+        logger.error("Billing reconciliation deduction failed", deductErr instanceof Error ? deductErr : undefined);
+      }
+    }
+  } catch (err) {
+    logger.error("Billing reconciliation check failed", err instanceof Error ? err : undefined);
   }
 }
 

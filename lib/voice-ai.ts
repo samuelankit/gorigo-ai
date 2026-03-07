@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { searchKnowledge, buildRAGContext } from "@/lib/rag";
 import { generateAgentResponse, type ConversationMessage } from "@/lib/ai";
 import { detectOptOut, handleOptOut } from "@/lib/compliance-engine";
+import { detectPromptInjection, SAFE_REFUSAL_VOICE } from "@/lib/prompt-guard";
 import { createLogger } from "@/lib/logger";
 import { calculateLLMCost, logCostEvent } from "@/lib/unit-economics";
 
@@ -99,6 +100,25 @@ export async function generateVoiceResponse(
     negotiationEnabled: agent.negotiationEnabled ?? false,
     negotiationGuardrails: agent.negotiationGuardrails as any,
   };
+
+  if (detectPromptInjection(userInput)) {
+    logger.warn("Prompt injection detected in voice input", { providerCallId, orgId });
+    history.push({ role: "user", content: userInput });
+    history.push({ role: "assistant", content: SAFE_REFUSAL_VOICE });
+    callConversations.set(providerCallId, history);
+    const injectionTurnCount = Math.floor(history.length / 2);
+    const existingTranscript = await getExistingTranscript(providerCallId);
+    const newTranscriptEntry = `\nCaller: ${userInput}\n${agent.name}: ${SAFE_REFUSAL_VOICE}`;
+    try {
+      await db.update(callLogs).set({
+        transcript: (existingTranscript || "") + newTranscriptEntry,
+        turnCount: injectionTurnCount,
+        conversationMessages: history,
+      }).where(eq(callLogs.providerCallId, providerCallId));
+    } catch {}
+
+    return { responseText: SAFE_REFUSAL_VOICE, turnCount: injectionTurnCount };
+  }
 
   const optOutCheck = detectOptOut(userInput);
   if (optOutCheck.detected) {

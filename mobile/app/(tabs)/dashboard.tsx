@@ -185,8 +185,8 @@ export default function DashboardScreen() {
             style={({ pressed }) => [styles.actionButton, { backgroundColor: "#f59e0b" }, pressed && styles.pressed]}
             onPress={() => router.push("/wallet")}
           >
-            <Ionicons name="add-circle-outline" size={18} color="white" />
-            <Text style={styles.actionButtonText}>Top Up</Text>
+            <Ionicons name="wallet-outline" size={18} color="white" />
+            <Text style={styles.actionButtonText}>Wallet</Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.actionButton, { backgroundColor: "#06b6d4" }, pressed && styles.pressed]}

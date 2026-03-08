@@ -17,7 +17,7 @@ export default function WalletScreen() {
   const { branding } = useBranding();
   const activeColor = branding?.brandColor || Colors.primary;
   const [balance, setBalance] = useState("0.00");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("GBP");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -76,7 +76,7 @@ export default function WalletScreen() {
     >
       <View style={[styles.balanceCard, { backgroundColor: activeColor }]}>
         <Text style={styles.balanceLabel}>Available Balance</Text>
-        <Text style={styles.balanceAmount}>${balance}</Text>
+        <Text style={styles.balanceAmount}>£{balance}</Text>
         <Text style={styles.balanceCurrency}>{currency}</Text>
       </View>
 
@@ -102,7 +102,7 @@ export default function WalletScreen() {
                     </Text>
                   </View>
                   <Text style={[styles.txAmount, { color: getTypeColor(tx.type) }]}>
-                    {tx.type === "debit" || tx.type === "usage" ? "-" : "+"}${Math.abs(Number(tx.amount)).toFixed(4)}
+                    {tx.type === "debit" || tx.type === "usage" ? "-" : "+"}£{Math.abs(Number(tx.amount)).toFixed(4)}
                   </Text>
                 </View>
                 {idx < transactions.length - 1 && <View style={styles.txSeparator} />}

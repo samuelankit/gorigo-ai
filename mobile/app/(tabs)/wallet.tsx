@@ -1,9 +1,8 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from "react-native";
 import { useState, useEffect, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
 import { getWallet, getWalletTransactions } from "../../lib/api";
-import { router } from "expo-router";
 import TransactionItem from "../../components/TransactionItem";
 import { useBranding } from "../../lib/branding-context";
 
@@ -115,13 +114,10 @@ export default function WalletScreen() {
       <View style={[styles.balanceCard, { backgroundColor: activeColor }]}>
         <Text style={styles.balanceLabel}>Wallet Balance</Text>
         <Text style={styles.balanceAmount}>£{data.balance.toFixed(2)}</Text>
-        <Pressable
-          style={({ pressed }) => [styles.topUpButton, pressed && styles.topUpButtonPressed]}
-          onPress={() => router.push("/topup")}
-        >
-          <Ionicons name="add-circle-outline" size={18} color={activeColor} />
-          <Text style={[styles.topUpButtonText, { color: activeColor }]}>Top Up</Text>
-        </Pressable>
+        <View style={styles.topUpNotice}>
+          <Ionicons name="globe-outline" size={14} color="rgba(255, 255, 255, 0.7)" />
+          <Text style={styles.topUpNoticeText}>Top up your wallet at gorigo.ai</Text>
+        </View>
       </View>
 
       {/* Usage Summary Section */}
@@ -245,22 +241,15 @@ const styles = StyleSheet.create({
     color: Colors.white,
     marginBottom: Spacing.lg,
   },
-  topUpButton: {
+  topUpNotice: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.white,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
+    gap: 6,
   },
-  topUpButtonPressed: {
-    opacity: 0.8,
-  },
-  topUpButtonText: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
+  topUpNoticeText: {
+    fontSize: FontSize.sm,
+    color: "rgba(255, 255, 255, 0.7)",
+    fontWeight: "500",
   },
   section: {
     marginBottom: Spacing.lg,

@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         agentType: agents.agentType,
         status: agents.status,
         language: agents.language,
+        greeting: agents.greeting,
         voiceName: agents.voiceName,
         inboundEnabled: agents.inboundEnabled,
         outboundEnabled: agents.outboundEnabled,
@@ -61,6 +62,43 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function POST(request: NextRequest) {
+  try {
+    const rl = await settingsLimiter(request);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+    const auth = await getAuthenticatedUser();
+    if (!auth || !auth.orgId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { name, agentType, language, greeting, enabled } = body;
+
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      return NextResponse.json({ error: "Agent name is required" }, { status: 400 });
+    }
+
+    const [newAgent] = await db
+      .insert(agents)
+      .values({
+        userId: auth.userId,
+        orgId: auth.orgId,
+        name: name.trim(),
+        agentType: agentType || "general",
+        language: language || "en-GB",
+        greeting: greeting || "Hello, thank you for calling. How can I help you today?",
+        status: enabled === false ? "inactive" : "active",
+      })
+      .returning();
+
+    return NextResponse.json({ agent: newAgent }, { status: 201 });
+  } catch (error) {
+    return handleRouteError(error, "MobileAgentCreate");
+  }
+}
+
 export async function PATCH(request: NextRequest) {
   try {
     const rl = await settingsLimiter(request);
@@ -73,10 +111,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, enabled } = body;
+    const { id, enabled, name, agentType, language, greeting } = body;
 
-    if (!id || typeof enabled !== "boolean") {
-      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: "Agent ID is required" }, { status: 400 });
     }
 
     const [agent] = await db
@@ -89,9 +127,30 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
+    const updates: Record<string, any> = {};
+    if (typeof enabled === "boolean") {
+      updates.status = enabled ? "active" : "inactive";
+    }
+    if (typeof name === "string" && name.trim().length > 0) {
+      updates.name = name.trim();
+    }
+    if (typeof agentType === "string") {
+      updates.agentType = agentType;
+    }
+    if (typeof language === "string") {
+      updates.language = language;
+    }
+    if (typeof greeting === "string") {
+      updates.greeting = greeting;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    }
+
     await db
       .update(agents)
-      .set({ status: enabled ? "active" : "inactive" })
+      .set(updates)
       .where(and(eq(agents.id, id), eq(agents.orgId, auth.orgId)));
 
     return NextResponse.json({ success: true });

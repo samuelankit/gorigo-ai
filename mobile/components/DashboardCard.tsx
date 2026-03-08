@@ -1,16 +1,22 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
+import { Colors, Spacing, FontSize, BorderRadius } from "../constants/theme";
+import { useTheme } from "../lib/theme-context";
+import { useMemo } from "react";
 
 interface DashboardCardProps {
-  label: string;
+  label?: string;
+  title?: string;
   value: string;
   icon: string;
   color: string;
   onPress?: () => void;
 }
 
-export default function DashboardCard({ label, value, icon, color, onPress }: DashboardCardProps) {
+export default function DashboardCard({ label, title, value, icon, color, onPress }: DashboardCardProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
@@ -21,50 +27,52 @@ export default function DashboardCard({ label, value, icon, color, onPress }: Da
         <Ionicons name={icon as any} size={20} color={color} />
       </View>
       <View style={styles.content}>
-        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.label}>{label || title}</Text>
         <Text style={styles.value}>{value}</Text>
       </View>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    gap: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  content: {
-    flex: 1,
-  },
-  label: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
-  value: {
-    fontSize: FontSize.lg,
-    fontWeight: "700",
-    color: Colors.text,
-    marginTop: 2,
-  },
-});
+const createStyles = (colors: typeof Colors) =>
+  StyleSheet.create({
+    card: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.card,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      gap: Spacing.md,
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+      elevation: 1,
+    },
+    pressed: {
+      opacity: 0.7,
+    },
+    iconCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: BorderRadius.full,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    content: {
+      flex: 1,
+    },
+    label: {
+      fontSize: FontSize.sm,
+      color: colors.textSecondary,
+    },
+    value: {
+      fontSize: FontSize.lg,
+      fontWeight: "700",
+      color: colors.text,
+      marginTop: 2,
+    },
+  });

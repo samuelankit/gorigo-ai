@@ -1,9 +1,10 @@
 import { View, Text, StyleSheet, FlatList, RefreshControl, Pressable } from "react-native";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
 import { getCalls, getAdminStats, apiRequest } from "../../lib/api";
 import { useBranding } from "../../lib/branding-context";
+import { useTheme } from "../../lib/theme-context";
 import { router } from "expo-router";
 
 type FilterType = "all" | "calls" | "alerts" | "wallet";
@@ -33,7 +34,8 @@ const formatTimeAgo = (timestamp: string) => {
 
 export default function ActivityScreen() {
   const { branding } = useBranding();
-  const activeColor = branding?.brandColor || Colors.primary;
+  const { colors } = useTheme();
+  const activeColor = branding?.brandColor || colors.primary;
   const [filter, setFilter] = useState<FilterType>("all");
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -58,7 +60,7 @@ export default function ActivityScreen() {
             subtitle: `${call.direction || "inbound"} \u00b7 ${call.agentName || "Unassigned"} \u00b7 ${call.duration ? `${Math.floor(call.duration / 60)}:${String(call.duration % 60).padStart(2, "0")}` : "0:00"}`,
             timestamp: call.startTime || call.createdAt || new Date().toISOString(),
             icon: call.direction === "outbound" ? "arrow-up-outline" : "call-outline",
-            iconColor: call.status === "completed" ? Colors.success : call.status === "failed" ? Colors.destructive : "#3b82f6",
+            iconColor: call.status === "completed" ? colors.success : call.status === "failed" ? colors.destructive : "#3b82f6",
             status: call.status,
             meta: call,
           });
@@ -76,7 +78,7 @@ export default function ActivityScreen() {
             subtitle: `${isCredit ? "+" : "-"}$${Math.abs(Number(tx.amount || 0)).toFixed(4)}`,
             timestamp: tx.createdAt || new Date().toISOString(),
             icon: isCredit ? "arrow-down-circle-outline" : "arrow-up-circle-outline",
-            iconColor: isCredit ? Colors.success : "#f59e0b",
+            iconColor: isCredit ? colors.success : "#f59e0b",
             status: tx.type,
             meta: tx,
           });
@@ -90,7 +92,7 @@ export default function ActivityScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [colors]);
 
   useEffect(() => {
     loadActivity();
@@ -112,6 +114,8 @@ export default function ActivityScreen() {
     { key: "alerts", label: "Alerts" },
     { key: "wallet", label: "Wallet" },
   ];
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const renderItem = ({ item }: { item: ActivityItem }) => (
     <Pressable
@@ -140,7 +144,7 @@ export default function ActivityScreen() {
 
   const EmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="pulse-outline" size={48} color={Colors.textTertiary} />
+      <Ionicons name="pulse-outline" size={48} color={colors.textTertiary} />
       <Text style={styles.emptyTitle}>No Activity Yet</Text>
       <Text style={styles.emptyDesc}>Calls, alerts, and transactions will show up here</Text>
     </View>
@@ -174,89 +178,90 @@ export default function ActivityScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  filterRow: {
-    flexDirection: "row",
-    padding: Spacing.md,
-    gap: Spacing.sm,
-  },
-  filterChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: Colors.card,
-  },
-  filterText: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
-  list: {
-    paddingHorizontal: Spacing.md,
-    flexGrow: 1,
-  },
-  activityCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.md,
-    gap: Spacing.md,
-  },
-  activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  activityInfo: {
-    flex: 1,
-  },
-  activityTitle: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  activitySubtitle: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  activityRight: {
-    alignItems: "flex-end",
-    gap: 4,
-  },
-  activityTime: {
-    fontSize: FontSize.xs,
-    color: Colors.textTertiary,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: Colors.borderLight,
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.xxl * 2,
-    gap: Spacing.sm,
-  },
-  emptyTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  emptyDesc: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
-});
+const createStyles = (colors: typeof Colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    filterRow: {
+      flexDirection: "row",
+      padding: Spacing.md,
+      gap: Spacing.sm,
+    },
+    filterChip: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.full,
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+      backgroundColor: colors.card,
+    },
+    filterText: {
+      fontSize: FontSize.sm,
+      color: colors.textSecondary,
+    },
+    list: {
+      paddingHorizontal: Spacing.md,
+      flexGrow: 1,
+    },
+    activityCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: Spacing.md,
+      gap: Spacing.md,
+    },
+    activityIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: BorderRadius.md,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    activityInfo: {
+      flex: 1,
+    },
+    activityTitle: {
+      fontSize: FontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    activitySubtitle: {
+      fontSize: FontSize.sm,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    activityRight: {
+      alignItems: "flex-end",
+      gap: 4,
+    },
+    activityTime: {
+      fontSize: FontSize.xs,
+      color: colors.textTertiary,
+    },
+    statusDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+    separator: {
+      height: 1,
+      backgroundColor: colors.borderLight,
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: Spacing.xxl * 2,
+      gap: Spacing.sm,
+    },
+    emptyTitle: {
+      fontSize: FontSize.lg,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    emptyDesc: {
+      fontSize: FontSize.sm,
+      color: colors.textSecondary,
+    },
+  });

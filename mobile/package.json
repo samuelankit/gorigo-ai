@@ -49,7 +49,8 @@
     "react-native-gesture-handler": "~2.25.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "~5.4.0",
-    "react-native-screens": "~4.11.1"
+    "react-native-screens": "~4.11.1",
+    "expo-screen-capture": "~7.1.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

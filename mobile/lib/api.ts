@@ -164,6 +164,20 @@ export async function updateAgentStatus(agentId: number, enabled: boolean) {
   });
 }
 
+export async function createAgent(data: { name: string; agentType?: string; language?: string; greeting?: string; enabled?: boolean }) {
+  return apiRequest("/api/mobile/agents", {
+    method: "POST",
+    body: data,
+  });
+}
+
+export async function updateAgent(id: number, data: { name?: string; agentType?: string; language?: string; greeting?: string; enabled?: boolean }) {
+  return apiRequest("/api/mobile/agents", {
+    method: "PATCH",
+    body: { id, ...data },
+  });
+}
+
 export async function getCalls(params?: { limit?: number; offset?: number; search?: string }) {
   const parts: string[] = [];
   if (params?.limit) parts.push(`limit=${params.limit}`);

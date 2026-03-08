@@ -1,13 +1,15 @@
 import { Text, StyleSheet, Animated } from "react-native";
 import { useEffect, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors, Spacing, FontSize } from "../../constants/theme";
+import { Colors, Spacing, FontSize } from "../constants/theme";
+import { useTheme } from "../lib/theme-context";
 
 interface ConnectionBannerProps {
   isOnline: boolean;
 }
 
 export default function ConnectionBanner({ isOnline }: ConnectionBannerProps) {
+  const { colors } = useTheme();
   const heightAnim = useRef(new Animated.Value(isOnline ? 0 : 1)).current;
 
   useEffect(() => {
@@ -29,9 +31,9 @@ export default function ConnectionBanner({ isOnline }: ConnectionBannerProps) {
   });
 
   return (
-    <Animated.View style={[styles.banner, { height: animatedHeight, opacity: animatedOpacity }]}>
-      <Ionicons name="cloud-offline-outline" size={16} color={Colors.white} />
-      <Text style={styles.text}>You're offline - commands will be queued</Text>
+    <Animated.View style={[styles.banner, { height: animatedHeight, opacity: animatedOpacity, backgroundColor: colors.warning }]}>
+      <Ionicons name="cloud-offline-outline" size={16} color={colors.white} />
+      <Text style={[styles.text, { color: colors.white }]}>You're offline - commands will be queued</Text>
     </Animated.View>
   );
 }
@@ -42,12 +44,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    backgroundColor: Colors.warning,
     overflow: "hidden",
   },
   text: {
     fontSize: FontSize.sm,
     fontWeight: "600",
-    color: Colors.white,
   },
 });

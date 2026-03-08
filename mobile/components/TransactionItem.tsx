@@ -1,6 +1,8 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
+import { Colors, Spacing, FontSize, BorderRadius } from "../constants/theme";
+import { useTheme } from "../lib/theme-context";
+import { useMemo } from "react";
 
 interface TransactionItemProps {
   title: string;
@@ -24,10 +26,13 @@ const formatTimeAgo = (timestamp: string) => {
 };
 
 export default function TransactionItem({ title, amount, type, timestamp, icon }: TransactionItemProps) {
+  const { colors } = useTheme();
   const isCredit = CREDIT_TYPES.includes(type.toLowerCase());
-  const amountColor = isCredit ? Colors.success : Colors.destructive;
+  const amountColor = isCredit ? colors.success : colors.destructive;
   const prefix = isCredit ? "+" : "-";
   const defaultIcon = isCredit ? "arrow-down-circle-outline" : "arrow-up-circle-outline";
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.row}>
@@ -45,35 +50,37 @@ export default function TransactionItem({ title, amount, type, timestamp, icon }
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.md,
-    gap: Spacing.md,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  info: {
-    flex: 1,
-  },
-  title: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  timestamp: {
-    fontSize: FontSize.xs,
-    color: Colors.textTertiary,
-    marginTop: 2,
-  },
-  amount: {
-    fontSize: FontSize.md,
-    fontWeight: "700",
-  },
-});
+const createStyles = (colors: typeof Colors) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.md,
+      gap: Spacing.md,
+    },
+    iconCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: BorderRadius.full,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    info: {
+      flex: 1,
+    },
+    title: {
+      fontSize: FontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    timestamp: {
+      fontSize: FontSize.xs,
+      color: colors.textTertiary,
+      marginTop: 2,
+    },
+    amount: {
+      fontSize: FontSize.md,
+      fontWeight: "700",
+    },
+  });

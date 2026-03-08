@@ -1,20 +1,23 @@
 import { View, Text, StyleSheet } from "react-native";
-import { Colors, Spacing, FontSize } from "../../constants/theme";
+import { Colors, Spacing, FontSize } from "../constants/theme";
+import { useTheme } from "../lib/theme-context";
 
 interface StatusBadgeProps {
   status: string;
   size?: "sm" | "md";
 }
 
-const getStatusColor = (status: string): string => {
-  const s = status.toLowerCase();
-  if (["active", "completed", "online"].includes(s)) return Colors.success;
-  if (["failed", "error", "offline"].includes(s)) return Colors.destructive;
-  if (["pending", "ringing"].includes(s)) return Colors.warning;
-  return Colors.textSecondary;
-};
-
 export default function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
+  const { colors } = useTheme();
+
+  const getStatusColor = (s: string): string => {
+    const lower = s.toLowerCase();
+    if (["active", "completed", "online"].includes(lower)) return colors.success;
+    if (["failed", "error", "offline"].includes(lower)) return colors.destructive;
+    if (["pending", "ringing"].includes(lower)) return colors.warning;
+    return colors.textSecondary;
+  };
+
   const color = getStatusColor(status);
   const isSm = size === "sm";
 

@@ -129,3 +129,21 @@ export function getNotificationColor(type: NotificationPayload["type"]): string 
     default: return "#189553";
   }
 }
+
+export function getRouteForNotificationType(type: NotificationPayload["type"]): string {
+  switch (type) {
+    case "low_wallet": return "/wallet";
+    case "agent_offline": return "/agents";
+    case "fraud_alert": return "/calls";
+    case "quality_drop": return "/calls";
+    case "general":
+    default:
+      return "/dashboard";
+  }
+}
+
+export function extractNotificationType(data: Record<string, any> | undefined): NotificationPayload["type"] {
+  if (!data || !data.type) return "general";
+  const valid: NotificationPayload["type"][] = ["low_wallet", "fraud_alert", "agent_offline", "quality_drop", "general"];
+  return valid.includes(data.type) ? data.type : "general";
+}

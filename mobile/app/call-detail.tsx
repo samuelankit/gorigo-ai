@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { useState, useEffect, useCallback } from "react";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { preventScreenCaptureAsync, allowScreenCaptureAsync } from "expo-screen-capture";
 import { Colors, Spacing, FontSize, BorderRadius } from "../constants/theme";
 import { apiRequest } from "../lib/api";
 import { useBranding } from "../lib/branding-context";
@@ -27,6 +28,29 @@ export default function CallDetailScreen() {
   useEffect(() => {
     if (id) loadCall();
   }, [id, loadCall]);
+
+  useEffect(() => {
+    const setupScreenCapture = async () => {
+      try {
+        await preventScreenCaptureAsync();
+      } catch (err) {
+        console.error("[CallDetail] Failed to prevent screen capture:", err);
+      }
+    };
+
+    setupScreenCapture();
+
+    return () => {
+      const cleanupScreenCapture = async () => {
+        try {
+          await allowScreenCaptureAsync();
+        } catch (err) {
+          console.error("[CallDetail] Failed to allow screen capture:", err);
+        }
+      };
+      cleanupScreenCapture();
+    };
+  }, []);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

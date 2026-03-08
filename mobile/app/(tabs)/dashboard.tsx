@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, ActivityIndicator } from "react-native";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
 import { getAdminStats, getTodayCalls, getWallet, getCalls, getUser } from "../../lib/api";
@@ -8,6 +8,7 @@ import { router } from "expo-router";
 import DashboardCard from "../../components/DashboardCard";
 import StatusBadge from "../../components/StatusBadge";
 import { useBranding } from "../../lib/branding-context";
+import { useTheme } from "../../lib/theme-context";
 
 interface DashboardData {
   callsToday: number;
@@ -37,7 +38,8 @@ const formatDuration = (seconds: number): string => {
 
 export default function DashboardScreen() {
   const { branding } = useBranding();
-  const activeColor = branding?.brandColor || Colors.primary;
+  const { colors } = useTheme();
+  const activeColor = branding?.brandColor || colors.primary;
   const [data, setData] = useState<DashboardData>({
     callsToday: 0,
     activeAgents: 0,
@@ -48,8 +50,10 @@ export default function DashboardScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadDashboardData = useCallback(async () => {
+    setError(null);
     try {
       const [statsResult, todayCallsResult, walletResult, callsResult, userResult] = await Promise.allSettled([
         getAdminStats(),
@@ -96,6 +100,7 @@ export default function DashboardScreen() {
       });
     } catch (err) {
       console.error("[Dashboard] Failed to load data:", err);
+      setError("Unable to load dashboard data. Please check your connection and try again.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -117,10 +122,31 @@ export default function DashboardScreen() {
     day: "numeric",
   });
 
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={activeColor} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="cloud-offline-outline" size={48} color={colors.textTertiary} />
+        <Text style={styles.errorTitle}>Something Went Wrong</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+        <Pressable
+          style={({ pressed }) => [styles.retryButton, { backgroundColor: activeColor }, pressed && { opacity: 0.8 }]}
+          onPress={loadDashboardData}
+          accessibilityLabel="Retry loading dashboard"
+          accessibilityRole="button"
+        >
+          <Ionicons name="refresh-outline" size={18} color="white" />
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </Pressable>
       </View>
     );
   }
@@ -131,7 +157,6 @@ export default function DashboardScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={activeColor} />}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Hello, {data.userName}!</Text>
@@ -139,13 +164,12 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* Metric Cards Grid */}
       <View style={styles.metricsGrid}>
         <DashboardCard
           title="Calls Today"
           value={data.callsToday.toLocaleString()}
           icon="call-outline"
-          color={Colors.primary}
+          color={colors.primary}
         />
         <DashboardCard
           title="Active Agents"
@@ -170,7 +194,6 @@ export default function DashboardScreen() {
         />
       </View>
 
-      {/* Quick Actions */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionsRow}>
@@ -183,22 +206,23 @@ export default function DashboardScreen() {
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.actionButton, { backgroundColor: "#f59e0b" }, pressed && styles.pressed]}
-            onPress={() => router.push("/wallet")}
+            onPress={() => router.push("/(tabs)/wallet")}
           >
             <Ionicons name="wallet-outline" size={18} color="white" />
             <Text style={styles.actionButtonText}>Wallet</Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.actionButton, { backgroundColor: "#06b6d4" }, pressed && styles.pressed]}
-            onPress={() => router.push("/agents")}
+            onPress={() => router.push("/campaigns" as any)}
+            accessibilityRole="button"
+            accessibilityLabel="View campaigns"
           >
-            <Ionicons name="people-outline" size={18} color="white" />
-            <Text style={styles.actionButtonText}>View Agents</Text>
+            <Ionicons name="megaphone-outline" size={18} color="white" />
+            <Text style={styles.actionButtonText}>Campaigns</Text>
           </Pressable>
         </View>
       </View>
 
-      {/* Recent Activity */}
       <View style={styles.section}>
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>Recent Activity</Text>
@@ -237,133 +261,182 @@ export default function DashboardScreen() {
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons name="call-outline" size={32} color={Colors.textTertiary} />
-            <Text style={styles.emptyStateText}>No recent calls</Text>
+            <Ionicons name="call-outline" size={48} color={colors.textTertiary} />
+            <Text style={styles.emptyStateTitle}>No Recent Activity</Text>
+            <Text style={styles.emptyStateSubtext}>Your recent calls and activity will appear here once your AI agents start handling conversations.</Text>
           </View>
         )}
       </View>
 
-      {/* Bottom spacing */}
       <View style={{ height: Spacing.lg }} />
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    padding: Spacing.md,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: Colors.background,
-  },
-  header: {
-    marginBottom: Spacing.lg,
-  },
-  greeting: {
-    fontSize: FontSize.xl,
-    fontWeight: "700",
-    color: Colors.text,
-  },
-  date: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: 4,
-  },
-  metricsGrid: {
-    flexDirection: "row",
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  section: {
-    marginBottom: Spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-    color: Colors.text,
-    marginBottom: Spacing.md,
-  },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.md,
-  },
-  viewAllText: {
-    fontSize: FontSize.sm,
-    fontWeight: "600",
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: Spacing.md,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
-  },
-  pressed: {
-    opacity: 0.8,
-  },
-  actionButtonText: {
-    color: "white",
-    fontSize: FontSize.sm,
-    fontWeight: "600",
-  },
-  activityItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.md,
-  },
-  activityItemPressed: {
-    backgroundColor: Colors.surface,
-  },
-  activityIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityTitle: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text,
-  },
-  activitySubtitle: {
-    fontSize: FontSize.xs,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  activityStatusContainer: {
-    alignItems: "flex-end",
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: Spacing.lg,
-    opacity: 0.5,
-  },
-  emptyStateText: {
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-    marginTop: Spacing.sm,
-  },
-});
+const createStyles = (colors: typeof Colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      padding: Spacing.md,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: colors.background,
+    },
+    header: {
+      marginBottom: Spacing.lg,
+    },
+    greeting: {
+      fontSize: FontSize.xl,
+      fontWeight: "700",
+      color: colors.text,
+    },
+    date: {
+      fontSize: FontSize.sm,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    metricsGrid: {
+      flexDirection: "row",
+      gap: Spacing.md,
+      marginBottom: Spacing.md,
+    },
+    section: {
+      marginBottom: Spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: FontSize.lg,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: Spacing.md,
+    },
+    sectionHeaderRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: Spacing.md,
+    },
+    viewAllText: {
+      fontSize: FontSize.sm,
+      fontWeight: "600",
+    },
+    actionsRow: {
+      flexDirection: "row",
+      gap: Spacing.md,
+    },
+    actionButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: Spacing.md,
+      borderRadius: BorderRadius.md,
+      gap: Spacing.sm,
+    },
+    pressed: {
+      opacity: 0.8,
+    },
+    actionButtonText: {
+      color: "white",
+      fontSize: FontSize.sm,
+      fontWeight: "600",
+    },
+    activityItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.card,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      marginBottom: Spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      gap: Spacing.md,
+    },
+    activityItemPressed: {
+      backgroundColor: colors.surface,
+    },
+    activityIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: BorderRadius.full,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    activityContent: {
+      flex: 1,
+    },
+    activityTitle: {
+      fontSize: FontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    activitySubtitle: {
+      fontSize: FontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    activityStatusContainer: {
+      alignItems: "flex-end",
+    },
+    emptyState: {
+      alignItems: "center",
+      paddingVertical: Spacing.xl,
+      paddingHorizontal: Spacing.lg,
+    },
+    emptyStateTitle: {
+      fontSize: FontSize.lg,
+      fontWeight: "600",
+      color: colors.text,
+      marginTop: Spacing.md,
+    },
+    emptyStateSubtext: {
+      fontSize: FontSize.sm,
+      color: colors.textSecondary,
+      marginTop: Spacing.sm,
+      textAlign: "center",
+      paddingHorizontal: Spacing.md,
+    },
+    emptyStateText: {
+      fontSize: FontSize.md,
+      color: colors.textSecondary,
+      marginTop: Spacing.sm,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: colors.background,
+      paddingHorizontal: Spacing.lg,
+    },
+    errorTitle: {
+      fontSize: FontSize.lg,
+      fontWeight: "600",
+      color: colors.text,
+      marginTop: Spacing.md,
+    },
+    errorMessage: {
+      fontSize: FontSize.sm,
+      color: colors.textSecondary,
+      textAlign: "center",
+      marginTop: Spacing.sm,
+      paddingHorizontal: Spacing.md,
+    },
+    retryButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: Spacing.sm + 4,
+      paddingHorizontal: Spacing.lg,
+      borderRadius: BorderRadius.md,
+      marginTop: Spacing.lg,
+      gap: Spacing.sm,
+    },
+    retryButtonText: {
+      color: "white",
+      fontSize: FontSize.md,
+      fontWeight: "600",
+    },
+  });

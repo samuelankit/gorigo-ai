@@ -1,20 +1,21 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../../constants/theme";
 import { useBranding } from "../../lib/branding-context";
+import { useTheme } from "../../lib/theme-context";
 
 export default function TabLayout() {
   const { branding } = useBranding();
-  const activeColor = branding?.brandColor || Colors.primary;
+  const { colors } = useTheme();
+  const activeColor = branding?.brandColor || colors.primary;
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: activeColor,
-        tabBarInactiveTintColor: Colors.textTertiary,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: Colors.background,
-          borderTopColor: Colors.borderLight,
+          backgroundColor: colors.background,
+          borderTopColor: colors.borderLight,
           borderTopWidth: 1,
           paddingBottom: 4,
           height: 56,
@@ -24,10 +25,10 @@ export default function TabLayout() {
           fontWeight: "500",
         },
         headerStyle: {
-          backgroundColor: Colors.background,
+          backgroundColor: colors.background,
         },
         headerShadowVisible: false,
-        headerTintColor: Colors.text,
+        headerTintColor: colors.text,
         headerTitleStyle: {
           fontWeight: "700",
           fontSize: 18,

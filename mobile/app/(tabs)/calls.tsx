@@ -8,12 +8,13 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
 import { getCalls } from "../../lib/api";
 import StatusBadge from "../../components/StatusBadge";
 import { useBranding } from "../../lib/branding-context";
+import { useTheme } from "../../lib/theme-context";
 import { router } from "expo-router";
 
 interface Call {
@@ -48,14 +49,12 @@ const formatTimeAgo = (timestamp: string): string => {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
 
-  // Check if yesterday
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   if (date.toDateString() === yesterday.toDateString()) {
     return "Yesterday";
   }
 
-  // Check if same year
   if (date.getFullYear() === now.getFullYear()) {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
@@ -65,7 +64,8 @@ const formatTimeAgo = (timestamp: string): string => {
 
 export default function CallsScreen() {
   const { branding } = useBranding();
-  const activeColor = branding?.brandColor || Colors.primary;
+  const { colors } = useTheme();
+  const activeColor = branding?.brandColor || colors.primary;
 
   const [calls, setCalls] = useState<Call[]>([]);
   const [filteredCalls, setFilteredCalls] = useState<Call[]>([]);
@@ -75,9 +75,11 @@ export default function CallsScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadCalls = useCallback(
     async (isInitial = true) => {
+      if (isInitial) setError(null);
       try {
         const currentOffset = isInitial ? 0 : offset;
         const result = await getCalls({ limit: 20, offset: currentOffset });
@@ -92,10 +94,10 @@ export default function CallsScreen() {
           setOffset((prev) => prev + 20);
         }
 
-        // Check if there are more results
         setHasMore(callsData.length >= 20);
       } catch (err) {
         console.error("[Calls] Failed to load:", err);
+        if (isInitial) setError("Unable to load calls. Please check your connection and try again.");
       } finally {
         if (isInitial) {
           setLoading(false);
@@ -107,12 +109,10 @@ export default function CallsScreen() {
     [offset]
   );
 
-  // Initial load
   useEffect(() => {
     loadCalls(true);
   }, []);
 
-  // Filter calls when search query or calls change
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredCalls(calls);
@@ -139,6 +139,8 @@ export default function CallsScreen() {
       loadCalls(false);
     }
   }, [hasMore, loadingMore, loading, loadCalls]);
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const renderCallItem = ({ item }: { item: Call }) => {
     const phoneNumber = item.phoneNumber || item.callerNumber || "Unknown";
@@ -182,11 +184,26 @@ export default function CallsScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="call-outline" size={48} color={Colors.textTertiary} />
-      <Text style={styles.emptyTitle}>No Calls Found</Text>
+      <Ionicons name="call-outline" size={48} color={colors.textTertiary} />
+      <Text style={styles.emptyTitle}>{searchQuery ? "No Matching Calls" : (error ? "Failed to Load Calls" : "No Calls Yet")}</Text>
       <Text style={styles.emptyDesc}>
-        {searchQuery ? "Try searching with a different phone number" : "Your call history will appear here"}
+        {searchQuery
+          ? "Try searching with a different phone number or clear the search to see all calls."
+          : error
+            ? error
+            : "Your call history will appear here once your AI agents start handling calls. Set up an agent to begin."}
       </Text>
+      {(error && !searchQuery) ? (
+        <Pressable
+          style={({ pressed }) => [styles.retryButton, { backgroundColor: activeColor }, pressed && { opacity: 0.8 }]}
+          onPress={() => loadCalls(true)}
+          accessibilityLabel="Retry loading calls"
+          accessibilityRole="button"
+        >
+          <Ionicons name="refresh-outline" size={18} color="white" />
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 
@@ -198,14 +215,13 @@ export default function CallsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={[styles.searchInputWrapper, { backgroundColor: Colors.surface }]}>
-          <Ionicons name="search" size={18} color={Colors.textSecondary} />
+        <View style={[styles.searchInputWrapper, { backgroundColor: colors.surface }]}>
+          <Ionicons name="search" size={18} color={colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search by phone number"
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             data-testid="search-input"
@@ -216,13 +232,12 @@ export default function CallsScreen() {
               data-testid="clear-search"
               hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
             >
-              <Ionicons name="close" size={18} color={Colors.textSecondary} />
+              <Ionicons name="close" size={18} color={colors.textSecondary} />
             </Pressable>
           ) : null}
         </View>
       </View>
 
-      {/* Loading State */}
       {loading ? (
         <View style={styles.centerLoading}>
           <ActivityIndicator size="large" color={activeColor} />
@@ -247,118 +262,135 @@ export default function CallsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  searchContainer: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  searchInputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
-    height: 40,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
-  listContent: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    flexGrow: 1,
-  },
-  callCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.sm,
-    gap: Spacing.md,
-  },
-  callIconContainer: {
-    justifyContent: "center",
-  },
-  callIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  callInfo: {
-    flex: 1,
-  },
-  phoneNumber: {
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  callDetails: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-  },
-  duration: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: Colors.textTertiary,
-  },
-  callRight: {
-    alignItems: "flex-end",
-    justifyContent: "center",
-  },
-  timeText: {
-    fontSize: FontSize.xs,
-    color: Colors.textTertiary,
-  },
-  separator: {
-    height: 0,
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.xxl * 2,
-    gap: Spacing.sm,
-  },
-  emptyTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-    color: Colors.text,
-    marginTop: Spacing.md,
-  },
-  emptyDesc: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    paddingHorizontal: Spacing.lg,
-  },
-  centerLoading: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingContainer: {
-    paddingVertical: Spacing.lg,
-    alignItems: "center",
-  },
-});
+const createStyles = (colors: typeof Colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    searchContainer: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    searchInputWrapper: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: Spacing.md,
+      borderRadius: BorderRadius.md,
+      gap: Spacing.sm,
+      height: 40,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: FontSize.md,
+      color: colors.text,
+    },
+    listContent: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      flexGrow: 1,
+    },
+    callCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.md,
+      backgroundColor: colors.card,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginBottom: Spacing.sm,
+      gap: Spacing.md,
+    },
+    callIconContainer: {
+      justifyContent: "center",
+    },
+    callIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: BorderRadius.md,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    callInfo: {
+      flex: 1,
+    },
+    phoneNumber: {
+      fontSize: FontSize.md,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: 4,
+    },
+    callDetails: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: Spacing.xs,
+    },
+    duration: {
+      fontSize: FontSize.sm,
+      color: colors.textSecondary,
+    },
+    dot: {
+      width: 3,
+      height: 3,
+      borderRadius: 1.5,
+      backgroundColor: colors.textTertiary,
+    },
+    callRight: {
+      alignItems: "flex-end",
+      justifyContent: "center",
+    },
+    timeText: {
+      fontSize: FontSize.xs,
+      color: colors.textTertiary,
+    },
+    separator: {
+      height: 0,
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: Spacing.xxl * 2,
+      paddingHorizontal: Spacing.lg,
+      gap: Spacing.sm,
+    },
+    emptyTitle: {
+      fontSize: FontSize.lg,
+      fontWeight: "600",
+      color: colors.text,
+      marginTop: Spacing.md,
+    },
+    emptyDesc: {
+      fontSize: FontSize.sm,
+      color: colors.textSecondary,
+      textAlign: "center",
+      paddingHorizontal: Spacing.md,
+    },
+    retryButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: Spacing.sm + 4,
+      paddingHorizontal: Spacing.lg,
+      borderRadius: BorderRadius.md,
+      marginTop: Spacing.md,
+      gap: Spacing.sm,
+    },
+    retryButtonText: {
+      color: "white",
+      fontSize: FontSize.md,
+      fontWeight: "600",
+    },
+    centerLoading: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    loadingContainer: {
+      paddingVertical: Spacing.lg,
+      alignItems: "center",
+    },
+  });

@@ -16,6 +16,24 @@ export const Colors = {
   white: "#ffffff",
 };
 
+export const DarkColors: typeof Colors = {
+  primary: "#22c55e",
+  primaryLight: "#1a3a28",
+  primaryDark: "#16a34a",
+  background: "#0f1512",
+  surface: "#1a201d",
+  card: "#1e2723",
+  text: "#e8f0ec",
+  textSecondary: "#9cb3a8",
+  textTertiary: "#6b8578",
+  border: "#2e3b35",
+  borderLight: "#242f2a",
+  destructive: "#ef4444",
+  warning: "#f59e0b",
+  success: "#22c55e",
+  white: "#ffffff",
+};
+
 export const Spacing = {
   xs: 4,
   sm: 8,

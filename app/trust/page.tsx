@@ -141,6 +141,7 @@ const complianceIconColors = [
   "text-blue-500",
   "text-emerald-500",
   "text-amber-500",
+  "text-rose-500",
 ];
 
 const complianceBgColors = [
@@ -148,6 +149,7 @@ const complianceBgColors = [
   "bg-blue-500/10",
   "bg-emerald-500/10",
   "bg-amber-500/10",
+  "bg-rose-500/10",
 ];
 
 const compliancePractices = [
@@ -176,7 +178,14 @@ const compliancePractices = [
     icon: Scale,
     title: "GDPR Data Handling",
     description:
-      "Data processing follows GDPR principles: purpose limitation, data minimisation, and storage limitation. Users can request data access, correction, or deletion through their organisation admin.",
+      "Data processing follows GDPR principles: purpose limitation, data minimisation, and storage limitation. Full Article 15 data export is available to all users. Users can request data access, correction, or deletion through their organisation admin.",
+    status: "active" as const,
+  },
+  {
+    icon: Globe,
+    title: "PECR Compliance",
+    description:
+      "Privacy and Electronic Communications Regulations compliance for all electronic marketing. Opt-in consent management, TPS/CTPS checking for UK numbers, and automatic suppression of registered numbers from outbound campaigns.",
     status: "active" as const,
   },
 ];

@@ -1,12 +1,25 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Switch, Linking } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Switch, Linking, Modal, FlatList } from "react-native";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Colors, Spacing, FontSize, BorderRadius } from "../../constants/theme";
 import { useAuth } from "../_layout";
 import { useBranding } from "../../lib/branding-context";
 import { useTheme } from "../../lib/theme-context";
 import { logout, getUser } from "../../lib/api";
 import { router } from "expo-router";
+
+const LANGUAGES = [
+  { code: "en-GB", label: "English (UK)" },
+  { code: "en-US", label: "English (US)" },
+  { code: "es", label: "Spanish" },
+  { code: "fr", label: "French" },
+  { code: "de", label: "German" },
+  { code: "it", label: "Italian" },
+  { code: "pt", label: "Portuguese" },
+  { code: "nl", label: "Dutch" },
+  { code: "ar", label: "Arabic" },
+];
 
 interface SettingsItem {
   icon: keyof typeof Ionicons.glyphMap;
@@ -32,9 +45,14 @@ export default function SettingsScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState("en-GB");
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
 
   useEffect(() => {
     loadUserData();
+    AsyncStorage.getItem("app_language").then((lang) => {
+      if (lang) setSelectedLanguage(lang);
+    });
   }, []);
 
   const loadUserData = useCallback(async () => {
@@ -81,10 +99,6 @@ export default function SettingsScreen() {
       .slice(0, 2);
   };
 
-  const comingSoon = (feature: string) => {
-    Alert.alert(feature, "This feature is coming soon in a future update.");
-  };
-
   const openURL = async (url: string) => {
     try {
       await Linking.openURL(url);
@@ -121,12 +135,12 @@ export default function SettingsScreen() {
     {
       icon: "business-outline",
       label: "Switch Business",
-      onPress: () => comingSoon("Switch Business"),
+      onPress: () => router.push("/business-switcher" as any),
     },
     {
       icon: "settings-outline",
       label: "Manage Businesses",
-      onPress: () => comingSoon("Manage Businesses"),
+      onPress: () => router.push("/business-switcher" as any),
     },
   ];
 
@@ -145,8 +159,8 @@ export default function SettingsScreen() {
     },
     {
       icon: "language-outline",
-      label: "Language",
-      onPress: () => comingSoon("Language"),
+      label: `Language (${LANGUAGES.find((l) => l.code === selectedLanguage)?.label || "English"})`,
+      onPress: () => setLanguageModalVisible(true),
     },
     {
       icon: "information-circle-outline",
@@ -270,6 +284,45 @@ export default function SettingsScreen() {
       </View>
 
       <Text style={styles.versionText}>GoRigo v1.0.0</Text>
+
+      <Modal
+        visible={languageModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setLanguageModalVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setLanguageModalVisible(false)}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Select Language</Text>
+              <Pressable onPress={() => setLanguageModalVisible(false)} accessibilityLabel="Close language picker" accessibilityRole="button">
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+            <FlatList
+              data={LANGUAGES}
+              keyExtractor={(item) => item.code}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={[styles.languageRow, selectedLanguage === item.code && { backgroundColor: activeColor + "10" }]}
+                  onPress={async () => {
+                    setSelectedLanguage(item.code);
+                    await AsyncStorage.setItem("app_language", item.code);
+                    setLanguageModalVisible(false);
+                  }}
+                  accessibilityLabel={`Select ${item.label}`}
+                  accessibilityRole="button"
+                >
+                  <Text style={[styles.languageLabel, { color: colors.text }]}>{item.label}</Text>
+                  {selectedLanguage === item.code && (
+                    <Ionicons name="checkmark-circle" size={22} color={activeColor} />
+                  )}
+                </Pressable>
+              )}
+            />
+          </View>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -443,5 +496,41 @@ const createStyles = (colors: typeof Colors) =>
       color: "white",
       fontSize: FontSize.md,
       fontWeight: "600",
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "flex-end",
+    },
+    modalContent: {
+      borderTopLeftRadius: BorderRadius.lg,
+      borderTopRightRadius: BorderRadius.lg,
+      paddingBottom: Spacing.xxl,
+      maxHeight: "60%",
+    },
+    modalHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderLight,
+    },
+    modalTitle: {
+      fontSize: FontSize.lg,
+      fontWeight: "600",
+    },
+    languageRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 14,
+      paddingHorizontal: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderLight,
+    },
+    languageLabel: {
+      fontSize: FontSize.md,
+      fontWeight: "500",
     },
   });

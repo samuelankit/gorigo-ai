@@ -9,6 +9,93 @@ const REQUEST_TIMEOUT_MS = 15000;
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;
 
+const PIN_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const SENSITIVE_ENDPOINTS = ["/api/auth/", "/api/wallet", "/api/billing", "/api/settings/password"];
+
+let _lastPinCheckTime = 0;
+let _pinCheckValid = true;
+let _pinCheckInProgress: Promise<boolean> | null = null;
+
+async function performPinCheck(): Promise<boolean> {
+  if (__DEV__) return true;
+
+  try {
+    const response = await fetchWithTimeout(
+      `${API_BASE}/api/security/pin-check`,
+      { method: "GET", headers: { "Content-Type": "application/json", "X-Client-Type": "mobile" } },
+      10000
+    );
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    if (!data.challenge || !data.timestamp || !data.pins || data.version !== 1) {
+      return false;
+    }
+
+    const age = Date.now() - data.timestamp;
+    if (age > 30000 || age < -5000) {
+      return false;
+    }
+
+    const verifyResponse = await fetchWithTimeout(
+      `${API_BASE}/api/security/pin-check`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Client-Type": "mobile" },
+        body: JSON.stringify({ challenge: data.challenge, timestamp: data.timestamp }),
+      },
+      10000
+    );
+
+    if (!verifyResponse.ok) return false;
+
+    const verifyData = await verifyResponse.json();
+    return verifyData.valid === true;
+  } catch {
+    return false;
+  }
+}
+
+async function ensurePinValid(): Promise<boolean> {
+  const now = Date.now();
+  if (now - _lastPinCheckTime < PIN_CHECK_INTERVAL_MS && _pinCheckValid) {
+    return true;
+  }
+
+  if (_pinCheckInProgress) {
+    return _pinCheckInProgress;
+  }
+
+  _pinCheckInProgress = performPinCheck()
+    .then((valid) => {
+      _pinCheckValid = valid;
+      _lastPinCheckTime = Date.now();
+      _pinCheckInProgress = null;
+      return valid;
+    })
+    .catch(() => {
+      _pinCheckInProgress = null;
+      return false;
+    });
+
+  return _pinCheckInProgress;
+}
+
+function isSensitiveEndpoint(endpoint: string): boolean {
+  return SENSITIVE_ENDPOINTS.some((s) => endpoint.startsWith(s));
+}
+
+export function resetPinCheck() {
+  _lastPinCheckTime = 0;
+  _pinCheckValid = true;
+  _pinCheckInProgress = null;
+}
+
+export function getPinCheckStatus(): { valid: boolean; lastCheck: number } {
+  return { valid: _pinCheckValid, lastCheck: _lastPinCheckTime };
+}
+
 interface ApiOptions {
   method?: string;
   body?: any;
@@ -18,8 +105,47 @@ interface ApiOptions {
 }
 
 let _onAuthExpired: (() => void) | null = null;
+let _refreshPromise: Promise<boolean> | null = null;
+
 export function setOnAuthExpired(callback: () => void) {
   _onAuthExpired = callback;
+}
+
+async function attemptTokenRefresh(): Promise<boolean> {
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = (async () => {
+    try {
+      const currentToken = await getToken();
+      if (!currentToken) return false;
+
+      const response = await fetchWithTimeout(`${API_BASE}/api/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Client-Type": "mobile",
+          "Authorization": `Bearer ${currentToken}`,
+        },
+      }, REQUEST_TIMEOUT_MS);
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          await saveToken(data.token);
+          return true;
+        }
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  })();
+
+  try {
+    return await _refreshPromise;
+  } finally {
+    _refreshPromise = null;
+  }
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -75,6 +201,16 @@ export async function apiRequest(endpoint: string, options: ApiOptions = {}) {
     config.body = JSON.stringify(body);
   }
 
+  if (isSensitiveEndpoint(endpoint)) {
+    const pinValid = await ensurePinValid();
+    if (!pinValid) {
+      const pinError: any = new Error("Security check failed. Connection may be compromised.");
+      pinError.statusCode = 0;
+      pinError.isPinFailure = true;
+      throw pinError;
+    }
+  }
+
   let lastError: Error | null = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -85,7 +221,26 @@ export async function apiRequest(endpoint: string, options: ApiOptions = {}) {
       const response = await fetchWithTimeout(`${API_BASE}${endpoint}`, config, timeout);
 
       if (!response.ok) {
-        if (response.status === 401) {
+        if (response.status === 401 && !endpoint.includes("/auth/refresh")) {
+          const refreshed = await attemptTokenRefresh();
+          if (refreshed) {
+            const newHeaders = await getAuthHeaders();
+            const retryConfig: RequestInit = {
+              method,
+              headers: { ...newHeaders, ...extraHeaders },
+            };
+            if (body && method !== "GET") {
+              retryConfig.body = JSON.stringify(body);
+            }
+            const retryResponse = await fetchWithTimeout(`${API_BASE}${endpoint}`, retryConfig, timeout);
+            if (retryResponse.ok) {
+              const ct = retryResponse.headers.get("content-type");
+              if (ct?.includes("application/json")) {
+                return retryResponse.json();
+              }
+              return { success: true };
+            }
+          }
           await removeToken();
           _onAuthExpired?.();
         }
@@ -152,8 +307,11 @@ export async function getAdminStats() {
   return apiRequest("/api/mobile/stats");
 }
 
-export async function getAgents(params?: { limit?: number }) {
-  const query = params?.limit ? `?limit=${params.limit}` : "";
+export async function getAgents(params?: { limit?: number; search?: string }) {
+  const parts: string[] = [];
+  if (params?.limit) parts.push(`limit=${params.limit}`);
+  if (params?.search) parts.push(`search=${encodeURIComponent(params.search)}`);
+  const query = parts.length ? `?${parts.join("&")}` : "";
   return apiRequest(`/api/mobile/agents${query}`);
 }
 

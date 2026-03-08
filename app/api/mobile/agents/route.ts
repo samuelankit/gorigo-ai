@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "50", 10) || 50, 100);
+    const search = searchParams.get("search")?.trim() || "";
 
     const callCountSubquery = db
       .select({
@@ -49,7 +50,11 @@ export async function GET(request: NextRequest) {
       })
       .from(agents)
       .leftJoin(callCountSubquery, eq(agents.id, callCountSubquery.agentId))
-      .where(eq(agents.orgId, auth.orgId))
+      .where(
+        search
+          ? and(eq(agents.orgId, auth.orgId), sql`${agents.name} ILIKE ${"%" + search + "%"}`)
+          : eq(agents.orgId, auth.orgId)
+      )
       .orderBy(desc(agents.createdAt))
       .limit(limit);
 

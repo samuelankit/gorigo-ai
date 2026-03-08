@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef, createContext, useContext, useCallback } from "react";
 import { View, AppState, Platform } from "react-native";
 import { isAuthenticated, logout as apiLogout, setOnAuthExpired } from "../lib/api";
+import { checkDeviceIntegrity, showSecurityWarning } from "../lib/security";
 import { BrandingProvider } from "../lib/branding-context";
 import { BiometricProvider } from "../lib/biometric-lock";
 import { useNetworkState } from "../lib/use-network";
@@ -64,6 +65,16 @@ export default function RootLayout() {
       setLoggedIn(false);
     });
   }, [refreshAuth]);
+
+  useEffect(() => {
+    checkDeviceIntegrity()
+      .then((result) => {
+        if (result.riskLevel !== "safe") {
+          showSecurityWarning(result);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
@@ -168,6 +179,7 @@ function RootLayoutInner({ isOnline }: { isOnline: boolean }) {
           <Stack.Screen name="edit-profile" options={{ title: "Edit Profile" }} />
           <Stack.Screen name="change-password" options={{ title: "Change Password" }} />
           <Stack.Screen name="notification-preferences" options={{ title: "Notification Preferences" }} />
+          <Stack.Screen name="search" options={{ title: "Search", headerShown: true }} />
         </Stack>
       </View>
     </>

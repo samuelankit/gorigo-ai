@@ -61,12 +61,16 @@ import {
   AlertTriangle,
   HardDrive,
   Search,
+  MapPin,
+  Info,
+  ChevronRight,
 } from "lucide-react";
 import { useToast } from "@/lib/use-toast";
 import {
   SOCIAL_CONNECTOR_REGISTRY,
   CONNECTOR_SEGMENTS,
   type SocialConnectorConfig,
+  type ConnectorStatus,
 } from "@/lib/social-connector-config";
 import {
   BarChart,
@@ -376,10 +380,15 @@ function OverviewTab({ strategies, posts, analytics, isLoading, onCreateStrategy
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(CONNECTOR_SEGMENTS).map(([key, seg]) => {
                 const connectors = Object.values(SOCIAL_CONNECTOR_REGISTRY).filter(c => c.segment === key);
+                const available = connectors.filter(c => c.status === "available" || c.status === "beta").length;
+                const roadmap = connectors.filter(c => c.status === "roadmap").length;
                 return (
                   <div key={key} className="p-3 rounded-lg border bg-muted/30">
                     <p className="text-sm font-medium">{seg.label}</p>
-                    <p className="text-xs text-muted-foreground">{connectors.length} tools</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <Badge variant="default" className="text-xs">{available} available</Badge>
+                      {roadmap > 0 && <Badge variant="outline" className="text-xs">{roadmap} roadmap</Badge>}
+                    </div>
                   </div>
                 );
               })}
@@ -488,6 +497,13 @@ function StrategiesTab({ strategies, isLoading, onCreateStrategy, onViewStrategy
 }
 
 function ContentStudioTab({ onGenerateCaption }: { onGenerateCaption: () => void }) {
+  const segmentIcon = (key: string) => {
+    if (key === "design") return <Palette className="h-5 w-5 text-pink-500" />;
+    if (key === "video") return <Video className="h-5 w-5 text-red-500" />;
+    if (key === "storage") return <HardDrive className="h-5 w-5 text-blue-500" />;
+    return <Globe className="h-5 w-5 text-green-500" />;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -514,22 +530,44 @@ function ContentStudioTab({ onGenerateCaption }: { onGenerateCaption: () => void
       </Card>
 
       {Object.entries(CONNECTOR_SEGMENTS).filter(([k]) => k !== "social" && k !== "marketing").map(([segKey, seg]) => {
-        const connectors = Object.values(SOCIAL_CONNECTOR_REGISTRY).filter(c => c.segment === segKey);
+        const allConnectors = Object.values(SOCIAL_CONNECTOR_REGISTRY).filter(c => c.segment === segKey);
+        const availableConnectors = allConnectors.filter(c => c.status === "available" || c.status === "beta");
+        const roadmapConnectors = allConnectors.filter(c => c.status === "roadmap");
+
         return (
           <Card key={segKey}>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                {segKey === "design" ? <Palette className="h-5 w-5 text-pink-500" /> : <Video className="h-5 w-5 text-red-500" />}
+                {segmentIcon(segKey)}
                 {seg.label}
               </CardTitle>
               <CardDescription>{seg.description}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {connectors.map((connector) => (
-                  <ConnectorCard key={connector.type} connector={connector} />
-                ))}
-              </div>
+            <CardContent className="space-y-4">
+              {availableConnectors.length > 0 && (
+                <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {availableConnectors.map((connector) => (
+                      <ConnectorCard key={connector.type} connector={connector} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {roadmapConnectors.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">Roadmap</span>
+                    <div className="flex-1 border-t" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {roadmapConnectors.map((connector) => (
+                      <ConnectorCard key={connector.type} connector={connector} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -538,35 +576,63 @@ function ContentStudioTab({ onGenerateCaption }: { onGenerateCaption: () => void
   );
 }
 
+const STATUS_BADGE_CONFIG: Record<ConnectorStatus, { label: string; variant: "default" | "secondary" | "outline" }> = {
+  available: { label: "Available", variant: "default" },
+  beta: { label: "Beta", variant: "secondary" },
+  roadmap: { label: "Roadmap", variant: "outline" },
+};
+
 function ConnectorCard({ connector }: { connector: SocialConnectorConfig }) {
   const [voted, setVoted] = useState(false);
+  const [localVotes, setLocalVotes] = useState(connector.communityVotes || 0);
+  const badgeCfg = STATUS_BADGE_CONFIG[connector.status];
+
+  const handleVote = () => {
+    if (!voted) {
+      setVoted(true);
+      setLocalVotes(prev => prev + 1);
+    }
+  };
 
   return (
-    <div className={`p-4 rounded-lg border ${connector.available ? "bg-background" : "bg-muted/30"}`} data-testid={`card-connector-${connector.type}`}>
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="font-medium text-sm">{connector.name}</h4>
-        {!connector.available && (
-          <Badge variant="outline" className="text-xs">Coming Soon</Badge>
-        )}
+    <div className={`p-4 rounded-lg border ${connector.status === "roadmap" ? "bg-muted/30" : "bg-background"}`} data-testid={`card-connector-${connector.type}`}>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <h4 className="font-medium text-sm truncate">{connector.name}</h4>
+        <Badge variant={badgeCfg.variant} className="text-xs shrink-0">
+          {badgeCfg.label}
+        </Badge>
       </div>
       <p className="text-xs text-muted-foreground mb-3">{connector.description}</p>
-      {connector.available ? (
+
+      {connector.oauthNote && connector.status !== "roadmap" && (
+        <div className="flex items-start gap-1.5 mb-3 p-2 rounded bg-muted/50">
+          <Info className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
+          <p className="text-xs text-muted-foreground">{connector.oauthNote}</p>
+        </div>
+      )}
+
+      {connector.status === "available" || connector.status === "beta" ? (
         <Button variant="outline" size="sm" className="w-full gap-2" data-testid={`button-connect-${connector.type}`}>
           <ExternalLink className="h-3 w-3" />
           Connect
         </Button>
       ) : (
-        <Button
-          variant={voted ? "default" : "outline"}
-          size="sm"
-          className="w-full gap-2"
-          onClick={() => setVoted(true)}
-          disabled={voted}
-          data-testid={`button-vote-${connector.type}`}
-        >
-          <ThumbsUp className="h-3 w-3" />
-          {voted ? "Voted!" : "Vote for this"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className={`flex-1 gap-2 ${voted ? "border-primary/30" : ""}`}
+            onClick={handleVote}
+            disabled={voted}
+            data-testid={`button-vote-${connector.type}`}
+          >
+            <ThumbsUp className={`h-3 w-3 ${voted ? "text-primary" : ""}`} />
+            {voted ? "Voted" : "Vote"}
+          </Button>
+          <span className="text-xs text-muted-foreground tabular-nums min-w-[3rem] text-right" data-testid={`text-votes-${connector.type}`}>
+            {localVotes} {localVotes === 1 ? "vote" : "votes"}
+          </span>
+        </div>
       )}
     </div>
   );

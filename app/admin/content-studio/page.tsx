@@ -25,6 +25,8 @@ import {
   Phone,
   ThumbsUp,
   Quote,
+  PackagePlus,
+  Loader2,
 } from "lucide-react";
 
 interface Industry {
@@ -146,6 +148,9 @@ export default function ContentStudioPage() {
   const [caseStudiesLoading, setCaseStudiesLoading] = useState(false);
   const [expandedCaseStudy, setExpandedCaseStudy] = useState<number | null>(null);
 
+  const [seeding, setSeeding] = useState(false);
+  const [hasData, setHasData] = useState<boolean | null>(null);
+
   useEffect(() => {
     fetch("/api/auth/session")
       .then((r) => r.json())
@@ -164,12 +169,18 @@ export default function ContentStudioPage() {
       .then((data) => {
         if (data?.industries) {
           setIndustries(data.industries);
+          setHasData(data.industries.length > 0);
           if (data.industries.length > 0 && !selectedIndustry) {
             setSelectedIndustry(data.industries[0]);
           }
+        } else {
+          setHasData(false);
         }
       })
-      .catch((e) => console.error("Fetch industries failed:", e))
+      .catch((e) => {
+        console.error("Fetch industries failed:", e);
+        setHasData(false);
+      })
       .finally(() => setIndustriesLoading(false));
   }, []);
 
@@ -203,6 +214,28 @@ export default function ContentStudioPage() {
       .catch((e) => console.error("Fetch case studies failed:", e))
       .finally(() => setCaseStudiesLoading(false));
   }, []);
+
+  const handleSeedContent = useCallback(async () => {
+    setSeeding(true);
+    try {
+      const res = await fetch("/api/admin/content-studio/seed", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Seed failed");
+      const data = await res.json();
+      if (!data.skipped) {
+        setHasData(true);
+        loadIndustries();
+        loadVoiceProfiles();
+        loadCaseStudies();
+      }
+    } catch (e) {
+      console.error("Seed content studio failed:", e);
+    } finally {
+      setSeeding(false);
+    }
+  }, [loadIndustries, loadVoiceProfiles, loadCaseStudies]);
 
   useEffect(() => {
     if (!user) return;
@@ -246,6 +279,39 @@ export default function ContentStudioPage() {
           </p>
         </div>
       </div>
+
+      {hasData === false && !industriesLoading && (
+        <Card data-testid="card-empty-content-studio">
+          <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-violet-500/10">
+              <PackagePlus className="w-7 h-7 text-violet-600 dark:text-violet-400" />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="font-medium text-foreground">No content found</p>
+              <p className="text-sm text-muted-foreground max-w-md">
+                Load starter content to populate industries, voice profiles, templates, and case studies with realistic, usable data.
+              </p>
+            </div>
+            <Button
+              onClick={handleSeedContent}
+              disabled={seeding}
+              data-testid="button-seed-content"
+            >
+              {seeding ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading content...
+                </>
+              ) : (
+                <>
+                  <PackagePlus className="mr-2 h-4 w-4" />
+                  Load Starter Content
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList data-testid="tabs-content-studio">

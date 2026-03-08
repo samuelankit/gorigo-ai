@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,9 +46,21 @@ interface Summary {
 
 export default function FinanceHomePage() {
   const [activeWsId, setActiveWsId] = useState<string>("");
+  const queryClient = useQueryClient();
 
   const { data: wsData, isLoading: wsLoading } = useQuery<{ workspaces: Workspace[] }>({
     queryKey: ["/api/finance/workspaces"],
+  });
+
+  const seedMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/admin/finance/seed", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to seed finance data");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/workspaces"] });
+    },
   });
 
   const workspaces = wsData?.workspaces || [];
@@ -103,7 +115,18 @@ export default function FinanceHomePage() {
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Landmark className="h-10 w-10 text-muted-foreground" />
         <p className="text-muted-foreground text-sm">No finance workspaces found.</p>
-        <p className="text-xs text-muted-foreground">Run the finance seed script to get started.</p>
+        <p className="text-xs text-muted-foreground">Set up your chart of accounts, tax codes, and workspaces to get started.</p>
+        <Button
+          size="sm"
+          onClick={() => seedMutation.mutate()}
+          disabled={seedMutation.isPending}
+          data-testid="button-seed-finance"
+        >
+          {seedMutation.isPending ? "Setting up..." : "Setup Finance"}
+        </Button>
+        {seedMutation.isError && (
+          <p className="text-xs text-destructive">Failed to set up finance data. Please try again.</p>
+        )}
       </div>
     );
   }

@@ -158,10 +158,19 @@ export default function DashboardScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.greeting}>Hello, {data.userName}!</Text>
           <Text style={styles.date}>{currentDate}</Text>
         </View>
+        <Pressable
+          onPress={() => router.push("/search" as any)}
+          style={({ pressed }) => [styles.searchButton, pressed && { opacity: 0.7 }]}
+          accessibilityLabel="Search"
+          accessibilityRole="button"
+          data-testid="button-search"
+        >
+          <Ionicons name="search-outline" size={22} color={colors.text} />
+        </Pressable>
       </View>
 
       <View style={styles.metricsGrid}>
@@ -287,7 +296,20 @@ const createStyles = (colors: typeof Colors) =>
       backgroundColor: colors.background,
     },
     header: {
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: Spacing.lg,
+      gap: Spacing.md,
+    },
+    searchButton: {
+      width: 40,
+      height: 40,
+      borderRadius: BorderRadius.full,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     greeting: {
       fontSize: FontSize.xl,

@@ -1,5 +1,7 @@
 import type { ConnectorSegment } from "@shared/schema";
 
+export type ConnectorStatus = "available" | "beta" | "roadmap";
+
 export interface SocialConnectorConfig {
   type: string;
   name: string;
@@ -8,6 +10,9 @@ export interface SocialConnectorConfig {
   authType: "oauth" | "api_key" | "none";
   icon: string;
   available: boolean;
+  status: ConnectorStatus;
+  oauthNote?: string;
+  communityVotes?: number;
   oauthScopes?: string[];
   platformLimits?: {
     maxPostsPerDay?: number;
@@ -26,6 +31,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "facebook",
     available: true,
+    status: "available",
+    oauthNote: "Requires Facebook Business account and Meta App OAuth setup",
     oauthScopes: ["pages_manage_posts", "instagram_basic", "instagram_content_publish"],
     platformLimits: { maxPostsPerDay: 25, maxCharacters: 2200 },
   },
@@ -37,6 +44,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "linkedin",
     available: true,
+    status: "available",
+    oauthNote: "Requires LinkedIn Developer App with Marketing API access",
     oauthScopes: ["w_member_social", "r_liteprofile"],
     platformLimits: { maxPostsPerDay: 100, maxCharacters: 3000 },
   },
@@ -48,6 +57,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "twitter",
     available: true,
+    status: "available",
+    oauthNote: "Requires X Developer account with OAuth 2.0 credentials",
     oauthScopes: ["tweet.write", "tweet.read", "users.read"],
     platformLimits: { maxPostsPerDay: 50, maxCharacters: 280 },
   },
@@ -59,6 +70,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "tiktok",
     available: true,
+    status: "available",
+    oauthNote: "Requires TikTok for Developers app with Content Publishing API",
     oauthScopes: ["video.upload", "video.publish"],
     platformLimits: { maxPostsPerDay: 10, videoOnly: true, maxCharacters: 2200 },
   },
@@ -70,6 +83,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "youtube",
     available: true,
+    status: "available",
+    oauthNote: "Requires Google Cloud project with YouTube Data API v3 enabled",
     oauthScopes: ["https://www.googleapis.com/auth/youtube.upload"],
     platformLimits: { maxPostsPerDay: 6, videoOnly: true, maxCharacters: 5000 },
   },
@@ -81,6 +96,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "canva",
     available: true,
+    status: "available",
+    oauthNote: "Requires Canva Connect API credentials",
   },
   figma: {
     type: "figma",
@@ -90,6 +107,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "figma",
     available: false,
+    status: "roadmap",
+    communityVotes: 142,
   },
   adobe_creative: {
     type: "adobe_creative",
@@ -99,6 +118,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "adobe",
     available: false,
+    status: "roadmap",
+    communityVotes: 89,
   },
   creatopy: {
     type: "creatopy",
@@ -108,6 +129,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "creatopy",
     available: false,
+    status: "roadmap",
+    communityVotes: 34,
   },
   snappa: {
     type: "snappa",
@@ -117,6 +140,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "snappa",
     available: false,
+    status: "roadmap",
+    communityVotes: 27,
   },
   visme: {
     type: "visme",
@@ -126,6 +151,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "visme",
     available: false,
+    status: "roadmap",
+    communityVotes: 41,
   },
   capcut: {
     type: "capcut",
@@ -135,6 +162,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "capcut",
     available: true,
+    status: "beta",
+    oauthNote: "Beta integration - connect via CapCut for Business",
   },
   invideo: {
     type: "invideo",
@@ -144,6 +173,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "invideo",
     available: false,
+    status: "roadmap",
+    communityVotes: 63,
   },
   lumen5: {
     type: "lumen5",
@@ -153,6 +184,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "lumen5",
     available: false,
+    status: "roadmap",
+    communityVotes: 51,
   },
   descript: {
     type: "descript",
@@ -162,6 +195,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "descript",
     available: false,
+    status: "roadmap",
+    communityVotes: 78,
   },
   animoto: {
     type: "animoto",
@@ -171,6 +206,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "animoto",
     available: false,
+    status: "roadmap",
+    communityVotes: 19,
   },
   synthesia: {
     type: "synthesia",
@@ -180,6 +217,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "synthesia",
     available: false,
+    status: "roadmap",
+    communityVotes: 156,
   },
   mailchimp: {
     type: "mailchimp",
@@ -189,6 +228,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "mailchimp",
     available: false,
+    status: "roadmap",
+    communityVotes: 112,
   },
   buffer: {
     type: "buffer",
@@ -198,6 +239,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "buffer",
     available: false,
+    status: "roadmap",
+    communityVotes: 95,
   },
   hootsuite: {
     type: "hootsuite",
@@ -207,6 +250,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "hootsuite",
     available: false,
+    status: "roadmap",
+    communityVotes: 87,
   },
   google_drive: {
     type: "google_drive",
@@ -216,6 +261,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "google_drive",
     available: true,
+    status: "available",
+    oauthNote: "Requires Google Cloud OAuth credentials with Drive API",
     oauthScopes: ["https://www.googleapis.com/auth/drive.readonly"],
   },
   dropbox: {
@@ -226,6 +273,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "dropbox",
     available: true,
+    status: "available",
+    oauthNote: "Requires Dropbox App Console OAuth credentials",
     oauthScopes: ["files.metadata.read", "files.content.read"],
   },
   onedrive: {
@@ -236,6 +285,8 @@ export const SOCIAL_CONNECTOR_REGISTRY: Record<string, SocialConnectorConfig> = 
     authType: "oauth",
     icon: "onedrive",
     available: true,
+    status: "available",
+    oauthNote: "Requires Azure AD app registration with Files.Read permission",
     oauthScopes: ["Files.Read"],
   },
 };
@@ -301,6 +352,14 @@ export function getSocialTierLimits(deploymentModel: string) {
 
 export function getConnectorsBySegment(segment: string) {
   return Object.values(SOCIAL_CONNECTOR_REGISTRY).filter(c => c.segment === segment);
+}
+
+export function getConnectorsByStatus(status: ConnectorStatus) {
+  return Object.values(SOCIAL_CONNECTOR_REGISTRY).filter(c => c.status === status);
+}
+
+export function getSegmentConnectorsByStatus(segment: string, status: ConnectorStatus) {
+  return Object.values(SOCIAL_CONNECTOR_REGISTRY).filter(c => c.segment === segment && c.status === status);
 }
 
 export function getPlatformLimits(connectorType: string) {

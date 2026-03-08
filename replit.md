@@ -30,6 +30,8 @@ Key features include:
 - **Web Traffic Intelligence**: Custom analytics with PII auto-redaction.
 - **International Calling System**: Country management, per-org telephony isolation, compliance engine, fraud detection, and currency conversion.
 - **Smart Drafts AI Content Studio**: Draft generation for call scripts, email/SMS templates, and FAQ answers.
+- **Finance Module Seeding**: SuperAdmin can seed finance workspaces (Personal + Company), chart of accounts, and UK tax codes via `/api/admin/finance/seed`. "Setup Finance" button on empty finance dashboard.
+- **Social Marketing Status System**: Connectors have explicit statuses ("Available", "Beta", "Roadmap") with OAuth setup notes and community voting for roadmap items. Files: `lib/social-connector-config.ts`.
 - **Business Continuity System**: Partner lifecycle management with suspension/termination cascades, client reassignment, and data export.
 - **Lead Management System**: Pipeline management with enrichment, scoring, and dedup.
 - **Conversation Analytics (Enterprise)**: Deep call analytics with KPIs, sentiment, quality scores, and agent scorecards.
@@ -37,7 +39,7 @@ Key features include:
 - **Omnichannel Messaging (Enterprise)**: Unified messaging across WhatsApp, SMS, email, and web chat.
 - **Department & Team Management**: Organizational hierarchy with role-based permissions, employee invitations, and per-department spending caps.
 - **Cost Accounting Dashboard**: SuperAdmin dashboard for real-time P&L, COGS breakdown, and pricing advisor.
-- **Content Studio**: Admin dashboard for Industry Templates, Voice Profiles, and Case Studies.
+- **Content Studio**: Admin dashboard for Industry Templates, Voice Profiles, and Case Studies. Features "Load Starter Content" button for SuperAdmin to seed 6 industries, 4 voice profiles, 3 case studies, and ~20 templates via `/api/admin/content-studio/seed`.
 - **Rigo Jarvis Features**: Free voice assistant with personal productivity tools.
 - **Low Balance Alerts**: Configurable wallet threshold alerts via email.
 - **Email Deliverability Monitoring**: SendGrid event webhook (`/api/webhooks/sendgrid`) tracks bounces, spam complaints, and delivery events in the `email_events` table. SuperAdmin email health dashboard at `/api/admin/email-health` shows bounce/spam rates with warning thresholds.
@@ -71,9 +73,9 @@ All dashboard pages use TanStack Query (React Query) v5 for data fetching and mu
 
 ## Mobile App (`/mobile`)
 The React Native/Expo mobile app is feature-complete in code. Located in `/mobile` directory.
-- **Screens**: Rigo AI Assistant (voice commands), Dashboard, Calls, Agents (create/edit/toggle), Wallet (read-only), Activity, Settings, Login, Call Detail, Business Switcher, Campaigns (monitor/pause/resume), Edit Profile, Change Password, Notification Preferences
+- **Screens**: Rigo AI Assistant (voice commands), Dashboard, Calls, Agents (create/edit/toggle), Wallet (read-only), Activity, Settings, Login, Call Detail, Business Switcher, Campaigns (monitor/pause/resume), Edit Profile, Change Password, Notification Preferences, Global Search
 - **Features**: Bearer token auth, biometric lock, push notifications with deep linking (low_wallet → wallet, agent_offline → agents, fraud_alert → calls), speech recognition, offline caching, white-label branding, haptic feedback, dark mode, screenshot prevention on sensitive screens (wallet, call details), accessibility labels across all screens. Mobile wallet is read-only (balance + transactions). Top-ups are web-only to avoid app store commission.
-- **Security**: Biometric auto-lock (5 min timeout), secure token storage (expo-secure-store), screenshot prevention (expo-screen-capture on wallet/call-detail), background app state protection. Missing: certificate pinning, jailbreak/root detection.
+- **Security**: Biometric auto-lock (5 min timeout), secure token storage (expo-secure-store), screenshot prevention (expo-screen-capture on wallet/call-detail), background app state protection, jailbreak/root detection with security warnings (`mobile/lib/security.ts`), certificate pinning via challenge-response protocol (`/api/security/pin-check`), automatic token refresh on 401 with single retry before logout (`/api/auth/refresh`).
 - **Backend**: All mobile API endpoints exist and work (`/api/mobile/stats`, `/api/mobile/agents` (GET/POST/PATCH), `/api/mobile/calls`, `/api/rigo`, `/api/wallet`, `/api/notifications`, `/api/calls/today`, `/api/settings/*`, `/api/businesses/*`, `/api/branding/[code]`)
 - **Auth**: Mobile login sends `X-Client-Type: mobile` header, receives Bearer token in response body. All subsequent requests use `Authorization: Bearer <token>`. Middleware bypasses CSRF origin check for mobile clients with Bearer tokens.
 - **Build**: EAS Build configured for dev, preview, and production profiles. See `mobile/QUICK_START.md` for setup.

@@ -60,6 +60,7 @@ TELNYX_CONNECTION_ID = "2912773303468820330"
 TELNYX_PHONE_NUMBER = "+441772975005"
 BASE_URL = "https://gorigo.ai"
 SENDGRID_FROM_EMAIL = "hello@gorigo.ai"
+TELNYX_PUBLIC_KEY = "LOqC7v7V5-03"
 
 [userenv.production]
 NODE_OPTIONS = "--max-old-space-size=768"

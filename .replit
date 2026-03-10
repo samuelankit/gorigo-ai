@@ -56,6 +56,10 @@ integrations = ["javascript_openrouter_ai_integrations:2.0.0", "javascript_opena
 BYOK_ENCRYPTION_KEY = "29b0961a49a3559da8cf425e0b8699884bf7e30d213a985ae09c2aa4f8981cb0"
 PRIMARY_VOICE_PROVIDER = "telnyx"
 NEXT_PUBLIC_APP_URL = "https://gorigo.ai"
+TELNYX_CONNECTION_ID = "2912773303468820330"
+TELNYX_PHONE_NUMBER = "+441772975005"
+BASE_URL = "https://gorigo.ai"
+SENDGRID_FROM_EMAIL = "hello@gorigo.ai"
 
 [userenv.production]
 NODE_OPTIONS = "--max-old-space-size=768"

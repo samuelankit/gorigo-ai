@@ -63,6 +63,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="campaigns"
+        options={{
+          title: "Campaigns",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="megaphone-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="wallet"
         options={{
           title: "Wallet",

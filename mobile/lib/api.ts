@@ -448,3 +448,53 @@ export async function loadBranding(): Promise<(BrandingConfig & { partnerCode: s
 export async function clearBranding() {
   await clearBrandingData();
 }
+
+export async function getCampaigns(params?: { limit?: number; offset?: number; search?: string; status?: string }) {
+  const parts: string[] = [];
+  if (params?.limit) parts.push(`limit=${params.limit}`);
+  if (params?.offset) parts.push(`offset=${params.offset}`);
+  if (params?.search) parts.push(`search=${encodeURIComponent(params.search)}`);
+  if (params?.status) parts.push(`status=${encodeURIComponent(params.status)}`);
+  const query = parts.length ? `?${parts.join("&")}` : "";
+  return apiRequest(`/api/mobile/campaigns${query}`);
+}
+
+export async function getCampaignDetail(id: number | string) {
+  return apiRequest(`/api/mobile/campaigns/${id}`);
+}
+
+export async function createCampaign(data: {
+  name: string;
+  agentId: number;
+  contacts: { phone: string; name: string }[];
+  callingHoursStart?: string;
+  callingHoursEnd?: string;
+  callingTimezone?: string;
+  budgetCap?: number;
+}) {
+  return apiRequest("/api/mobile/campaigns", {
+    method: "POST",
+    body: data,
+  });
+}
+
+export async function updateCampaign(id: number | string, data: { name?: string; agentId?: number; callingHoursStart?: string; callingHoursEnd?: string }) {
+  return apiRequest(`/api/mobile/campaigns/${id}`, {
+    method: "PATCH",
+    body: data,
+  });
+}
+
+export async function approveCampaign(id: number | string) {
+  return apiRequest(`/api/mobile/campaigns/${id}/approve`, {
+    method: "POST",
+    body: { consentConfirmed: true },
+  });
+}
+
+export async function controlCampaign(id: number | string, action: "pause" | "resume" | "cancel") {
+  return apiRequest(`/api/mobile/campaigns/${id}/control`, {
+    method: "POST",
+    body: { action },
+  });
+}

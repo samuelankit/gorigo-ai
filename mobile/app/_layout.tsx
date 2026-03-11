@@ -175,7 +175,9 @@ function RootLayoutInner({ isOnline }: { isOnline: boolean }) {
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="call-detail" options={{ title: "Call Details" }} />
           <Stack.Screen name="business-switcher" options={{ title: "Switch Business" }} />
+          <Stack.Screen name="campaign-detail" options={{ title: "Campaign Details" }} />
           <Stack.Screen name="campaigns" options={{ title: "Campaigns" }} />
+          <Stack.Screen name="campaign-create" options={{ title: "Create Campaign" }} />
           <Stack.Screen name="edit-profile" options={{ title: "Edit Profile" }} />
           <Stack.Screen name="change-password" options={{ title: "Change Password" }} />
           <Stack.Screen name="notification-preferences" options={{ title: "Notification Preferences" }} />

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { agents, callLogs, orgs, phoneNumbers } from "@/shared/schema";
+import { agents, callLogs, orgs, phoneNumbers, campaignContacts, campaigns } from "@/shared/schema";
 import { resolveRate, type UsageCategory } from "@/lib/rate-resolver";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { validateTelnyxWebhook, speakText, speakAndGather, gatherInput, hangupCall, answerCall } from "@/lib/telnyx";
 import { isWithinBusinessHours, getNextOpenTime, type BusinessHoursConfig } from "@/lib/business-hours";
 import { recordConsent } from "@/lib/dnc";
@@ -299,6 +299,10 @@ async function handleCallHangup(
     logger.error("Failed to update call log on hangup", err instanceof Error ? err : undefined);
   }
 
+  reconcileCampaignContact(callControlId, hangupCause, durationSecs).catch(err => {
+    logger.error("Campaign contact reconciliation failed", err instanceof Error ? err : undefined);
+  });
+
   processCallRefund(callControlId, hangupCause, durationSecs).catch(err => {
     logger.error("Auto-refund check failed", err instanceof Error ? err : undefined);
   });
@@ -346,4 +350,103 @@ async function handleCallHangup(
   })();
 
   return NextResponse.json({ status: "ok" });
+}
+
+async function reconcileCampaignContact(
+  callControlId: string,
+  hangupCause: string,
+  durationSecs: number
+): Promise<void> {
+  const [callLog] = await db
+    .select({
+      id: callLogs.id,
+      campaignId: callLogs.campaignId,
+      campaignContactId: callLogs.campaignContactId,
+      duration: callLogs.duration,
+    })
+    .from(callLogs)
+    .where(eq(callLogs.providerCallId, callControlId))
+    .limit(1);
+
+  if (!callLog?.campaignId || !callLog?.campaignContactId) return;
+
+  const wasAnswered = durationSecs > 0;
+  const isNormalEnd = hangupCause === "normal_clearing" || hangupCause === "originator_cancel";
+  const contactDisposition = wasAnswered
+    ? "completed"
+    : isNormalEnd
+      ? "no_answer"
+      : hangupCause || "failed";
+
+  const [contact] = await db
+    .select()
+    .from(campaignContacts)
+    .where(
+      and(
+        eq(campaignContacts.id, callLog.campaignContactId),
+        sql`${campaignContacts.status} IN ('calling', 'claiming')`
+      )
+    )
+    .limit(1);
+
+  if (!contact) return;
+
+  const maxAttempts = contact.maxAttempts ?? 3;
+  const currentAttempts = contact.attemptCount ?? 0;
+  const shouldRetry = !wasAnswered && currentAttempts < maxAttempts && contactDisposition !== "compliance_blocked";
+
+  if (shouldRetry) {
+    const retryMinutes = 60;
+    const nextRetry = new Date(Date.now() + retryMinutes * 60 * 1000);
+    const [updated] = await db.update(campaignContacts).set({
+      status: "pending",
+      lastCallDisposition: contactDisposition,
+      nextRetryAfter: nextRetry,
+      callLogId: callLog.id,
+    }).where(
+      and(
+        eq(campaignContacts.id, contact.id),
+        sql`${campaignContacts.status} IN ('calling', 'claiming')`
+      )
+    ).returning({ id: campaignContacts.id });
+
+    if (!updated) return;
+  } else {
+    const finalStatus = wasAnswered ? "completed" : "failed";
+    const [updated] = await db.update(campaignContacts).set({
+      status: finalStatus,
+      lastCallDisposition: contactDisposition,
+      completedAt: new Date(),
+      callLogId: callLog.id,
+    }).where(
+      and(
+        eq(campaignContacts.id, contact.id),
+        sql`${campaignContacts.status} IN ('calling', 'claiming')`
+      )
+    ).returning({ id: campaignContacts.id });
+
+    if (!updated) return;
+
+    if (wasAnswered) {
+      await db.update(campaigns).set({
+        completedCount: sql`COALESCE(${campaigns.completedCount}, 0) + 1`,
+        answeredCount: sql`COALESCE(${campaigns.answeredCount}, 0) + 1`,
+        updatedAt: new Date(),
+      }).where(eq(campaigns.id, callLog.campaignId));
+    } else {
+      await db.update(campaigns).set({
+        completedCount: sql`COALESCE(${campaigns.completedCount}, 0) + 1`,
+        failedCount: sql`COALESCE(${campaigns.failedCount}, 0) + 1`,
+        updatedAt: new Date(),
+      }).where(eq(campaigns.id, callLog.campaignId));
+    }
+  }
+
+  logger.info("Campaign contact reconciled", {
+    campaignId: callLog.campaignId,
+    contactId: callLog.campaignContactId,
+    disposition: contactDisposition,
+    wasAnswered,
+    shouldRetry,
+  });
 }

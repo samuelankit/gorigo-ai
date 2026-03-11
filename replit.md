@@ -42,7 +42,7 @@ Key features include:
 - **Content Studio**: Admin dashboard for Industry Templates, Voice Profiles, and Case Studies. Features "Load Starter Content" button for SuperAdmin to seed 6 industries, 4 voice profiles, 3 case studies, and ~20 templates via `/api/admin/content-studio/seed`.
 - **Rigo Jarvis Features**: Free voice assistant with personal productivity tools.
 - **Low Balance Alerts**: Configurable wallet threshold alerts via email.
-- **Email Deliverability Monitoring**: SendGrid event webhook (`/api/webhooks/sendgrid`) tracks bounces, spam complaints, and delivery events in the `email_events` table. SuperAdmin email health dashboard at `/api/admin/email-health` shows bounce/spam rates with warning thresholds.
+- **Email Deliverability Monitoring**: AWS SES handles bounce/complaint notifications. Email events tracked in `email_events` table. SuperAdmin email health dashboard at `/api/admin/email-health` shows bounce/spam rates with warning thresholds. Legacy SendGrid webhook route kept at `/api/webhooks/sendgrid` (returns 200 OK, no-op).
 - **Invoice/Receipt Generation**: Downloadable HTML receipts with VAT breakdown.
 - **Public Status Page**: Real-time system health monitoring for core services. Health endpoints: `/api/health` (detailed), `/api/health/live` (liveness), `/api/health/ready` (readiness).
 - **Self-Service Phone Numbers**: Browse and purchase Telnyx numbers.
@@ -68,7 +68,7 @@ All dashboard pages use TanStack Query (React Query) v5 for data fetching and mu
 - **Charting Library**: Recharts.
 - **Telephony**: Telnyx (primary), Vonage (fallback).
 - **Payments**: Stripe.
-- **Email**: SendGrid.
+- **Email**: AWS SES (eu-west-2 London, UK data residency).
 - **Mobile Development**: Expo SDK 54, expo-router, expo-speech, expo-av, expo-haptics.
 
 ## Mobile App (`/mobile`)

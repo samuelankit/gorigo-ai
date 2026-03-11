@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
+    "@aws-sdk/client-ses": "^3.1006.0",
     "@expo/vector-icons": "^15.0.3",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -70,6 +71,7 @@
     "expo-haptics": "^15.0.8",
     "expo-linking": "^8.0.11",
     "expo-router": "^6.0.23",
+    "expo-screen-capture": "^7.1.0",
     "expo-speech": "^14.0.8",
     "expo-splash-screen": "^31.0.13",
     "expo-status-bar": "^3.0.9",
@@ -115,8 +117,7 @@
     "ws": "^8.18.0",
     "xlsx": "^0.18.5",
     "zod": "^3.25.76",
-    "zod-validation-error": "^3.5.4",
-    "expo-screen-capture": "^7.1.0"
+    "zod-validation-error": "^3.5.4"
   },
   "devDependencies": {
     "@replit/vite-plugin-cartographer": "^0.4.4",

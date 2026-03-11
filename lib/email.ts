@@ -1,46 +1,66 @@
-import sgMail from "@sendgrid/mail";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || "";
-const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_FROM || "ankitsamuel@gorigo.ai";
+const AWS_SES_REGION = process.env.AWS_SES_REGION || "eu-west-2";
+const AWS_SES_ACCESS_KEY_ID = process.env.AWS_SES_ACCESS_KEY_ID || "";
+const AWS_SES_SECRET_ACCESS_KEY = process.env.AWS_SES_SECRET_ACCESS_KEY || "";
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_FROM || "hello@gorigo.ai";
 
-let initialized = false;
+let sesClient: SESClient | null = null;
 
-function initSendGrid(): boolean {
-  if (initialized) return true;
-  if (!SENDGRID_API_KEY) {
-    console.warn("[Email] SendGrid API key not configured - emails will be logged to console instead");
+function initSES(): boolean {
+  if (sesClient) return true;
+  if (!AWS_SES_ACCESS_KEY_ID || !AWS_SES_SECRET_ACCESS_KEY) {
+    console.warn("[Email] AWS SES credentials not configured - emails will be logged to console instead");
     return false;
   }
-  sgMail.setApiKey(SENDGRID_API_KEY);
-  initialized = true;
+  sesClient = new SESClient({
+    region: AWS_SES_REGION,
+    credentials: {
+      accessKeyId: AWS_SES_ACCESS_KEY_ID,
+      secretAccessKey: AWS_SES_SECRET_ACCESS_KEY,
+    },
+  });
   return true;
 }
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
-  if (!initSendGrid()) {
+  if (!initSES()) {
     console.log(`[Email] Would send to: ${to}`);
     console.log(`[Email] Subject: ${subject}`);
-    console.log(`[Email] Body logged (SendGrid not configured)`);
+    console.log(`[Email] Body logged (AWS SES not configured)`);
     return true;
   }
   try {
-    await sgMail.send({
-      to,
-      from: { email: FROM_EMAIL, name: "GoRigo" },
-      subject,
-      html,
+    const command = new SendEmailCommand({
+      Source: `GoRigo <${FROM_EMAIL}>`,
+      Destination: {
+        ToAddresses: [to],
+      },
+      Message: {
+        Subject: {
+          Data: subject,
+          Charset: "UTF-8",
+        },
+        Body: {
+          Html: {
+            Data: html,
+            Charset: "UTF-8",
+          },
+        },
+      },
     });
+    await sesClient!.send(command);
     console.log(`[Email] Sent to ${to}: ${subject}`);
     return true;
   } catch (err: any) {
-    const details = err?.response?.body?.errors || err.message;
+    const details = err?.message || err;
     console.error(`[Email] Failed to send to ${to}:`, details);
     return false;
   }
 }
 
 export function isEmailConfigured(): boolean {
-  return !!SENDGRID_API_KEY;
+  return !!(AWS_SES_ACCESS_KEY_ID && AWS_SES_SECRET_ACCESS_KEY);
 }
 
 export async function sendVerificationEmail(

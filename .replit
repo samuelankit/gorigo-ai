@@ -64,6 +64,7 @@ TELNYX_PUBLIC_KEY = "LOqC7v7V5-03"
 PIN_CHECK_SECRET = "73aaee031a90cfa6fa3941193a597574db6c4c3e74f63f2f7e1b1e8b4b23dfc1"
 NEXT_PUBLIC_STRIPE_CONFIGURED = "true"
 NEXT_PUBLIC_BASE_URL = "https://gorigo.ai"
+AWS_SES_REGION = "eu-west-2"
 
 [userenv.production]
 NODE_OPTIONS = "--max-old-space-size=768"

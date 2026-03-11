@@ -39,11 +39,11 @@ export async function GET() {
     message: stripeConfigured ? undefined : "Stripe not configured",
   });
 
-  const emailConfigured = !!process.env.SENDGRID_API_KEY;
+  const emailConfigured = !!(process.env.AWS_SES_ACCESS_KEY_ID && process.env.AWS_SES_SECRET_ACCESS_KEY);
   services.push({
     name: "Email Service",
     status: emailConfigured ? "operational" : "degraded",
-    message: emailConfigured ? undefined : "SendGrid not configured",
+    message: emailConfigured ? undefined : "AWS SES not configured",
   });
 
   const telnyxConfigured = !!process.env.TELNYX_API_KEY;

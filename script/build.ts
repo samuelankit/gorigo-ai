@@ -19,7 +19,7 @@ const allowlist = [
   "memorystore",
   "multer",
   "nanoid",
-  "@sendgrid/mail",
+  "@aws-sdk/client-ses",
   "openai",
   "passport",
   "passport-local",

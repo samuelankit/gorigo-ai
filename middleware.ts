@@ -165,7 +165,8 @@ export function middleware(request: NextRequest) {
     if (!isExempt && !hasApiKey && !(hasBearerToken && isMobileClient)) {
       const origin = request.headers.get("origin");
       const referer = request.headers.get("referer");
-      const host = request.headers.get("host");
+      const forwardedHost = request.headers.get("x-forwarded-host");
+      const host = forwardedHost || request.headers.get("host");
 
       const sourceUrl = origin || referer;
       if (!sourceUrl || !host) {
@@ -180,7 +181,8 @@ export function middleware(request: NextRequest) {
 
       try {
         const sourceHost = new URL(sourceUrl).host;
-        if (sourceHost !== host) {
+        const effectiveHost = host.split(",")[0].trim();
+        if (sourceHost !== effectiveHost) {
           const errorResponse = NextResponse.json(
             { error: "Forbidden: cross-origin request" },
             { status: 403 }

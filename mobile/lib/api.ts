@@ -498,3 +498,16 @@ export async function controlCampaign(id: number | string, action: "pause" | "re
     body: { action },
   });
 }
+
+export async function getOwnedPhoneNumbers() {
+  return apiRequest("/api/mobile/phone-numbers");
+}
+
+export async function searchAvailableNumbers(params?: { country?: string; type?: string; areaCode?: string }) {
+  const parts: string[] = [];
+  if (params?.country) parts.push(`country=${encodeURIComponent(params.country)}`);
+  if (params?.type) parts.push(`type=${encodeURIComponent(params.type)}`);
+  if (params?.areaCode) parts.push(`areaCode=${encodeURIComponent(params.areaCode)}`);
+  const query = parts.length ? `?${parts.join("&")}` : "";
+  return apiRequest(`/api/mobile/phone-numbers/available${query}`);
+}

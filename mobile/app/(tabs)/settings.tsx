@@ -128,6 +128,11 @@ export default function SettingsScreen() {
 
   const businessSectionItems: SettingsItem[] = [
     {
+      icon: "call-outline",
+      label: "Phone Numbers",
+      onPress: () => router.push("/phone-numbers" as any),
+    },
+    {
       icon: "megaphone-outline",
       label: "Campaigns",
       onPress: () => router.push("/campaigns" as any),

@@ -181,6 +181,7 @@ function RootLayoutInner({ isOnline }: { isOnline: boolean }) {
           <Stack.Screen name="edit-profile" options={{ title: "Edit Profile" }} />
           <Stack.Screen name="change-password" options={{ title: "Change Password" }} />
           <Stack.Screen name="notification-preferences" options={{ title: "Notification Preferences" }} />
+          <Stack.Screen name="phone-numbers" options={{ title: "Phone Numbers" }} />
           <Stack.Screen name="search" options={{ title: "Search", headerShown: true }} />
         </Stack>
       </View>

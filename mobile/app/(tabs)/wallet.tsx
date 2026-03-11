@@ -161,10 +161,18 @@ export default function WalletScreen() {
     >
       <View style={[styles.balanceCard, { backgroundColor: activeColor }]}>
         <Text style={styles.balanceLabel}>Wallet Balance</Text>
-        <Text style={styles.balanceAmount}>£{data.balance.toFixed(2)}</Text>
+        <Text style={styles.balanceAmount} data-testid="text-wallet-balance">£{data.balance.toFixed(2)}</Text>
+        {data.balance < 50 && (
+          <View style={styles.lowBalanceNotice}>
+            <Ionicons name="warning-outline" size={16} color="#fbbf24" />
+            <Text style={styles.lowBalanceText}>
+              Low balance — top up at gorigo.ai to keep your services running
+            </Text>
+          </View>
+        )}
         <View style={styles.topUpNotice}>
           <Ionicons name="globe-outline" size={14} color="rgba(255, 255, 255, 0.7)" />
-          <Text style={styles.topUpNoticeText}>Manage balance via web dashboard</Text>
+          <Text style={styles.topUpNoticeText}>Top up and manage balance at gorigo.ai</Text>
         </View>
       </View>
 
@@ -287,6 +295,22 @@ const createStyles = (colors: typeof Colors) =>
       fontWeight: "700",
       color: colors.white,
       marginBottom: Spacing.lg,
+    },
+    lowBalanceNotice: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: "rgba(0, 0, 0, 0.15)",
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.md,
+      marginBottom: Spacing.sm,
+    },
+    lowBalanceText: {
+      fontSize: FontSize.sm,
+      color: "#fbbf24",
+      fontWeight: "600",
+      flex: 1,
     },
     topUpNotice: {
       flexDirection: "row",

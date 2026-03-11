@@ -6,6 +6,7 @@ import { getAuthenticatedUser, requireWriteAccess } from "@/lib/get-user";
 import { generalLimiter } from "@/lib/rate-limit";
 import { checkBodySize, BODY_LIMITS } from "@/lib/body-limit";
 import { handleRouteError } from "@/lib/api-error";
+import { rejectMobilePayments } from "@/lib/mobile-guards";
 
 export async function GET() {
   try {
@@ -36,6 +37,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const mobileBlock = rejectMobilePayments(request);
+    if (mobileBlock) return mobileBlock;
+
     const rl = await generalLimiter(request);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });

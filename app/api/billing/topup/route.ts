@@ -6,6 +6,7 @@ import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
 import { createLogger } from "@/lib/logger";
 import { getUncachableStripeClient, isStripeConnectorConfigured } from "@/lib/stripe-client";
+import { rejectMobilePayments } from "@/lib/mobile-guards";
 
 const logger = createLogger("BillingTopup");
 
@@ -15,6 +16,9 @@ const topupSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const mobileBlock = rejectMobilePayments(request);
+    if (mobileBlock) return mobileBlock;
+
     const rl = await billingLimiter(request);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });

@@ -104,7 +104,15 @@ export default function CampaignDetailScreen() {
               await loadCampaign();
             } catch (err: any) {
               await notificationFeedback("error");
-              Alert.alert("Error", err.message || "Failed to approve campaign");
+              const msg = err.message || "Failed to approve campaign";
+              if (msg.toLowerCase().includes("insufficient")) {
+                Alert.alert(
+                  "Insufficient Balance",
+                  "Your wallet balance is too low to start this campaign. Please top up your wallet at gorigo.ai and try again."
+                );
+              } else {
+                Alert.alert("Error", msg);
+              }
             } finally {
               setActionLoading(false);
             }

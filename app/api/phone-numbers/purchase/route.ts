@@ -8,6 +8,7 @@ import { sql } from "drizzle-orm";
 import { wallets } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { createLogger } from "@/lib/logger";
+import { rejectMobilePayments } from "@/lib/mobile-guards";
 
 const logger = createLogger("PhoneNumberPurchase");
 
@@ -17,6 +18,9 @@ const purchaseSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const mobileBlock = rejectMobilePayments(request);
+    if (mobileBlock) return mobileBlock;
+
     const rl = await billingLimiter(request);
     if (!rl.allowed) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });

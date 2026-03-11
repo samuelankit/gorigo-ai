@@ -10,7 +10,7 @@ type ConsentLevel = "essential" | "analytics" | "all";
 interface CookiePreferences {
   essential: boolean;
   analytics: boolean;
-  marketing: boolean;
+  preferences: boolean;
 }
 
 const CONSENT_KEY = "gorigo_cookie_consent";
@@ -27,9 +27,17 @@ function getStoredConsent(): { level: ConsentLevel; version: string } | null {
   }
 }
 
+function setCookie(name: string, value: string, days: number) {
+  if (typeof document === "undefined") return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax; Secure`;
+}
+
 function storeConsent(level: ConsentLevel) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(CONSENT_KEY, JSON.stringify({ level, version: CONSENT_VERSION, timestamp: new Date().toISOString() }));
+  const payload = JSON.stringify({ level, version: CONSENT_VERSION, timestamp: new Date().toISOString() });
+  localStorage.setItem(CONSENT_KEY, payload);
+  setCookie(CONSENT_KEY, payload, 365);
 }
 
 export function CookieConsent() {
@@ -38,7 +46,7 @@ export function CookieConsent() {
   const [preferences, setPreferences] = useState<CookiePreferences>({
     essential: true,
     analytics: false,
-    marketing: false,
+    preferences: false,
   });
 
   useEffect(() => {
@@ -64,7 +72,7 @@ export function CookieConsent() {
   }
 
   function handleSavePreferences() {
-    const level: ConsentLevel = preferences.analytics && preferences.marketing
+    const level: ConsentLevel = preferences.analytics && preferences.preferences
       ? "all"
       : preferences.analytics
         ? "analytics"
@@ -145,13 +153,13 @@ export function CookieConsent() {
             <label className="flex items-center gap-2 text-xs">
               <input
                 type="checkbox"
-                checked={preferences.marketing}
-                onChange={(e) => setPreferences((p) => ({ ...p, marketing: e.target.checked }))}
+                checked={preferences.preferences}
+                onChange={(e) => setPreferences((p) => ({ ...p, preferences: e.target.checked }))}
                 className="rounded"
-                data-testid="checkbox-marketing"
+                data-testid="checkbox-preferences"
               />
-              <span className="font-medium">Marketing</span>
-              <span className="text-muted-foreground">— Personalised content and advertising</span>
+              <span className="font-medium">Preferences</span>
+              <span className="text-muted-foreground">— Remember your settings like theme, language, and layout</span>
             </label>
           </div>
         )}

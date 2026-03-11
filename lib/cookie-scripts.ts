@@ -23,7 +23,7 @@ export function hasAnalyticsConsent(): boolean {
   return consent.level === "analytics" || consent.level === "all";
 }
 
-export function hasMarketingConsent(): boolean {
+export function hasPreferencesConsent(): boolean {
   const consent = getConsentState();
   if (!consent) return false;
   return consent.level === "all";
@@ -52,8 +52,8 @@ export function loadConsentedScripts(): void {
     // example: loadScript("https://www.googletagmanager.com/gtag/js?id=GA_ID");
   }
 
-  if (hasMarketingConsent()) {
-    // placeholder: load marketing scripts when configured
+  if (hasPreferencesConsent()) {
+    // placeholder: load preference-related scripts when configured
   }
 }
 

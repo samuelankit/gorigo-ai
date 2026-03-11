@@ -35,9 +35,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: writeCheck.error }, { status: 403 });
     }
 
-    const emailCheck = requireEmailVerified(auth);
-    if (!emailCheck.allowed) {
-      return NextResponse.json({ error: emailCheck.error }, { status: emailCheck.status || 403 });
+    if (!auth.user.mustChangePassword) {
+      const emailCheck = requireEmailVerified(auth);
+      if (!emailCheck.allowed) {
+        return NextResponse.json({ error: emailCheck.error }, { status: emailCheck.status || 403 });
+      }
     }
 
     const body = await request.json();
@@ -55,7 +57,7 @@ export async function PUT(request: NextRequest) {
     const hashedPassword = await hashPassword(newPassword);
     await db
       .update(users)
-      .set({ password: hashedPassword })
+      .set({ password: hashedPassword, mustChangePassword: false })
       .where(eq(users.id, auth.user.id));
 
     const currentToken = await getSessionCookie();

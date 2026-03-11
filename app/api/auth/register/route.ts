@@ -15,11 +15,6 @@ const logger = createLogger("Auth");
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = await authLimiter(request);
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
-    }
-
     const sizeError = checkBodySize(request, BODY_LIMITS.auth);
     if (sizeError) return sizeError;
 
@@ -30,6 +25,11 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password, businessName } = parsed.data;
+
+    const rl = await authLimiter(request, email);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
     const affiliateCode = body.affiliateCode || null;
     const termsAccepted = body.termsAccepted === true;
 

@@ -68,6 +68,14 @@ export async function ensureServicesStarted() {
   }
 
   try {
+    const { startHealthAlerts } = await import("@/lib/health-alerts");
+    startHealthAlerts();
+    console.log("[GoRigo] Health alert system started (5 min interval)");
+  } catch (e) {
+    console.error("[GoRigo] Health alerts init failed:", e);
+  }
+
+  try {
     const { setupGracefulShutdown } = await import("@/lib/shutdown");
     setupGracefulShutdown([
       () => console.info("[Shutdown] Stopping background services..."),

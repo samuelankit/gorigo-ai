@@ -20,16 +20,16 @@ const forgotPasswordSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = await authLimiter(request);
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
-    }
-
     const sizeError = checkBodySize(request, BODY_LIMITS.auth);
     if (sizeError) return sizeError;
 
     const body = await request.json();
     const { email } = forgotPasswordSchema.parse(body);
+
+    const rl = await authLimiter(request, email);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
 
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 

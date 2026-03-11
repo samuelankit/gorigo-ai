@@ -56,9 +56,15 @@ function LoginForm() {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
         setError(data.error || "Invalid email or password.");
+        return;
+      }
+
+      if (data.mustChangePassword) {
+        router.push("/settings/password?forced=true");
         return;
       }
 

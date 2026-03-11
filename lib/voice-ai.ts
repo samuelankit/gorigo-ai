@@ -12,6 +12,7 @@ const logger = createLogger("VoiceAI");
 
 const callConversations = new Map<string, ConversationMessage[]>();
 const callAgentCache = new Map<string, number>();
+const callLLMCosts = new Map<string, number>();
 
 const MAX_HISTORY_TURNS = 20;
 const CLEANUP_INTERVAL_MS = 30 * 60 * 1000;
@@ -25,6 +26,7 @@ setInterval(() => {
     if (now - ts > MAX_CALL_AGE_MS) {
       callConversations.delete(callId);
       callAgentCache.delete(callId);
+      callLLMCosts.delete(callId);
       callTimestamps.delete(callId);
     }
   });
@@ -39,6 +41,7 @@ export function initCallConversation(providerCallId: string, agentId: number): v
 export function cleanupCallConversation(providerCallId: string): void {
   callConversations.delete(providerCallId);
   callAgentCache.delete(providerCallId);
+  callLLMCosts.delete(providerCallId);
   callTimestamps.delete(providerCallId);
 }
 
@@ -148,6 +151,27 @@ export async function generateVoiceResponse(
     } catch {}
 
     return { responseText: optOutResponse, turnCount: optOutTurnCount };
+  }
+
+  const maxLLMCost = agent.maxLLMCostPerCall ? parseFloat(String(agent.maxLLMCostPerCall)) : 2.0;
+  const cumulativeLLMCost = callLLMCosts.get(providerCallId) || 0;
+  if (maxLLMCost > 0 && cumulativeLLMCost >= maxLLMCost) {
+    logger.warn("LLM cost ceiling reached for call", { providerCallId, orgId, cumulativeLLMCost, maxLLMCost });
+    const costCeilResponse = "I appreciate our conversation. I've reached the limit for this session. Is there anything else quick I can help with, or would you like to call back?";
+    history.push({ role: "user", content: userInput });
+    history.push({ role: "assistant", content: costCeilResponse });
+    callConversations.set(providerCallId, history);
+    const turnCount = Math.floor(history.length / 2);
+    const existingTranscript = await getExistingTranscript(providerCallId);
+    const newEntry = `\nCaller: ${userInput}\n${agent.name}: ${costCeilResponse}`;
+    try {
+      await db.update(callLogs).set({
+        transcript: (existingTranscript || "") + newEntry,
+        turnCount,
+        conversationMessages: history,
+      }).where(eq(callLogs.providerCallId, providerCallId));
+    } catch {}
+    return { responseText: costCeilResponse, turnCount };
   }
 
   const hasFAQGrounding = agentConfig.faqEntries && agentConfig.faqEntries.length > 0;
@@ -264,6 +288,8 @@ ENDINGS: When wrapping up, be concise: "Is there anything else I can help with?"
     const inputTokens = aiResponse.inputTokens || 0;
     const outputTokens = aiResponse.outputTokens || 0;
     const llmCost = calculateLLMCost(aiResponse.model || "gpt-4o-mini", inputTokens, outputTokens);
+    const prevCost = callLLMCosts.get(providerCallId) || 0;
+    callLLMCosts.set(providerCallId, prevCost + llmCost.costGBP);
     await logCostEvent({
       orgId,
       callLogId,

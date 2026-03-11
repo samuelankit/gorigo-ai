@@ -9,6 +9,8 @@ const fallbackStore = new Map<string, RateLimitEntry>();
 const FALLBACK_WINDOW_MS = 60_000;
 const FALLBACK_MAX_REQUESTS = 120;
 
+const SESSION_COOKIE_NAME = "gorigo_session";
+
 const cleanupTimer = setInterval(() => {
   const now = Date.now();
   fallbackStore.forEach((entry, key) => {
@@ -17,11 +19,20 @@ const cleanupTimer = setInterval(() => {
 }, 60_000);
 (cleanupTimer as unknown as { unref?: () => void })?.unref?.();
 
-function fallbackRateLimit(ip: string): boolean {
+function getCompositeKey(request: NextRequest, ip: string): string {
+  const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  if (sessionToken) {
+    const tokenPrefix = sessionToken.substring(0, 16);
+    return `${tokenPrefix}:${ip}`;
+  }
+  return ip;
+}
+
+function fallbackRateLimit(key: string): boolean {
   const now = Date.now();
-  const existing = fallbackStore.get(ip);
+  const existing = fallbackStore.get(key);
   if (!existing || existing.resetAt <= now) {
-    fallbackStore.set(ip, { count: 1, resetAt: now + FALLBACK_WINDOW_MS });
+    fallbackStore.set(key, { count: 1, resetAt: now + FALLBACK_WINDOW_MS });
     return true;
   }
   if (existing.count < FALLBACK_MAX_REQUESTS) {
@@ -117,8 +128,9 @@ export function middleware(request: NextRequest) {
 
   const forwarded = request.headers.get("x-forwarded-for");
   const ip = forwarded?.split(",")[0]?.trim() || "unknown";
+  const compositeKey = getCompositeKey(request, ip);
 
-  if (!fallbackRateLimit(ip)) {
+  if (!fallbackRateLimit(compositeKey)) {
     const errorResponse = NextResponse.json(
       { error: "Too many requests. Please try again later." },
       { status: 429 }
@@ -192,6 +204,13 @@ export function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-request-id", requestId);
   requestHeaders.set("x-request-start", String(startMs));
+  requestHeaders.delete("x-rate-limit-user-id");
+
+  const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  if (sessionToken) {
+    const tokenPrefix = sessionToken.substring(0, 16);
+    requestHeaders.set("x-rate-limit-user-id", tokenPrefix);
+  }
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },

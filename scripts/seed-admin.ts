@@ -68,6 +68,7 @@ async function seed() {
       businessName: "GoRigo Platform",
       globalRole: "SUPERADMIN",
       isDemo: false,
+      mustChangePassword: true,
     }).returning();
     console.log("Created superadmin user: admin@gorigo.ai / admin123");
 

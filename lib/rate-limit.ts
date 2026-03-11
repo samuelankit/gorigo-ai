@@ -9,6 +9,12 @@ interface RateLimitResult {
   remaining?: number;
 }
 
+interface RateLimitOptions {
+  windowMs: number;
+  maxRequests: number;
+  bucket: string;
+}
+
 const SENSITIVE_BUCKETS = new Set(["auth", "billing", "admin", "settings", "apikey"]);
 
 function getClientIp(request: NextRequest): string {
@@ -17,18 +23,35 @@ function getClientIp(request: NextRequest): string {
   return cfIp || forwarded?.split(",")[0]?.trim() || "unknown";
 }
 
-function rateLimit({ windowMs, maxRequests, bucket }: { windowMs: number; maxRequests: number; bucket: string }) {
+function getUserIdFromRequest(request: NextRequest): string | null {
+  const userId = request.headers.get("x-rate-limit-user-id");
+  return userId || null;
+}
+
+function buildRateLimitKey(request: NextRequest, email?: string): string {
+  const ip = getClientIp(request);
+  if (email) {
+    return `email:${email.toLowerCase()}`;
+  }
+  const userId = getUserIdFromRequest(request);
+  if (userId) {
+    return `${userId}:${ip}`;
+  }
+  return ip;
+}
+
+function rateLimit({ windowMs, maxRequests, bucket }: RateLimitOptions) {
   const failClosed = SENSITIVE_BUCKETS.has(bucket);
 
-  return async function check(request: NextRequest): Promise<RateLimitResult> {
-    const ip = getClientIp(request);
+  return async function check(request: NextRequest, opts?: { email?: string }): Promise<RateLimitResult> {
+    const compositeKey = buildRateLimitKey(request, opts?.email);
     const now = new Date();
     const windowEndMs = now.getTime() + windowMs;
 
     try {
       const result = await db.execute(sql`
         INSERT INTO rate_limits (key, bucket, count, window_start, window_end)
-        VALUES (${ip}, ${bucket}, 1, NOW(), to_timestamp(${windowEndMs / 1000}))
+        VALUES (${compositeKey}, ${bucket}, 1, NOW(), to_timestamp(${windowEndMs / 1000}))
         ON CONFLICT (key, bucket) DO UPDATE SET
           count = CASE
             WHEN rate_limits.window_end <= NOW() THEN 1
@@ -70,6 +93,31 @@ function rateLimit({ windowMs, maxRequests, bucket }: { windowMs: number; maxReq
   };
 }
 
+function rateLimitByEmail({ windowMs, maxRequests, bucket }: RateLimitOptions) {
+  const limiter = rateLimit({ windowMs, maxRequests, bucket });
+  const ipLimiter = rateLimit({ windowMs, maxRequests, bucket: `${bucket}_ip` });
+
+  return async function check(request: NextRequest, email?: string): Promise<RateLimitResult> {
+    const ipResult = await ipLimiter(request);
+    if (!ipResult.allowed) {
+      return ipResult;
+    }
+
+    if (email) {
+      const emailResult = await limiter(request, { email });
+      if (!emailResult.allowed) {
+        return emailResult;
+      }
+      return {
+        allowed: true,
+        remaining: Math.min(ipResult.remaining ?? 0, emailResult.remaining ?? 0),
+      };
+    }
+
+    return ipResult;
+  };
+}
+
 let cleanupStarted = false;
 function startCleanup() {
   if (cleanupStarted) return;
@@ -88,7 +136,7 @@ function startCleanup() {
 
 startCleanup();
 
-export const authLimiter = rateLimit({ windowMs: 60_000, maxRequests: 10, bucket: "auth" });
+export const authLimiter = rateLimitByEmail({ windowMs: 60_000, maxRequests: 10, bucket: "auth" });
 export const aiLimiter = rateLimit({ windowMs: 60_000, maxRequests: 20, bucket: "ai" });
 export const knowledgeLimiter = rateLimit({ windowMs: 60_000, maxRequests: 10, bucket: "knowledge" });
 export const generalLimiter = rateLimit({ windowMs: 60_000, maxRequests: 100, bucket: "general" });

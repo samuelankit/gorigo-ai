@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   emailVerificationExpiresAt: timestamp("email_verification_expires_at"),
   termsAcceptedAt: timestamp("terms_accepted_at"),
   termsVersion: text("terms_version"),
+  mustChangePassword: boolean("must_change_password").default(false),
 });
 
 export const sessions = pgTable("sessions", {
@@ -113,6 +114,7 @@ export const agents = pgTable("agents", {
   strictKnowledgeMode: boolean("strict_knowledge_mode").default(false),
   maxTokensPerCall: integer("max_tokens_per_call").default(4096),
   maxTokensPerSession: integer("max_tokens_per_session").default(16384),
+  maxLLMCostPerCall: numeric("max_llm_cost_per_call", { precision: 10, scale: 4 }).default("2.0000"),
   visibility: text("visibility").default("shared"),
   sharedWithDepartments: jsonb("shared_with_departments").default([]),
 }, (table) => [

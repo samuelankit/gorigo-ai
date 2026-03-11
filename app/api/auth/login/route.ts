@@ -30,16 +30,16 @@ function getClientInfo(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const rl = await authLimiter(request);
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
-    }
-
     const sizeError = checkBodySize(request, BODY_LIMITS.auth);
     if (sizeError) return sizeError;
 
     const body = await request.json();
     const { email, password } = loginSchema.parse(body);
+
+    const rl = await authLimiter(request, email);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
 
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!user) {
@@ -108,9 +108,12 @@ export async function POST(request: NextRequest) {
 
     logAuthEvent("login.success", user.id, user.email).catch((err) => { logger.error("Log login success event failed", err); });
 
-    const { password: _, emailVerificationToken: _evt, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, ...userWithoutPassword } = user;
+    const { password: _, emailVerificationToken: _evt, emailVerificationExpiresAt: _evea, failedLoginAttempts: _fla, lockedUntil: _lu, mustChangePassword: _mcp, ...userWithoutPassword } = user;
     const isMobile = request.headers.get("x-client-type") === "mobile";
-    return NextResponse.json({ user: userWithoutPassword, ...(isMobile ? { token } : {}) }, { status: 200 });
+    const responseData: Record<string, unknown> = { user: userWithoutPassword };
+    if (isMobile) responseData.token = token;
+    if (user.mustChangePassword) responseData.mustChangePassword = true;
+    return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
     return handleRouteError(error, "Login");
   }

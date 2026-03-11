@@ -9,9 +9,10 @@ import { cleanupCallConversation } from "@/lib/voice-ai";
 
 const logger = createLogger("MidCallBilling");
 
-const BILLING_INTERVAL_MS = 60_000;
-const LOW_BALANCE_WARNING_THRESHOLD_MINUTES = 2;
-const GRACE_WINDOW_AFTER_WARNING_MS = 30_000;
+const BILLING_INTERVAL_MS = 10_000;
+const DB_PERSIST_INTERVAL_MS = 30_000;
+const LOW_BALANCE_WARNING_THRESHOLD_MINUTES = 1;
+const GRACE_WINDOW_AFTER_WARNING_MS = 15_000;
 
 interface ActiveCallBilling {
   orgId: number;
@@ -22,6 +23,7 @@ interface ActiveCallBilling {
   lowBalanceWarned: boolean;
   lowBalanceWarnedAt: number | null;
   terminated: boolean;
+  lastDbPersistTime: number;
 }
 
 const activeCallBilling = new Map<string, ActiveCallBilling>();
@@ -39,6 +41,7 @@ export function startCallBilling(callControlId: string, orgId: number, ratePerMi
     lowBalanceWarned: false,
     lowBalanceWarnedAt: null,
     terminated: false,
+    lastDbPersistTime: startTime,
   });
 
   db.insert(activeCallBillingState)
@@ -147,6 +150,18 @@ export async function reconcileCallBilling(
 
     const expectedCharge = roundMoney((providerDurationSecs / 60) * ratePerMinute);
     const deficit = roundMoney(expectedCharge - alreadyBilled);
+
+    if (alreadyBilled > expectedCharge + 0.01) {
+      const overcharge = roundMoney(alreadyBilled - expectedCharge);
+      logger.warn("Billing reconciliation overcharge detected", {
+        callControlId,
+        orgId,
+        providerDurationSecs,
+        expectedCharge,
+        alreadyBilled,
+        overcharge,
+      });
+    }
 
     if (deficit > 0.01) {
       logger.warn("Billing reconciliation deficit detected", {
@@ -261,10 +276,14 @@ async function processBillingCycle(): Promise<void> {
             `call_billing_${callControlId}_${totalSecs}`
           );
           billing.lastBilledSecs = totalSecs;
-          db.update(activeCallBillingState)
-            .set({ lastBilledSecs: totalSecs })
-            .where(eq(activeCallBillingState.callControlId, callControlId))
-            .catch(() => {});
+          const now2 = Date.now();
+          if (now2 - billing.lastDbPersistTime >= DB_PERSIST_INTERVAL_MS) {
+            billing.lastDbPersistTime = now2;
+            db.update(activeCallBillingState)
+              .set({ lastBilledSecs: totalSecs })
+              .where(eq(activeCallBillingState.callControlId, callControlId))
+              .catch(() => {});
+          }
         } catch (deductErr) {
           if (deductErr instanceof Error && deductErr.message.includes("Insufficient balance")) {
             await terminateCallForBilling(callControlId, billing, "insufficient");
@@ -376,6 +395,30 @@ export async function terminateAllCallsForOrg(orgId: number, reason: string = "o
   return terminated;
 }
 
+async function reconstructBilledSecsFromWallet(callControlId: string, orgId: number, ratePerMinute: number): Promise<number> {
+  try {
+    const [result] = await db
+      .select({ total: sql<number>`COALESCE(SUM(ABS(${walletTransactions.amount})), 0)` })
+      .from(walletTransactions)
+      .where(
+        and(
+          eq(walletTransactions.orgId, orgId),
+          eq(walletTransactions.referenceType, "call"),
+          like(walletTransactions.referenceId, `call_billing_%${callControlId}%`)
+        )
+      );
+
+    const totalBilled = Number(result?.total ?? 0);
+    if (totalBilled <= 0 || ratePerMinute <= 0) return 0;
+
+    const billedMinutes = totalBilled / ratePerMinute;
+    return Math.floor(billedMinutes * 60);
+  } catch (err) {
+    logger.error("Failed to reconstruct billed seconds from wallet", err instanceof Error ? err : undefined);
+    return 0;
+  }
+}
+
 export async function restoreCallBilling(): Promise<number> {
   try {
     const rows = await db
@@ -397,15 +440,29 @@ export async function restoreCallBilling(): Promise<number> {
         continue;
       }
 
+      const ratePerMinute = parseFloat(String(row.ratePerMinute));
+      const walletBilledSecs = await reconstructBilledSecsFromWallet(row.callControlId, row.orgId, ratePerMinute);
+      const dbBilledSecs = row.lastBilledSecs ?? 0;
+      const lastBilledSecs = Math.max(walletBilledSecs, dbBilledSecs);
+
+      if (walletBilledSecs > dbBilledSecs) {
+        logger.info("Reconstructed billing state from wallet transactions (higher than DB state)", {
+          callControlId: row.callControlId,
+          walletBilledSecs,
+          dbBilledSecs,
+        });
+      }
+
       activeCallBilling.set(row.callControlId, {
         orgId: row.orgId,
         callControlId: row.callControlId,
-        ratePerMinute: parseFloat(String(row.ratePerMinute)),
+        ratePerMinute,
         startTime,
-        lastBilledSecs: row.lastBilledSecs ?? 0,
+        lastBilledSecs,
         lowBalanceWarned: row.lowBalanceWarned ?? false,
         lowBalanceWarnedAt: row.lowBalanceWarnedAt ? parseInt(row.lowBalanceWarnedAt, 10) : null,
         terminated: false,
+        lastDbPersistTime: Date.now(),
       });
       restored++;
     }

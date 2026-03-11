@@ -222,11 +222,28 @@ export async function getVerifiedUser(): Promise<AuthResult | null> {
   return auth;
 }
 
+export function requirePasswordChanged(auth: AuthResult | null): { allowed: boolean; error: string | null; status?: number } {
+  if (!auth) return { allowed: false, error: "Not authenticated", status: 401 };
+  if (auth.user.mustChangePassword) {
+    return { allowed: false, error: "Password change required. Please change your password before continuing.", status: 403 };
+  }
+  return { allowed: true, error: null };
+}
+
 export async function requireVerifiedAuth(): Promise<{ auth: AuthResult | null; error: Response | null }> {
   const { NextResponse } = await import("next/server");
   const auth = await getAuthenticatedUser();
   if (!auth) {
     return { auth: null, error: NextResponse.json({ error: "Authentication required" }, { status: 401 }) };
+  }
+  if (auth.user.mustChangePassword) {
+    return {
+      auth: null,
+      error: NextResponse.json(
+        { error: "Password change required. Please change your password before continuing.", code: "MUST_CHANGE_PASSWORD", mustChangePassword: true },
+        { status: 403 }
+      ),
+    };
   }
   const smtpConfigured = !!(process.env.SMTP_HOST || process.env.SENDGRID_API_KEY || process.env.EMAIL_HOST);
   if (smtpConfigured && auth.user.emailVerified === false) {

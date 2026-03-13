@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { X, Settings2, Shield } from "lucide-react";
 import { loadConsentedScripts, removeNonEssentialScripts } from "@/lib/cookie-scripts";
+
+const APP_ROUTE_PREFIXES = [
+  "/dashboard",
+  "/admin",
+  "/settings",
+  "/onboarding",
+];
 
 type ConsentLevel = "essential" | "analytics" | "all";
 
@@ -41,6 +49,7 @@ function storeConsent(level: ConsentLevel) {
 }
 
 export function CookieConsent() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>({
@@ -48,6 +57,8 @@ export function CookieConsent() {
     analytics: false,
     preferences: false,
   });
+
+  const isAppRoute = APP_ROUTE_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
 
   useEffect(() => {
     const consent = getStoredConsent();
@@ -86,7 +97,7 @@ export function CookieConsent() {
     setVisible(false);
   }
 
-  if (!visible) return null;
+  if (!visible || isAppRoute) return null;
 
   return (
     <div

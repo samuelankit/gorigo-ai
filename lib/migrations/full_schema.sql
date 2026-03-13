@@ -18,28 +18,12 @@ CREATE SCHEMA public;
 -- Name: set_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.set_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-begin
-  new._updated_at = now();
-  return NEW;
-end;
-$$;
 
 
 --
 -- Name: set_updated_at_metadata(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.set_updated_at_metadata() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-begin
-  new.updated_at = now();
-  return NEW;
-end;
-$$;
 
 
 

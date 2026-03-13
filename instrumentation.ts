@@ -128,24 +128,33 @@ async function ensureProductionFullSchema() {
     }
 
     const sqlText = fs.readFileSync(sqlFilePath, "utf-8");
-    const statements = sqlText
-      .split(/;\s*\n/)
-      .map((s: string) => s.trim())
-      .filter((s: string) => s.length > 0 && !s.startsWith("--"));
+
+    const statements: string[] = [];
+    let current = "";
+    for (const line of sqlText.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("--")) continue;
+      current += line + "\n";
+      if (trimmed.endsWith(";")) {
+        const stmt = current.trim();
+        if (stmt.length > 3) statements.push(stmt);
+        current = "";
+      }
+    }
+    if (current.trim().length > 3) statements.push(current.trim());
 
     let applied = 0;
     let skipped = 0;
     for (const stmt of statements) {
-      if (!stmt || stmt.trim().length < 4) continue;
       try {
-        await db.execute(sql.raw(stmt + (stmt.endsWith(";") ? "" : ";")));
+        await db.execute(sql.raw(stmt));
         applied++;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes("already exists") || msg.includes("does not exist") || msg.includes("duplicate")) {
+        if (msg.includes("already exists") || msg.includes("does not exist") || msg.includes("duplicate") || msg.includes("cannot drop")) {
           skipped++;
         } else {
-          console.warn(`[GoRigo] Schema stmt: ${msg.substring(0, 100)}`);
+          console.warn(`[GoRigo] Schema stmt: ${msg.substring(0, 120)}`);
         }
       }
     }

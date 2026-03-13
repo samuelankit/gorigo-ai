@@ -333,7 +333,7 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-300 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-200" />
           </span>
-          <span className="text-sm font-semibold">Chat with Us</span>
+          <span className="text-sm font-semibold">Chat with Rigo</span>
         </div>
         <Button
           variant="ghost"
@@ -526,7 +526,7 @@ export function ChatWidget({ onClose }: { onClose: () => void }) {
 
           <div className="text-center py-1.5 border-t border-border">
             <span className="text-[10px] text-muted-foreground/50">
-              Powered by GoRigo AI
+              Rigo · GoRigo AI
             </span>
           </div>
         </>

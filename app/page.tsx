@@ -9,6 +9,7 @@ import { WebCallButton } from "@/components/landing/web-call-button";
 import { TalkTimeInfo } from "@/components/talk-time-info";
 import { ArrowRight } from "lucide-react";
 import { Suspense, lazy } from "react";
+import { RigoPrompt } from "@/components/landing/rigo-prompt";
 
 const HomeBelowFold = lazy(() => import("@/components/landing/home-sections").then((mod) => ({ default: mod.HomeBelowFold })));
 
@@ -110,6 +111,9 @@ export default function HomePage() {
             <p className="mt-4 text-xs text-muted-foreground">
               Prepaid wallet from £50. Go live in under 5 minutes.
             </p>
+
+            <RigoPrompt />
+
           </div>
         </div>
       </section>

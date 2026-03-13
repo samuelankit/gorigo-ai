@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     const BUILTIN_AGENTS: Record<string, { name: string; dept: string; faqs: Array<{question: string; answer: string}> }> = {
       sales: {
-        name: "Ava", dept: "Sales",
+        name: "Rigo", dept: "Sales",
         faqs: [
           { question: "what is gorigo", answer: "GoRigo is an AI-powered voice platform that automates outbound and inbound calling for businesses. You get intelligent AI agents, campaign management, compliance tools, and real-time analytics — all in one platform." },
           { question: "how much does gorigo cost price", answer: "GoRigo uses talk-time-only billing. Individual plan: £0.20/min. Team plan: £0.18/min. Enterprise: custom pricing. Minimum wallet top-up is £50. You only pay for actual call minutes — no monthly fees." },
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         ],
       },
       support: {
-        name: "Max", dept: "Support",
+        name: "Rigo", dept: "Support",
         faqs: [
           { question: "top up wallet", answer: "Go to Dashboard > Finance > Wallet, click 'Top Up', and complete the Stripe checkout. Minimum top-up is £50. Top-ups are non-refundable except for platform errors." },
           { question: "reset password", answer: "Click 'Forgot Password' on the login page, enter your email, and follow the link we send you. Links expire after 1 hour." },
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
         ],
       },
       onboarding: {
-        name: "Zara", dept: "Onboarding",
+        name: "Rigo", dept: "Onboarding",
         faqs: [
           { question: "how get started first steps", answer: "Welcome! 3 steps: 1) Top up your wallet (minimum £50). 2) Create your AI agent in Agents & Flow. 3) Add your phone number and launch a campaign. That is it — your AI is live!" },
           { question: "create agent", answer: "Go to Agents & Flow > Create Agent. Give it a name, set the greeting message, add FAQ entries, and configure the voice. Your agent is ready in under 5 minutes." },

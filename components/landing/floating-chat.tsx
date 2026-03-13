@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatWidget } from "./chat-widget";
 
@@ -12,20 +12,30 @@ export function FloatingChat() {
     <>
       {open && <ChatWidget onClose={() => setOpen(false)} />}
       <div className="fixed bottom-5 right-5 z-50">
-        <Button
-          size="icon"
-          onClick={() => setOpen(!open)}
-          className="rounded-full shadow-lg"
-          aria-label={open ? "Close chat" : "Chat with GoRigo AI"}
-          data-testid="button-floating-chat"
-        >
-          {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
-        </Button>
-        {!open && (
-          <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 pointer-events-none">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-background" />
-          </span>
+        {open ? (
+          <Button
+            size="icon"
+            onClick={() => setOpen(false)}
+            className="rounded-full shadow-lg"
+            aria-label="Close Rigo chat"
+            data-testid="button-floating-chat"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        ) : (
+          <button
+            onClick={() => setOpen(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-[#E8604C] to-[#F5A623] text-white rounded-full px-4 py-2.5 shadow-lg hover:shadow-xl transition-shadow"
+            aria-label="Chat with Rigo"
+            data-testid="button-floating-chat"
+          >
+            <div className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+            </div>
+            <Sparkles className="h-4 w-4" />
+            <span className="text-sm font-semibold">Ask Rigo</span>
+          </button>
         )}
       </div>
     </>

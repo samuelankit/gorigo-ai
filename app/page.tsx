@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/json-ld";
-import { CustomIcon } from "@/components/ui/custom-icon";
-import { WebCallButton } from "@/components/landing/web-call-button";
 import { TalkTimeInfo } from "@/components/talk-time-info";
 import { ArrowRight } from "lucide-react";
 import { Suspense, lazy } from "react";
@@ -69,32 +67,7 @@ export default function HomePage() {
               <TalkTimeInfo />
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 flex-wrap" data-testid="hero-talk-to-ai">
-              <Link
-                href="/demo"
-                data-testid="link-hero-call-ai"
-                className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-2.5 shadow-sm hover-elevate dark:bg-white sm:hidden"
-              >
-                <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#E8604C] to-[#F5A623]">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8604C]/40" />
-                  <CustomIcon name="phone-call" size={22} className="relative text-white" />
-                </span>
-                <span className="flex flex-col items-start">
-                  <span className="text-base font-semibold tracking-tight text-gray-900">Talk to Our AI</span>
-                  <span className="text-sm text-gray-500">Try the live demo</span>
-                </span>
-              </Link>
-              <WebCallButton />
-              <span className="inline-flex items-center gap-2 text-sm font-medium text-[#E8604C] dark:text-[#F5A623]" data-testid="text-hero-availability">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E8604C] opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#E8604C]" />
-                </span>
-                Available 24/7
-              </span>
-            </div>
-
-            <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
+            <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
               <Link href="/register">
                 <Button size="lg" data-testid="button-hero-start">
                   Get Started

@@ -121,7 +121,7 @@ async function ensureProductionFullSchema() {
     const { db } = await import("@/lib/db");
     const { sql } = await import("drizzle-orm");
 
-    const sqlFilePath = path.join(process.cwd(), "lib", "migrations", "full_schema.sql");
+    const sqlFilePath = path.resolve("lib", "migrations", "full_schema.sql");
     if (!fs.existsSync(sqlFilePath)) {
       console.warn("[GoRigo] Full schema migration file not found — skipping");
       return;

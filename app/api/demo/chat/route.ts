@@ -162,7 +162,6 @@ export async function POST(request: NextRequest) {
       "phone": "Go to Phone Numbers in the left menu. Search available UK numbers, select one, and it is instantly assigned to your account. You can then attach it to any agent or campaign.",
     };
 
-    const lowerMsg = message.toLowerCase();
     for (const topic of TOPIC_TRIGGERS) {
       if (topic.keywords.some(k => lowerMsg.includes(k))) {
         faqMatch = DIRECT_ANSWERS[topic.faqKey] || "";

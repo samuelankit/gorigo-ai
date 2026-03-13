@@ -1,11 +1,8 @@
 import { Navbar } from "@/components/landing/navbar";
 import { PublicLayout } from "@/components/public-layout";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
 import { OrganizationJsonLd, WebPageJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/json-ld";
 import { TalkTimeInfo } from "@/components/talk-time-info";
-import { ArrowRight } from "lucide-react";
 import { Suspense, lazy } from "react";
 import { RigoPrompt } from "@/components/landing/rigo-prompt";
 
@@ -66,15 +63,6 @@ export default function HomePage() {
               <span className="text-lg sm:text-xl font-bold text-teal-500 dark:text-teal-400 ml-0.5" data-testid="text-hero-pound-symbol">£</span>
               <TalkTimeInfo />
             </p>
-
-            <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
-              <Link href="/register">
-                <Button size="lg" data-testid="button-hero-start">
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
 
             <RigoPrompt />
 

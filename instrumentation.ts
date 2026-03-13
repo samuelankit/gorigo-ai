@@ -117,7 +117,11 @@ async function ensureProductionSchemaColumns() {
       `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_agent text`,
       `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS created_at timestamp DEFAULT now()`,
       `ALTER TABLE rate_limits ADD COLUMN IF NOT EXISTS key text`,
-      `CREATE TABLE IF NOT EXISTS rate_limits (id serial PRIMARY KEY, key text NOT NULL, bucket text NOT NULL, count integer DEFAULT 1, window_start timestamp DEFAULT now(), window_end timestamp, UNIQUE(key, bucket))`,
+      `CREATE TABLE IF NOT EXISTS rate_limits (id serial PRIMARY KEY, key text NOT NULL, bucket text NOT NULL, count integer DEFAULT 1, window_start timestamp DEFAULT now(), window_end timestamp NOT NULL DEFAULT now())`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_rate_limits_key_bucket_unique ON rate_limits (key, bucket)`,
+      `CREATE INDEX IF NOT EXISTS idx_rate_limits_window_end ON rate_limits (window_end)`,
+      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS expires_at timestamp`,
+      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_id integer`,
     ];
 
     for (const stmt of alterStatements) {

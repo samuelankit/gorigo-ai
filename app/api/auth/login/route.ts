@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
     if (user.mustChangePassword) responseData.mustChangePassword = true;
     return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
+    console.error("[Login] CAUGHT ERROR:", error instanceof Error ? error.message : String(error), error instanceof Error ? error.stack : "");
     return handleRouteError(error, "Login");
   }
 }

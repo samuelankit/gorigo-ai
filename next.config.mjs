@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  outputFileTracingIncludes: {
+    '/**': ['./lib/migrations/**'],
+  },
   reactStrictMode: false,
   devIndicators: false,
   allowedDevOrigins: [

@@ -38,42 +38,45 @@ export async function POST(request: NextRequest) {
     }
 
     const deptName = DEPARTMENT_AGENTS[department] || null;
+    const lowerMsg = message.toLowerCase();
+    const salesKeywords = ["pricing", "cost", "demo", "buy", "plans", "features", "interested", "how much", "trial"];
+    const supportKeywords = ["help", "issue", "problem", "not working", "error", "bug", "reset", "password", "billing"];
+    const onboardingKeywords = ["new", "getting started", "setup", "first time", "how to", "configure", "just signed up"];
 
     let targetAgent;
-    if (deptName) {
-      [targetAgent] = await db
-        .select()
-        .from(agents)
-        .where(
-          and(
-            eq(agents.orgId, GORIGO_ORG_ID),
-            eq(agents.departmentName, deptName),
-            eq(agents.status, "active")
+    try {
+      if (deptName) {
+        [targetAgent] = await db
+          .select()
+          .from(agents)
+          .where(
+            and(
+              eq(agents.orgId, GORIGO_ORG_ID),
+              eq(agents.departmentName, deptName),
+              eq(agents.status, "active")
+            )
           )
-        )
-        .limit(1);
-    }
-
-    if (!targetAgent) {
-      const orgAgents = await db
-        .select()
-        .from(agents)
-        .where(and(eq(agents.orgId, GORIGO_ORG_ID), eq(agents.status, "active")));
-
-      const lowerMsg = message.toLowerCase();
-      const salesKeywords = ["pricing", "cost", "demo", "buy", "plans", "features", "interested", "how much", "trial"];
-      const supportKeywords = ["help", "issue", "problem", "not working", "error", "bug", "reset", "password", "billing"];
-      const onboardingKeywords = ["new", "getting started", "setup", "first time", "how to", "configure", "just signed up"];
-
-      if (salesKeywords.some(k => lowerMsg.includes(k))) {
-        targetAgent = orgAgents.find(a => a.departmentName === "Sales") || orgAgents[0];
-      } else if (supportKeywords.some(k => lowerMsg.includes(k))) {
-        targetAgent = orgAgents.find(a => a.departmentName === "Support") || orgAgents[0];
-      } else if (onboardingKeywords.some(k => lowerMsg.includes(k))) {
-        targetAgent = orgAgents.find(a => a.departmentName === "Onboarding") || orgAgents[0];
-      } else {
-        targetAgent = orgAgents.find(a => a.departmentName === "Sales") || orgAgents[0];
+          .limit(1);
       }
+
+      if (!targetAgent) {
+        const orgAgents = await db
+          .select()
+          .from(agents)
+          .where(and(eq(agents.orgId, GORIGO_ORG_ID), eq(agents.status, "active")));
+
+        if (salesKeywords.some(k => lowerMsg.includes(k))) {
+          targetAgent = orgAgents.find(a => a.departmentName === "Sales") || orgAgents[0];
+        } else if (supportKeywords.some(k => lowerMsg.includes(k))) {
+          targetAgent = orgAgents.find(a => a.departmentName === "Support") || orgAgents[0];
+        } else if (onboardingKeywords.some(k => lowerMsg.includes(k))) {
+          targetAgent = orgAgents.find(a => a.departmentName === "Onboarding") || orgAgents[0];
+        } else {
+          targetAgent = orgAgents.find(a => a.departmentName === "Sales") || orgAgents[0];
+        }
+      }
+    } catch (dbErr) {
+      console.warn("[DemoChat] DB query failed (table may not exist yet):", dbErr instanceof Error ? dbErr.message : dbErr);
     }
 
     if (!targetAgent) {

@@ -79,26 +79,58 @@ export async function POST(request: NextRequest) {
       console.warn("[DemoChat] DB query failed (table may not exist yet):", dbErr instanceof Error ? dbErr.message : dbErr);
     }
 
-    if (!targetAgent) {
-      return NextResponse.json({
-        reply: "I'm sorry, our AI agents are currently being set up. Please try again later.",
-        agent: "System",
-        department: "none",
-      });
-    }
+    const BUILTIN_AGENTS: Record<string, { name: string; dept: string; faqs: Array<{question: string; answer: string}> }> = {
+      sales: {
+        name: "Ava", dept: "Sales",
+        faqs: [
+          { question: "what is gorigo", answer: "GoRigo is an AI-powered voice platform that automates outbound and inbound calling for businesses. You get intelligent AI agents, campaign management, compliance tools, and real-time analytics — all in one platform." },
+          { question: "how much does gorigo cost price", answer: "GoRigo uses talk-time-only billing. Individual plan: £0.20/min. Team plan: £0.18/min. Enterprise: custom pricing. Minimum wallet top-up is £50. You only pay for actual call minutes — no monthly fees." },
+          { question: "free trial", answer: "GoRigo is a prepaid platform with no free trials. You top up your wallet with a minimum of £50 and only pay for actual talk time used. No wasted budget on subscriptions." },
+          { question: "features what can gorigo do", answer: "GoRigo includes: AI voice agents, outbound campaign management, inbound call handling, knowledge base RAG, compliance tools (DNC, TPS, TCPA), real-time analytics, multi-agent management, visual flow builder, and a mobile app." },
+          { question: "how start get started sign up", answer: "Getting started is simple: 1) Create your account. 2) Top up your wallet (min £50). 3) Create your AI agent. 4) Add a phone number. 5) Launch your first campaign. Your AI is live in minutes." },
+        ],
+      },
+      support: {
+        name: "Max", dept: "Support",
+        faqs: [
+          { question: "top up wallet", answer: "Go to Dashboard > Finance > Wallet, click 'Top Up', and complete the Stripe checkout. Minimum top-up is £50. Top-ups are non-refundable except for platform errors." },
+          { question: "reset password", answer: "Click 'Forgot Password' on the login page, enter your email, and follow the link we send you. Links expire after 1 hour." },
+          { question: "call failed why", answer: "Common reasons: insufficient wallet balance (minimum £1.00 required), DNC/TPS compliance block, or invalid phone number format. Check your Call History for the exact failure reason." },
+          { question: "billing invoice receipt", answer: "Go to Finance > Invoices to download PDF invoices and receipts. All transactions are logged in your wallet history with timestamps." },
+        ],
+      },
+      onboarding: {
+        name: "Zara", dept: "Onboarding",
+        faqs: [
+          { question: "how get started first steps", answer: "Welcome! 3 steps: 1) Top up your wallet (minimum £50). 2) Create your AI agent in Agents & Flow. 3) Add your phone number and launch a campaign. That is it — your AI is live!" },
+          { question: "create agent", answer: "Go to Agents & Flow > Create Agent. Give it a name, set the greeting message, add FAQ entries, and configure the voice. Your agent is ready in under 5 minutes." },
+          { question: "run campaign", answer: "Go to Campaigns > Create Campaign. Choose your agent, upload a contact list (CSV), set your calling hours and budget cap, then click Approve. The platform handles everything automatically." },
+          { question: "phone number", answer: "Go to Phone Numbers in the left menu. Search available UK numbers, select one, and it is instantly assigned to your account. You can then attach it to any agent or campaign." },
+        ],
+      },
+    };
+
+    const builtinKey = department in BUILTIN_AGENTS ? department : "sales";
+    const builtin = BUILTIN_AGENTS[builtinKey];
+
+    const syntheticAgent = targetAgent || {
+      name: builtin.name,
+      departmentName: builtin.dept,
+      faqEntries: builtin.faqs,
+    };
 
     const msgClean = message.toLowerCase().replace(/[^a-z0-9\s]/g, "");
     const msgWords = msgClean.split(/\s+/).filter(w => w.length > 2);
 
     let faqMatch = "";
-    if (targetAgent.faqEntries && Array.isArray(targetAgent.faqEntries)) {
-      const faqs = targetAgent.faqEntries as Array<{ question: string; answer: string }>;
+    if (syntheticAgent.faqEntries && Array.isArray(syntheticAgent.faqEntries)) {
+      const faqs = syntheticAgent.faqEntries as Array<{ question: string; answer: string }>;
       let bestScore = 0;
       for (const faq of faqs) {
         const qWords = faq.question.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(w => w.length > 2);
         const matchCount = qWords.filter(w => msgWords.includes(w)).length;
         const score = qWords.length > 0 ? matchCount / qWords.length : 0;
-        if (matchCount >= 2 && score > bestScore) {
+        if (matchCount >= 1 && score > bestScore) {
           bestScore = score;
           faqMatch = faq.answer;
         }
@@ -171,14 +203,14 @@ export async function POST(request: NextRequest) {
         ],
       };
 
-      const deptReplies = genericReplies[targetAgent.departmentName || "Sales"] || genericReplies.Sales;
+      const deptReplies = genericReplies[syntheticAgent.departmentName || "Sales"] || genericReplies.Sales;
       reply = deptReplies[Math.floor(Math.random() * deptReplies.length)];
     }
 
     return NextResponse.json({
       reply,
-      agent: targetAgent.name,
-      department: targetAgent.departmentName || "General",
+      agent: syntheticAgent.name,
+      department: syntheticAgent.departmentName || "General",
     });
   } catch (error) {
     return handleRouteError(error, "DemoChat");

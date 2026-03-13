@@ -14,6 +14,7 @@ export async function register() {
 
     if (process.env.NODE_ENV === "production") {
       await runDatabaseMigrations();
+      await ensureProductionSchemaColumns();
       await ensureProductionAdminUser();
 
       const { ensureServicesStarted } = await import("@/lib/lazy-init");
@@ -92,6 +93,46 @@ async function runDatabaseMigrations() {
     }
   } catch (e) {
     console.error("[GoRigo] DB migration failed:", e instanceof Error ? e.message : e);
+  }
+}
+
+async function ensureProductionSchemaColumns() {
+  try {
+    const { db } = await import("@/lib/db");
+    const { sql } = await import("drizzle-orm");
+
+    const alterStatements = [
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts integer DEFAULT 0`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until timestamp`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS global_role text DEFAULT 'CLIENT'`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean DEFAULT false`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token text`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires_at timestamp`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at timestamp`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version text`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password boolean DEFAULT false`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at timestamp`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_demo boolean DEFAULT false`,
+      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ip_address text`,
+      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_agent text`,
+      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS created_at timestamp DEFAULT now()`,
+      `ALTER TABLE rate_limits ADD COLUMN IF NOT EXISTS key text`,
+      `CREATE TABLE IF NOT EXISTS rate_limits (id serial PRIMARY KEY, key text NOT NULL, bucket text NOT NULL, count integer DEFAULT 1, window_start timestamp DEFAULT now(), window_end timestamp, UNIQUE(key, bucket))`,
+    ];
+
+    for (const stmt of alterStatements) {
+      try {
+        await db.execute(sql.raw(stmt));
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("already exists") && !msg.includes("does not exist")) {
+          console.warn(`[GoRigo] Schema fix skipped: ${msg.substring(0, 100)}`);
+        }
+      }
+    }
+    console.log("[GoRigo] Production schema columns verified");
+  } catch (e) {
+    console.error("[GoRigo] Schema column fix failed:", e instanceof Error ? e.message : e);
   }
 }
 

@@ -122,16 +122,62 @@ export async function POST(request: NextRequest) {
     const msgClean = message.toLowerCase().replace(/[^a-z0-9\s]/g, "");
     const msgWords = msgClean.split(/\s+/).filter(w => w.length > 2);
 
+    const TOPIC_TRIGGERS: Array<{ keywords: string[]; faqKey: string }> = [
+      { keywords: ["cost", "price", "pricing", "how much", "per minute", "rate", "plan", "package", "expensive", "cheap", "pay", "billing", "charge"], faqKey: "cost" },
+      { keywords: ["free trial", "trial", "free"], faqKey: "trial" },
+      { keywords: ["feature", "what can", "capability", "do for", "include", "offer", "tools", "does it do"], faqKey: "features" },
+      { keywords: ["get started", "start", "sign up", "begin", "setup", "first step", "join", "onboard"], faqKey: "start" },
+      { keywords: ["what is gorigo", "what is it", "about gorigo", "tell me about", "gorigo platform", "explain gorigo"], faqKey: "about" },
+    ];
+
+    const FAQ_KEY_MAP: Record<string, string> = {
+      "cost": "how much does gorigo cost price",
+      "trial": "free trial",
+      "features": "features what can gorigo do",
+      "start": "how start get started sign up",
+      "about": "what is gorigo",
+      "wallet": "top up wallet",
+      "password": "reset password",
+      "failed": "call failed why",
+      "invoice": "billing invoice receipt",
+      "create": "create agent",
+      "campaign": "run campaign",
+      "phone": "phone number",
+    };
+
     let faqMatch = "";
-    if (syntheticAgent.faqEntries && Array.isArray(syntheticAgent.faqEntries)) {
+
+    const DIRECT_ANSWERS: Record<string, string> = {
+      "cost": "GoRigo uses talk-time-only billing. Individual plan: £0.20/min. Team plan: £0.18/min. Enterprise: custom pricing. Minimum wallet top-up is £50. You only pay for actual call minutes — no monthly fees.",
+      "trial": "GoRigo is a prepaid platform with no free trials. You top up your wallet with a minimum of £50 and only pay for actual talk time used. No wasted budget on subscriptions.",
+      "features": "GoRigo includes: AI voice agents, outbound campaign management, inbound call handling, knowledge base RAG, compliance tools (DNC, TPS, TCPA), real-time analytics, multi-agent management, visual flow builder, and a mobile app.",
+      "start": "Getting started is simple: 1) Create your account. 2) Top up your wallet (min £50). 3) Create your AI agent. 4) Add a phone number. 5) Launch your first campaign. Your AI is live in minutes.",
+      "about": "GoRigo is an AI-powered voice platform that automates outbound and inbound calling for businesses. You get intelligent AI agents, campaign management, compliance tools, and real-time analytics — all in one platform.",
+      "wallet": "Go to Dashboard > Finance > Wallet, click 'Top Up', and complete the Stripe checkout. Minimum top-up is £50. Top-ups are non-refundable except for platform errors.",
+      "password": "Click 'Forgot Password' on the login page, enter your email, and follow the link we send you. Links expire after 1 hour.",
+      "failed": "Common reasons: insufficient wallet balance (minimum £1.00 required), DNC/TPS compliance block, or invalid phone number format. Check your Call History for the exact failure reason.",
+      "invoice": "Go to Finance > Invoices to download PDF invoices and receipts. All transactions are logged in your wallet history with timestamps.",
+      "create": "Go to Agents & Flow > Create Agent. Give it a name, set the greeting message, add FAQ entries, and configure the voice. Your agent is ready in under 5 minutes.",
+      "campaign": "Go to Campaigns > Create Campaign. Choose your agent, upload a contact list (CSV), set your calling hours and budget cap, then click Approve. The platform handles everything automatically.",
+      "phone": "Go to Phone Numbers in the left menu. Search available UK numbers, select one, and it is instantly assigned to your account. You can then attach it to any agent or campaign.",
+    };
+
+    const lowerMsg = message.toLowerCase();
+    for (const topic of TOPIC_TRIGGERS) {
+      if (topic.keywords.some(k => lowerMsg.includes(k))) {
+        faqMatch = DIRECT_ANSWERS[topic.faqKey] || "";
+        if (faqMatch) break;
+      }
+    }
+
+    if (!faqMatch && syntheticAgent.faqEntries && Array.isArray(syntheticAgent.faqEntries)) {
       const faqs = syntheticAgent.faqEntries as Array<{ question: string; answer: string }>;
       let bestScore = 0;
       for (const faq of faqs) {
-        const qWords = faq.question.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(w => w.length > 2);
-        const matchCount = qWords.filter(w => msgWords.includes(w)).length;
-        const score = qWords.length > 0 ? matchCount / qWords.length : 0;
-        if (matchCount >= 1 && score > bestScore) {
-          bestScore = score;
+        const qWords = faq.question.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(w => w.length > 3);
+        const matchCount = msgWords.filter(w => w.length > 3 && qWords.includes(w)).length;
+        if (matchCount > 0 && matchCount > bestScore) {
+          bestScore = matchCount;
           faqMatch = faq.answer;
         }
       }

@@ -162,7 +162,7 @@ export function middleware(request: NextRequest) {
     const hasApiKey = !!request.headers.get("x-api-key");
     const hasBearerToken = !!request.headers.get("authorization")?.startsWith("Bearer ");
     const isMobileClient = request.headers.get("x-client-type") === "mobile";
-    if (!isExempt && !hasApiKey && !(hasBearerToken && isMobileClient)) {
+    if (!isExempt && !hasApiKey && !isMobileClient && !(hasBearerToken && isMobileClient)) {
       const origin = request.headers.get("origin");
       const referer = request.headers.get("referer");
       const forwardedHost = request.headers.get("x-forwarded-host");

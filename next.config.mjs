@@ -15,9 +15,6 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
-    outputFileTracingIncludes: {
-      '/': ['./migrations/**'],
-    },
   },
   typescript: {
     ignoreBuildErrors: true,

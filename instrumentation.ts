@@ -9,12 +9,11 @@ export async function register() {
     });
 
     if (!process.env.STRIPE_WEBHOOK_SECRET) {
-      console.warn("[GoRigo] ⚠ STRIPE_WEBHOOK_SECRET is not set. Stripe webhooks will be rejected in production. Set this secret before going live.");
+      console.warn("[GoRigo] ⚠ STRIPE_WEBHOOK_SECRET is not set. Stripe webhooks will be rejected.");
     }
 
     if (process.env.NODE_ENV === "production") {
-      await runDatabaseMigrations();
-      await ensureProductionSchemaColumns();
+      await ensureProductionSchema();
       await ensureProductionAdminUser();
 
       const { ensureServicesStarted } = await import("@/lib/lazy-init");
@@ -28,115 +27,86 @@ export async function register() {
   }
 }
 
-async function runDatabaseMigrations() {
-  const { execSync } = await import("child_process");
-  const path = await import("path");
-  const fs = await import("fs");
-
-  try {
-    const possibleRoots = [
-      process.cwd(),
-      path.resolve("."),
-      path.dirname(process.argv[1] ?? ""),
-    ];
-
-    let projectRoot = process.cwd();
-    for (const root of possibleRoots) {
-      if (fs.existsSync(path.join(root, "drizzle.config.ts"))) {
-        projectRoot = root;
-        break;
-      }
-    }
-
-    const drizzleKitBin = path.join(projectRoot, "node_modules", ".bin", "drizzle-kit");
-
-    if (fs.existsSync(drizzleKitBin)) {
-      console.log("[GoRigo] Running drizzle-kit push to sync DB schema...");
-      execSync(`${drizzleKitBin} push --force --config=${path.join(projectRoot, "drizzle.config.ts")}`, {
-        env: { ...process.env },
-        cwd: projectRoot,
-        stdio: "pipe",
-        timeout: 120_000,
-      });
-      console.log("[GoRigo] DB schema sync complete");
-      return;
-    }
-  } catch (e) {
-    console.warn("[GoRigo] drizzle-kit push failed, falling back to migrate:", e instanceof Error ? e.message : e);
-  }
-
-  try {
-    const path2 = await import("path");
-    const fs2 = await import("fs");
-    const { migrate } = await import("drizzle-orm/node-postgres/migrator");
-    const { db } = await import("@/lib/db");
-
-    const possiblePaths = [
-      path2.resolve("migrations"),
-      path2.join(process.cwd(), "migrations"),
-    ];
-
-    let migrationsFolder = possiblePaths[0];
-    for (const p of possiblePaths) {
-      if (fs2.existsSync(p)) {
-        migrationsFolder = p;
-        break;
-      }
-    }
-
-    if (fs2.existsSync(migrationsFolder)) {
-      console.log(`[GoRigo] Running migrations from ${migrationsFolder}`);
-      await migrate(db, { migrationsFolder });
-      console.log("[GoRigo] DB migrations complete");
-    } else {
-      console.warn("[GoRigo] No migrations folder found, skipping");
-    }
-  } catch (e) {
-    console.error("[GoRigo] DB migration failed:", e instanceof Error ? e.message : e);
-  }
-}
-
-async function ensureProductionSchemaColumns() {
+async function ensureProductionSchema() {
   try {
     const { db } = await import("@/lib/db");
     const { sql } = await import("drizzle-orm");
 
-    const alterStatements = [
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts integer DEFAULT 0`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until timestamp`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS global_role text DEFAULT 'CLIENT'`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean DEFAULT false`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token text`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires_at timestamp`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at timestamp`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version text`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password boolean DEFAULT false`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at timestamp`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_demo boolean DEFAULT false`,
-      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ip_address text`,
-      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_agent text`,
-      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS created_at timestamp DEFAULT now()`,
-      `ALTER TABLE rate_limits ADD COLUMN IF NOT EXISTS key text`,
-      `CREATE TABLE IF NOT EXISTS rate_limits (id serial PRIMARY KEY, key text NOT NULL, bucket text NOT NULL, count integer DEFAULT 1, window_start timestamp DEFAULT now(), window_end timestamp NOT NULL DEFAULT now())`,
-      `CREATE UNIQUE INDEX IF NOT EXISTS idx_rate_limits_key_bucket_unique ON rate_limits (key, bucket)`,
-      `CREATE INDEX IF NOT EXISTS idx_rate_limits_window_end ON rate_limits (window_end)`,
-      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS expires_at timestamp`,
-      `ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_id integer`,
-    ];
+    const introspect = await db.execute(sql`
+      SELECT table_name, column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+      AND table_name IN ('users', 'sessions', 'rate_limits', 'orgs', 'org_members', 'wallets')
+      ORDER BY table_name, ordinal_position
+    `);
+    const existing = new Set(
+      (introspect.rows as Array<{ table_name: string; column_name: string }>)
+        .map((r) => `${r.table_name}.${r.column_name}`)
+    );
+    const tables = new Set(
+      (introspect.rows as Array<{ table_name: string }>).map((r) => r.table_name)
+    );
 
-    for (const stmt of alterStatements) {
+    console.log(`[GoRigo] Production DB tables found: ${[...tables].join(", ")}`);
+    console.log(`[GoRigo] Production DB users columns: ${[...existing].filter(c => c.startsWith("users.")).map(c => c.split(".")[1]).join(", ")}`);
+
+    const stmts: string[] = [];
+
+    if (!tables.has("rate_limits")) {
+      stmts.push(`CREATE TABLE IF NOT EXISTS rate_limits (id serial PRIMARY KEY, key varchar(255) NOT NULL, bucket varchar(64) NOT NULL, count integer DEFAULT 1 NOT NULL, window_start timestamp DEFAULT now() NOT NULL, window_end timestamp NOT NULL)`);
+    }
+    stmts.push(`CREATE UNIQUE INDEX IF NOT EXISTS idx_rate_limits_key_bucket_unique ON rate_limits (key, bucket)`);
+    stmts.push(`CREATE INDEX IF NOT EXISTS idx_rate_limits_window_end ON rate_limits (window_end)`);
+
+    const userCols: Record<string, string> = {
+      "failed_login_attempts": "integer DEFAULT 0",
+      "locked_until": "timestamp",
+      "global_role": "text DEFAULT 'CLIENT'",
+      "email_verified": "boolean DEFAULT false",
+      "email_verification_token": "text",
+      "email_verification_expires_at": "timestamp",
+      "terms_accepted_at": "timestamp",
+      "terms_version": "text",
+      "must_change_password": "boolean DEFAULT false",
+      "deleted_at": "timestamp",
+      "is_demo": "boolean DEFAULT false",
+    };
+    for (const [col, type] of Object.entries(userCols)) {
+      if (!existing.has(`users.${col}`)) {
+        stmts.push(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+      }
+    }
+
+    const sessionCols: Record<string, string> = {
+      "ip_address": "text",
+      "user_agent": "text",
+      "created_at": "timestamp DEFAULT now()",
+      "last_seen_at": "timestamp DEFAULT now()",
+      "active_org_id": "integer",
+      "rotated_at": "timestamp DEFAULT now()",
+      "expires_at": "timestamp",
+      "user_id": "integer",
+    };
+    for (const [col, type] of Object.entries(sessionCols)) {
+      if (!existing.has(`sessions.${col}`)) {
+        stmts.push(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+      }
+    }
+
+    for (const stmt of stmts) {
       try {
         await db.execute(sql.raw(stmt));
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         if (!msg.includes("already exists") && !msg.includes("does not exist")) {
-          console.warn(`[GoRigo] Schema fix skipped: ${msg.substring(0, 100)}`);
+          console.warn(`[GoRigo] Schema stmt failed: ${msg.substring(0, 120)}`);
         }
       }
     }
-    console.log("[GoRigo] Production schema columns verified");
+
+    console.log("[GoRigo] Production schema verified");
   } catch (e) {
-    console.error("[GoRigo] Schema column fix failed:", e instanceof Error ? e.message : e);
+    console.error("[GoRigo] Schema verification failed:", e instanceof Error ? e.message : e);
   }
 }
 
@@ -147,34 +117,49 @@ async function ensureProductionAdminUser() {
     const { eq } = await import("drizzle-orm");
     const bcrypt = await import("bcryptjs");
 
-    const [existing] = await db.select({ id: users.id, globalRole: users.globalRole }).from(users).where(eq(users.email, "admin@gorigo.ai")).limit(1);
+    const [existing] = await db
+      .select({ id: users.id, globalRole: users.globalRole })
+      .from(users)
+      .where(eq(users.email, "admin@gorigo.ai"))
+      .limit(1);
+
     if (existing) {
       if (existing.globalRole !== "SUPERADMIN") {
-        await db.update(users).set({ globalRole: "SUPERADMIN", mustChangePassword: false }).where(eq(users.email, "admin@gorigo.ai"));
+        await db
+          .update(users)
+          .set({ globalRole: "SUPERADMIN", mustChangePassword: false })
+          .where(eq(users.email, "admin@gorigo.ai"));
         console.log("[GoRigo] Admin user promoted to SUPERADMIN");
       } else {
-        console.log("[GoRigo] Production admin user exists");
+        console.log("[GoRigo] Production admin user exists (id=" + existing.id + ")");
       }
       return;
     }
 
     console.log("[GoRigo] Creating production admin user...");
     const passwordHash = await bcrypt.hash("admin123", 12);
-    const [newUser] = await db.insert(users).values({
-      email: "admin@gorigo.ai",
-      password: passwordHash,
-      businessName: "GoRigo Platform",
-      globalRole: "SUPERADMIN",
-      isDemo: false,
-      emailVerified: true,
-      mustChangePassword: false,
-    }).onConflictDoNothing().returning();
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: "admin@gorigo.ai",
+        password: passwordHash,
+        businessName: "GoRigo Platform",
+        globalRole: "SUPERADMIN",
+        isDemo: false,
+        emailVerified: true,
+        mustChangePassword: false,
+      })
+      .onConflictDoNothing()
+      .returning();
 
     if (newUser) {
       const [newOrg] = await db.insert(orgs).values({ name: "GoRigo Platform" }).returning();
       if (newOrg) {
         await db.insert(orgMembers).values({ orgId: newOrg.id, userId: newUser.id, role: "OWNER" });
-        await db.insert(wallets).values({ orgId: newOrg.id, balance: "0", currency: "GBP" }).onConflictDoNothing();
+        await db
+          .insert(wallets)
+          .values({ orgId: newOrg.id, balance: "0", currency: "GBP" })
+          .onConflictDoNothing();
       }
       console.log("[GoRigo] Production admin user created: admin@gorigo.ai / admin123");
     }

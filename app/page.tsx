@@ -74,16 +74,7 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/contact">
-                <Button variant="outline" size="lg" data-testid="button-hero-demo">
-                  Book a Demo
-                </Button>
-              </Link>
             </div>
-
-            <p className="mt-4 text-xs text-muted-foreground">
-              Prepaid wallet from £50. Go live in under 5 minutes.
-            </p>
 
             <RigoPrompt />
 

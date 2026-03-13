@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -49,21 +49,33 @@ export function Navbar() {
           </Link>
 
           <div className="hidden items-center gap-0.5 md:flex flex-wrap">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "px-3 py-1.5 text-sm transition-colors rounded-md",
-                  isActive(link.href)
-                    ? "text-foreground font-medium"
-                    : "text-muted-foreground"
-                )}
-                data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) =>
+              link.href === "/rigo" ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-gradient-to-r from-[#E8604C]/10 to-[#F5A623]/10 text-[#E8604C] border border-[#E8604C]/20 hover:border-[#E8604C]/40 transition-colors"
+                  data-testid="link-nav-rigo"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Ask Rigo
+                </Link>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "px-3 py-1.5 text-sm transition-colors rounded-md",
+                    isActive(link.href)
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground"
+                  )}
+                  data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </div>
         </div>
 

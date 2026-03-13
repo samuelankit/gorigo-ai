@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { RigoPrompt } from "@/components/landing/rigo-prompt";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { PublicLayout } from "@/components/public-layout";
@@ -194,7 +195,12 @@ export default function RigoPage() {
               most platforms charge extra for? Rigo includes them at no cost.
             </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-10 max-w-2xl mx-auto">
+              <p className="text-sm text-muted-foreground mb-3">Try it now — no sign up needed</p>
+              <RigoPrompt />
+            </div>
+
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button asChild size="lg">
                 <Link href="/register" data-testid="link-rigo-get-started">
                   Try Rigo Free

@@ -28,7 +28,12 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "50", 10) || 50, 200);
     const offset = Math.max(parseInt(searchParams.get("offset") ?? "0", 10) || 0, 0);
 
+    const includeInternal = searchParams.get("include_internal") === "true";
     const conditions: any[] = [];
+
+    if (!includeInternal) {
+      conditions.push(sql`(${orgs.isInternal} IS NULL OR ${orgs.isInternal} = false)`);
+    }
 
     if (searchQuery) {
       conditions.push(ilike(orgs.name, `%${searchQuery}%`));
@@ -198,6 +203,7 @@ export async function GET(request: NextRequest) {
         partnerId: partner?.partnerId ?? null,
         channelType: org.channelType,
         deploymentModel: org.deploymentModel ?? "individual",
+        isInternal: org.isInternal ?? false,
         totalCalls: callCountMap.get(org.id) ?? 0,
         totalRevenue: revenueMap.get(org.id) ?? 0,
         walletBalance: wallet?.balance ?? 0,

@@ -56,6 +56,7 @@ export const orgs = pgTable("orgs", {
   voicemailGreeting: text("voicemail_greeting"),
   deploymentModel: text("deployment_model").default("individual"),
   webhookSecret: text("webhook_secret"),
+  isInternal: boolean("is_internal").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

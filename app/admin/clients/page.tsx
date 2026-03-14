@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import {
   Users, Download, Search, Eye, ChevronLeft, ChevronRight,
-  Cloud, Key, Phone, DollarSign, Building2,
+  Cloud, Key, Phone, DollarSign, Building2, Shield, Wallet, ArrowUpCircle,
 } from "lucide-react";
 
 interface Client {
@@ -35,6 +35,7 @@ interface Client {
   partnerId: number | null;
   channelType: string;
   deploymentModel: string;
+  isInternal: boolean;
   totalCalls: number;
   totalRevenue: number;
   walletBalance: number;
@@ -69,6 +70,7 @@ function getStatusBadge(channelType: string) {
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
+  const [internalAccount, setInternalAccount] = useState<Client | null>(null);
   const [partners, setPartners] = useState<PartnerOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -79,6 +81,8 @@ export default function ClientsPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [fundingOrgId, setFundingOrgId] = useState<number | null>(null);
+  const [fundAmount, setFundAmount] = useState("");
 
   const fetchClients = useCallback(() => {
     setLoading(true);
@@ -108,6 +112,40 @@ export default function ClientsPage() {
   }, [page, filterPartner, filterPackage, filterStatus, searchTerm]);
 
   useEffect(() => { fetchClients(); }, [fetchClients]);
+
+  useEffect(() => {
+    fetch("/api/admin/clients?include_internal=true&limit=5")
+      .then((r) => r.json())
+      .then((d) => {
+        const all: Client[] = d?.clients || [];
+        const internal = all.find((c) => c.isInternal);
+        if (internal) setInternalAccount(internal);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleFundInternal = async () => {
+    const amount = parseFloat(fundAmount);
+    if (!fundingOrgId || isNaN(amount) || amount < 1) return;
+    try {
+      const res = await fetch("/api/admin/wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orgId: fundingOrgId, amount, description: "Internal allocation from SuperAdmin", action: "topup" }),
+      });
+      if (res.ok) {
+        setFundingOrgId(null);
+        setFundAmount("");
+        fetch("/api/admin/clients?include_internal=true&limit=5")
+          .then((r) => r.json())
+          .then((d) => {
+            const all: Client[] = d?.clients || [];
+            const internal = all.find((c) => c.isInternal);
+            if (internal) setInternalAccount(internal);
+          });
+      }
+    } catch {}
+  };
 
   useEffect(() => {
     fetch("/api/admin/partners")
@@ -182,6 +220,64 @@ export default function ClientsPage() {
           Export CSV
         </Button>
       </div>
+
+      {internalAccount && (
+        <Card className="border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-orange-500/10">
+                  <Shield className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-foreground">{internalAccount.businessName}</span>
+                    <Badge className="no-default-hover-elevate bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-700 text-[10px]">
+                      GoRigo Internal
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{internalAccount.ownerEmail} · {internalAccount.totalCalls} calls · {internalAccount.agentCount} agents</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Wallet Balance</p>
+                  <p className="font-bold text-lg text-foreground">
+                    {new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(internalAccount.walletBalance)}
+                  </p>
+                </div>
+                {fundingOrgId === internalAccount.id ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={50}
+                      placeholder="£50"
+                      value={fundAmount}
+                      onChange={(e) => setFundAmount(e.target.value)}
+                      className="w-24 px-2 py-1.5 text-sm border rounded-md bg-background"
+                      data-testid="input-fund-amount"
+                    />
+                    <Button size="sm" onClick={handleFundInternal} data-testid="button-confirm-fund">Confirm</Button>
+                    <Button size="sm" variant="outline" onClick={() => { setFundingOrgId(null); setFundAmount(""); }} data-testid="button-cancel-fund">Cancel</Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setFundingOrgId(internalAccount.id)} data-testid="button-fund-internal">
+                      <ArrowUpCircle className="h-4 w-4 mr-1.5" />
+                      Allocate Funds
+                    </Button>
+                    <Link href={`/admin/clients/${internalAccount.id}`}>
+                      <Button size="sm" variant="ghost" data-testid="button-view-internal">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>

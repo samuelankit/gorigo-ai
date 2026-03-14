@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         id: wallets.id,
         orgId: wallets.orgId,
         orgName: orgs.name,
+        isInternal: orgs.isInternal,
         balance: wallets.balance,
         currency: wallets.currency,
         lowBalanceThreshold: wallets.lowBalanceThreshold,

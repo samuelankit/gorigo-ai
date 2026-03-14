@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { orgs } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { getAuthenticatedUser, requireEmailVerified } from "@/lib/get-user";
-import { getActiveCalls } from "@/lib/call-limits";
+import { getActiveCalls, getPlatformMinCallBalance } from "@/lib/call-limits";
 import { settingsLimiter } from "@/lib/rate-limit";
 import { z } from "zod";
 import { handleRouteError } from "@/lib/api-error";
@@ -30,11 +30,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Organization not found" }, { status: 404 });
     }
 
-    const activeCalls = await getActiveCalls(auth.orgId);
+    const [activeCalls, platformFloor] = await Promise.all([
+      getActiveCalls(auth.orgId),
+      getPlatformMinCallBalance(),
+    ]);
+
+    const orgMin = Number(org.minCallBalance) || 1.00;
 
     return NextResponse.json({
       maxConcurrentCalls: org.maxConcurrentCalls || 5,
-      minCallBalance: org.minCallBalance || 1.00,
+      minCallBalance: orgMin,
+      platformMinCallBalance: platformFloor,
+      effectiveMinBalance: Math.max(orgMin, platformFloor),
       activeCalls,
     });
   } catch (error) {
@@ -68,6 +75,13 @@ export async function PUT(request: NextRequest) {
     }
 
     if (validated.minCallBalance !== undefined) {
+      const platformFloor = await getPlatformMinCallBalance();
+      if (validated.minCallBalance < platformFloor) {
+        return NextResponse.json({
+          error: `Minimum call balance cannot be set below the platform floor of £${platformFloor.toFixed(2)}.`,
+          platformFloor,
+        }, { status: 400 });
+      }
       updates.minCallBalance = validated.minCallBalance;
     }
 

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { callLogs, orgs } from "@/shared/schema";
+import { callLogs, orgs, platformSettings } from "@/shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 export async function getActiveCalls(orgId: number): Promise<number> {
@@ -32,7 +32,18 @@ export async function canStartCall(orgId: number): Promise<{ allowed: boolean; r
   return { allowed: true, activeCalls, maxCalls: maxConcurrent };
 }
 
+export async function getPlatformMinCallBalance(): Promise<number> {
+  const [setting] = await db
+    .select()
+    .from(platformSettings)
+    .where(eq(platformSettings.key, "platform_min_call_balance"))
+    .limit(1);
+  return setting ? parseFloat(setting.value || "1.00") : 1.00;
+}
+
 export async function getMinCallBalance(orgId: number): Promise<number> {
   const [org] = await db.select().from(orgs).where(eq(orgs.id, orgId)).limit(1);
-  return Number(org?.minCallBalance) || 1.00;
+  const orgMin = Number(org?.minCallBalance) || 1.00;
+  const platformFloor = await getPlatformMinCallBalance();
+  return Math.max(orgMin, platformFloor);
 }

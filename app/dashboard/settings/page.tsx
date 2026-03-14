@@ -104,6 +104,7 @@ export default function SettingsPage() {
 
   const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(5);
   const [minCallBalance, setMinCallBalance] = useState(1.0);
+  const [platformMinCallBalance, setPlatformMinCallBalance] = useState(1.0);
   const [activeCalls, setActiveCalls] = useState(0);
 
   interface PhoneNumber {
@@ -210,6 +211,10 @@ export default function SettingsPage() {
     if (callLimitsRaw.minCallBalance !== undefined && minCallBalance === 1.0) {
       const parsed = parseFloat(callLimitsRaw.minCallBalance) || 1.0;
       if (parsed !== 1.0) setMinCallBalance(parsed);
+    }
+    if (callLimitsRaw.platformMinCallBalance !== undefined && platformMinCallBalance === 1.0) {
+      const floor = parseFloat(callLimitsRaw.platformMinCallBalance) || 1.0;
+      if (floor !== 1.0) setPlatformMinCallBalance(floor);
     }
     if (callLimitsRaw.activeCalls !== undefined && activeCalls === 0 && callLimitsRaw.activeCalls !== 0) {
       setActiveCalls(callLimitsRaw.activeCalls);
@@ -384,8 +389,8 @@ export default function SettingsPage() {
       toast({ title: "Error", description: "Max concurrent calls must be between 1 and 100.", variant: "destructive" });
       return;
     }
-    if (minCallBalance < 0) {
-      toast({ title: "Error", description: "Minimum call balance must be non-negative.", variant: "destructive" });
+    if (minCallBalance < platformMinCallBalance) {
+      toast({ title: "Below platform floor", description: `Minimum call balance cannot be set below £${platformMinCallBalance.toFixed(2)}.`, variant: "destructive" });
       return;
     }
     saveCallLimitsMutation.mutate();
@@ -886,25 +891,29 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label htmlFor="minCallBalance">Minimum Call Balance</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">£</span>
                 <Input
                   id="minCallBalance"
                   type="number"
-                  min={0}
+                  min={platformMinCallBalance}
                   step={0.01}
                   value={minCallBalance}
-                  onChange={(e) => setMinCallBalance(parseFloat(e.target.value) || 0)}
+                  onChange={(e) => setMinCallBalance(parseFloat(e.target.value) || platformMinCallBalance)}
                   className="pl-7"
                   data-testid="input-min-call-balance"
                 />
               </div>
               <p className="text-xs text-muted-foreground">Minimum account balance required to place calls</p>
+              <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
+                <span className="font-medium">Platform floor: £{platformMinCallBalance.toFixed(2)}</span>
+                <span className="text-blue-500 dark:text-blue-400">— You cannot set this lower than the platform minimum.</span>
+              </div>
             </div>
 
             {minCallBalance > 0 && (
               <div className="flex items-start gap-2 text-sm text-muted-foreground">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>Calls will be blocked if your account balance falls below ${minCallBalance.toFixed(2)}</span>
+                <span>Calls will be blocked if your account balance falls below £{Math.max(minCallBalance, platformMinCallBalance).toFixed(2)}</span>
               </div>
             )}
 

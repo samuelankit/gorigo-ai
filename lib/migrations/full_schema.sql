@@ -3606,9 +3606,20 @@ CREATE TABLE IF NOT EXISTS orgs (
     suspended_at timestamp without time zone,
     suspended_reason text,
     updated_at timestamp without time zone DEFAULT now(),
-    webhook_secret text
+    webhook_secret text,
+    is_internal boolean DEFAULT false
 );
 
+ALTER TABLE orgs ADD COLUMN IF NOT EXISTS is_internal boolean DEFAULT false;
+
+UPDATE orgs SET is_internal = true, name = 'International Business Exchange Ltd'
+WHERE id IN (
+  SELECT om.org_id FROM org_members om
+  JOIN users u ON u.id = om.user_id
+  WHERE u.email = 'admin@gorigo.ai' AND om.role = 'OWNER'
+  LIMIT 1
+)
+AND (is_internal IS NULL OR is_internal = false);
 
 --
 -- Name: orgs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
